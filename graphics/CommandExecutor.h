@@ -9,6 +9,8 @@ class BeginCommandExecution;
 class CommandList;
 class RenderDevice;
 
+typedef std::shared_ptr< CommandExecutor > pCommandExecutor;
+
 class CommandExecutor {
 private:
     friend class BeginCommandExecution;
@@ -63,7 +65,9 @@ public:
     CommandList *bindRenderPass( VkPipelineBindPoint bindPoint );
     CommandList *bindVertexMemory( const VkBuffer &vertexBuffer, const VkDeviceSize &offset );
     CommandList *bindIndexMemory( VkBuffer indexBuffer, const VkDeviceSize &offset );
+    CommandList *bindDescriptorSet( const VkPipelineLayout& pipelineLayout, const VkDescriptorSet& descriptorSet );
     CommandList *drawIndexed( const std::vector< uint32_t > &indices );
+    CommandList *pipelineBarrier( VkImage& image, const VkImageLayout& oldLayout, const VkImageLayout& newLayout );
     CommandList *draw( uint32_t vertexCount );
     CommandList *filter( bool condition );
     CommandList *otherwise( );

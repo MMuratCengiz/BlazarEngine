@@ -163,6 +163,48 @@ CommandList *CommandList::bindIndexMemory( VkBuffer indexBuffer, const VkDeviceS
     return this;
 }
 
+CommandList *CommandList::pipelineBarrier( VkImage& image, const VkImageLayout& oldLayout, const VkImageLayout& newLayout ) {
+    ENSURE_FILTER
+
+    VkImageMemoryBarrier memoryBarrier{ };
+
+    memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    memoryBarrier.oldLayout = oldLayout;
+    memoryBarrier.newLayout = newLayout;
+    memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    memoryBarrier.image = image;
+    memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    memoryBarrier.subresourceRange.baseMipLevel = 0;
+    memoryBarrier.subresourceRange.levelCount = 1;
+    memoryBarrier.subresourceRange.baseArrayLayer = 0;
+    memoryBarrier.subresourceRange.layerCount = 1;
+    memoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+    memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    for ( VkCommandBuffer &buffer: buffers ) {
+        vkCmdPipelineBarrier(
+                buffer,
+                VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                0, 0,
+                nullptr, 0,
+                nullptr,
+                1, &memoryBarrier );
+    }
+
+    return this;
+}
+
+CommandList *CommandList::bindDescriptorSet( const VkPipelineLayout& pipelineLayout, const VkDescriptorSet& descriptorSet ) {
+    ENSURE_FILTER
+
+    for ( VkCommandBuffer &buffer: buffers ) {
+        vkCmdBindDescriptorSets( buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr );
+    }
+
+    return this;
+}
+
 VkResult CommandList::execute( ) {
     for ( VkCommandBuffer buffer: buffers ) {
         vkEndCommandBuffer( buffer );

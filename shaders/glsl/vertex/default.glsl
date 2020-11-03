@@ -1,11 +1,19 @@
 #version 450
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
+layout(binding = 0) uniform SceneMVP {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} mvp;
 
-layout (location = 0) out vec3 fragColor;
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec2 texture1Coor;
+
+layout (location = 0) out vec2 transitTexture1Coor;
 
 void main() {
-    gl_Position = vec4(inPosition, 1.0f);
-    fragColor = inColor;
+    gl_Position = mvp.proj * mvp.view * mvp.model * vec4(inPosition, 1.0f);
+
+    transitTexture1Coor = texture1Coor;
 }

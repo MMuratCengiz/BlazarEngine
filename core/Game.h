@@ -12,12 +12,14 @@
 #include "../renderobjects/Triangle2D.h"
 #include <chrono>
 
+using namespace SomeVulkan::Core;
 using namespace SomeVulkan::Input;
 using namespace SomeVulkan::Graphics;
 
 static void windowResizeCb( void *userPointer, int width, int height ) {
     if ( width > 0 && height > 0 ) {
-        auto *pVulkanApi = static_cast< RenderDevice * >( userPointer );
+        auto *renderDevice = static_cast< RenderDevice * >( userPointer );
+        renderDevice->getContext()->triggerEvent( EventType::SwapChainInvalidated );
 //        pVulkanApi->resetSwapChain( );
     }
 }
@@ -110,6 +112,8 @@ public:
         uint32_t fpsCounter = 0;
 
         while ( !glfwWindowShouldClose( window ) ) {
+            Time::tick();
+
             playable->processEvents( window );
 
             int width, height;

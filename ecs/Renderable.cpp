@@ -10,12 +10,12 @@ using namespace SomeVulkan::ECS;
 
 const uint32_t Renderable::UID = 1;
 
-SomeVulkan::Graphics::VertexDescriptor SomeVulkan::ECS::Renderable::getVertexDescriptor( ) {
-    return vertexDescriptor;
+const SomeVulkan::Graphics::DrawDescription& SomeVulkan::ECS::Renderable::getDrawDescription( ) const {
+    return drawDescription;
 }
 
-void SomeVulkan::ECS::Renderable::setVertexDescriptor( SomeVulkan::Graphics::VertexDescriptor vd ) {
-    vertexDescriptor = std::move( vd );
+void SomeVulkan::ECS::Renderable::setDrawDescription( SomeVulkan::Graphics::DrawDescription& vd ) {
+    drawDescription = std::move( vd );
 }
 
 uint32_t Renderable::getId( ) {

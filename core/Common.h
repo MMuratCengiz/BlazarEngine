@@ -9,7 +9,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
 #include <string>
 #include <iostream>
@@ -18,6 +18,8 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include <cstring>
+#include "Time.h"
+#include "../external/loaders/stb_image.h"
 
 typedef struct StatusInfo {
     int code;
@@ -39,6 +41,7 @@ typedef struct StatusInfo {
 #define COMPONENT_VKAPI "RenderDevice"
 #define COMPONENT_VKPRESENTATION "RenderSurface"
 #define COMPONENT_GAMEH "GAMEH"
+#define COMPONENT_TLOAD "TEXTURELOADING"
 
 #define VERBOSITY_CRITICAL 1
 #define VERBOSITY_HIGH 2
@@ -65,3 +68,6 @@ public:
         return def;
     }
 };
+
+#define range( var, from, to ) for ( uint32_t var = from; from < to; ++var )
+#define until( var, to ) for ( uint32_t var = 0; var < to; ++var )

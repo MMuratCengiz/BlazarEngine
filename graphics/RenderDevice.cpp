@@ -278,6 +278,7 @@ void SomeVulkan::Graphics::RenderDevice::createLogicalDevice( ) {
     std::vector< VkDeviceQueueCreateInfo > deviceQueueCreateInfos = createUniqueDeviceCreateInfos( );
 
     VkPhysicalDeviceFeatures features { };
+    features.samplerAnisotropy = true;
 
 #ifdef DEBUG
     std::vector< const char * > layers;

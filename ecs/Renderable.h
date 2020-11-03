@@ -2,22 +2,22 @@
 
 #include "../core/Common.h"
 #include "IComponent.h"
-#include "../graphics/VertexDescriptor.h"
+#include "../graphics/DrawDescription.h"
 
 NAMESPACES( SomeVulkan, ECS )
 
 class Renderable : public IComponent {
 private:
-    Graphics::VertexDescriptor vertexDescriptor;
+    Graphics::DrawDescription drawDescription;
 
 public:
     static const uint32_t UID;
 
     uint32_t getId( ) override;
 
-    void setVertexDescriptor( Graphics::VertexDescriptor vd );
+    void setDrawDescription( Graphics::DrawDescription& vd );
 
-    Graphics::VertexDescriptor getVertexDescriptor( );
+    [[nodiscard]] const Graphics::DrawDescription& getDrawDescription( ) const;
 };
 
 

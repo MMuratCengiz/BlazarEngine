@@ -6,40 +6,63 @@
 #include <utility>
 #include "RenderSurface.h"
 #include "DefaultShaderLayout.h"
+#include "GraphicsException.h"
 
 std::unordered_map< std::string, std::vector< char > > SomeVulkan::Graphics::RenderSurface::cachedShaders { };
 
-SomeVulkan::Graphics::RenderSurface::RenderSurface( const std::shared_ptr< RenderContext >& context,
-                                                    const std::vector< Shader >& shaders )
-        : context(context) {
-    createSurface();
-
+SomeVulkan::Graphics::RenderSurface::RenderSurface( const std::shared_ptr< RenderContext > &context,
+                                                    std::vector< Shader > shaders )
+        : context( context ), shaders( std::move( shaders ) ) {
+    pipelineCreateInfo = { };
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineCreateInfo.pDepthStencilState = nullptr;
 
-    configureVertexInput( shaders );
+    createPipeline( false );
+
+    context->subscribeToEvent( EventType::SwapChainInvalidated, [ & ](
+            RenderContext *context, EventType eventType ) -> void {
+        vkDeviceWaitIdle( context->logicalDevice );
+
+        dispose( );
+        createPipeline( true );
+    } );
+}
+
+void SomeVulkan::Graphics::RenderSurface::createPipeline( bool isReset ) {
+
+#define IFISNOTRESET( F ) if ( !isReset ) { F; }
+
+    createSurface( );
+
+    IFISNOTRESET( configureVertexInput( ) )
 
     configureViewport( );
 
-    configureRasterization( );
+    IFISNOTRESET( configureRasterization( ) )
 
-    configureMultisampling( );
+    IFISNOTRESET( configureMultisampling( ) )
 
-    configureColorBlend( );
+    IFISNOTRESET( configureColorBlend( ) )
 
     configureDynamicState( );
 
-    createPipelineLayout( );
+    IFISNOTRESET( createDescriptorPool( ) );
 
-    createRenderPass( );
+    if ( context->descriptorManager == nullptr ) {
+        context->descriptorManager = std::make_shared< DescriptorManager >( context, shaderLayout );
+    }
+
+    if ( renderer == nullptr ) {
+        renderer = std::make_shared< Renderer >( context, shaderLayout );
+    }
+
+    IFISNOTRESET( createPipelineLayout( ) )
+
+    IFISNOTRESET( createRenderPass( ) )
 
     if ( vkCreateGraphicsPipelines( context->logicalDevice, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
                                     &context->pipeline ) != VK_SUCCESS ) {
         throw std::runtime_error( "failed to create graphics pipeline!" );
-    }
-
-    for ( VkShaderModule module: shaderModules ) {
-        vkDestroyShaderModule( context->logicalDevice, module, nullptr );
     }
 
     createFrameBuffers( );
@@ -80,7 +103,6 @@ void SomeVulkan::Graphics::RenderSurface::createSurface( ) {
     context->imageFormat = selectedSurfaceFormat.format;
 
     createSwapChain( capabilities, selectedSurfaceFormat, selectedPresentMode );
-    renderer = std::make_shared< Renderer >( context );
 }
 
 void SomeVulkan::Graphics::RenderSurface::createSwapChain( VkSurfaceCapabilitiesKHR surfaceCapabilities,
@@ -132,15 +154,16 @@ void SomeVulkan::Graphics::RenderSurface::createImageAndImageViews( VkFormat for
 
     vkGetSwapchainImagesKHR( context->logicalDevice, context->swapChain, &imageCount, nullptr );
 
-    context->images.resize( imageCount );
+    context->swapChainImages.resize( imageCount );
     context->imageViews.resize( imageCount );
 
-    vkGetSwapchainImagesKHR( context->logicalDevice, context->swapChain, &imageCount, context->images.data( ) );
+    vkGetSwapchainImagesKHR( context->logicalDevice, context->swapChain, &imageCount,
+                             context->swapChainImages.data( ) );
 
     VkImageViewCreateInfo imageViewCreateInfo { };
 
     int index = 0;
-    for ( auto image: context->images ) {
+    for ( auto image: context->swapChainImages ) {
         imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         imageViewCreateInfo.image = image;
         imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -184,7 +207,7 @@ void SomeVulkan::Graphics::RenderSurface::chooseExtent2D( const VkSurfaceCapabil
 
 }
 
-void SomeVulkan::Graphics::RenderSurface::configureVertexInput( const std::vector< Shader > &shaders ) {
+void SomeVulkan::Graphics::RenderSurface::configureVertexInput( ) {
     for ( const SomeVulkan::Graphics::Shader &shader: shaders ) {
         VkPipelineShaderStageCreateInfo createInfo { };
 
@@ -210,15 +233,14 @@ void SomeVulkan::Graphics::RenderSurface::configureVertexInput( const std::vecto
         shaderModules.emplace_back( shaderModule );
     }
 
-    const auto &attributeDescription = defaultShaderLayout->getAttributeDescription( );
-    const auto &bindingDescription = defaultShaderLayout->getBindingDescription( );
+    const auto &attributeDescription = shaderLayout->getVertexAttributeDescriptions( );
+    const auto &bindingDescription = shaderLayout->getInputBindingDescription( );
 
     inputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     inputStateCreateInfo.vertexBindingDescriptionCount = 1;
     inputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-    inputStateCreateInfo.vertexAttributeDescriptionCount = 2;
+    inputStateCreateInfo.vertexAttributeDescriptionCount = attributeDescription.size();
     inputStateCreateInfo.pVertexAttributeDescriptions = attributeDescription.data( );
-
 
     inputAssemblyCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -270,7 +292,7 @@ void SomeVulkan::Graphics::RenderSurface::configureRasterization( ) {
     rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationStateCreateInfo.lineWidth = 1.0f;
     rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
@@ -280,7 +302,7 @@ void SomeVulkan::Graphics::RenderSurface::configureRasterization( ) {
 }
 
 void SomeVulkan::Graphics::RenderSurface::configureColorBlend( ) {
-    colorBlendAttachment.colorWriteMask =
+    /*colorBlendAttachment.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = VK_FALSE;
     colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
@@ -288,7 +310,10 @@ void SomeVulkan::Graphics::RenderSurface::configureColorBlend( ) {
     colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
     colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
     colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;*/
+
+    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_FALSE;
 
     // This overwrites the above
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -318,18 +343,18 @@ SomeVulkan::Graphics::RenderSurface::configureDynamicState( ) {
 void
 SomeVulkan::Graphics::RenderSurface::createPipelineLayout( ) {
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount = 0;
-    pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+    pipelineLayoutCreateInfo.setLayoutCount = 1;
+    pipelineLayoutCreateInfo.pSetLayouts = &context->descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
     pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
     if ( vkCreatePipelineLayout( context->logicalDevice, &pipelineLayoutCreateInfo, nullptr,
-                                 &pipelineLayout ) !=
+                                 &context->pipelineLayout ) !=
          VK_SUCCESS ) {
         throw std::runtime_error( "failed to create pipeline layout!" );
     }
 
-    pipelineCreateInfo.layout = pipelineLayout;
+    pipelineCreateInfo.layout = context->pipelineLayout;
 }
 
 void SomeVulkan::Graphics::RenderSurface::createRenderPass( ) {
@@ -404,9 +429,9 @@ std::vector< char > SomeVulkan::Graphics::RenderSurface::readFile( const std::st
 
     file.close( );
 
-    cachedShaders[ filename ] = contents;
+    cachedShaders[ filename ] = std::move( contents );
 
-    return contents;
+    return cachedShaders[ filename ];
 }
 
 VkShaderModule SomeVulkan::Graphics::RenderSurface::createShaderModule( const std::string &filename ) {
@@ -455,18 +480,30 @@ void SomeVulkan::Graphics::RenderSurface::createFrameBuffers( ) {
     }
 }
 
+
 SomeVulkan::Graphics::RenderSurface::~RenderSurface( ) {
+    for ( VkShaderModule module: shaderModules ) {
+        vkDestroyShaderModule( context->logicalDevice, module, nullptr );
+    }
+
+    dispose( );
+
+    vkDestroyDescriptorPool( context->logicalDevice, context->descriptorPool, nullptr );
+    vkDestroyDescriptorSetLayout( context->logicalDevice, context->descriptorSetLayout, nullptr );
+    vkDestroyPipelineLayout( context->logicalDevice, context->pipelineLayout, nullptr );
+    vkDestroyRenderPass( context->logicalDevice, context->renderPass, nullptr );
+}
+
+void SomeVulkan::Graphics::RenderSurface::dispose( ) {
+    if ( renderer != nullptr ) {
+        renderer->freeBuffers( );
+    }
+
     for ( VkFramebuffer buffer: context->frameBuffers ) {
         vkDestroyFramebuffer( context->logicalDevice, buffer, nullptr );
     }
 
-    if ( renderer != nullptr ) {
-//        renderer->freeBuffers( );
-    }
-
     vkDestroyPipeline( context->logicalDevice, context->pipeline, nullptr );
-    vkDestroyPipelineLayout( context->logicalDevice, pipelineLayout, nullptr );
-    vkDestroyRenderPass( context->logicalDevice, context->renderPass, nullptr );
 
     for ( auto image: context->imageViews ) {
         vkDestroyImageView( context->logicalDevice, image, nullptr );
@@ -475,6 +512,27 @@ SomeVulkan::Graphics::RenderSurface::~RenderSurface( ) {
     vkDestroySwapchainKHR( context->logicalDevice, context->swapChain, nullptr );
 }
 
-std::shared_ptr< SomeVulkan::Graphics::Renderer >& SomeVulkan::Graphics::RenderSurface::getSurfaceRenderer( ) {
+std::shared_ptr< SomeVulkan::Graphics::Renderer > &SomeVulkan::Graphics::RenderSurface::getSurfaceRenderer( ) {
     return renderer;
+}
+
+void SomeVulkan::Graphics::RenderSurface::createDescriptorPool( ) {
+    VkDescriptorPoolSize poolSize { };
+
+    auto swapChainImageCount = static_cast< uint32_t >( context->swapChainImages.size( ) );
+
+    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSize.descriptorCount = swapChainImageCount;
+
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo { };
+    descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptorPoolCreateInfo.poolSizeCount = 1;
+    descriptorPoolCreateInfo.pPoolSizes = &poolSize;
+    descriptorPoolCreateInfo.maxSets = swapChainImageCount;
+
+    if ( vkCreateDescriptorPool( context->logicalDevice, &descriptorPoolCreateInfo, nullptr,
+                                 &context->descriptorPool ) !=
+         VK_SUCCESS ) {
+        throw GraphicsException( GraphicsException::Source::RenderSurface, "Failed to create descriptor pool!" );
+    }
 }

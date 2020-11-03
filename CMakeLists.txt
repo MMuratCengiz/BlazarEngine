@@ -9,7 +9,7 @@ function(add_shader SHADER_TYPE SHADER_NAME)
     set(OUTPUT_FILE "${SHADER_ROOT_DIR}spirv/${SHADER_TYPE}/${SHADER_NAME}.spv")
 
     #remember to add glslc to environment path
-    execute_process(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE})
+    execute_process(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE} )
 endfunction()
 
 add_shader(vertex default)
@@ -27,11 +27,11 @@ set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 
 set(Libs external/loaders/stb_image.h)
 
-set(Core core/Game.h core/Common.h)
-set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp graphics/DefaultShaderLayout.cpp graphics/DefaultShaderLayout.h graphics/VertexDescriptor.h graphics/ShaderLayout.h graphics/RenderUtilities.h graphics/RenderContext.h graphics/GraphicsException.h)
-set(Input input/GlobalEventHandler.cpp input/GlobalEventHandler.h)
+set(Core core/Game.h core/Common.h core/Time.h)
+set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp graphics/DefaultShaderLayout.h graphics/DrawDescription.h graphics/RenderUtilities.h graphics/RenderContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h graphics/ShaderLayout.h graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp)
+set(Input input/GlobalEventHandler.cpp input/GlobalEventHandler.h core/DynamicMemory.h)
 set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h ecs/Renderable.cpp)
-set(RenderObjects renderobjects/Triangle2D.h)
+set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
 
 set(Shaders shaders/glsl/fragment/default.glsl shaders/glsl/vertex/default.glsl renderobjects/Triangle2D.h graphics/CommandExecutor.cpp graphics/CommandExecutor.h)
 

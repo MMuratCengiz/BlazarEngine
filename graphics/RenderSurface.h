@@ -26,43 +26,41 @@ private:
 
     static std::unordered_map< std::string, std::vector< char > > cachedShaders;
     std::shared_ptr< RenderContext > context;
+    std::vector< Shader > shaders;
 
-    VkPipelineLayout pipelineLayout;
-
-    VkGraphicsPipelineCreateInfo pipelineCreateInfo { };
-
-    VkPipelineColorBlendStateCreateInfo colorBlending { };
+    // Pipeline createInfo required structures in class scope
     VkPipelineColorBlendAttachmentState colorBlendAttachment { };
-
+    VkGraphicsPipelineCreateInfo pipelineCreateInfo { };
+    VkPipelineColorBlendStateCreateInfo colorBlending { };
     VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo { };
-    VkRect2D viewScissor { };
     VkPipelineViewportStateCreateInfo viewportStateCreateInfo { };
-
     VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo { };
-
     VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo { };
-
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo { };
     VkPipelineVertexInputStateCreateInfo inputStateCreateInfo { };
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo { };
+    VkRect2D viewScissor { };
+    // --
 
     std::vector< VkPipelineShaderStageCreateInfo > pipelineStageCreateInfos;
     std::vector< VkShaderModule > shaderModules;
 
     std::shared_ptr< Renderer > renderer;
-    std::shared_ptr< DefaultShaderLayout > defaultShaderLayout = std::make_shared< DefaultShaderLayout >();
+    std::shared_ptr< DefaultShaderLayout > shaderLayout = std::make_shared< DefaultShaderLayout >();
 public:
-    RenderSurface( const std::shared_ptr< RenderContext >&, const std::vector< Shader >& shaders );
+    RenderSurface( const std::shared_ptr< RenderContext >&, std::vector< Shader > shaders );
 
     std::shared_ptr< Renderer >& getSurfaceRenderer();
     ~RenderSurface( );
 private:
-    void createSurface();
+    void createPipeline( bool isReset  );
+    void createSurface( );
 
     VkShaderModule createShaderModule( const std::string &filename );
+
     static std::vector< char > readFile( const std::string &filename );
 
-    void configureVertexInput( const std::vector< Shader > &shaders );
+    void configureVertexInput( );
 
     void createSwapChain( VkSurfaceCapabilitiesKHR surfaceCapabilities, VkSurfaceFormatKHR surfaceFormat,
                           VkPresentModeKHR presentMode );
@@ -74,7 +72,9 @@ private:
     void createPipelineLayout( );
     void createRenderPass( );
     void createFrameBuffers( );
+    void createDescriptorPool( );
     void chooseExtent2D( const VkSurfaceCapabilitiesKHR& capabilities );
     void createImageAndImageViews( VkFormat format );
+    void dispose();
 };
 END_NAMESPACES

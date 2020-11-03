@@ -1,34 +1,43 @@
 #pragma once
 
 #include "../core/Common.h"
+#include "DrawDescription.h"
 
-NAMESPACES(SomeVulkan, Graphics)
+NAMESPACES( SomeVulkan, Graphics )
 
-typedef enum class DataType_T {
-    Float,
-    Double,
-    Boolean,
-    Short,
-    Int,
-    Long,
-    Vec2,
-    Vec3,
-    Vec4,
-} DataType;
-
-typedef struct ShaderAttribute_T {
-    DataType dataType;
-    void * data;
-} ShaderAttribute;
+struct DescriptorSetBinding {
+    uint16_t index;
+    VkDescriptorType type;
+    VkDescriptorSetLayoutBinding binding;
+    VkDeviceSize size;
+};
+/*
+struct VertextInputBinding {
+    AttributeCode attributeCode;
+    VkVertexInputBindingDescription vertexInputDescription;
+};*/
 
 class ShaderLayout {
 protected:
-    std::vector< ShaderAttribute > attributes;
+    VkVertexInputBindingDescription inputBindingDescription;
+    std::vector< VkVertexInputAttributeDescription > vertexAttributeDescriptions;
+    std::vector< DescriptorSetBinding > descriptorSetBindings;
 
-    virtual void initializeAttributes() = 0;
 public:
-    [[nodiscard]] std::vector< ShaderAttribute > getAttributes() const {
-        return attributes;
+    [[nodiscard]] inline const VkVertexInputBindingDescription& getInputBindingDescription() const {
+        return inputBindingDescription;
+    }
+
+    [[nodiscard]] inline const std::vector< VkVertexInputAttributeDescription >& getVertexAttributeDescriptions() const {
+        return vertexAttributeDescriptions;
+    }
+
+    [[nodiscard]] inline const std::vector< DescriptorSetBinding >& getDescriptorSetBindings() const {
+        return descriptorSetBindings;
+    }
+
+    inline const uint8_t getDescriptorCount() const {
+        return descriptorSetBindings.size();
     }
 };
 
