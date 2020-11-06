@@ -3,12 +3,12 @@
 //
 #include "Time.h"
 
-using namespace SomeVulkan::Core;
+NAMESPACES( SomeVulkan, Core )
 
 long long int Time::prev = 0;
 float Time::deltaTime = 0.0f;
 
-void SomeVulkan::Core::Time::tick( ) {
+void Time::tick( ) {
     if ( prev == 0 ) {
         prev = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
         return;
@@ -20,6 +20,8 @@ void SomeVulkan::Core::Time::tick( ) {
     prev = now;
 }
 
-float SomeVulkan::Core::Time::getDeltaTime( ) {
+float Time::getDeltaTime( ) {
     return deltaTime;
 }
+
+END_NAMESPACES

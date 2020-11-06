@@ -4,9 +4,10 @@
 #include "../ecs/IGameEntity.h"
 #include "../ecs/Renderable.h"
 #include "../graphics/DrawDescription.h"
+#include "../graphics/Texture.h"
 
 #include <string>
-#include <strstream>
+#include <sstream>
 #include <utility>
 #include <assimp/include/assimp/scene.h>
 #include <assimp/Importer.hpp>
@@ -15,7 +16,19 @@
 
 NAMESPACES( SomeVulkan, RenderObjects )
 
-class Mesh;
+class Model;
+
+class Mesh : public ECS::IGameEntity {
+    Graphics::DrawDescription drawDescription{ };
+    std::shared_ptr< Graphics::Texture > texture = std::make_shared< Graphics::Texture >( 2,
+                                                                                          "/assets/textures/viking_room.png" );
+
+    friend class Model;
+
+    START_COMPONENTS
+        RENDERABLE
+    END_COMPONENTS
+};
 
 class Model {
 private:
@@ -27,7 +40,7 @@ public:
         const aiScene *scene = import.ReadFile( path, aiProcess_Triangulate | aiProcess_FlipUVs );
 
         if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode ) {
-            std::strstream ss;
+            std::stringstream ss;
             ss << "ERROR::ASSIMP::" << import.GetErrorString( );
             throw std::runtime_error( ss.str( ) );
         }
@@ -35,31 +48,36 @@ public:
         onEachNode( scene, scene->mRootNode );
     }
 
-    void onEachNode( const aiScene *scene, aiNode *pNode ) {
+    void onEachNode( const aiScene *scene, const aiNode *pNode ) {
         for ( unsigned int i = 0; i < pNode->mNumChildren; ++i ) {
             onEachNode( scene, pNode->mChildren[ i ] );
         }
 
         for ( unsigned int m = 0; m < pNode->mNumMeshes; m++ ) {
             aiMesh *mesh = scene->mMeshes[ pNode->mMeshes[ m ] ];
-            onEachMesh( scene, mesh );
+            onEachMesh( mesh );
         }
     }
 
-    void onEachMesh( const aiScene *scene, aiMesh *mesh ) {
+    void onEachMesh( const aiMesh *mesh ) {
         auto pMesh = std::make_shared< Mesh >( );
 
-        Graphics::DrawDescription drawDescription { };
+        Graphics::DrawDescription& drawDescription = pMesh->drawDescription;
+
+        drawDescription.vertexCount = mesh->mNumVertices;
+        drawDescription.indexedMode = true;
+        drawDescription.vertexMemory.setInitialSize( mesh->mNumVertices * 5 * sizeof( float ) );
+        drawDescription.textures.emplace_back( pMesh->texture );
 
         for ( unsigned int i = 0; i < mesh->mNumVertices; ++i ) {
             auto vec = mesh->mVertices[ i ];
 
-            drawDescription.vertexMemory.attachElements( { vec.x, vec.y, vec.z } );
+            drawDescription.vertexMemory.attachElements< float >( { vec.x, vec.y, vec.z } );
 
             if ( mesh->mTextureCoords[ 0 ] ) {
                 aiVector3D &tCoor = mesh->mTextureCoords[ 0 ][ i ];
 
-                drawDescription.vertexMemory.attachElements( { tCoor.x, tCoor.y } );
+                drawDescription.vertexMemory.attachElements< float >( { tCoor.x , tCoor.y } );
             }
         }
 
@@ -71,6 +89,7 @@ public:
             }
         }
 
+        pMesh->getComponent< ECS::Renderable >()->setDrawDescription( drawDescription );
         modelEntities.emplace_back( pMesh );
     }
 
@@ -79,13 +98,5 @@ public:
     }
 };
 
-
-class Mesh : public ECS::IGameEntity {
-    friend class Model;
-
-    START_COMPONENTS
-        RENDERABLE
-    END_COMPONENTS
-};
 
 END_NAMESPACES

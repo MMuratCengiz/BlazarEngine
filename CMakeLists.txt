@@ -28,7 +28,7 @@ set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 set(Libs external/loaders/stb_image.h)
 
 set(Core core/Game.h core/Common.h core/Time.h)
-set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp graphics/DefaultShaderLayout.h graphics/DrawDescription.h graphics/RenderUtilities.h graphics/RenderContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h graphics/ShaderLayout.h graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp)
+set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp graphics/DefaultShaderLayout.h graphics/DrawDescription.h graphics/RenderUtilities.h graphics/RenderContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h graphics/ShaderLayout.h graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp graphics/CommanExecutorArguments.h)
 set(Input input/GlobalEventHandler.cpp input/GlobalEventHandler.h core/DynamicMemory.h)
 set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h ecs/Renderable.cpp)
 set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)

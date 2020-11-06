@@ -3,7 +3,8 @@
 //
 
 #include "RenderDevice.h"
-#include "GraphicsException.h"
+
+NAMESPACES( SomeVulkan, Graphics )
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                      VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -32,7 +33,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
     return VK_FALSE;
 }
 
-SomeVulkan::Graphics::RenderDevice::RenderDevice( GLFWwindow *window ) {
+RenderDevice::RenderDevice( GLFWwindow *window ) {
     context = std::make_shared< RenderContext >( );
     context->window = window;
 
@@ -100,7 +101,7 @@ SomeVulkan::Graphics::RenderDevice::RenderDevice( GLFWwindow *window ) {
     createSurface( );
 }
 
-void SomeVulkan::Graphics::RenderDevice::initSupportedExtensions( ) {
+void RenderDevice::initSupportedExtensions( ) {
     uint32_t extensionCount;
     vkEnumerateInstanceExtensionProperties( nullptr, &extensionCount, nullptr );
 
@@ -112,7 +113,7 @@ void SomeVulkan::Graphics::RenderDevice::initSupportedExtensions( ) {
     }
 }
 
-void SomeVulkan::Graphics::RenderDevice::initSupportedLayers( std::vector< const char * > &layers ) {
+void RenderDevice::initSupportedLayers( std::vector< const char * > &layers ) {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties( &layerCount, nullptr );
 
@@ -129,7 +130,7 @@ void SomeVulkan::Graphics::RenderDevice::initSupportedLayers( std::vector< const
     }
 }
 
-VkDebugUtilsMessengerCreateInfoEXT SomeVulkan::Graphics::RenderDevice::getDebugUtilsCreateInfo( ) const {
+VkDebugUtilsMessengerCreateInfoEXT RenderDevice::getDebugUtilsCreateInfo( ) const {
     VkDebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo { };
     debugUtilsCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     debugUtilsCreateInfo.messageSeverity =
@@ -143,7 +144,7 @@ VkDebugUtilsMessengerCreateInfoEXT SomeVulkan::Graphics::RenderDevice::getDebugU
     return debugUtilsCreateInfo;
 }
 
-void SomeVulkan::Graphics::RenderDevice::initDebugMessages( const VkDebugUtilsMessengerCreateInfoEXT &createInfo ) {
+void RenderDevice::initDebugMessages( const VkDebugUtilsMessengerCreateInfoEXT &createInfo ) {
     auto createDebugUtils = ( PFN_vkCreateDebugUtilsMessengerEXT ) vkGetInstanceProcAddr( context->instance,
                                                                                           "vkCreateDebugUtilsMessengerEXT" );
 
@@ -155,8 +156,8 @@ void SomeVulkan::Graphics::RenderDevice::initDebugMessages( const VkDebugUtilsMe
     }
 }
 
-std::vector< SomeVulkan::Graphics::DeviceInfo >
-SomeVulkan::Graphics::RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
+std::vector< DeviceInfo >
+RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
     uint32_t deviceCount;
 
     vkEnumeratePhysicalDevices( context->instance, &deviceCount, nullptr );
@@ -187,7 +188,7 @@ SomeVulkan::Graphics::RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck devi
 }
 
 void
-SomeVulkan::Graphics::RenderDevice::createDeviceInfo( const VkPhysicalDevice &physicalDevice, DeviceInfo &deviceInfo ) {
+RenderDevice::createDeviceInfo( const VkPhysicalDevice &physicalDevice, DeviceInfo &deviceInfo ) {
     VkPhysicalDeviceFeatures deviceFeatures;
     std::vector< VkQueueFamilyProperties > localQueueFamilies;
 
@@ -212,13 +213,13 @@ SomeVulkan::Graphics::RenderDevice::createDeviceInfo( const VkPhysicalDevice &ph
     deviceInfo.extensionProperties = extensions;
 }
 
-void SomeVulkan::Graphics::RenderDevice::selectDevice( const DeviceInfo &deviceInfo ) {
+void RenderDevice::selectDevice( const DeviceInfo &deviceInfo ) {
     context->physicalDevice = deviceInfo.device;
 
     createLogicalDevice( );
 }
 
-void SomeVulkan::Graphics::RenderDevice::setupQueueFamilies( ) {
+void RenderDevice::setupQueueFamilies( ) {
     if ( !queueFamiliesPrepared ) {
         auto exists = [ & ]( QueueType bit ) -> bool {
             return context->queueFamilies.find( bit ) != context->queueFamilies.end( );
@@ -253,7 +254,7 @@ void SomeVulkan::Graphics::RenderDevice::setupQueueFamilies( ) {
     queueFamiliesPrepared = true;
 }
 
-void SomeVulkan::Graphics::RenderDevice::addQueueFamily( uint32_t index, const VkQueueFamilyProperties &properties,
+void RenderDevice::addQueueFamily( uint32_t index, const VkQueueFamilyProperties &properties,
                                                          T_FUNC::findQueueType &exists ) {
     for ( QueueType queueType: queueTypes ) {
         if ( QUEUE_TYPE_FLAGS.find( queueType ) != QUEUE_TYPE_FLAGS.end( ) ) {
@@ -266,7 +267,7 @@ void SomeVulkan::Graphics::RenderDevice::addQueueFamily( uint32_t index, const V
     }
 }
 
-void SomeVulkan::Graphics::RenderDevice::createLogicalDevice( ) {
+void RenderDevice::createLogicalDevice( ) {
     setupQueueFamilies( );
 
     if ( logicalDeviceCreated ) {
@@ -279,6 +280,7 @@ void SomeVulkan::Graphics::RenderDevice::createLogicalDevice( ) {
 
     VkPhysicalDeviceFeatures features { };
     features.samplerAnisotropy = true;
+    features.sampleRateShading = true;
 
 #ifdef DEBUG
     std::vector< const char * > layers;
@@ -317,7 +319,7 @@ void SomeVulkan::Graphics::RenderDevice::createLogicalDevice( ) {
                       &context->queues[ QueueType::Presentation ] );
 }
 
-void SomeVulkan::Graphics::RenderDevice::createSurface( ) {
+void RenderDevice::createSurface( ) {
     if ( context->window == nullptr ) {
         throw GraphicsException( GraphicsException::Source::RenderDevice,
                                  "No window context to create renderer surface with." );
@@ -327,7 +329,7 @@ void SomeVulkan::Graphics::RenderDevice::createSurface( ) {
     }
 }
 
-bool SomeVulkan::Graphics::RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) {
+bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) {
     int foundRequiredExtensionCount = 0;
 
     const std::unordered_map< std::string, bool > &reqExtensions = defaultRequiredExtensions( );
@@ -342,7 +344,7 @@ bool SomeVulkan::Graphics::RenderDevice::defaultDeviceCapabilityCheck( const Dev
     return foundRequiredExtensionCount == reqExtensions.size( );
 }
 
-std::unordered_map< std::string, bool > SomeVulkan::Graphics::RenderDevice::defaultRequiredExtensions( ) {
+std::unordered_map< std::string, bool > RenderDevice::defaultRequiredExtensions( ) {
     std::unordered_map< std::string, bool > result;
 
     result[ VK_KHR_SWAPCHAIN_EXTENSION_NAME ] = true;
@@ -350,7 +352,7 @@ std::unordered_map< std::string, bool > SomeVulkan::Graphics::RenderDevice::defa
     return result;
 }
 
-std::vector< VkDeviceQueueCreateInfo > SomeVulkan::Graphics::RenderDevice::createUniqueDeviceCreateInfos( ) {
+std::vector< VkDeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateInfos( ) {
     std::unordered_map< uint32_t, bool > uniqueIndexes;
     std::vector< VkDeviceQueueCreateInfo > result;
 
@@ -374,18 +376,18 @@ std::vector< VkDeviceQueueCreateInfo > SomeVulkan::Graphics::RenderDevice::creat
     return result;
 }
 
-void SomeVulkan::Graphics::RenderDevice::beforeDelete( ) {
+void RenderDevice::beforeDelete( ) {
     vkDeviceWaitIdle( context->logicalDevice );
 }
 
-std::unique_ptr< SomeVulkan::Graphics::RenderSurface >
-SomeVulkan::Graphics::RenderDevice::createRenderSurface( const std::vector< Shader >& shaders ) {
+std::unique_ptr< RenderSurface >
+RenderDevice::createRenderSurface( const std::vector< Shader >& shaders ) {
     vkDeviceWaitIdle( context->logicalDevice );
 
     auto *renderSurface = new RenderSurface { context, shaders };
     return std::unique_ptr< RenderSurface >( renderSurface );
 }
-SomeVulkan::Graphics::RenderDevice::~RenderDevice( ) {
+RenderDevice::~RenderDevice( ) {
     if ( debugMessenger != VK_NULL_HANDLE ) {
         auto deleteDebugUtils = ( PFN_vkDestroyDebugUtilsMessengerEXT )
                 vkGetInstanceProcAddr( context->instance, "vkDestroyDebugUtilsMessengerEXT" );
@@ -408,6 +410,8 @@ SomeVulkan::Graphics::RenderDevice::~RenderDevice( ) {
     }
 }
 
-std::shared_ptr< SomeVulkan::Graphics::RenderContext > SomeVulkan::Graphics::RenderDevice::getContext( ) const {
+std::shared_ptr< RenderContext > RenderDevice::getContext( ) const {
     return context;
 }
+
+END_NAMESPACES

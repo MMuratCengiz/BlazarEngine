@@ -59,6 +59,9 @@ public:
     VkSurfaceKHR surface;
     std::vector< VkImage > swapChainImages;
     std::vector< VkImageView > imageViews;
+    VkImage depthImage;
+    VkDeviceMemory depthMemory;
+    VkImageView depthView;
     VkExtent2D surfaceExtent { };
     VkFormat imageFormat;
     VkDescriptorPool descriptorPool;

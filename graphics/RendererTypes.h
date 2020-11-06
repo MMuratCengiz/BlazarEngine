@@ -25,48 +25,23 @@ typedef enum class DeviceBufferType {
     Image
 } DeviceBufferType;
 
+#define DBS_OP( OPERATOR ) \
+bool operator OPERATOR( const DeviceBufferSize& other ) const { \
+    if ( size != 0 || other.size != 0) { \
+        return size OPERATOR other.size;\
+    } \
+    return extent.width * extent.height OPERATOR other.extent.width * other.extent.height; \
+}
+
 typedef union DeviceBufferSize {
     VkDeviceSize size ;
     VkExtent2D extent;
 
-    bool operator <( const DeviceBufferSize& other ) const {
-        if ( size != 0 || other.size != 0) {
-            return size < other.size;
-        }
-
-        return extent.width * extent.height < other.extent.width * other.extent.height;
-    }
-    bool operator <=( const DeviceBufferSize& other ) const {
-        if ( size != 0 || other.size != 0 ) {
-            return size <= other.size;
-        }
-
-        return extent.width * extent.height <= other.extent.width * other.extent.height;
-    }
-
-    bool operator >( const DeviceBufferSize& other ) const {
-        if ( size != 0 || other.size != 0 ) {
-            return size > other.size;
-        }
-
-        return extent.width * extent.height > other.extent.width * other.extent.height;
-    }
-
-    bool operator >=( const DeviceBufferSize& other ) const {
-        if ( size != 0 || other.size != 0 ) {
-            return size >= other.size;
-        }
-
-        return extent.width * extent.height >= other.extent.width * other.extent.height;
-    }
-
-    bool operator ==( const DeviceBufferSize& other ) const {
-        if ( size != 0 || other.size != 0 ) {
-            return size == other.size;
-        }
-
-        return extent.width == other.extent.width && extent.height == other.extent.height;
-    }
+    DBS_OP( < )
+    DBS_OP( <= )
+    DBS_OP( > )
+    DBS_OP( >= )
+    DBS_OP( == )
 
     bool operator ==( const uint32_t& other ) const {
         return size == other;
@@ -101,6 +76,7 @@ typedef struct FrameContext {
     DeviceMemory ibo;
     std::vector< DeviceMemory > ubo;
     std::vector< DeviceMemory > tbo;
+    uint64_t vboOffset = 0;
 } FrameContext;
 
 END_NAMESPACES

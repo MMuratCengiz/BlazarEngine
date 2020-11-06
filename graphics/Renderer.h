@@ -6,6 +6,7 @@
 #include "RenderUtilities.h"
 #include "RendererTypes.h"
 #include "DefaultShaderLayout.h"
+#include "../renderobjects/Model.h"
 #include "../renderobjects/Triangle2D.h"
 
 NAMESPACES( SomeVulkan, Graphics )
@@ -14,7 +15,7 @@ using namespace ECS;
 
 class Renderer {
 private:
-    const DeviceBufferSize INITIAL_VBO_SIZE = DeviceBufferSize { .size = 100 * sizeof( float ) };
+    const DeviceBufferSize INITIAL_VBO_SIZE = DeviceBufferSize { .size = 200 * 65536 * sizeof( float ) };
     const DeviceBufferSize INITIAL_IBO_SIZE = DeviceBufferSize { .size = 100 * sizeof( uint32_t ) };
     const DeviceBufferSize INITIAL_UBO_SIZE = DeviceBufferSize { .size = 3 * 4 * 4 * sizeof( float ) };
 
@@ -38,6 +39,7 @@ private:
     VkDeviceSize currentIndexBufferSize = 0;
     std::shared_ptr< ShaderLayout > shaderLayout;
     std::shared_ptr< RenderObject::Triangle2D > triangle;
+    RenderObjects::Model model = RenderObjects::Model( PATH( "/assets/models/viking_room.obj" ) );
 public:
     explicit Renderer( const std::shared_ptr< RenderContext > &context, const std::shared_ptr< ShaderLayout >& shaderLayout );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );
@@ -54,22 +56,24 @@ public:
 private:
 
     template< class T, class V = std::vector< T > >
-    void transferData( const V &v, DeviceMemory &targetMemory) {
-        transferData< T, V >( v, targetMemory, DeviceBufferSize { .size = v.size() });
+    void transferData( const V &v, DeviceMemory &targetMemory, VkDeviceSize offset ) {
+        transferData< T, V >( v, targetMemory, offset, DeviceBufferSize { .size = v.size() });
     }
 
     template< class T, class V = std::vector< T > >
-    void transferData( const V &v, DeviceMemory &targetMemory, const DeviceBufferSize& bufferSize ) {
+    void transferData( const V &v, DeviceMemory &targetMemory, VkDeviceSize offset, const DeviceBufferSize& bufferSize ) {
         ensureMemorySize( bufferSize, targetMemory );
 
         RenderUtilities::copyToDeviceMemory(
                 context->logicalDevice,
                 targetMemory.memory,
                 ( const void * ) v.data( ),
-                v.size( ) * sizeof( T )
+                v.size( ) * sizeof( T ),
+                offset
         );
     }
 
+    void drawRenderObjects( );
     void refreshCommands( const std::shared_ptr< Renderable > &renderable );
     void ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &memory );
     void allocateDeviceMemory( const DeviceBufferSize &size, DeviceMemory &dm );

@@ -6,7 +6,7 @@
 
 using namespace SomeVulkan::Graphics;
 
-CommandExecutor::CommandExecutor( const std::shared_ptr< RenderContext >& context ) : context( context ) {
+CommandExecutor::CommandExecutor( const std::shared_ptr< RenderContext > &context ) : context( context ) {
     VkCommandPoolCreateInfo commandPoolCreateInfo { };
 
     commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -41,10 +41,11 @@ BeginCommandExecution::generateBuffers( VkCommandBufferUsageFlags usage, uint16_
     bufferAllocateInfo.commandPool = executor->commandPool;
     bufferAllocateInfo.commandBufferCount = bufferCount;
 
-    VkResult result = vkAllocateCommandBuffers( executor->context->logicalDevice, &bufferAllocateInfo, buffers.data( ) );
+    vkAllocateCommandBuffers( executor->context->logicalDevice, &bufferAllocateInfo,
+                                                buffers.data( ) );
 
     auto *pCommandList = new CommandList { executor, buffers, usage };
-    return std::shared_ptr< CommandList >( pCommandList );
+    return std::move( std::shared_ptr< CommandList >( pCommandList ) );
 }
 
 CommandList::CommandList(
@@ -85,6 +86,8 @@ CommandList *CommandList::beginRenderPass( const VkFramebuffer frameBuffers[], c
     uint16_t index = 0;
 
 
+    VkClearValue clearValues[] = { clearValue, { .depthStencil = { 1.0f, 0 } } };
+
     for ( VkCommandBuffer buffer: buffers ) {
         VkRenderPassBeginInfo renderPassBeginInfo { };
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -92,8 +95,9 @@ CommandList *CommandList::beginRenderPass( const VkFramebuffer frameBuffers[], c
         renderPassBeginInfo.framebuffer = frameBuffers[ index++ ];
         renderPassBeginInfo.renderArea.offset = { 0, 0 };
         renderPassBeginInfo.renderArea.extent = executor->context->surfaceExtent;
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearValue;
+        renderPassBeginInfo.clearValueCount = 2;
+        renderPassBeginInfo.pClearValues = clearValues;
+
 
         vkCmdBeginRenderPass( buffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE );
     }
@@ -163,29 +167,57 @@ CommandList *CommandList::bindIndexMemory( VkBuffer indexBuffer, const VkDeviceS
     return this;
 }
 
-CommandList *CommandList::pipelineBarrier( VkImage& image, const VkImageLayout& oldLayout, const VkImageLayout& newLayout ) {
+CommandList *CommandList::blitImage( const ImageBlitArgs &args ) {
     ENSURE_FILTER
 
-    VkImageMemoryBarrier memoryBarrier{ };
+    VkImageBlit imageBlit { };
+
+    imageBlit.srcOffsets[ 0 ] = args.srcOffsets[ 0 ];
+    imageBlit.dstOffsets[ 0 ] = args.dstOffsets[ 0 ];
+    imageBlit.srcOffsets[ 1 ] = args.srcOffsets[ 1 ];
+    imageBlit.dstOffsets[ 1 ] = args.dstOffsets[ 1 ];
+
+    imageBlit.srcSubresource = args.srcSubresource;
+    imageBlit.dstSubresource = args.dstSubresource;
+
+
+    for ( VkCommandBuffer &buffer: buffers ) {
+        vkCmdBlitImage( buffer,
+                        args.sourceImage,
+                        args.sourceImageLayout,
+                        args.destinationImage,
+                        args.destinationImageLayout,
+                        1,
+                        &imageBlit,
+                        VK_FILTER_LINEAR );
+    }
+
+    return this;
+}
+
+CommandList *CommandList::pipelineBarrier( const PipelineBarrierArgs &args ) {
+    ENSURE_FILTER
+
+    VkImageMemoryBarrier memoryBarrier { };
 
     memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    memoryBarrier.oldLayout = oldLayout;
-    memoryBarrier.newLayout = newLayout;
+    memoryBarrier.oldLayout = args.oldLayout;
+    memoryBarrier.newLayout = args.newLayout;
     memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    memoryBarrier.image = image;
+    memoryBarrier.image = args.image;
     memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    memoryBarrier.subresourceRange.baseMipLevel = 0;
-    memoryBarrier.subresourceRange.levelCount = 1;
+    memoryBarrier.subresourceRange.baseMipLevel = args.baseMipLevel;
+    memoryBarrier.subresourceRange.levelCount = args.mipLevel;
     memoryBarrier.subresourceRange.baseArrayLayer = 0;
     memoryBarrier.subresourceRange.layerCount = 1;
-    memoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-    memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    memoryBarrier.srcAccessMask = args.sourceAccess;
+    memoryBarrier.dstAccessMask = args.destinationAccess;
 
     for ( VkCommandBuffer &buffer: buffers ) {
         vkCmdPipelineBarrier(
                 buffer,
-                VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                args.sourceStage, args.destinationStage,
                 0, 0,
                 nullptr, 0,
                 nullptr,
@@ -195,11 +227,41 @@ CommandList *CommandList::pipelineBarrier( VkImage& image, const VkImageLayout& 
     return this;
 }
 
-CommandList *CommandList::bindDescriptorSet( const VkPipelineLayout& pipelineLayout, const VkDescriptorSet& descriptorSet ) {
+CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args ) {
+    ENSURE_FILTER
+
+
+    VkBufferImageCopy bufferImageCopy { };
+
+    bufferImageCopy.bufferOffset = 0;
+    bufferImageCopy.bufferRowLength = 0;
+    bufferImageCopy.bufferImageHeight = 0;
+    bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    bufferImageCopy.imageSubresource.mipLevel = 0;
+    bufferImageCopy.imageSubresource.baseArrayLayer = 0;
+    bufferImageCopy.imageSubresource.layerCount = 1;
+    bufferImageCopy.imageOffset = { 0, 0, 0 };
+    bufferImageCopy.imageExtent = {
+            args.width,
+            args.height,
+            1
+    };
+
+    for ( VkCommandBuffer &buffer: buffers ) {
+        vkCmdCopyBufferToImage( buffer, args.sourceBuffer, args.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+                                &bufferImageCopy );
+    }
+
+    return this;
+}
+
+CommandList *
+CommandList::bindDescriptorSet( const VkPipelineLayout &pipelineLayout, const VkDescriptorSet &descriptorSet ) {
     ENSURE_FILTER
 
     for ( VkCommandBuffer &buffer: buffers ) {
-        vkCmdBindDescriptorSets( buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr );
+        vkCmdBindDescriptorSets( buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0,
+                                 nullptr );
     }
 
     return this;
@@ -212,7 +274,7 @@ VkResult CommandList::execute( ) {
 
     VkSubmitInfo submitInfo { };
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = buffers.size();
+    submitInfo.commandBufferCount = buffers.size( );
     submitInfo.pCommandBuffers = buffers.data( );
 
     VkQueue queue = executor->context->queues[ QueueType::Graphics ];
@@ -233,7 +295,7 @@ CommandList *CommandList::filter( bool condition ) {
 }
 
 bool CommandList::passesFilter( ) const {
-    return ! conditionActive || conditionValue;
+    return !conditionActive || conditionValue;
 }
 
 CommandList *CommandList::otherwise( ) {
@@ -250,7 +312,7 @@ CommandList *CommandList::endFilter( ) {
 }
 
 CommandList::~CommandList( ) {
-    freeBuffers();
+    freeBuffers( );
 }
 
 void CommandList::freeBuffers( ) {

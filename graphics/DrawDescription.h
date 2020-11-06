@@ -23,6 +23,7 @@ typedef struct AttributeDescription {
 struct DrawDescription {
     bool indexedMode = false;
 
+    float vertexCount;
     Core::DynamicMemory vertexMemory{ };
 
     std::vector< uint32_t > indices;

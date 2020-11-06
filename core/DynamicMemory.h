@@ -17,9 +17,15 @@ public:
         buffer = static_cast< char * >( malloc( initialSize ) );
     }
 
+    void setInitialSize( uint32_t size ) {
+        free( buffer );
+        buffer = static_cast< char * >( malloc( size ) );
+        bufferSize = size;
+    }
+
     template< typename T >
     void attachElement( T e ) {
-        uint32_t size = sizeof( e );
+        uint32_t size = sizeof( T );
 
         expandIfRequired( size );
 
@@ -29,13 +35,17 @@ public:
 
 
     template< typename T >
-    void attachElements( std::initializer_list< T > elements ) {
-        for ( T e: elements ) {
-            attachElement( e );
-        }
+    void attachElements( std::vector< T > elements ) {
+        uint32_t additionalSize = elements.size( ) * sizeof( T );
+
+        expandIfRequired( additionalSize );
+        
+        memcpy( buffer + currentSize, elements.data(), additionalSize );
+        currentSize += additionalSize;
     }
 
     const void *data( uint32_t offset = 0 ) const {
+        float * f = ( float * ) (void*)buffer;
         return static_cast< const void * >( buffer + offset );
     }
 
@@ -50,9 +60,9 @@ public:
 private:
     void expandIfRequired( const uint32_t& additionalSize ) {
         if ( additionalSize + currentSize > bufferSize ) {
-            uint32_t newSize = bufferSize + std::max< uint32_t >( 1024, additionalSize );
+            bufferSize += std::max< uint32_t >( 1024, additionalSize );
 
-            buffer = static_cast< char * >( realloc( static_cast< void * >( buffer ), newSize ) );
+            buffer = static_cast< char * >( realloc( buffer, bufferSize ) );
         }
     }
 };

@@ -9,7 +9,6 @@ NAMESPACES( SomeVulkan, ECS )
 class Renderable : public IComponent {
 private:
     Graphics::DrawDescription drawDescription;
-
 public:
     static const uint32_t UID;
 

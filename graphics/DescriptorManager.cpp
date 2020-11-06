@@ -5,13 +5,15 @@
 #include "DescriptorManager.h"
 
 
-SomeVulkan::Graphics::DescriptorManager::DescriptorManager( const std::shared_ptr< RenderContext >& context,
-                                                            const std::shared_ptr< ShaderLayout >& shaderLayout ) :
-                                                      context( context ), shaderLayout( shaderLayout ) {
+NAMESPACES( SomeVulkan, Graphics )
+
+DescriptorManager::DescriptorManager( const std::shared_ptr< RenderContext >& context,
+                                      const std::shared_ptr< ShaderLayout >& shaderLayout ) :
+                                      context( context ), shaderLayout( shaderLayout ) {
     createDescriptorSets();
 }
 
-void SomeVulkan::Graphics::DescriptorManager::createDescriptorSets( ) {
+void DescriptorManager::createDescriptorSets( ) {
     uint32_t swapChainImageCount = context->swapChainImages.size();
 
     VkDescriptorSetLayoutCreateInfo createInfo { };
@@ -48,7 +50,7 @@ void SomeVulkan::Graphics::DescriptorManager::createDescriptorSets( ) {
     }
 }
 
-void SomeVulkan::Graphics::DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateInfo &updateInfo ) {
+void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateInfo &updateInfo ) {
     const DescriptorSetBinding& ref = shaderLayout->getDescriptorSetBindings()[ updateInfo.index ];
 
     VkDescriptorBufferInfo descriptorBufferInfo { };
@@ -66,7 +68,7 @@ void SomeVulkan::Graphics::DescriptorManager::updateUniformDescriptorSetBinding(
     vkUpdateDescriptorSets( this->context->logicalDevice, 1, &writeDescriptorSet, 0, nullptr );
 }
 
-void SomeVulkan::Graphics::DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingUpdateInfo &texUpdateInfo ) {
+void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingUpdateInfo &texUpdateInfo ) {
     const BindingUpdateInfo& updateInfo = texUpdateInfo.updateInfo;
 
     VkDescriptorImageInfo descriptorImageInfo { };
@@ -83,7 +85,7 @@ void SomeVulkan::Graphics::DescriptorManager::updateTextureDescriptorSetBinding(
     vkUpdateDescriptorSets( this->context->logicalDevice, 1, &writeDescriptorSet, 0, nullptr );
 }
 
-VkWriteDescriptorSet SomeVulkan::Graphics::DescriptorManager::getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo ) {
+VkWriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo ) {
     const DescriptorSetBinding& ref = shaderLayout->getDescriptorSetBindings()[ updateInfo.index ];
     VkWriteDescriptorSet writeDescriptorSet { };
 
@@ -97,9 +99,11 @@ VkWriteDescriptorSet SomeVulkan::Graphics::DescriptorManager::getCommonWriteDesc
     return writeDescriptorSet;
 }
 
-SomeVulkan::Graphics::DescriptorManager::~DescriptorManager( ) {
+DescriptorManager::~DescriptorManager( ) {
     vkDestroySampler( context->logicalDevice, sampler, nullptr );
     vkDestroyImageView( context->logicalDevice, imageView, nullptr );
 
     vkDestroyDescriptorSetLayout( context->logicalDevice, context->descriptorSetLayout, nullptr );
 }
+
+END_NAMESPACES

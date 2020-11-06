@@ -4,7 +4,7 @@
 
 #include "RenderDeviceBuilder.h"
 
-using namespace SomeVulkan::Graphics;
+NAMESPACES( SomeVulkan, Graphics )
 
 RenderDevice *RenderDeviceBuilder::createRenderDevice( GLFWwindow *window ) {
     return new RenderDevice { window };
@@ -35,3 +35,5 @@ RenderDeviceBuilder::RenderDeviceComplete RenderDeviceBuilder::RenderDeviceSelec
 std::shared_ptr< RenderDevice > RenderDeviceBuilder::RenderDeviceComplete::create( ) const {
     return renderDevice;
 }
+
+END_NAMESPACES

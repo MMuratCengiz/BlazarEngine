@@ -9,18 +9,23 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "../external/loaders/stb_image.h"
-#include "GraphicsException.h"
-#include "Texture.h"
 
-SomeVulkan::Graphics::Renderer::Renderer( const std::shared_ptr< RenderContext > &context,
+NAMESPACES( SomeVulkan, Graphics )
+
+Renderer::Renderer( const std::shared_ptr< RenderContext > &context,
                                           const std::shared_ptr< ShaderLayout > &shaderLayout )
         : context( context ), shaderLayout( shaderLayout ) {
     poolSize = context->swapChainImages.size( );
 
     createFrameContexts( );
 
-    triangle = std::make_shared< RenderObject::Triangle2D >( );
-    addRenderObject( ENTITY_CAST( triangle ) );
+/*    triangle = std::make_shared< RenderObject::Triangle2D >( );
+    addRenderObject( ENTITY_CAST( triangle ) );*/
+
+    for ( const auto& gameObject: model.getEntities() ) {
+        addRenderObject( gameObject );
+//        break;
+    }
 
     createSynchronizationStructures( context->logicalDevice );
 
@@ -31,7 +36,7 @@ SomeVulkan::Graphics::Renderer::Renderer( const std::shared_ptr< RenderContext >
     SomeVulkan::Input::GlobalEventHandler::Instance( ).addWindowResizeCallback( context->window, this, pFunction );
 }
 
-void SomeVulkan::Graphics::Renderer::createFrameContexts( ) {
+void Renderer::createFrameContexts( ) {
     frameContexts.resize( poolSize, { } );
 
     for ( uint32_t i = 0; i < poolSize; ++i ) {
@@ -45,7 +50,7 @@ void SomeVulkan::Graphics::Renderer::createFrameContexts( ) {
 
 
         fContext.vbo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        fContext.vbo.bufferUsage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        fContext.vbo.bufferUsage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
         ensureMemorySize( INITIAL_IBO_SIZE, fContext.ibo );
         ensureMemorySize( INITIAL_VBO_SIZE, fContext.vbo );
@@ -83,23 +88,73 @@ void SomeVulkan::Graphics::Renderer::createFrameContexts( ) {
 
 float rotation = 90.0f;
 
-void SomeVulkan::Graphics::Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable ) {
+void Renderer::drawRenderObjects() {
+    FrameContext &currentFrameContext = frameContexts[ frameIndex ];
+
+    if ( currentFrameContext.cachedBuffers == nullptr ) {
+        std::shared_ptr< CommandExecutor > &currentExecutor = currentFrameContext.commandExecutor;
+        
+        currentFrameContext.cachedBuffers = currentExecutor
+                ->startCommandExecution( )
+                ->generateBuffers( 0, context->frameBuffers.size( ) );
+    }
+
+    currentFrameContext.cachedBuffers
+        ->beginCommand()
+        ->beginRenderPass( context->frameBuffers.data( ), { 0.0f, 0.0f, 0.0f, 1.0f }  )
+        ->bindRenderPass( VK_PIPELINE_BIND_POINT_GRAPHICS );
+
+    currentFrameContext.vboOffset = 0;
+
+
+    // TODO move this somewhere else
+    glm::mat4 project = glm::perspective( glm::radians( 60.0f ), ( float ) context->surfaceExtent.width /
+                                                                 ( float ) context->surfaceExtent.height, 0.1f, 10.0f );
+
+    project[ 1 ][ 1 ] = -1;
+
+    auto v3 = [ ]( float f1, float f2, float f3 ) -> glm::vec3 {
+        return glm::vec3( f1, f2, f3 );
+    };
+
+    rotation += Core::Time::getDeltaTime( );
+
+    const MVP mvp {
+            .model = glm::rotate(glm::mat4(1.0f),  glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f)),
+            .view  = glm::lookAt( v3( 0.0f, 2.0f, 1.0f ), v3( 0.0f, 0.0f, 0.0f ), v3( 0.0f, 0.0f, 1.0f ) ),
+            .projection = project
+    };
+
+    transferData< float, MVP >( mvp, currentFrameContext.ubo[ 0 ], 0 );
+
+    for ( const auto &renderObject: renderObjects ) {
+        refreshCommands( renderObject );
+    }
+
+    currentFrameContext.cachedBuffers
+        ->endRenderPass( )
+        ->execute( );
+}
+
+
+void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable ) {
     const DrawDescription &drawDescription = renderable->getDrawDescription( );
 
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
 
     std::vector< VkFramebuffer > &frameBuffers = context->frameBuffers;
 
-    if ( currentFrameContext.cachedBuffers == nullptr ) {
-        currentFrameContext.cachedBuffers = currentFrameContext.commandExecutor
-                ->startCommandExecution( )
-                ->generateBuffers( 0, frameBuffers.size( ) );
-    }
+    VkDeviceSize offset = currentFrameContext.vboOffset;
+    VkDeviceSize vertexOffset = drawDescription.vertexMemory.size();
+    VkDeviceSize indexOffset = drawDescription.indices.size() * sizeof( uint32_t );
 
-    transferData< char, Core::DynamicMemory >( drawDescription.vertexMemory, currentFrameContext.vbo );
+    transferData< char, Core::DynamicMemory >(
+            drawDescription.vertexMemory,
+            currentFrameContext.vbo, offset );
 
     if ( drawDescription.indexedMode ) {
-        transferData< uint32_t >( drawDescription.indices, currentFrameContext.ibo );
+        transferData< uint32_t >( drawDescription.indices, currentFrameContext.vbo, offset + vertexOffset,
+                                  DeviceBufferSize { .size = drawDescription.indices.size() * sizeof( uint32_t ) } );
     }
 
     uint32_t i = 1;
@@ -118,45 +173,20 @@ void SomeVulkan::Graphics::Renderer::refreshCommands( const std::shared_ptr< Ren
         context->descriptorManager->updateTextureDescriptorSetBinding( textureBindingUpdateInfo );
     }
 
-//    rotation += Core::Time::getDeltaTime( );
-
-    // TODO move this somewhere else
-    glm::mat4 project = glm::perspective( glm::radians( 45.0f ), context->surfaceExtent.width /
-                                                                 ( float ) context->surfaceExtent.height, 0.1f, 10.0f );
-
-    project[ 1 ][ 1 ] = -1;
-
-    auto v3 = [ ]( float f1, float f2, float f3 ) -> glm::vec3 {
-        return glm::vec3( f1, f2, f3 );
-    };
-
-    const MVP mvp {
-            .model = glm::rotate( glm::mat4( 1.0f ), glm::radians( rotation ), v3( 0.0f, 0.0f, 1.0f ) ),
-            .view  = glm::lookAt( v3( 2.0f, 2.0f, 2.0f ), v3( 0.0f, 0.0f, 0.0f ), v3( 0.0f, 0.0f, 1.0f ) ),
-            .projection = project
-    };
-
-    transferData< float, MVP >( mvp, currentFrameContext.ubo[ 0 ] );
-
-    VkDeviceSize offset = 0;
-
     currentFrameContext.cachedBuffers
-            ->beginCommand( )
-            ->beginRenderPass( frameBuffers.data( ), { 0.0f, 0.0f, 0.0f, 1.0f } )
-            ->bindRenderPass( VK_PIPELINE_BIND_POINT_GRAPHICS )
             ->bindVertexMemory( currentFrameContext.vbo.buffer.regular, offset )
             ->bindDescriptorSet( context->pipelineLayout, context->descriptorSets[ frameIndex ] )
             ->filter( drawDescription.indexedMode )
-            ->bindIndexMemory( currentFrameContext.ibo.buffer.regular, offset )
+            ->bindIndexMemory( currentFrameContext.vbo.buffer.regular, offset + vertexOffset )
             ->drawIndexed( drawDescription.indices )
             ->otherwise( )
-            ->draw( 4 )
-            ->endFilter( )
-            ->endRenderPass( )
-            ->execute( );
+            ->draw( drawDescription.vertexCount )
+            ->endFilter( );
+
+    currentFrameContext.vboOffset += vertexOffset + indexOffset;
 }
 
-void SomeVulkan::Graphics::Renderer::ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &dm ) {
+void Renderer::ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &dm ) {
     if ( dm.currentMemorySize == 0 || dm.currentMemorySize < requiredSize ) {
         if ( dm.bufferType == DeviceBufferType::Regular ) {
             vkDestroyBuffer( context->logicalDevice, dm.buffer.regular, nullptr );
@@ -178,7 +208,7 @@ void SomeVulkan::Graphics::Renderer::ensureMemorySize( const DeviceBufferSize &r
     }
 }
 
-void SomeVulkan::Graphics::Renderer::allocateDeviceMemory( const DeviceBufferSize &size, DeviceMemory &dm ) {
+void Renderer::allocateDeviceMemory( const DeviceBufferSize &size, DeviceMemory &dm ) {
     VkMemoryRequirements memoryRequirements { };
 
     if ( dm.bufferType == DeviceBufferType::Regular ) {
@@ -209,7 +239,7 @@ void SomeVulkan::Graphics::Renderer::allocateDeviceMemory( const DeviceBufferSiz
         imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
         imageCreateInfo.usage = dm.bufferUsage;
         imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageCreateInfo.samples = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
 
         if ( vkCreateImage( context->logicalDevice, &imageCreateInfo, nullptr, &dm.buffer.image ) != VK_SUCCESS ) {
             throw GraphicsException( GraphicsException::Source::Renderer, "Failed to create image!" );
@@ -229,7 +259,7 @@ void SomeVulkan::Graphics::Renderer::allocateDeviceMemory( const DeviceBufferSiz
     }
 }
 
-void SomeVulkan::Graphics::Renderer::createSynchronizationStructures( const VkDevice &device ) {
+void Renderer::createSynchronizationStructures( const VkDevice &device ) {
     VkSemaphoreCreateInfo semaphoreCreateInfo { };
     semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -255,81 +285,76 @@ void SomeVulkan::Graphics::Renderer::createSynchronizationStructures( const VkDe
     }
 }
 
-void SomeVulkan::Graphics::Renderer::render( ) {
+void Renderer::render( ) {
     FrameContext &fContext = frameContexts[ frameIndex ];
+    
+    vkWaitForFences( context->logicalDevice, 1, &inFlightFences[ frameIndex ], VK_TRUE, UINT64_MAX );
 
-    for ( const auto &renderObject: renderObjects ) {
+    uint32_t nextImage;
+    VkResult result = vkAcquireNextImageKHR( context->logicalDevice, context->swapChain,
+                                             UINT64_MAX,
+                                             imageAvailableSemaphores[ frameIndex ],
+                                             VK_NULL_HANDLE, &nextImage );
 
-        vkWaitForFences( context->logicalDevice, 1, &inFlightFences[ frameIndex ], VK_TRUE, UINT64_MAX );
+    if ( result == VK_ERROR_OUT_OF_DATE_KHR ) {
+        context->triggerEvent( EventType::SwapChainInvalidated );
+        return;
+    } else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR ) {
+        throw std::runtime_error( "failed to acquire swap chain image!" );
+    }
 
-        uint32_t nextImage;
-        VkResult result = vkAcquireNextImageKHR( context->logicalDevice, context->swapChain,
-                                                 UINT64_MAX,
-                                                 imageAvailableSemaphores[ frameIndex ],
-                                                 VK_NULL_HANDLE, &nextImage );
+    if ( imagesInFlight[ nextImage ] != VK_NULL_HANDLE ) {
+        vkWaitForFences( context->logicalDevice, 1, &imagesInFlight[ frameIndex ], VK_TRUE, UINT64_MAX );
+    }
 
-        if ( result == VK_ERROR_OUT_OF_DATE_KHR ) {
-            context->triggerEvent( EventType::SwapChainInvalidated );
-            return;
-        } else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR ) {
-            throw std::runtime_error( "failed to acquire swap chain image!" );
-        }
+    drawRenderObjects( );
 
-        if ( imagesInFlight[ nextImage ] != VK_NULL_HANDLE ) {
-            vkWaitForFences( context->logicalDevice, 1, &imagesInFlight[ frameIndex ], VK_TRUE, UINT64_MAX );
-        }
+    imagesInFlight[ nextImage ] = inFlightFences[ frameIndex ];
 
-        refreshCommands( renderObject );
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
+    VkSubmitInfo submitInfo { };
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        imagesInFlight[ nextImage ] = inFlightFences[ frameIndex ];
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &imageAvailableSemaphores[ frameIndex ];
+    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &fContext.cachedBuffers->getBuffers( )[ nextImage ];
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &renderFinishedSemaphores[ frameIndex ];
 
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    vkResetFences( context->logicalDevice, 1, &inFlightFences[ frameIndex ] );
 
-        VkSubmitInfo submitInfo { };
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    if ( vkQueueSubmit( context->queues[ QueueType::Graphics ], 1, &submitInfo,
+                        inFlightFences[ frameIndex ] ) ) {
+        throw std::runtime_error( "failed to submit draw command buffer!" );
+    }
 
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &imageAvailableSemaphores[ frameIndex ];
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &fContext.cachedBuffers->getBuffers( )[ nextImage ];
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &renderFinishedSemaphores[ frameIndex ];
+    VkPresentInfoKHR presentInfo { };
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = &renderFinishedSemaphores[ frameIndex ];
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &context->swapChain;
+    presentInfo.pImageIndices = &nextImage;
+    presentInfo.pResults = nullptr;
 
-        vkResetFences( context->logicalDevice, 1, &inFlightFences[ frameIndex ] );
+    result = vkQueuePresentKHR( context->queues[ QueueType::Presentation ], &presentInfo );
 
-        if ( vkQueueSubmit( context->queues[ QueueType::Graphics ], 1, &submitInfo,
-                            inFlightFences[ frameIndex ] ) ) {
-            throw std::runtime_error( "failed to submit draw command buffer!" );
-        }
-
-        VkPresentInfoKHR presentInfo { };
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &renderFinishedSemaphores[ frameIndex ];
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &context->swapChain;
-        presentInfo.pImageIndices = &nextImage;
-        presentInfo.pResults = nullptr;
-
-        result = vkQueuePresentKHR( context->queues[ QueueType::Presentation ], &presentInfo );
-
-        if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frameBufferResized ) {
-            frameBufferResized = false;
-            context->triggerEvent( EventType::SwapChainInvalidated );
-            return;
-        } else if ( result != VK_SUCCESS ) {
-            throw std::runtime_error( "failed to acquire swap chain image!" );
-        }
-
+    if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frameBufferResized ) {
+        frameBufferResized = false;
+        context->triggerEvent( EventType::SwapChainInvalidated );
+        return;
+    } else if ( result != VK_SUCCESS ) {
+        throw std::runtime_error( "failed to acquire swap chain image!" );
     }
 
     frameIndex = ( frameIndex + 2 ) & poolSize;
 }
 
 // TODO test more
-void SomeVulkan::Graphics::Renderer::ensureEnoughTexBuffers( uint32_t size ) {
+void Renderer::ensureEnoughTexBuffers( uint32_t size ) {
     std::vector< DeviceMemory > &tbo = frameContexts[ frameIndex ].tbo;
 
     if ( size > tbo.size( ) ) {
@@ -342,14 +367,14 @@ void SomeVulkan::Graphics::Renderer::ensureEnoughTexBuffers( uint32_t size ) {
     }
 }
 
-void SomeVulkan::Graphics::Renderer::freeBuffers( ) {
+void Renderer::freeBuffers( ) {
     for ( FrameContext &fc: frameContexts ) {
         fc.cachedBuffers.reset( );
         fc.cachedBuffers = nullptr;
     }
 }
 
-SomeVulkan::Graphics::Renderer::~Renderer( ) {
+Renderer::~Renderer( ) {
     for ( auto& renderable: renderObjects) {
         for ( auto& tex: renderable->getDrawDescription().textures ) {
             tex->unload();
@@ -365,7 +390,7 @@ SomeVulkan::Graphics::Renderer::~Renderer( ) {
     }
 }
 
-void SomeVulkan::Graphics::Renderer::addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity ) {
+void Renderer::addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity ) {
     std::shared_ptr< ECS::Renderable > renderable = gameEntity->getComponent< ECS::Renderable >( );
 
     if ( renderable != nullptr ) {
@@ -373,7 +398,7 @@ void SomeVulkan::Graphics::Renderer::addRenderObject( const std::shared_ptr< IGa
     }
 }
 
-void SomeVulkan::Graphics::Renderer::clearDeviceMemory( ) {
+void Renderer::clearDeviceMemory( ) {
     for ( FrameContext &fc: frameContexts ) {
         for ( DeviceMemory &dm: fc.ubo ) {
             if ( dm.bufferType == DeviceBufferType::Regular ) {
@@ -398,3 +423,4 @@ void SomeVulkan::Graphics::Renderer::clearDeviceMemory( ) {
     }
 }
 
+END_NAMESPACES

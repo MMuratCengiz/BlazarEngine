@@ -3,11 +3,10 @@
 //
 
 #include "GlobalEventHandler.h"
-#include "../core/Game.h"
 
-using namespace SomeVulkan::Input;
+NAMESPACES( SomeVulkan, Input )
 
-void SomeVulkan::Input::GlobalEventHandler::addWindowResizeCallback( GLFWwindow * window, void * userPointer, const TFUNC::WindowResize& cb ) {
+void GlobalEventHandler::addWindowResizeCallback( GLFWwindow * window, void * userPointer, const TFUNC::WindowResize& cb ) {
     glfwSetWindowUserPointer( window, ( void * ) this );
 
     glfwSetFramebufferSizeCallback( window, [ ]( GLFWwindow *window, int width, int height ) {
@@ -27,3 +26,5 @@ void SomeVulkan::Input::GlobalEventHandler::addWindowResizeCallback( GLFWwindow 
     windowResizeUserPointers[ index ] = userPointer;
     windowResizeFunctors[ index ] = cb;
 }
+
+END_NAMESPACES

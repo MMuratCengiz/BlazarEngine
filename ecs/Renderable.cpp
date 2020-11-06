@@ -4,20 +4,21 @@
 
 #include "Renderable.h"
 
-#include <utility>
 
-using namespace SomeVulkan::ECS;
+NAMESPACES( SomeVulkan, ECS )
 
 const uint32_t Renderable::UID = 1;
 
-const SomeVulkan::Graphics::DrawDescription& SomeVulkan::ECS::Renderable::getDrawDescription( ) const {
+const Graphics::DrawDescription& Renderable::getDrawDescription( ) const {
     return drawDescription;
 }
 
-void SomeVulkan::ECS::Renderable::setDrawDescription( SomeVulkan::Graphics::DrawDescription& vd ) {
+void Renderable::setDrawDescription( Graphics::DrawDescription& vd ) {
     drawDescription = std::move( vd );
 }
 
 uint32_t Renderable::getId( ) {
     return UID;
 }
+
+END_NAMESPACES

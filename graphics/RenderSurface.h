@@ -39,12 +39,20 @@ private:
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo { };
     VkPipelineVertexInputStateCreateInfo inputStateCreateInfo { };
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo { };
+    VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{ };
     VkRect2D viewScissor { };
     // --
 
-    std::vector< VkPipelineShaderStageCreateInfo > pipelineStageCreateInfos;
-    std::vector< VkShaderModule > shaderModules;
+    // To be moved, maybe?
+    VkImage samplingImage;
+    VkImageView samplingImageView;
+    VkDeviceMemory samplingMemory;
+    VkSampleCountFlagBits msaaSampleCount;
+    // --
 
+    std::vector< VkPipelineShaderStageCreateInfo > pipelineStageCreateInfos;
+
+    std::vector< VkShaderModule > shaderModules;
     std::shared_ptr< Renderer > renderer;
     std::shared_ptr< DefaultShaderLayout > shaderLayout = std::make_shared< DefaultShaderLayout >();
 public:
@@ -57,6 +65,7 @@ private:
     void createSurface( );
 
     VkShaderModule createShaderModule( const std::string &filename );
+    VkFormat findSupportedDepthFormat( );
 
     static std::vector< char > readFile( const std::string &filename );
 
@@ -64,6 +73,10 @@ private:
 
     void createSwapChain( VkSurfaceCapabilitiesKHR surfaceCapabilities, VkSurfaceFormatKHR surfaceFormat,
                           VkPresentModeKHR presentMode );
+
+    void createImageView( VkImageView &imageView, const VkImage& image, const VkFormat& format,
+                          const VkImageAspectFlags& aspectFlags );
+    void createSamplingResources( );
     void configureColorBlend( );
     void configureRasterization( );
     void configureViewport( );
@@ -72,9 +85,10 @@ private:
     void createPipelineLayout( );
     void createRenderPass( );
     void createFrameBuffers( );
+    void createDepthAttachmentImages( );
     void createDescriptorPool( );
     void chooseExtent2D( const VkSurfaceCapabilitiesKHR& capabilities );
-    void createImageAndImageViews( VkFormat format );
+    void createSwapChainImages( VkFormat format );
     void dispose();
 };
 END_NAMESPACES

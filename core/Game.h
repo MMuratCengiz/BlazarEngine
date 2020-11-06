@@ -20,7 +20,6 @@ static void windowResizeCb( void *userPointer, int width, int height ) {
     if ( width > 0 && height > 0 ) {
         auto *renderDevice = static_cast< RenderDevice * >( userPointer );
         renderDevice->getContext()->triggerEvent( EventType::SwapChainInvalidated );
-//        pVulkanApi->resetSwapChain( );
     }
 }
 

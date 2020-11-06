@@ -29,6 +29,7 @@ private:
 
     bool isLoadedToGPUMemory{};
 
+    uint32_t mipLevels;
     uint8_t dimension;
     uint32_t width;
     uint32_t height;
@@ -79,6 +80,8 @@ public:
 
         return texInfo;
     }
+private:
+    void generateMipMaps( std::shared_ptr< RenderContext > &context, std::shared_ptr< CommandExecutor > &commandExecutor ) const;
 };
 
 END_NAMESPACES

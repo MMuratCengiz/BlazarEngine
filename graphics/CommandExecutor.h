@@ -2,12 +2,14 @@
 
 #include "../core/Common.h"
 #include "RenderContext.h"
+#include "CommanExecutorArguments.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
 class BeginCommandExecution;
 class CommandList;
 class RenderDevice;
+class RenderContext;
 
 typedef std::shared_ptr< CommandExecutor > pCommandExecutor;
 
@@ -20,7 +22,7 @@ private:
     std::shared_ptr< RenderContext > context;
 
 public:
-    explicit CommandExecutor( const std::shared_ptr< RenderContext >& context );
+    explicit CommandExecutor( const std::shared_ptr< RenderContext > &context );
 
     std::shared_ptr< BeginCommandExecution > startCommandExecution( );
 
@@ -46,7 +48,7 @@ public:
 class CommandList {
 private:
     CommandExecutor *executor;
-    VkCommandBufferUsageFlags usage{};
+    VkCommandBufferUsageFlags usage { };
 
     std::vector< VkCommandBuffer > buffers;
 
@@ -58,26 +60,28 @@ private:
 
     CommandList( CommandExecutor *executor, std::vector< VkCommandBuffer > buffers, VkCommandBufferUsageFlags usage );
 public:
-    CommandList *beginCommand();
+    CommandList *beginCommand( );
     CommandList *copyBuffer( const VkDeviceSize &size, VkBuffer &src, VkBuffer &dst );
     CommandList *beginRenderPass( const VkFramebuffer frameBuffers[], const VkClearValue &clearValue );
     CommandList *endRenderPass( );
     CommandList *bindRenderPass( VkPipelineBindPoint bindPoint );
     CommandList *bindVertexMemory( const VkBuffer &vertexBuffer, const VkDeviceSize &offset );
     CommandList *bindIndexMemory( VkBuffer indexBuffer, const VkDeviceSize &offset );
-    CommandList *bindDescriptorSet( const VkPipelineLayout& pipelineLayout, const VkDescriptorSet& descriptorSet );
+    CommandList *bindDescriptorSet( const VkPipelineLayout &pipelineLayout, const VkDescriptorSet &descriptorSet );
     CommandList *drawIndexed( const std::vector< uint32_t > &indices );
-    CommandList *pipelineBarrier( VkImage& image, const VkImageLayout& oldLayout, const VkImageLayout& newLayout );
+    CommandList *blitImage( const ImageBlitArgs & args );
+    CommandList *pipelineBarrier( const PipelineBarrierArgs& args );
+    CommandList *copyBufferToImage( const CopyBufferToImageArgs& args );
     CommandList *draw( uint32_t vertexCount );
     CommandList *filter( bool condition );
     CommandList *otherwise( );
-    CommandList *endFilter();
+    CommandList *endFilter( );
 
     VkResult execute( );
-    const std::vector< VkCommandBuffer >& getBuffers( );
-    ~CommandList();
+    const std::vector< VkCommandBuffer > &getBuffers( );
+    ~CommandList( );
 
-    void freeBuffers();
+    void freeBuffers( );
 private:
     [[nodiscard]] bool passesFilter( ) const;
 };
