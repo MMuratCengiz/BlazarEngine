@@ -7,31 +7,31 @@ NAMESPACES( SomeVulkan, Graphics )
 typedef struct CopyBufferToImageArgs {
     uint32_t width;
     uint32_t height;
-    VkBuffer sourceBuffer;
-    VkImage image;
+    vk::Buffer sourceBuffer;
+    vk::Image image;
 } CopyBufferToImageArgs;
 
 typedef struct PipelineBarrierArgs {
-    VkImage image { };
-    VkImageLayout oldLayout;
-    VkImageLayout newLayout;
+    vk::Image image { };
+    vk::ImageLayout oldLayout;
+    vk::ImageLayout newLayout;
     uint32_t baseMipLevel = 0;
     uint32_t mipLevel = 1;
-    VkAccessFlags sourceAccess { };
-    VkAccessFlags destinationAccess { };
-    VkShaderStageFlags sourceStage = VK_PIPELINE_STAGE_HOST_BIT;
-    VkShaderStageFlags destinationStage = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+    vk::AccessFlags sourceAccess { };
+    vk::AccessFlags destinationAccess { };
+    vk::PipelineStageFlags sourceStage = vk::PipelineStageFlagBits::eHost;
+    vk::PipelineStageFlags destinationStage = vk::PipelineStageFlagBits::eVertexShader;
 } PipelineBarrierArgs;
 
 typedef struct ImageBlitArgs {
-    VkImage sourceImage;
-    VkImageLayout sourceImageLayout;
-    VkImage destinationImage;
-    VkImageLayout destinationImageLayout;
-    VkImageSubresourceLayers srcSubresource;
-    VkOffset3D srcOffsets[2];
-    VkImageSubresourceLayers dstSubresource;
-    VkOffset3D dstOffsets[2];
+    vk::Image sourceImage;
+    vk::ImageLayout sourceImageLayout;
+    vk::Image destinationImage;
+    vk::ImageLayout destinationImageLayout;
+    vk::ImageSubresourceLayers srcSubresource;
+    vk::Offset3D srcOffsets[2];
+    vk::ImageSubresourceLayers dstSubresource;
+    vk::Offset3D dstOffsets[2];
 } ImageBlitArgs;
 
 END_NAMESPACES

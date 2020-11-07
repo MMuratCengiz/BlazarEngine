@@ -13,7 +13,7 @@
 NAMESPACES( SomeVulkan, Graphics )
 
 Renderer::Renderer( const std::shared_ptr< RenderContext > &context,
-                                          const std::shared_ptr< ShaderLayout > &shaderLayout )
+                    const std::shared_ptr< ShaderLayout > &shaderLayout )
         : context( context ), shaderLayout( shaderLayout ) {
     poolSize = context->swapChainImages.size( );
 
@@ -22,9 +22,8 @@ Renderer::Renderer( const std::shared_ptr< RenderContext > &context,
 /*    triangle = std::make_shared< RenderObject::Triangle2D >( );
     addRenderObject( ENTITY_CAST( triangle ) );*/
 
-    for ( const auto& gameObject: model.getEntities() ) {
+    for ( const auto &gameObject: model.getEntities( ) ) {
         addRenderObject( gameObject );
-//        break;
     }
 
     createSynchronizationStructures( context->logicalDevice );
@@ -45,12 +44,12 @@ void Renderer::createFrameContexts( ) {
 
         fContext.commandExecutor = std::make_shared< CommandExecutor >( context );
 
-        fContext.ibo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        fContext.ibo.bufferUsage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        fContext.ibo.properties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+        fContext.ibo.bufferUsage = vk::BufferUsageFlagBits::eIndexBuffer;
 
 
-        fContext.vbo.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        fContext.vbo.bufferUsage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        fContext.vbo.properties = vk::MemoryPropertyFlagBits::eHostVisible;
+        fContext.vbo.bufferUsage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer;
 
         ensureMemorySize( INITIAL_IBO_SIZE, fContext.ibo );
         ensureMemorySize( INITIAL_VBO_SIZE, fContext.vbo );
@@ -60,25 +59,26 @@ void Renderer::createFrameContexts( ) {
         for ( uint32_t index = 0; index < shaderLayout->getDescriptorCount( ); ++index ) {
             const DescriptorSetBinding &binding = shaderLayout->getDescriptorSetBindings( )[ index ];
 
-            fContext.ubo[ index ].properties =
-                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+            fContext.ubo[ index ].properties = vk::MemoryPropertyFlagBits::eHostVisible |
+                                               vk::MemoryPropertyFlagBits::eHostCoherent;
 
-            if ( binding.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ) {
-                fContext.ubo[ index ].bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            if ( binding.type == vk::DescriptorType::eUniformBuffer ) {
+                fContext.ubo[ index ].bufferUsage = vk::BufferUsageFlagBits::eUniformBuffer;
                 fContext.ubo[ index ].bufferType = DeviceBufferType::Regular;
 
                 ensureMemorySize( INITIAL_UBO_SIZE, fContext.ubo[ index ] );
 
-                BindingUpdateInfo updateInfo;
-                updateInfo.index = index;
-                updateInfo.parent = context->descriptorSets[ i ];
-                updateInfo.memory = fContext.ubo[ index ];
+                BindingUpdateInfo updateInfo {
+                        index,
+                        context->descriptorSets[ i ],
+                        fContext.ubo[ index ]
+                };
 
                 context->descriptorManager->updateUniformDescriptorSetBinding( updateInfo );
             }
 
-            if ( binding.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ) {
-                fContext.ubo[ index ].bufferUsage = VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+            if ( binding.type == vk::DescriptorType::eCombinedImageSampler ) {
+                fContext.ubo[ index ].bufferUsage = vk::BufferUsageFlagBits::eUniformTexelBuffer;
                 fContext.ubo[ index ].bufferType = DeviceBufferType::Image;
             }
 
@@ -88,21 +88,23 @@ void Renderer::createFrameContexts( ) {
 
 float rotation = 90.0f;
 
-void Renderer::drawRenderObjects() {
+void Renderer::drawRenderObjects( ) {
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
 
     if ( currentFrameContext.cachedBuffers == nullptr ) {
         std::shared_ptr< CommandExecutor > &currentExecutor = currentFrameContext.commandExecutor;
-        
+
         currentFrameContext.cachedBuffers = currentExecutor
                 ->startCommandExecution( )
-                ->generateBuffers( 0, context->frameBuffers.size( ) );
+                ->generateBuffers( { }, context->frameBuffers.size( ) ); // TODO this could be problematic
     }
 
+    vk::ClearColorValue colorClear = { std::array< float, 4 > { 0.0f, 0.0f, 0.0f, 1.0f } };
+
     currentFrameContext.cachedBuffers
-        ->beginCommand()
-        ->beginRenderPass( context->frameBuffers.data( ), { 0.0f, 0.0f, 0.0f, 1.0f }  )
-        ->bindRenderPass( VK_PIPELINE_BIND_POINT_GRAPHICS );
+            ->beginCommand( )
+            ->beginRenderPass( context->frameBuffers.data( ), colorClear )
+            ->bindRenderPass( vk::PipelineBindPoint::eGraphics );
 
     currentFrameContext.vboOffset = 0;
 
@@ -120,7 +122,7 @@ void Renderer::drawRenderObjects() {
     rotation += Core::Time::getDeltaTime( );
 
     const MVP mvp {
-            .model = glm::rotate(glm::mat4(1.0f),  glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f)),
+            .model = glm::rotate( glm::mat4( 1.0f ), glm::radians( rotation ), glm::vec3( 0.0f, 0.0f, 1.0f ) ),
             .view  = glm::lookAt( v3( 0.0f, 2.0f, 1.0f ), v3( 0.0f, 0.0f, 0.0f ), v3( 0.0f, 0.0f, 1.0f ) ),
             .projection = project
     };
@@ -132,8 +134,8 @@ void Renderer::drawRenderObjects() {
     }
 
     currentFrameContext.cachedBuffers
-        ->endRenderPass( )
-        ->execute( );
+            ->endRenderPass( )
+            ->execute( );
 }
 
 
@@ -142,11 +144,11 @@ void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable 
 
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
 
-    std::vector< VkFramebuffer > &frameBuffers = context->frameBuffers;
+    std::vector< vk::Framebuffer > &frameBuffers = context->frameBuffers;
 
     VkDeviceSize offset = currentFrameContext.vboOffset;
-    VkDeviceSize vertexOffset = drawDescription.vertexMemory.size();
-    VkDeviceSize indexOffset = drawDescription.indices.size() * sizeof( uint32_t );
+    VkDeviceSize vertexOffset = drawDescription.vertexMemory.size( );
+    VkDeviceSize indexOffset = drawDescription.indices.size( ) * sizeof( uint32_t );
 
     transferData< char, Core::DynamicMemory >(
             drawDescription.vertexMemory,
@@ -154,7 +156,7 @@ void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable 
 
     if ( drawDescription.indexedMode ) {
         transferData< uint32_t >( drawDescription.indices, currentFrameContext.vbo, offset + vertexOffset,
-                                  DeviceBufferSize { .size = drawDescription.indices.size() * sizeof( uint32_t ) } );
+                                  DeviceBufferSize { .size = drawDescription.indices.size( ) * sizeof( uint32_t ) } );
     }
 
     uint32_t i = 1;
@@ -189,19 +191,19 @@ void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable 
 void Renderer::ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &dm ) {
     if ( dm.currentMemorySize == 0 || dm.currentMemorySize < requiredSize ) {
         if ( dm.bufferType == DeviceBufferType::Regular ) {
-            vkDestroyBuffer( context->logicalDevice, dm.buffer.regular, nullptr );
+            context->logicalDevice.destroyBuffer( dm.buffer.regular );
         } else {
-            vkDestroyImage( context->logicalDevice, dm.buffer.image, nullptr );
+            context->logicalDevice.destroyImage( dm.buffer.image );
         }
 
-        vkFreeMemory( context->logicalDevice, dm.memory, nullptr );
+        context->logicalDevice.freeMemory( dm.memory );
 
         allocateDeviceMemory( requiredSize, dm );
 
         if ( dm.bufferType == DeviceBufferType::Regular ) {
-            vkBindBufferMemory( context->logicalDevice, dm.buffer.regular, dm.memory, 0 );
+            context->logicalDevice.bindBufferMemory( dm.buffer.regular, dm.memory, 0 );
         } else {
-            vkBindImageMemory( context->logicalDevice, dm.buffer.image, dm.memory, 0 );
+            context->logicalDevice.bindImageMemory( dm.buffer.image, dm.memory, 0 );
         }
 
         dm.currentMemorySize = requiredSize;
@@ -212,60 +214,48 @@ void Renderer::allocateDeviceMemory( const DeviceBufferSize &size, DeviceMemory 
     VkMemoryRequirements memoryRequirements { };
 
     if ( dm.bufferType == DeviceBufferType::Regular ) {
-        VkBufferCreateInfo bufferCreateInfo { };
+        vk::BufferCreateInfo bufferCreateInfo { };
 
-        bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.size = size.size;
         bufferCreateInfo.usage = dm.bufferUsage;
-        bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-        if ( vkCreateBuffer( context->logicalDevice, &bufferCreateInfo, nullptr, &dm.buffer.regular ) != VK_SUCCESS ) {
-            throw std::runtime_error( "failed to create vertex buffer!" );
-        }
-
-        vkGetBufferMemoryRequirements( context->logicalDevice, dm.buffer.regular, &memoryRequirements );
+        dm.buffer.regular = context->logicalDevice.createBuffer( bufferCreateInfo );
+        memoryRequirements = context->logicalDevice.getBufferMemoryRequirements( dm.buffer.regular );
     } else {
-        VkImageCreateInfo imageCreateInfo { };
+        vk::ImageCreateInfo imageCreateInfo { };
 
-        imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageCreateInfo.imageType = vk::ImageType::e2D;
         imageCreateInfo.extent.width = size.extent.width;
         imageCreateInfo.extent.height = size.extent.height;
         imageCreateInfo.extent.depth = 1;
         imageCreateInfo.mipLevels = 1;
         imageCreateInfo.arrayLayers = 1;
-        imageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        imageCreateInfo.tiling = VK_IMAGE_TILING_LINEAR;
-        imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-        imageCreateInfo.usage = dm.bufferUsage;
-        imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        imageCreateInfo.format = vk::Format::eR8G8B8A8Srgb;
+        imageCreateInfo.tiling = vk::ImageTiling::eLinear;
+        imageCreateInfo.initialLayout = vk::ImageLayout::ePreinitialized;
+//        imageCreateInfo.usage = vk::ImageUsageFlags( dm.bufferUsage ); // todo care, should not be active anyway
+        imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
         imageCreateInfo.samples = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
 
-        if ( vkCreateImage( context->logicalDevice, &imageCreateInfo, nullptr, &dm.buffer.image ) != VK_SUCCESS ) {
-            throw GraphicsException( GraphicsException::Source::Renderer, "Failed to create image!" );
-        }
+        dm.buffer.image = context->logicalDevice.createImage( imageCreateInfo );
 
-        vkGetImageMemoryRequirements( context->logicalDevice, dm.buffer.image, &memoryRequirements );
+        memoryRequirements = context->logicalDevice.getImageMemoryRequirements( dm.buffer.image );
     }
 
-    VkMemoryAllocateInfo memoryAllocateInfo { };
-    memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    vk::MemoryAllocateInfo memoryAllocateInfo { };
+
     memoryAllocateInfo.allocationSize = memoryRequirements.size;
     memoryAllocateInfo.memoryTypeIndex = RenderUtilities::getMatchingMemoryType( context, dm.properties,
                                                                                  memoryRequirements );
-
-    if ( vkAllocateMemory( context->logicalDevice, &memoryAllocateInfo, nullptr, &dm.memory ) != VK_SUCCESS ) {
-        throw std::runtime_error( "failed to allocate buffer memory!" );
-    }
+    dm.memory = context->logicalDevice.allocateMemory( memoryAllocateInfo );
 }
 
-void Renderer::createSynchronizationStructures( const VkDevice &device ) {
-    VkSemaphoreCreateInfo semaphoreCreateInfo { };
-    semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+void Renderer::createSynchronizationStructures( const vk::Device &device ) {
+    vk::SemaphoreCreateInfo semaphoreCreateInfo { };
 
-    VkFenceCreateInfo fenceCreateInfo { };
-    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    vk::FenceCreateInfo fenceCreateInfo { };
+    fenceCreateInfo.flags = vk::FenceCreateFlagBits::eSignaled;
 
     this->imageAvailableSemaphores.resize( this->poolSize );
     this->renderFinishedSemaphores.resize( this->poolSize );
@@ -275,46 +265,45 @@ void Renderer::createSynchronizationStructures( const VkDevice &device ) {
 
 
     for ( uint32_t i = 0; i < this->imageAvailableSemaphores.size( ); ++i ) {
-        VkResult r1 = vkCreateSemaphore( device, &semaphoreCreateInfo, nullptr, &this->imageAvailableSemaphores[ i ] );
-        VkResult r2 = vkCreateSemaphore( device, &semaphoreCreateInfo, nullptr, &this->renderFinishedSemaphores[ i ] );
-        VkResult r3 = vkCreateFence( device, &fenceCreateInfo, nullptr, &this->inFlightFences[ i ] );
-
-        if ( r1 != VK_SUCCESS || r2 != VK_SUCCESS || r3 != VK_SUCCESS ) {
-            throw std::runtime_error( "failed to create semaphores!" );
-        }
+        this->imageAvailableSemaphores[ i ] = device.createSemaphore( semaphoreCreateInfo );
+        this->renderFinishedSemaphores[ i ] = device.createSemaphore( semaphoreCreateInfo );
+        this->inFlightFences[ i ] = device.createFence( fenceCreateInfo );
     }
 }
 
 void Renderer::render( ) {
     FrameContext &fContext = frameContexts[ frameIndex ];
-    
-    vkWaitForFences( context->logicalDevice, 1, &inFlightFences[ frameIndex ], VK_TRUE, UINT64_MAX );
+
+    auto waitResult = context->logicalDevice.waitForFences( 1, &inFlightFences[ frameIndex ], VK_TRUE, UINT64_MAX );
+
+    VkCheckResult( waitResult );
 
     uint32_t nextImage;
-    VkResult result = vkAcquireNextImageKHR( context->logicalDevice, context->swapChain,
-                                             UINT64_MAX,
-                                             imageAvailableSemaphores[ frameIndex ],
-                                             VK_NULL_HANDLE, &nextImage );
+    auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX,
+                                                              imageAvailableSemaphores[ frameIndex ],
+                                                              VK_NULL_HANDLE );
 
-    if ( result == VK_ERROR_OUT_OF_DATE_KHR ) {
+    if ( result.result == vk::Result::eErrorOutOfDateKHR ) {
         context->triggerEvent( EventType::SwapChainInvalidated );
         return;
-    } else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR ) {
+    } else if ( result.result != vk::Result::eSuccess && result.result == vk::Result::eSuboptimalKHR ) {
         throw std::runtime_error( "failed to acquire swap chain image!" );
     }
 
+    nextImage = result.value;
+
     if ( imagesInFlight[ nextImage ] != VK_NULL_HANDLE ) {
-        vkWaitForFences( context->logicalDevice, 1, &imagesInFlight[ frameIndex ], VK_TRUE, UINT64_MAX );
+        waitResult = context->logicalDevice.waitForFences( 1, &imagesInFlight[ frameIndex ], true, UINT64_MAX );
+        VkCheckResult( waitResult );
     }
 
     drawRenderObjects( );
 
     imagesInFlight[ nextImage ] = inFlightFences[ frameIndex ];
 
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
-    VkSubmitInfo submitInfo { };
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    vk::SubmitInfo submitInfo { };
 
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &imageAvailableSemaphores[ frameIndex ];
@@ -324,15 +313,14 @@ void Renderer::render( ) {
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &renderFinishedSemaphores[ frameIndex ];
 
-    vkResetFences( context->logicalDevice, 1, &inFlightFences[ frameIndex ] );
+    context->logicalDevice.resetFences( 1, &inFlightFences[ frameIndex ] );
 
-    if ( vkQueueSubmit( context->queues[ QueueType::Graphics ], 1, &submitInfo,
-                        inFlightFences[ frameIndex ] ) ) {
-        throw std::runtime_error( "failed to submit draw command buffer!" );
-    }
+    auto submitResult = context->queues[ QueueType::Graphics ].submit( 1, &submitInfo, inFlightFences[ frameIndex ] );
 
-    VkPresentInfoKHR presentInfo { };
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    VkCheckResult( submitResult );
+
+    vk::PresentInfoKHR presentInfo { };
+
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = &renderFinishedSemaphores[ frameIndex ];
     presentInfo.swapchainCount = 1;
@@ -340,13 +328,14 @@ void Renderer::render( ) {
     presentInfo.pImageIndices = &nextImage;
     presentInfo.pResults = nullptr;
 
-    result = vkQueuePresentKHR( context->queues[ QueueType::Presentation ], &presentInfo );
+    auto presentResult = context->queues[ QueueType::Presentation ].presentKHR( presentInfo );
 
-    if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frameBufferResized ) {
+    if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR
+         || frameBufferResized ) {
         frameBufferResized = false;
         context->triggerEvent( EventType::SwapChainInvalidated );
         return;
-    } else if ( result != VK_SUCCESS ) {
+    } else if ( presentResult != vk::Result::eSuccess ) {
         throw std::runtime_error( "failed to acquire swap chain image!" );
     }
 
@@ -358,11 +347,11 @@ void Renderer::ensureEnoughTexBuffers( uint32_t size ) {
     std::vector< DeviceMemory > &tbo = frameContexts[ frameIndex ].tbo;
 
     if ( size > tbo.size( ) ) {
-        tbo.resize( size );
+        tbo.resize( size, { } );
         DeviceMemory &memory = tbo[ size - 1 ];
 
-        memory.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        memory.bufferUsage = VK_IMAGE_USAGE_SAMPLED_BIT;
+        memory.properties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+        memory.bufferUsage = vk::BufferUsageFlagBits( vk::ImageUsageFlagBits::eSampled ); // todo problem?
         memory.bufferType = DeviceBufferType::Image;
     }
 }
@@ -375,18 +364,18 @@ void Renderer::freeBuffers( ) {
 }
 
 Renderer::~Renderer( ) {
-    for ( auto& renderable: renderObjects) {
-        for ( auto& tex: renderable->getDrawDescription().textures ) {
-            tex->unload();
+    for ( auto &renderable: renderObjects ) {
+        for ( auto &tex: renderable->getDrawDescription( ).textures ) {
+            tex->unload( );
         }
     }
 
     clearDeviceMemory( );
 
     for ( uint32_t index = 0; index < imageAvailableSemaphores.size( ); ++index ) {
-        vkDestroySemaphore( context->logicalDevice, renderFinishedSemaphores[ index ], nullptr );
-        vkDestroySemaphore( context->logicalDevice, imageAvailableSemaphores[ index ], nullptr );
-        vkDestroyFence( context->logicalDevice, inFlightFences[ index ], nullptr );
+        context->logicalDevice.destroySemaphore( renderFinishedSemaphores[ index ], nullptr );
+        context->logicalDevice.destroySemaphore( imageAvailableSemaphores[ index ], nullptr );
+        context->logicalDevice.destroyFence( inFlightFences[ index ], nullptr );
     }
 }
 
@@ -402,23 +391,23 @@ void Renderer::clearDeviceMemory( ) {
     for ( FrameContext &fc: frameContexts ) {
         for ( DeviceMemory &dm: fc.ubo ) {
             if ( dm.bufferType == DeviceBufferType::Regular ) {
-                vkDestroyBuffer( this->context->logicalDevice, dm.buffer.regular, nullptr );
+                this->context->logicalDevice.destroyBuffer( dm.buffer.regular, nullptr );
             } else {
-                vkDestroyImage( this->context->logicalDevice, dm.buffer.image, nullptr );
+                this->context->logicalDevice.destroyImage( dm.buffer.image, nullptr );
             }
 
-            vkFreeMemory( this->context->logicalDevice, dm.memory, nullptr );
+            this->context->logicalDevice.freeMemory( dm.memory, nullptr );
         }
 
-        vkDestroyBuffer( this->context->logicalDevice, fc.ibo.buffer.regular, nullptr );
-        vkFreeMemory( this->context->logicalDevice, fc.ibo.memory, nullptr );
+        this->context->logicalDevice.destroyBuffer( fc.ibo.buffer.regular, nullptr );
+        this->context->logicalDevice.freeMemory( fc.ibo.memory, nullptr );
 
-        vkDestroyBuffer( this->context->logicalDevice, fc.vbo.buffer.regular, nullptr );
-        vkFreeMemory( this->context->logicalDevice, fc.vbo.memory, nullptr );
+        this->context->logicalDevice.destroyBuffer( fc.vbo.buffer.regular, nullptr );
+        this->context->logicalDevice.freeMemory( fc.vbo.memory, nullptr );
 
-        for ( DeviceMemory texm: fc.tbo ) {
-            vkDestroyImage( this->context->logicalDevice, texm.buffer.image, nullptr );
-            vkFreeMemory( this->context->logicalDevice, texm.memory, nullptr );
+        for ( DeviceMemory &texm: fc.tbo ) {
+            this->context->logicalDevice.destroyImage( texm.buffer.image, nullptr );
+            this->context->logicalDevice.freeMemory( texm.memory, nullptr );
         }
     }
 }

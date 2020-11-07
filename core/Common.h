@@ -6,6 +6,7 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.hpp>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <assert.h>
 #include <memory>
 #include <glm/glm.hpp>
 #include <cstring>
@@ -71,3 +73,5 @@ public:
 
 #define range( var, from, to ) for ( uint32_t var = from; from < to; ++var )
 #define until( var, to ) for ( uint32_t var = 0; var < to; ++var )
+
+#define VkCheckResult( R ) assert( R == vk::Result::eSuccess )

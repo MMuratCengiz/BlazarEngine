@@ -37,18 +37,17 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
     context = std::make_shared< RenderContext >( );
     context->window = window;
 
-    VkApplicationInfo appInfo {
-            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-            .pApplicationName = "SomeVulkan",
-            .applicationVersion = VK_MAKE_VERSION( 1, 0, 0 ),
-            .pEngineName = "No Engine",
-            .engineVersion = VK_MAKE_VERSION( 1, 0, 0 ),
-            .apiVersion = VK_API_VERSION_1_2,
+    vk::ApplicationInfo appInfo {
+            "SomeVulkan",
+            VK_MAKE_VERSION( 1, 0, 0 ),
+            "No Engine",
+            VK_MAKE_VERSION( 1, 0, 0 ),
+            VK_API_VERSION_1_2,
     };
 
-    VkInstanceCreateInfo createInfo {
-            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-            .pApplicationInfo = &appInfo
+    vk::InstanceCreateInfo createInfo {
+            { },
+            &appInfo
     };
 
     uint32_t glfwExtensionCount;
@@ -64,10 +63,10 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
     std::vector< const char * > layers;
     initSupportedLayers( layers );
 
-    VkDebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo = getDebugUtilsCreateInfo( );
+    vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo = getDebugUtilsCreateInfo( );
 
 #if DEBUG
-    createInfo.pNext = ( VkDebugUtilsMessengerCreateInfoEXT * ) &debugUtilsCreateInfo;
+    createInfo.pNext = ( vk::DebugUtilsMessengerCreateInfoEXT * ) &debugUtilsCreateInfo;
 
     if ( supportedLayers.find( "VK_LAYER_KHRONOS_validation" ) == supportedLayers.end( ) ) {
         createInfo.enabledLayerCount = 0;
@@ -80,47 +79,28 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
     createInfo.enabledLayerCount = 0;
 #endif
 
-    VkResult createInstanceResult = vkCreateInstance( &createInfo, nullptr, &context->instance );
-
-    if ( createInstanceResult != VK_SUCCESS ) {
-
-        std::string es;
-
-        SFORMAT( 1, "VkInstance initialization failed, code: " << createInstanceResult << ".", es );
-
-        TRACE( COMPONENT_VKAPI, VERBOSITY_CRITICAL, es.c_str( ) )
-
-        throw GraphicsException( GraphicsException::Source::RenderDevice, "Call to vkCreateInstance failed!" );
-    }
+    context->instance = vk::createInstance( createInfo );
 
     initSupportedExtensions( );
     initDebugMessages( debugUtilsCreateInfo );
 
-    TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "All Vk components initialized successfully." )
+    TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "All vk:: components initialized successfully." )
 
     createSurface( );
 }
 
 void RenderDevice::initSupportedExtensions( ) {
-    uint32_t extensionCount;
-    vkEnumerateInstanceExtensionProperties( nullptr, &extensionCount, nullptr );
+    auto extensionProperties = vk::enumerateInstanceExtensionProperties( nullptr );
 
-    std::vector< VkExtensionProperties > extensionProperties( extensionCount );
-    vkEnumerateInstanceExtensionProperties( nullptr, &extensionCount, extensionProperties.data( ) );
-
-    for ( VkExtensionProperties prp: extensionProperties ) {
+    for ( vk::ExtensionProperties prp: extensionProperties ) {
         this->supportedExtensions[ prp.extensionName ] = true;
     }
 }
 
 void RenderDevice::initSupportedLayers( std::vector< const char * > &layers ) {
-    uint32_t layerCount;
-    vkEnumerateInstanceLayerProperties( &layerCount, nullptr );
+    auto layerProperties = vk::enumerateInstanceLayerProperties( );
 
-    std::vector< VkLayerProperties > layerProperties( layerCount );
-    vkEnumerateInstanceLayerProperties( &layerCount, layerProperties.data( ) );
-
-    for ( VkLayerProperties prp: layerProperties ) {
+    for ( vk::LayerProperties prp: layerProperties ) {
         auto layerPair = ENABLED_LAYERS.find( prp.layerName );
 
         if ( layerPair != ENABLED_LAYERS.end( ) ) {
@@ -130,45 +110,44 @@ void RenderDevice::initSupportedLayers( std::vector< const char * > &layers ) {
     }
 }
 
-VkDebugUtilsMessengerCreateInfoEXT RenderDevice::getDebugUtilsCreateInfo( ) const {
-    VkDebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo { };
-    debugUtilsCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    debugUtilsCreateInfo.messageSeverity =
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    debugUtilsCreateInfo.messageType =
-            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    debugUtilsCreateInfo.pfnUserCallback = debugCallback;
-    debugUtilsCreateInfo.pUserData = nullptr;
+vk::DebugUtilsMessengerCreateInfoEXT RenderDevice::getDebugUtilsCreateInfo( ) const {
+    vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo { };
+
+    debugUtilsCreateInfo.setMessageSeverity(
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eError |
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning );
+
+    debugUtilsCreateInfo.setMessageType(
+            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance );
+
+    debugUtilsCreateInfo.setPfnUserCallback( debugCallback );
     return debugUtilsCreateInfo;
 }
 
-void RenderDevice::initDebugMessages( const VkDebugUtilsMessengerCreateInfoEXT &createInfo ) {
-    auto createDebugUtils = ( PFN_vkCreateDebugUtilsMessengerEXT ) vkGetInstanceProcAddr( context->instance,
-                                                                                          "vkCreateDebugUtilsMessengerEXT" );
+void RenderDevice::initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT &createInfo ) {
+    auto instance = static_cast< VkInstance >( context->instance );
 
+    auto createDebugUtils = ( PFN_vkCreateDebugUtilsMessengerEXT ) vkGetInstanceProcAddr(
+            instance, "vkCreateDebugUtilsMessengerEXT" );
+
+    auto createInfoCast = static_cast< VkDebugUtilsMessengerCreateInfoEXT >( createInfo );
     if ( createDebugUtils == nullptr ||
-         createDebugUtils( context->instance, &createInfo, nullptr, &debugMessenger ) != VK_SUCCESS ) {
+         createDebugUtils( instance, &createInfoCast, nullptr, &debugMessenger ) != VK_SUCCESS ) {
         TRACE( COMPONENT_VKAPI, VERBOSITY_HIGH, "Failed to create Vk debugger." )
-
         throw GraphicsException( GraphicsException::Source::RenderDevice, "Failed to initialize debugger!" );
     }
 }
 
 std::vector< DeviceInfo >
 RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
-    uint32_t deviceCount;
-
-    vkEnumeratePhysicalDevices( context->instance, &deviceCount, nullptr );
-
-    std::vector< VkPhysicalDevice > devices( deviceCount );
+    auto devices = context->instance.enumeratePhysicalDevices( );
     std::vector< DeviceInfo > result;
 
-    vkEnumeratePhysicalDevices( context->instance, &deviceCount, devices.data( ) );
-
     for ( auto it = devices.begin( ); it != devices.end( ); ) {
-        VkPhysicalDevice physicalDevice = *it;
+        vk::PhysicalDevice physicalDevice = *it;
 
         DeviceInfo deviceInfo {
                 .device = physicalDevice
@@ -188,25 +167,20 @@ RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
 }
 
 void
-RenderDevice::createDeviceInfo( const VkPhysicalDevice &physicalDevice, DeviceInfo &deviceInfo ) {
-    VkPhysicalDeviceFeatures deviceFeatures;
-    std::vector< VkQueueFamilyProperties > localQueueFamilies;
+RenderDevice::createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo &deviceInfo ) {
+    vk::PhysicalDeviceFeatures deviceFeatures;
+    vk::PhysicalDeviceProperties deviceProperties;
 
-    VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties( physicalDevice, &deviceProperties );
-    vkGetPhysicalDeviceFeatures( physicalDevice, &deviceFeatures );
+    std::vector< vk::QueueFamilyProperties > localQueueFamilies;
+
+    physicalDevice.getProperties( &deviceProperties );
+    physicalDevice.getFeatures( &deviceFeatures );
 
     uint32_t queueFamilyCount;
-    vkGetPhysicalDeviceQueueFamilyProperties( physicalDevice, &queueFamilyCount, nullptr );
-    vkGetPhysicalDeviceQueueFamilyProperties( physicalDevice, &queueFamilyCount, localQueueFamilies.data( ) );
+    physicalDevice.getQueueFamilyProperties( &queueFamilyCount, nullptr );
+    physicalDevice.getQueueFamilyProperties( &queueFamilyCount, localQueueFamilies.data( ) );
 
-    uint32_t extensionCount;
-
-    vkEnumerateDeviceExtensionProperties( physicalDevice, nullptr, &extensionCount, nullptr );
-
-    std::vector< VkExtensionProperties > extensions( extensionCount );
-
-    vkEnumerateDeviceExtensionProperties( physicalDevice, nullptr, &extensionCount, extensions.data( ) );
+    auto extensions = physicalDevice.enumerateDeviceExtensionProperties( nullptr );
 
     deviceInfo.properties = deviceProperties;
     deviceInfo.features = deviceFeatures;
@@ -215,7 +189,6 @@ RenderDevice::createDeviceInfo( const VkPhysicalDevice &physicalDevice, DeviceIn
 
 void RenderDevice::selectDevice( const DeviceInfo &deviceInfo ) {
     context->physicalDevice = deviceInfo.device;
-
     createLogicalDevice( );
 }
 
@@ -226,19 +199,17 @@ void RenderDevice::setupQueueFamilies( ) {
         };
 
         uint32_t queueFamilyCount;
-        vkGetPhysicalDeviceQueueFamilyProperties( context->physicalDevice, &queueFamilyCount, nullptr );
+        context->physicalDevice.getQueueFamilyProperties( &queueFamilyCount, nullptr );
 
-        std::vector< VkQueueFamilyProperties > localQueueFamilies( queueFamilyCount );
-        vkGetPhysicalDeviceQueueFamilyProperties( context->physicalDevice, &queueFamilyCount,
-                                                  localQueueFamilies.data( ) );
+        std::vector< vk::QueueFamilyProperties > localQueueFamilies( queueFamilyCount );
+        context->physicalDevice.getQueueFamilyProperties( &queueFamilyCount, localQueueFamilies.data( ) );
 
         uint32_t index = 0;
-        for ( VkQueueFamilyProperties properties: localQueueFamilies ) {
+        for ( vk::QueueFamilyProperties properties: localQueueFamilies ) {
             addQueueFamily( index, properties, exists );
 
-            VkBool32 presentationSupport;
-            vkGetPhysicalDeviceSurfaceSupportKHR( context->physicalDevice, index, context->surface,
-                                                  &presentationSupport );
+            vk::Bool32 presentationSupport;
+            presentationSupport = context->physicalDevice.getSurfaceSupportKHR( index, context->surface );
 
             if ( presentationSupport && !exists( QueueType::Presentation ) ) {
                 context->queueFamilies[ QueueType::Presentation ] = QueueFamily {
@@ -254,11 +225,11 @@ void RenderDevice::setupQueueFamilies( ) {
     queueFamiliesPrepared = true;
 }
 
-void RenderDevice::addQueueFamily( uint32_t index, const VkQueueFamilyProperties &properties,
-                                                         T_FUNC::findQueueType &exists ) {
+void RenderDevice::addQueueFamily( uint32_t index, const vk::QueueFamilyProperties &properties,
+                                   T_FUNC::findQueueType &exists ) {
     for ( QueueType queueType: queueTypes ) {
         if ( QUEUE_TYPE_FLAGS.find( queueType ) != QUEUE_TYPE_FLAGS.end( ) ) {
-            uint32_t flag = QUEUE_TYPE_FLAGS.at( queueType );
+            auto flag = QUEUE_TYPE_FLAGS.at( queueType );
 
             if ( properties.queueFlags & flag && !exists( queueType ) ) {
                 context->queueFamilies[ queueType ] = QueueFamily { .index = index, .properties = properties };
@@ -276,9 +247,9 @@ void RenderDevice::createLogicalDevice( ) {
 
     logicalDeviceCreated = true;
 
-    std::vector< VkDeviceQueueCreateInfo > deviceQueueCreateInfos = createUniqueDeviceCreateInfos( );
+    std::vector< vk::DeviceQueueCreateInfo > deviceQueueCreateInfos = createUniqueDeviceCreateInfos( );
 
-    VkPhysicalDeviceFeatures features { };
+    vk::PhysicalDeviceFeatures features { };
     features.samplerAnisotropy = true;
     features.sampleRateShading = true;
 
@@ -286,47 +257,47 @@ void RenderDevice::createLogicalDevice( ) {
     std::vector< const char * > layers;
     initSupportedLayers( layers );
 #endif
-    VkDeviceCreateInfo createInfo {
-            .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            .queueCreateInfoCount = static_cast< uint32_t >( deviceQueueCreateInfos.size( ) ),
-            .pQueueCreateInfos = deviceQueueCreateInfos.data( ),
+    vk::DeviceCreateInfo createInfo {
+            vk::DeviceCreateFlagBits( ),
+            static_cast< uint32_t >( deviceQueueCreateInfos.size( ) ),
+            deviceQueueCreateInfos.data( ),
 #ifdef DEBUG
-            .enabledLayerCount = static_cast<uint32_t>( layers.size( ) ),
-            .ppEnabledLayerNames = layers.data( ),
+            static_cast<uint32_t>( layers.size( ) ),
+            layers.data( ),
 #elif
-            .enabledLayerCount = 0,
+            0, { },
 #endif
-            .enabledExtensionCount = static_cast<uint32_t>(REQUIRED_EXTENSIONS.size( )),
-            .ppEnabledExtensionNames = REQUIRED_EXTENSIONS.data( ),
-            .pEnabledFeatures = &features
+            static_cast<uint32_t>(REQUIRED_EXTENSIONS.size( )),
+            REQUIRED_EXTENSIONS.data( ),
+            &features
     };
 
-    if ( vkCreateDevice( context->physicalDevice, &createInfo, nullptr, &context->logicalDevice ) != VK_SUCCESS ) {
-        TRACE( COMPONENT_VKAPI, VERBOSITY_CRITICAL, "Creation of logical device failed!" )
-
-        throw GraphicsException( GraphicsException::Source::RenderDevice, "Creation of logical device failed!" );
-    }
+    context->logicalDevice = context->physicalDevice.createDevice( createInfo );
 
     glfwSetWindowUserPointer( context->window, this );
 
     context->queues[ QueueType::Graphics ] = { };
     context->queues[ QueueType::Presentation ] = { };
 
-    vkGetDeviceQueue( context->logicalDevice, context->queueFamilies[ QueueType::Graphics ].index, 0,
-                      &context->queues[ QueueType::Graphics ] );
+    context->logicalDevice.getQueue( context->queueFamilies[ QueueType::Graphics ].index, 0,
+                                     &context->queues[ QueueType::Graphics ] );
 
-    vkGetDeviceQueue( context->logicalDevice, context->queueFamilies[ QueueType::Presentation ].index, 0,
-                      &context->queues[ QueueType::Presentation ] );
+    context->logicalDevice.getQueue( context->queueFamilies[ QueueType::Presentation ].index, 0,
+                                     &context->queues[ QueueType::Presentation ] );
 }
 
 void RenderDevice::createSurface( ) {
+    auto instance = static_cast< VkInstance >( context->instance );
+    auto surface = static_cast< VkSurfaceKHR >( context->surface ); // TODO Check this might be problematic
+
     if ( context->window == nullptr ) {
         throw GraphicsException( GraphicsException::Source::RenderDevice,
                                  "No window context to create renderer surface with." );
-    } else if ( glfwCreateWindowSurface( context->instance, context->window, nullptr, &context->surface ) !=
-                VK_SUCCESS ) {
+    } else if ( glfwCreateWindowSurface( instance, context->window, nullptr, &surface ) != VK_SUCCESS ) {
         throw GraphicsException( GraphicsException::Source::RenderDevice, "Window surface creation failed." );
     }
+
+    context->surface = vk::SurfaceKHR( surface );
 }
 
 bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) {
@@ -335,9 +306,7 @@ bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) 
     const std::unordered_map< std::string, bool > &reqExtensions = defaultRequiredExtensions( );
 
     for ( const auto &extension: deviceInfo.extensionProperties ) {
-
         bool extFound = reqExtensions.find( extension.extensionName ) != reqExtensions.end( );
-
         foundRequiredExtensionCount += extFound;
     }
 
@@ -346,26 +315,24 @@ bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) 
 
 std::unordered_map< std::string, bool > RenderDevice::defaultRequiredExtensions( ) {
     std::unordered_map< std::string, bool > result;
-
     result[ VK_KHR_SWAPCHAIN_EXTENSION_NAME ] = true;
-
     return result;
 }
 
-std::vector< VkDeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateInfos( ) {
+std::vector< vk::DeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateInfos( ) {
     std::unordered_map< uint32_t, bool > uniqueIndexes;
-    std::vector< VkDeviceQueueCreateInfo > result;
+    std::vector< vk::DeviceQueueCreateInfo > result;
 
     for ( std::pair< QueueType, QueueFamily > key: context->queueFamilies ) {
         if ( uniqueIndexes.find( key.second.index ) == uniqueIndexes.end( ) ) {
             float priority = key.first == QueueType::Graphics || key.first == QueueType::Presentation ? 1.0f : 0.9f;
 
             result.emplace_back(
-                    VkDeviceQueueCreateInfo {
-                            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                            .queueFamilyIndex = key.second.index,
-                            .queueCount = 1,
-                            .pQueuePriorities = &priority
+                    vk::DeviceQueueCreateInfo {
+                            vk::DeviceQueueCreateFlagBits( ),
+                            key.second.index,
+                            1,
+                            &priority
                     }
             );
 
@@ -377,36 +344,44 @@ std::vector< VkDeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateInf
 }
 
 void RenderDevice::beforeDelete( ) {
-    vkDeviceWaitIdle( context->logicalDevice );
+    context->logicalDevice.waitIdle( );
 }
 
 std::unique_ptr< RenderSurface >
-RenderDevice::createRenderSurface( const std::vector< Shader >& shaders ) {
-    vkDeviceWaitIdle( context->logicalDevice );
+RenderDevice::createRenderSurface( const std::vector< Shader > &shaders ) {
+    context->logicalDevice.waitIdle( );
 
     auto *renderSurface = new RenderSurface { context, shaders };
     return std::unique_ptr< RenderSurface >( renderSurface );
 }
-RenderDevice::~RenderDevice( ) {
-    if ( debugMessenger != VK_NULL_HANDLE ) {
-        auto deleteDebugUtils = ( PFN_vkDestroyDebugUtilsMessengerEXT )
-                vkGetInstanceProcAddr( context->instance, "vkDestroyDebugUtilsMessengerEXT" );
 
-        if ( deleteDebugUtils ) {
-            deleteDebugUtils( context->instance, debugMessenger, nullptr );
-        }
-    }
+RenderDevice::~RenderDevice( ) {
+    destroyDebugUtils( );
 
     if ( context->surface != VK_NULL_HANDLE ) {
-        vkDestroySurfaceKHR( context->instance, context->surface, nullptr );
+        context->instance.destroySurfaceKHR( context->surface );
     }
 
     if ( context->logicalDevice != VK_NULL_HANDLE ) {
-        vkDestroyDevice( context->logicalDevice, nullptr );
+        context->logicalDevice.destroy( );
     }
 
     if ( context->instance != VK_NULL_HANDLE ) {
-        vkDestroyInstance( context->instance, nullptr );
+        context->instance.destroy( );
+    }
+}
+
+void RenderDevice::destroyDebugUtils( ) const {
+    if ( debugMessenger == VK_NULL_HANDLE ) {
+        return;
+    }
+
+    auto instance = static_cast<VkInstance>(context->instance);
+    auto deleteDebugUtils = ( PFN_vkDestroyDebugUtilsMessengerEXT )
+            vkGetInstanceProcAddr( instance, "vkDestroyDebugUtilsMessengerEXT" );
+
+    if ( deleteDebugUtils ) {
+        deleteDebugUtils( static_cast< VkInstance >( instance ), debugMessenger, nullptr );
     }
 }
 

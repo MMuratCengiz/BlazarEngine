@@ -26,17 +26,17 @@ private:
 
     std::shared_ptr< RenderContext > context;
     std::vector< FrameContext > frameContexts;
-    std::vector< VkCommandBuffer > buffers;
+    std::vector< vk::CommandBuffer > buffers;
 
-    std::vector< VkSemaphore > imageAvailableSemaphores;
-    std::vector< VkSemaphore > renderFinishedSemaphores;
-    std::vector< VkFence > imagesInFlight;
-    std::vector< VkFence > inFlightFences;
+    std::vector< vk::Semaphore > imageAvailableSemaphores;
+    std::vector< vk::Semaphore > renderFinishedSemaphores;
+    std::vector< vk::Fence > imagesInFlight;
+    std::vector< vk::Fence > inFlightFences;
     std::vector< std::shared_ptr< Renderable > > renderObjects;
 
     bool frameBufferResized = false;
-    VkDeviceSize currentVbBufferSize = 0;
-    VkDeviceSize currentIndexBufferSize = 0;
+    vk::DeviceSize currentVbBufferSize = 0;
+    vk::DeviceSize currentIndexBufferSize = 0;
     std::shared_ptr< ShaderLayout > shaderLayout;
     std::shared_ptr< RenderObject::Triangle2D > triangle;
     RenderObjects::Model model = RenderObjects::Model( PATH( "/assets/models/viking_room.obj" ) );
@@ -56,12 +56,12 @@ public:
 private:
 
     template< class T, class V = std::vector< T > >
-    void transferData( const V &v, DeviceMemory &targetMemory, VkDeviceSize offset ) {
+    void transferData( const V &v, DeviceMemory &targetMemory, vk::DeviceSize offset ) {
         transferData< T, V >( v, targetMemory, offset, DeviceBufferSize { .size = v.size() });
     }
 
     template< class T, class V = std::vector< T > >
-    void transferData( const V &v, DeviceMemory &targetMemory, VkDeviceSize offset, const DeviceBufferSize& bufferSize ) {
+    void transferData( const V &v, DeviceMemory &targetMemory, vk::DeviceSize offset, const DeviceBufferSize& bufferSize ) {
         ensureMemorySize( bufferSize, targetMemory );
 
         RenderUtilities::copyToDeviceMemory(
@@ -77,7 +77,7 @@ private:
     void refreshCommands( const std::shared_ptr< Renderable > &renderable );
     void ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &memory );
     void allocateDeviceMemory( const DeviceBufferSize &size, DeviceMemory &dm );
-    void createSynchronizationStructures( const VkDevice &device );
+    void createSynchronizationStructures( const vk::Device &device );
     void clearDeviceMemory( );
     void createFrameContexts( );
     void ensureEnoughTexBuffers( uint32_t size );

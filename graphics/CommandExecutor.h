@@ -18,7 +18,7 @@ private:
     friend class BeginCommandExecution;
     friend class CommandList;
 
-    VkCommandPool commandPool { };
+    vk::CommandPool commandPool { };
     std::shared_ptr< RenderContext > context;
 
 public:
@@ -33,14 +33,14 @@ class BeginCommandExecution {
 private:
     CommandExecutor *executor;
 
-    std::vector< VkCommandBuffer > buffers;
+    std::vector< vk::CommandBuffer > buffers;
 private:
     friend class CommandExecutor;
     friend class CommandList;
 
     explicit BeginCommandExecution( CommandExecutor *executor );
 public:
-    std::shared_ptr< CommandList > generateBuffers( VkCommandBufferUsageFlags usage, uint16_t bufferCount = 1 );
+    std::shared_ptr< CommandList > generateBuffers( vk::CommandBufferUsageFlags usage, uint16_t bufferCount = 1 );
 };
 
 #define ENSURE_FILTER if ( !passesFilter() ) { return this; }
@@ -48,9 +48,9 @@ public:
 class CommandList {
 private:
     CommandExecutor *executor;
-    VkCommandBufferUsageFlags usage { };
+    vk::CommandBufferUsageFlags usage { };
 
-    std::vector< VkCommandBuffer > buffers;
+    std::vector< vk::CommandBuffer > buffers;
 
     bool conditionActive = false;
     bool conditionValue = false;
@@ -58,16 +58,16 @@ private:
 private:
     friend class BeginCommandExecution;
 
-    CommandList( CommandExecutor *executor, std::vector< VkCommandBuffer > buffers, VkCommandBufferUsageFlags usage );
+    CommandList( CommandExecutor *executor, std::vector< vk::CommandBuffer > buffers, vk::CommandBufferUsageFlags usage );
 public:
     CommandList *beginCommand( );
-    CommandList *copyBuffer( const VkDeviceSize &size, VkBuffer &src, VkBuffer &dst );
-    CommandList *beginRenderPass( const VkFramebuffer frameBuffers[], const VkClearValue &clearValue );
+    CommandList *copyBuffer( const vk::DeviceSize &size, vk::Buffer &src, vk::Buffer &dst );
+    CommandList *beginRenderPass( const vk::Framebuffer frameBuffers[], const vk::ClearColorValue &clearValue );
     CommandList *endRenderPass( );
-    CommandList *bindRenderPass( VkPipelineBindPoint bindPoint );
-    CommandList *bindVertexMemory( const VkBuffer &vertexBuffer, const VkDeviceSize &offset );
-    CommandList *bindIndexMemory( VkBuffer indexBuffer, const VkDeviceSize &offset );
-    CommandList *bindDescriptorSet( const VkPipelineLayout &pipelineLayout, const VkDescriptorSet &descriptorSet );
+    CommandList *bindRenderPass( vk::PipelineBindPoint bindPoint );
+    CommandList *bindVertexMemory( const vk::Buffer &vertexBuffer, const vk::DeviceSize &offset );
+    CommandList *bindIndexMemory( vk::Buffer indexBuffer, const vk::DeviceSize &offset );
+    CommandList *bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const vk::DescriptorSet &descriptorSet );
     CommandList *drawIndexed( const std::vector< uint32_t > &indices );
     CommandList *blitImage( const ImageBlitArgs & args );
     CommandList *pipelineBarrier( const PipelineBarrierArgs& args );
@@ -77,8 +77,8 @@ public:
     CommandList *otherwise( );
     CommandList *endFilter( );
 
-    VkResult execute( );
-    const std::vector< VkCommandBuffer > &getBuffers( );
+    vk::Result execute( );
+    const std::vector< vk::CommandBuffer > &getBuffers( );
     ~CommandList( );
 
     void freeBuffers( );

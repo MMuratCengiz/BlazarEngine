@@ -7,16 +7,16 @@
 NAMESPACES( SomeVulkan, Graphics )
 
 typedef struct AddressMode {
-    VkSamplerAddressMode U;
-    VkSamplerAddressMode V;
-    VkSamplerAddressMode W;
+    vk::SamplerAddressMode U;
+    vk::SamplerAddressMode V;
+    vk::SamplerAddressMode W;
 } AddressMode;
 
 typedef struct TextureInfo {
-    VkFilter magFilter;
-    VkFilter minFilter;
+    vk::Filter magFilter;
+    vk::Filter minFilter;
     AddressMode addressMode;
-    VkSamplerMipmapMode mipmapMode;
+    vk::SamplerMipmapMode mipmapMode;
     float mipLodBias;
     float minLod;
     float maxLod;
@@ -40,9 +40,9 @@ private:
     TextureInfo textureInfo;
 
     DeviceMemory textureGPUBuffer { };
-    VkSampler sampler{ };
-    VkImageView imageView{ };
-    VkDevice device;
+    vk::Sampler sampler{ };
+    vk::ImageView imageView{ };
+    vk::Device device;
 public:
     explicit Texture( uint8_t dimension, const std::string& path, TextureInfo sampler = defaultTextureInfo( ) );
     void unload();
@@ -56,8 +56,8 @@ public:
     [[nodiscard]] inline const stbi_uc *data( ) const { return contents; };
     [[nodiscard]] inline const TextureInfo &getTextureInfo( ) const { return textureInfo; };
     [[nodiscard]] inline const bool &isLoadedIntoGPUMemory( ) const { return isLoadedToGPUMemory; };
-    [[nodiscard]] inline const VkSampler &getSampler( ) const { return sampler; };
-    [[nodiscard]] inline const VkImageView &getImageView( ) const { return imageView; };
+    [[nodiscard]] inline const vk::Sampler &getSampler( ) const { return sampler; };
+    [[nodiscard]] inline const vk::ImageView &getImageView( ) const { return imageView; };
     [[nodiscard]] inline const DeviceMemory &getDeviceMemory( ) const { return textureGPUBuffer; };
 
     [[nodiscard]] uint32_t size( ) const;
@@ -68,12 +68,12 @@ public:
     inline static TextureInfo defaultTextureInfo( ) {
         TextureInfo texInfo { };
 
-        texInfo.magFilter = VK_FILTER_LINEAR;
-        texInfo.minFilter = VK_FILTER_LINEAR;
-        texInfo.addressMode.U = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        texInfo.addressMode.V = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        texInfo.addressMode.W = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        texInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        texInfo.magFilter = vk::Filter::eLinear;
+        texInfo.minFilter = vk::Filter::eLinear;
+        texInfo.addressMode.U = vk::SamplerAddressMode::eRepeat;
+        texInfo.addressMode.V = vk::SamplerAddressMode::eRepeat;
+        texInfo.addressMode.W = vk::SamplerAddressMode::eRepeat;
+        texInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
         texInfo.mipLodBias = 0.0f;
         texInfo.minLod = 0.0f;
         texInfo.maxLod = 0.0f;

@@ -36,71 +36,61 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
 
     this->device = context->logicalDevice;
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
+    vk::Buffer stagingBuffer;
+    vk::DeviceMemory stagingBufferMemory;
 
     RenderUtilities::createBufferAndMemory(
             context,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            vk::BufferUsageFlagBits::eTransferSrc,
             size( ),
             stagingBuffer,
             stagingBufferMemory,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
     );
-
 
     RenderUtilities::copyToDeviceMemory( context->logicalDevice, stagingBufferMemory, contents, size( ) );
 
-    VkImageCreateInfo imageCreateInfo { };
+    vk::ImageCreateInfo imageCreateInfo { };
 
-    imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageCreateInfo.imageType = vk::ImageType::e2D;
     imageCreateInfo.extent.width = width;
     imageCreateInfo.extent.height = height;
     imageCreateInfo.extent.depth = 1;
     imageCreateInfo.mipLevels = mipLevels;
     imageCreateInfo.arrayLayers = 1;
-    imageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-    imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageCreateInfo.usage =
-            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageCreateInfo.format = vk::Format::eR8G8B8A8Srgb;
+    imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
+    imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+    imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst
+                            | vk::ImageUsageFlagBits::eSampled;
+    imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+    imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 
-    if ( vkCreateImage( context->logicalDevice, &imageCreateInfo, nullptr, &textureGPUBuffer.buffer.image ) !=
-         VK_SUCCESS ) {
-        throw GraphicsException( GraphicsException::Source::Renderer, "Failed to create image!" );
-    }
+    textureGPUBuffer.buffer.image = context->logicalDevice.createImage( imageCreateInfo );
 
-    VkMemoryRequirements memoryRequirements { };
+    vk::MemoryRequirements memoryRequirements { };
 
     RenderUtilities::allocateImageMemory( context, textureGPUBuffer.buffer.image, textureGPUBuffer.memory,
-                                          memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+                                          memoryRequirements, vk::MemoryPropertyFlagBits::eDeviceLocal );
 
-    vkBindImageMemory( context->logicalDevice, textureGPUBuffer.buffer.image, textureGPUBuffer.memory, 0 );
+    context->logicalDevice.bindImageMemory( textureGPUBuffer.buffer.image, textureGPUBuffer.memory, 0 );
 
     isLoadedToGPUMemory = true;
 
-    VkImageViewCreateInfo imageViewCreateInfo { };
+    vk::ImageViewCreateInfo imageViewCreateInfo { };
 
-    imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     imageViewCreateInfo.image = textureGPUBuffer.buffer.image;
-    imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    imageViewCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-    imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
+    imageViewCreateInfo.format = vk::Format::eR8G8B8A8Srgb;
+    imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
     imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
     imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
     imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
     imageViewCreateInfo.subresourceRange.layerCount = 1;
 
-    if ( vkCreateImageView( context->logicalDevice, &imageViewCreateInfo, nullptr, &imageView ) != VK_SUCCESS ) {
-        throw GraphicsException { GraphicsException::Source::RenderSurface, "Could not create image view!" };
-    }
+    imageView = context->logicalDevice.createImageView( imageViewCreateInfo );
 
-    VkSamplerCreateInfo samplerCreateInfo { };
-
-    samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    vk::SamplerCreateInfo samplerCreateInfo { };
 
     samplerCreateInfo.magFilter = textureInfo.magFilter;
     samplerCreateInfo.minFilter = textureInfo.minFilter;
@@ -109,29 +99,27 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
     samplerCreateInfo.addressModeW = textureInfo.addressMode.W;
     samplerCreateInfo.anisotropyEnable = VK_TRUE;
     samplerCreateInfo.maxAnisotropy = 16.0f;
-    samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueBlack;
     samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
     samplerCreateInfo.compareEnable = VK_FALSE;
-    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
     samplerCreateInfo.mipmapMode = textureInfo.mipmapMode;
     samplerCreateInfo.mipLodBias = textureInfo.mipLodBias;
     samplerCreateInfo.minLod = textureInfo.minLod;
     samplerCreateInfo.maxLod = mipLevels;
 
-    if ( vkCreateSampler( context->logicalDevice, &samplerCreateInfo, nullptr, &sampler ) != VK_SUCCESS ) {
-        throw GraphicsException { GraphicsException::Source::RenderSurface, "Could not create image view!" };
-    }
+    sampler = context->logicalDevice.createSampler( samplerCreateInfo );
 
     PipelineBarrierArgs args { };
 
     args.mipLevel = mipLevels;
     args.image = textureGPUBuffer.buffer.image;
-    args.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    args.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    args.sourceAccess = 0;
-    args.destinationAccess = VK_ACCESS_TRANSFER_WRITE_BIT;
-    args.sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    args.destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    args.oldLayout = vk::ImageLayout::eUndefined;
+    args.newLayout = vk::ImageLayout::eTransferDstOptimal;
+    args.sourceAccess = { };
+    args.destinationAccess = vk::AccessFlagBits::eTransferWrite;
+    args.sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+    args.destinationStage = vk::PipelineStageFlagBits::eTransfer;
 
     CopyBufferToImageArgs copyBufferToImageArgs { };
     copyBufferToImageArgs.image = textureGPUBuffer.buffer.image;
@@ -140,25 +128,24 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
     copyBufferToImageArgs.height = height;
 
     commandExecutor->startCommandExecution( )
-            ->generateBuffers( VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, 1 )
+            ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 )
             ->beginCommand( )
             ->pipelineBarrier( args )
             ->copyBufferToImage( copyBufferToImageArgs )
             ->execute( );
 
-    vkDestroyBuffer( context->logicalDevice, stagingBuffer, nullptr );
-    vkFreeMemory( context->logicalDevice, stagingBufferMemory, nullptr );
+    context->logicalDevice.destroyBuffer( stagingBuffer );
+    context->logicalDevice.freeMemory( stagingBufferMemory );
 
-    VkFormatProperties properties;
-    vkGetPhysicalDeviceFormatProperties( context->physicalDevice, VK_FORMAT_R8G8B8A8_SRGB, &properties );
+    vk::FormatProperties properties = context->physicalDevice.getFormatProperties( vk::Format::eR8G8B8A8Srgb );
 
-    if ( ( properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT ) == 0 ) {
+    if ( ( properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear )
+         != vk::FormatFeatureFlagBits::eSampledImageFilterLinear ) {
         throw std::runtime_error( "Unsupported device, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT must be "
                                   "supported" );
     }
 
     generateMipMaps( context, commandExecutor );
-
 }
 
 void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
@@ -166,7 +153,7 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
     int32_t mipWidth = width, mipHeight = height;
 
     auto cmdBuffer = commandExecutor->startCommandExecution( )
-            ->generateBuffers( VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, 1 );
+            ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 );
 
     cmdBuffer->beginCommand( );
 
@@ -186,32 +173,33 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
         pipelineBarrierArgs.baseMipLevel = index - 1;
         pipelineBarrierArgs.mipLevel = 1;
         pipelineBarrierArgs.image = textureGPUBuffer.buffer.image;
-        pipelineBarrierArgs.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        pipelineBarrierArgs.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        pipelineBarrierArgs.sourceAccess = VK_ACCESS_TRANSFER_WRITE_BIT;
-        pipelineBarrierArgs.destinationAccess = VK_ACCESS_TRANSFER_READ_BIT;
-        pipelineBarrierArgs.sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        pipelineBarrierArgs.destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        pipelineBarrierArgs.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+        pipelineBarrierArgs.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+        pipelineBarrierArgs.sourceAccess = vk::AccessFlagBits::eTransferWrite;
+        pipelineBarrierArgs.destinationAccess = vk::AccessFlagBits::eTransferRead;
+        pipelineBarrierArgs.sourceStage = vk::PipelineStageFlagBits::eTransfer;
+        pipelineBarrierArgs.destinationStage = vk::PipelineStageFlagBits::eTransfer;
 
         cmdBuffer->pipelineBarrier( pipelineBarrierArgs );
 
 
-        blitArgs.srcOffsets[ 0 ] = { 0, 0, 0 };
-        blitArgs.srcOffsets[ 1 ] = { mipWidth, mipHeight, 1 };
-        blitArgs.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        blitArgs.srcOffsets[ 0 ] = vk::Offset3D { 0, 0, 0 };
+        blitArgs.srcOffsets[ 1 ] = vk::Offset3D { mipWidth, mipHeight, 1 };
+        blitArgs.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         blitArgs.srcSubresource.mipLevel = index - 1;
         blitArgs.srcSubresource.baseArrayLayer = 0;
         blitArgs.srcSubresource.layerCount = 1;
-        blitArgs.dstOffsets[ 0 ] = { 0, 0, 0 };
-        blitArgs.dstOffsets[ 1 ] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-        blitArgs.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        blitArgs.dstOffsets[ 0 ] = vk::Offset3D { 0, 0, 0 };
+        blitArgs.dstOffsets[ 1 ] = vk::Offset3D { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1,
+                                                  1 };
+        blitArgs.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         blitArgs.dstSubresource.mipLevel = index;
         blitArgs.dstSubresource.baseArrayLayer = 0;
         blitArgs.dstSubresource.layerCount = 1;
         blitArgs.sourceImage = textureGPUBuffer.buffer.image;
         blitArgs.destinationImage = textureGPUBuffer.buffer.image;
-        blitArgs.sourceImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        blitArgs.destinationImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        blitArgs.sourceImageLayout = vk::ImageLayout::eTransferSrcOptimal;
+        blitArgs.destinationImageLayout = vk::ImageLayout::eTransferDstOptimal;
 
         cmdBuffer->blitImage( blitArgs );
 
@@ -220,15 +208,14 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
         pipelineBarrierArgs.baseMipLevel = index - 1;
         pipelineBarrierArgs.mipLevel = 1;
         pipelineBarrierArgs.image = textureGPUBuffer.buffer.image;
-        pipelineBarrierArgs.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        pipelineBarrierArgs.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        pipelineBarrierArgs.sourceAccess = VK_ACCESS_TRANSFER_READ_BIT;
-        pipelineBarrierArgs.destinationAccess = VK_ACCESS_SHADER_READ_BIT;
-        pipelineBarrierArgs.sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        pipelineBarrierArgs.destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        pipelineBarrierArgs.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+        pipelineBarrierArgs.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        pipelineBarrierArgs.sourceAccess = vk::AccessFlagBits::eTransferRead;
+        pipelineBarrierArgs.destinationAccess = vk::AccessFlagBits::eShaderRead;
+        pipelineBarrierArgs.sourceStage = vk::PipelineStageFlagBits::eTransfer;
+        pipelineBarrierArgs.destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
 
         cmdBuffer->pipelineBarrier( pipelineBarrierArgs );
-
 
         if ( mipWidth > 1 ) { mipWidth /= 2; }
         if ( mipHeight > 1 ) { mipHeight /= 2; }
@@ -237,27 +224,27 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
     pipelineBarrierArgs.baseMipLevel = mipLevels - 1;
     pipelineBarrierArgs.mipLevel = 1;
     pipelineBarrierArgs.image = textureGPUBuffer.buffer.image;
-    pipelineBarrierArgs.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    pipelineBarrierArgs.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    pipelineBarrierArgs.sourceAccess = VK_ACCESS_TRANSFER_READ_BIT;
-    pipelineBarrierArgs.destinationAccess = VK_ACCESS_SHADER_READ_BIT;
-    pipelineBarrierArgs.sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    pipelineBarrierArgs.destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    pipelineBarrierArgs.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+    pipelineBarrierArgs.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    pipelineBarrierArgs.sourceAccess = vk::AccessFlagBits::eTransferRead;
+    pipelineBarrierArgs.destinationAccess = vk::AccessFlagBits::eShaderRead;
+    pipelineBarrierArgs.sourceStage = vk::PipelineStageFlagBits::eTransfer;
+    pipelineBarrierArgs.destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
 
     cmdBuffer->pipelineBarrier( pipelineBarrierArgs );
     cmdBuffer->execute( );
 }
 
-Texture::~Texture( ) { }
+Texture::~Texture( ) = default;
 
 void Texture::unload( ) {
     stbi_image_free( contents );
 
     if ( device != nullptr && isLoadedToGPUMemory ) {
-        vkDestroySampler( device, sampler, nullptr );
-        vkDestroyImageView( device, imageView, nullptr );
-        vkDestroyImage( device, textureGPUBuffer.buffer.image, nullptr );
-        vkFreeMemory( device, textureGPUBuffer.memory, nullptr );
+        device.destroySampler( sampler );
+        device.destroyImageView( imageView );
+        device.destroyImage( textureGPUBuffer.buffer.image );
+        device.freeMemory( textureGPUBuffer.memory );
     }
 }
 

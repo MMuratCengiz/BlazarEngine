@@ -12,12 +12,12 @@ NAMESPACES( SomeVulkan, Graphics )
 class Texture;
 
 typedef struct TextureDescription {
-    VkImageView imageView;
+    vk::ImageView imageView;
 } TextureDescription;
 
 typedef struct BindingUpdateInfo {
     uint32_t index{};
-    VkDescriptorSet parent{};
+    vk::DescriptorSet parent{};
     DeviceMemory memory;
 } BindingUpdateInfo;
 
@@ -33,8 +33,8 @@ private:
     std::shared_ptr< RenderContext > context;
     std::shared_ptr< ShaderLayout > shaderLayout;
 
-    VkSampler sampler{ };
-    VkImageView imageView{ };
+    vk::Sampler sampler{ };
+    vk::ImageView imageView{ };
 public:
     explicit DescriptorManager( const std::shared_ptr< RenderContext >& renderContext,
                        const std::shared_ptr< ShaderLayout >& shaderLayout );
@@ -48,7 +48,7 @@ public:
     ~DescriptorManager();
 private:
     void createDescriptorSets( );
-    VkWriteDescriptorSet getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo );
+    vk::WriteDescriptorSet getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo );
 };
 
 END_NAMESPACES

@@ -7,23 +7,23 @@ NAMESPACES( SomeVulkan, Graphics )
 class CommandExecutor;
 class CommandList;
 
-typedef struct CustomTransfer {
-    VkDeviceSize transferSize;
+struct CustomTransfer {
+    vk::DeviceSize transferSize;
     void * transferData;
 
-    [[nodiscard]] VkDeviceSize size() const {
+    [[nodiscard]] vk::DeviceSize size() const {
         return transferSize;
     }
 
     [[nodiscard]] void * data() const {
         return transferData;
     }
-} CustomTransfer;
+};
 
-typedef enum class DeviceBufferType {
+enum class DeviceBufferType {
     Regular,
     Image
-} DeviceBufferType;
+};
 
 #define DBS_OP( OPERATOR ) \
 bool operator OPERATOR( const DeviceBufferSize& other ) const { \
@@ -33,9 +33,9 @@ bool operator OPERATOR( const DeviceBufferSize& other ) const { \
     return extent.width * extent.height OPERATOR other.extent.width * other.extent.height; \
 }
 
-typedef union DeviceBufferSize {
-    VkDeviceSize size ;
-    VkExtent2D extent;
+union DeviceBufferSize {
+    vk::DeviceSize size ;
+    vk::Extent2D extent;
 
     DBS_OP( < )
     DBS_OP( <= )
@@ -47,28 +47,45 @@ typedef union DeviceBufferSize {
         return size == other;
     }
 
-    bool operator ==( const VkExtent2D& other ) const {
+    bool operator ==( const vk::Extent2D& other ) const {
         return extent.width == other.width && extent.height == other.height;
     }
-} DeviceBufferSize;
 
-typedef union DeviceBuffer {
-    VkBuffer regular;
-    VkImage image;
-} DeviceBuffer;
+    DeviceBufferSize* operator =( const uint32_t& other ) {
+        size = other;
+        return this;
+    }
 
-typedef struct DeviceMemory {
+    DeviceBufferSize* operator =( const vk::Extent2D& other ) {
+        extent = other;
+        return this;
+    }
+
+    DeviceBufferSize* operator =( const DeviceBufferSize& other ) {
+        this->size = other.size;
+        this->extent = other.extent;
+        return this;
+    }
+};
+
+union DeviceBuffer {
+    vk::Buffer regular;
+    vk::Image image;
+};
+
+
+struct DeviceMemory {
     DeviceBuffer buffer;
     DeviceBufferType bufferType = DeviceBufferType::Regular;
 
-    VkDeviceMemory memory;
+    vk::DeviceMemory memory;
 
     DeviceBufferSize currentMemorySize;
-    VkMemoryPropertyFlags properties;
-    VkBufferUsageFlags bufferUsage;
-} DeviceMemory;
+    vk::MemoryPropertyFlags properties;
+    vk::BufferUsageFlags bufferUsage;
+};
 
-typedef struct FrameContext {
+struct FrameContext {
     std::shared_ptr< CommandExecutor > commandExecutor;
     std::shared_ptr< CommandList > cachedBuffers;
 
@@ -77,6 +94,6 @@ typedef struct FrameContext {
     std::vector< DeviceMemory > ubo;
     std::vector< DeviceMemory > tbo;
     uint64_t vboOffset = 0;
-} FrameContext;
+};
 
 END_NAMESPACES

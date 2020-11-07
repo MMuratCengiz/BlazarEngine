@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include "../core/Common.h"
 #include "RenderSurface.h"
 #include "RenderDeviceBuilder.h"
@@ -31,8 +31,8 @@ typedef const std::function< bool( QueueType index ) > &findQueueType;
 
 class RenderDevice {
 public:
-    const std::unordered_map< QueueType, uint32_t > QUEUE_TYPE_FLAGS = {
-            { QueueType::Graphics, VK_QUEUE_GRAPHICS_BIT },
+    const std::unordered_map< QueueType, vk::QueueFlagBits > QUEUE_TYPE_FLAGS = {
+            { QueueType::Graphics, vk::QueueFlagBits::eGraphics },
     };
 private:
     const std::unordered_map< std::string, bool > ENABLED_LAYERS {
@@ -70,22 +70,23 @@ public:
     ~RenderDevice( );
 private:
     void initSupportedExtensions( );
-    void initDebugMessages( const VkDebugUtilsMessengerCreateInfoEXT &createInfo );
+    void initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT &createInfo );
     void initSupportedLayers( std::vector< const char * > &layers );
 
-    VkDebugUtilsMessengerCreateInfoEXT getDebugUtilsCreateInfo( ) const;
+    vk::DebugUtilsMessengerCreateInfoEXT getDebugUtilsCreateInfo( ) const;
     void setupQueueFamilies( );
     void createLogicalDevice( );
     void createSurface( );
 
-    void addQueueFamily( uint32_t index, const VkQueueFamilyProperties &properties, T_FUNC::findQueueType &exists );
+    void addQueueFamily( uint32_t index, const vk::QueueFamilyProperties &properties, T_FUNC::findQueueType &exists );
 
     static std::unordered_map< std::string, bool > defaultRequiredExtensions();
     static bool defaultDeviceCapabilityCheck( const DeviceInfo& deviceInfo );
-    static void createDeviceInfo( const VkPhysicalDevice &physicalDevice, DeviceInfo& deviceInfo );
-    std::vector< VkDeviceQueueCreateInfo > createUniqueDeviceCreateInfos( );
+    static void createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo& deviceInfo );
+    std::vector< vk::DeviceQueueCreateInfo > createUniqueDeviceCreateInfos( );
 
     friend class RenderDeviceBuilder;
+    void destroyDebugUtils( ) const;
 };
 
 END_NAMESPACES

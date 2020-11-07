@@ -16,46 +16,35 @@ DescriptorManager::DescriptorManager( const std::shared_ptr< RenderContext >& co
 void DescriptorManager::createDescriptorSets( ) {
     uint32_t swapChainImageCount = context->swapChainImages.size();
 
-    VkDescriptorSetLayoutCreateInfo createInfo { };
+    vk::DescriptorSetLayoutCreateInfo createInfo { };
 
     const std::vector< DescriptorSetBinding > &descriptorSetBindings = shaderLayout->getDescriptorSetBindings( );
-    VkDescriptorSetLayoutBinding vkDescriptorSetBindings[descriptorSetBindings.size( )];
+    vk::DescriptorSetLayoutBinding vkDescriptorSetBindings[descriptorSetBindings.size( )];
 
     for ( uint8_t i = 0; i < shaderLayout->getDescriptorCount( ); ++i ) {
         vkDescriptorSetBindings[ i ] = descriptorSetBindings[ i ].binding;
     }
 
-    createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     createInfo.bindingCount = shaderLayout->getDescriptorCount( );
     createInfo.pBindings = vkDescriptorSetBindings;
 
-    if ( vkCreateDescriptorSetLayout( context->logicalDevice, &createInfo, nullptr, &context->descriptorSetLayout ) !=
-         VK_SUCCESS ) {
-        throw GraphicsException( GraphicsException::Source::RenderSurface, "Couldn't create descriptor set layout! " );
-    }
+    context->descriptorSetLayout = context->logicalDevice.createDescriptorSetLayout( createInfo );
 
-    std::vector< VkDescriptorSetLayout > layouts( swapChainImageCount, context->descriptorSetLayout );
-    VkDescriptorSetAllocateInfo allocateInfo { };
-
-    allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    std::vector< vk::DescriptorSetLayout > layouts( swapChainImageCount, context->descriptorSetLayout );
+    vk::DescriptorSetAllocateInfo allocateInfo { };
     allocateInfo.descriptorPool = context->descriptorPool;
     allocateInfo.descriptorSetCount = swapChainImageCount;
     allocateInfo.pSetLayouts = layouts.data( );
 
-    context->descriptorSets.resize( swapChainImageCount );
-
-    if ( vkAllocateDescriptorSets( context->logicalDevice, &allocateInfo, context->descriptorSets.data( ) ) !=
-         VK_SUCCESS ) {
-        throw GraphicsException( GraphicsException::Source::RenderSurface, "Couldn't create descriptor sets! " );
-    }
+    context->descriptorSets = context->logicalDevice.allocateDescriptorSets( allocateInfo );
 }
 
 void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateInfo &updateInfo ) {
     const DescriptorSetBinding& ref = shaderLayout->getDescriptorSetBindings()[ updateInfo.index ];
 
-    VkDescriptorBufferInfo descriptorBufferInfo { };
+    vk::DescriptorBufferInfo descriptorBufferInfo { };
 
-    VkWriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
+    vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
 
     descriptorBufferInfo.buffer = updateInfo.memory.buffer.regular;
     descriptorBufferInfo.offset = 0;
@@ -65,16 +54,16 @@ void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateIn
     writeDescriptorSet.pImageInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets( this->context->logicalDevice, 1, &writeDescriptorSet, 0, nullptr );
+    context->logicalDevice.updateDescriptorSets( 1, &writeDescriptorSet, 0, nullptr );
 }
 
 void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingUpdateInfo &texUpdateInfo ) {
     const BindingUpdateInfo& updateInfo = texUpdateInfo.updateInfo;
 
-    VkDescriptorImageInfo descriptorImageInfo { };
-    VkWriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
+    vk::DescriptorImageInfo descriptorImageInfo { };
+    vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
 
-    descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    descriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     descriptorImageInfo.imageView = texUpdateInfo.texture->getImageView();
     descriptorImageInfo.sampler =  texUpdateInfo.texture->getSampler();
 
@@ -82,14 +71,13 @@ void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingU
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets( this->context->logicalDevice, 1, &writeDescriptorSet, 0, nullptr );
+    context->logicalDevice.updateDescriptorSets( 1, &writeDescriptorSet, 0, nullptr );
 }
 
-VkWriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo ) {
+vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo ) {
     const DescriptorSetBinding& ref = shaderLayout->getDescriptorSetBindings()[ updateInfo.index ];
-    VkWriteDescriptorSet writeDescriptorSet { };
+    vk::WriteDescriptorSet writeDescriptorSet { };
 
-    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.dstSet = updateInfo.parent;
     writeDescriptorSet.dstBinding = ref.index;
     writeDescriptorSet.dstArrayElement = 0;
@@ -100,10 +88,9 @@ VkWriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const Bindi
 }
 
 DescriptorManager::~DescriptorManager( ) {
-    vkDestroySampler( context->logicalDevice, sampler, nullptr );
-    vkDestroyImageView( context->logicalDevice, imageView, nullptr );
-
-    vkDestroyDescriptorSetLayout( context->logicalDevice, context->descriptorSetLayout, nullptr );
+    context->logicalDevice.destroySampler( sampler );
+    context->logicalDevice.destroyImageView( imageView );
+    context->logicalDevice.destroyDescriptorSetLayout( context->descriptorSetLayout );
 }
 
 END_NAMESPACES

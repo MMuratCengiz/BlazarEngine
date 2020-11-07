@@ -10,104 +10,84 @@ private:
     RenderUtilities( ) = default;
 public:
     inline static void copyToDeviceMemory(
-            const VkDevice &device,
-            const VkDeviceMemory &deviceMemory,
+            const vk::Device &device,
+            const vk::DeviceMemory &deviceMemory,
             const void *data,
-            VkDeviceSize size,
-            uint32_t sourceOffset = 0,
-            uint32_t targetOffset = 0 ) {
-        void *boundMem;
+            vk::DeviceSize size,
+            vk::DeviceSize targetOffset = 0 ) {
 
-        VkResult mapResult = vkMapMemory( device, deviceMemory, sourceOffset, size, targetOffset, &boundMem );
-
-        if ( mapResult == VK_SUCCESS ) {
-            std::memcpy( boundMem, data, size );
-            vkUnmapMemory( device, deviceMemory );
-        }
+        void *boundMem = device.mapMemory( deviceMemory, targetOffset, size );
+        std::memcpy( boundMem, data, size );
+        device.unmapMemory( deviceMemory );
     }
 
-    inline static void createSampler( const pRenderContext &context, VkSampler &sampler,
-                                      const VkSamplerCreateInfo &samplerCreateInfo ) {
-        if ( vkCreateSampler( context->logicalDevice, &samplerCreateInfo, nullptr, &sampler ) ) {
-            throw GraphicsException( GraphicsException::Source::Utilities, "Error creating sampler!" );
-        }
+    inline static void createSampler( const pRenderContext &context, vk::Sampler &sampler,
+                                      const vk::SamplerCreateInfo &samplerCreateInfo ) {
+        sampler = context->logicalDevice.createSampler( samplerCreateInfo );
     }
 
-    inline static void allocateImageMemory( const pRenderContext &context, const VkImage &image,
-                                            VkDeviceMemory &memory, VkMemoryRequirements &memoryRequirements,
-                                            VkMemoryPropertyFlags properties =
-                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) {
-        vkGetImageMemoryRequirements( context->logicalDevice, image, &memoryRequirements );
+    inline static void allocateImageMemory( const pRenderContext &context, const vk::Image &image,
+                                            vk::DeviceMemory &memory, vk::MemoryRequirements &memoryRequirements,
+                                            vk::MemoryPropertyFlags properties =
+                                            vk::MemoryPropertyFlagBits::eHostVisible |
+                                            vk::MemoryPropertyFlagBits::eHostCoherent ) {
+        memoryRequirements = context->logicalDevice.getImageMemoryRequirements( image );
 
-        VkMemoryAllocateInfo memoryAllocateInfo { };
+        vk::MemoryAllocateInfo memoryAllocateInfo { };
 
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
         memoryAllocateInfo.memoryTypeIndex = getMatchingMemoryType( context, properties, memoryRequirements );
 
-        if ( vkAllocateMemory( context->logicalDevice, &memoryAllocateInfo, nullptr, &memory ) != VK_SUCCESS ) {
-            throw std::runtime_error( "failed to allocate buffer memory!" );
-        }
+        memory = context->logicalDevice.allocateMemory( memoryAllocateInfo );
     }
 
     inline static void createBufferAndMemory( const pRenderContext &context,
-                                              const VkBufferUsageFlags& usage,
-                                              const VkDeviceSize& requiredSize,
-                                              VkBuffer &buffer,
-                                              VkDeviceMemory &memory,
-                                              VkMemoryPropertyFlags properties ) {
+                                              const vk::BufferUsageFlags &usage,
+                                              const vk::DeviceSize &requiredSize,
+                                              vk::Buffer &buffer,
+                                              vk::DeviceMemory &memory,
+                                              vk::MemoryPropertyFlags properties ) {
 
-        VkBufferCreateInfo bufferCreateInfo { };
+        vk::BufferCreateInfo bufferCreateInfo { };
 
-        bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.size = requiredSize;
         bufferCreateInfo.usage = usage;
-        bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-        if ( vkCreateBuffer( context->logicalDevice, &bufferCreateInfo, nullptr, &buffer ) != VK_SUCCESS ) {
-            throw std::runtime_error( "failed to create vertex buffer!" );
-        }
+        buffer = context->logicalDevice.createBuffer( bufferCreateInfo );
 
-        VkMemoryRequirements memoryRequirements{ };
+        vk::MemoryRequirements memoryRequirements = context->logicalDevice.getBufferMemoryRequirements( buffer );
 
-        vkGetBufferMemoryRequirements( context->logicalDevice, buffer, &memoryRequirements );
+        vk::MemoryAllocateInfo memoryAllocateInfo { };
 
-        VkMemoryAllocateInfo memoryAllocateInfo { };
-
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
         memoryAllocateInfo.memoryTypeIndex = getMatchingMemoryType( context, properties, memoryRequirements );
 
-        if ( vkAllocateMemory( context->logicalDevice, &memoryAllocateInfo, nullptr, &memory ) != VK_SUCCESS ) {
-            throw std::runtime_error( "failed to allocate buffer memory!" );
-        }
+        memory = context->logicalDevice.allocateMemory( memoryAllocateInfo );
 
-        vkBindBufferMemory( context->logicalDevice, buffer, memory, 0 );
+        context->logicalDevice.bindBufferMemory( buffer, memory, 0 );
     }
 
-    inline static VkSampleCountFlagBits maxDeviceMSAASampleCount( const VkPhysicalDevice& physicalDevice ) {
-        VkPhysicalDeviceProperties properties;
+    inline static vk::SampleCountFlagBits maxDeviceMSAASampleCount( const vk::PhysicalDevice &physicalDevice ) {
+        vk::PhysicalDeviceProperties properties = physicalDevice.getProperties( );
 
-        vkGetPhysicalDeviceProperties( physicalDevice, &properties );
+        vk::SampleCountFlags samples = properties.limits.framebufferColorSampleCounts &
+                                       properties.limits.framebufferDepthSampleCounts;
 
-        VkSampleCountFlags samples = properties.limits.framebufferColorSampleCounts &
-                                     properties.limits.framebufferDepthSampleCounts;
+        if ( samples & vk::SampleCountFlagBits::e64 ) { return vk::SampleCountFlagBits::e64; }
+        if ( samples & vk::SampleCountFlagBits::e32 ) { return vk::SampleCountFlagBits::e32; }
+        if ( samples & vk::SampleCountFlagBits::e16 ) { return vk::SampleCountFlagBits::e16; }
+        if ( samples & vk::SampleCountFlagBits::e8 ) { return vk::SampleCountFlagBits::e8; }
+        if ( samples & vk::SampleCountFlagBits::e4 ) { return vk::SampleCountFlagBits::e4; }
+        if ( samples & vk::SampleCountFlagBits::e2 ) { return vk::SampleCountFlagBits::e2; }
 
-        if ( samples & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-        if ( samples & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-        if ( samples & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-        if ( samples & VK_SAMPLE_COUNT_8_BIT ) { return VK_SAMPLE_COUNT_8_BIT;  }
-        if ( samples & VK_SAMPLE_COUNT_4_BIT ) { return VK_SAMPLE_COUNT_4_BIT;  }
-        if ( samples & VK_SAMPLE_COUNT_2_BIT ) { return VK_SAMPLE_COUNT_2_BIT;  }
-
-        return VK_SAMPLE_COUNT_1_BIT;
+        return vk::SampleCountFlagBits::e1;
     }
+
     inline static uint32_t getMatchingMemoryType( const pRenderContext &context,
-                                                  const VkMemoryPropertyFlags &memoryProperties,
-                                                  const VkMemoryRequirements &memoryRequirements ) {
-        VkPhysicalDeviceMemoryProperties physicalMemoryProperties { };
-        vkGetPhysicalDeviceMemoryProperties( context->physicalDevice, &physicalMemoryProperties );
+                                                  const vk::MemoryPropertyFlags &memoryProperties,
+                                                  const vk::MemoryRequirements &memoryRequirements ) {
+        vk::PhysicalDeviceMemoryProperties physicalMemoryProperties = context->physicalDevice.getMemoryProperties( );
 
         uint32_t typeBits = memoryRequirements.memoryTypeBits;
         uint32_t index = 0;

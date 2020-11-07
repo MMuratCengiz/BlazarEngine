@@ -4,55 +4,55 @@
 #include "Renderer.h"
 #include "DefaultShaderLayout.h"
 
-
 NAMESPACES( SomeVulkan, Graphics )
 
-typedef enum class ShaderType {
+enum class ShaderType {
     Vertex,
     Fragment
-} ShaderType;
+};
 
-typedef struct Shader {
+struct Shader {
     ShaderType type;
     std::string filename;
-} Shader;
+};
 
 class RenderSurface {
 private:
-    const VkDynamicState dynamicStates[2] = {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_LINE_WIDTH
+    const vk::DynamicState dynamicStates[2] = {
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eLineWidth,
     };
 
     static std::unordered_map< std::string, std::vector< char > > cachedShaders;
     std::shared_ptr< RenderContext > context;
     std::vector< Shader > shaders;
 
+    // Todo see if we can make these all local again
     // Pipeline createInfo required structures in class scope
-    VkPipelineColorBlendAttachmentState colorBlendAttachment { };
-    VkGraphicsPipelineCreateInfo pipelineCreateInfo { };
-    VkPipelineColorBlendStateCreateInfo colorBlending { };
-    VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo { };
-    VkPipelineViewportStateCreateInfo viewportStateCreateInfo { };
-    VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo { };
-    VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo { };
-    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo { };
-    VkPipelineVertexInputStateCreateInfo inputStateCreateInfo { };
-    VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo { };
-    VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{ };
-    VkRect2D viewScissor { };
+    vk::PipelineColorBlendAttachmentState colorBlendAttachment { };
+    vk::GraphicsPipelineCreateInfo pipelineCreateInfo { };
+    vk::PipelineColorBlendStateCreateInfo colorBlending { };
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo { };
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo { };
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo { };
+    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo { };
+    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo { };
+    vk::PipelineVertexInputStateCreateInfo inputStateCreateInfo { };
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo { };
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{ };
+    vk::Rect2D viewScissor { };
     // --
 
     // To be moved, maybe?
-    VkImage samplingImage;
-    VkImageView samplingImageView;
-    VkDeviceMemory samplingMemory;
-    VkSampleCountFlagBits msaaSampleCount;
+    vk::Image samplingImage;
+    vk::ImageView samplingImageView;
+    vk::DeviceMemory samplingMemory;
+    vk::SampleCountFlagBits msaaSampleCount;
     // --
 
-    std::vector< VkPipelineShaderStageCreateInfo > pipelineStageCreateInfos;
+    std::vector< vk::PipelineShaderStageCreateInfo > pipelineStageCreateInfos;
 
-    std::vector< VkShaderModule > shaderModules;
+    std::vector< vk::ShaderModule > shaderModules;
     std::shared_ptr< Renderer > renderer;
     std::shared_ptr< DefaultShaderLayout > shaderLayout = std::make_shared< DefaultShaderLayout >();
 public:
@@ -64,18 +64,18 @@ private:
     void createPipeline( bool isReset  );
     void createSurface( );
 
-    VkShaderModule createShaderModule( const std::string &filename );
-    VkFormat findSupportedDepthFormat( );
+    vk::ShaderModule createShaderModule( const std::string &filename );
+    vk::Format findSupportedDepthFormat( );
 
     static std::vector< char > readFile( const std::string &filename );
 
     void configureVertexInput( );
 
-    void createSwapChain( VkSurfaceCapabilitiesKHR surfaceCapabilities, VkSurfaceFormatKHR surfaceFormat,
-                          VkPresentModeKHR presentMode );
+    void createSwapChain( vk::SurfaceCapabilitiesKHR surfaceCapabilities, vk::SurfaceFormatKHR surfaceFormat,
+                          vk::PresentModeKHR presentMode );
 
-    void createImageView( VkImageView &imageView, const VkImage& image, const VkFormat& format,
-                          const VkImageAspectFlags& aspectFlags );
+    void createImageView( vk::ImageView &imageView, const vk::Image& image, const vk::Format& format,
+                          const vk::ImageAspectFlags& aspectFlags );
     void createSamplingResources( );
     void configureColorBlend( );
     void configureRasterization( );
@@ -87,8 +87,8 @@ private:
     void createFrameBuffers( );
     void createDepthAttachmentImages( );
     void createDescriptorPool( );
-    void chooseExtent2D( const VkSurfaceCapabilitiesKHR& capabilities );
-    void createSwapChainImages( VkFormat format );
+    void chooseExtent2D( const vk::SurfaceCapabilitiesKHR& capabilities );
+    void createSwapChainImages( vk::Format format );
     void dispose();
 };
 END_NAMESPACES

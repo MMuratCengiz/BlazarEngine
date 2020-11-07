@@ -7,9 +7,9 @@ NAMESPACES( SomeVulkan, Graphics )
 
 struct DescriptorSetBinding {
     uint16_t index;
-    VkDescriptorType type;
-    VkDescriptorSetLayoutBinding binding;
-    VkDeviceSize size;
+    vk::DescriptorType type;
+    vk::DescriptorSetLayoutBinding binding;
+    vk::DeviceSize size;
 };
 /*
 struct VertextInputBinding {
@@ -19,16 +19,16 @@ struct VertextInputBinding {
 
 class ShaderLayout {
 protected:
-    VkVertexInputBindingDescription inputBindingDescription;
-    std::vector< VkVertexInputAttributeDescription > vertexAttributeDescriptions;
+    vk::VertexInputBindingDescription inputBindingDescription;
+    std::vector< vk::VertexInputAttributeDescription > vertexAttributeDescriptions;
     std::vector< DescriptorSetBinding > descriptorSetBindings;
 
 public:
-    [[nodiscard]] inline const VkVertexInputBindingDescription& getInputBindingDescription() const {
+    [[nodiscard]] inline const vk::VertexInputBindingDescription& getInputBindingDescription() const {
         return inputBindingDescription;
     }
 
-    [[nodiscard]] inline const std::vector< VkVertexInputAttributeDescription >& getVertexAttributeDescriptions() const {
+    [[nodiscard]] inline const std::vector< vk::VertexInputAttributeDescription >& getVertexAttributeDescriptions() const {
         return vertexAttributeDescriptions;
     }
 
