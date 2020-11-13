@@ -1,13 +1,11 @@
 #pragma once
 
+#include "../core/Common.h"
 #include <string>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include <utility>
 #include <functional>
 #include <iostream>
 #include "../graphics/RenderDevice.h"
-#include "../core/Common.h"
 #include "../input/GlobalEventHandler.h"
 #include "../renderobjects/Triangle2D.h"
 #include <chrono>

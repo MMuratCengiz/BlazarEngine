@@ -3,7 +3,6 @@
 //
 
 #include "Texture.h"
-#include "RenderUtilities.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -29,26 +28,29 @@ uint32_t Texture::size( ) const {
     return getWidth( ) * getHeight( ) * 4;
 }
 
-void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCommandExecutor &commandExecutor ) {
+void Texture::loadIntoGPUMemory( std::shared_ptr< InstanceContext > &context, pCommandExecutor &commandExecutor ) {
     if ( isLoadedToGPUMemory ) {
         return;
     }
 
+    this->context = context;
     this->device = context->logicalDevice;
 
-    vk::Buffer stagingBuffer;
-    vk::DeviceMemory stagingBufferMemory;
+    vk::BufferCreateInfo stagingBufferCreateInfo{ };
+    stagingBufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+    stagingBufferCreateInfo.size = size( );
+    stagingBufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-    RenderUtilities::createBufferAndMemory(
-            context,
-            vk::BufferUsageFlagBits::eTransferSrc,
-            size( ),
-            stagingBuffer,
-            stagingBufferMemory,
-            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-    );
+    vma::AllocationCreateInfo stagingAllocationInfo{ };
+    stagingAllocationInfo.usage = vma::MemoryUsage::eCpuToGpu;
+    stagingAllocationInfo.requiredFlags = vk::MemoryPropertyFlagBits::eHostVisible;
+    stagingAllocationInfo.preferredFlags = vk::MemoryPropertyFlagBits::eHostCoherent;
 
-    RenderUtilities::copyToDeviceMemory( context->logicalDevice, stagingBufferMemory, contents, size( ) );
+    auto stagingBuffer = context->vma.createBuffer( stagingBufferCreateInfo, stagingAllocationInfo );
+
+    void * data = context->vma.mapMemory( stagingBuffer.second );
+    memcpy( data, contents, size() );
+    context->vma.unmapMemory( stagingBuffer.second );
 
     vk::ImageCreateInfo imageCreateInfo { };
 
@@ -66,20 +68,18 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
     imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
     imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 
-    textureGPUBuffer.buffer.image = context->logicalDevice.createImage( imageCreateInfo );
+    vma::AllocationCreateInfo allocationCreateInfo { };
+    allocationCreateInfo.usage = vma::MemoryUsage::eGpuOnly;
 
-    vk::MemoryRequirements memoryRequirements { };
-
-    RenderUtilities::allocateImageMemory( context, textureGPUBuffer.buffer.image, textureGPUBuffer.memory,
-                                          memoryRequirements, vk::MemoryPropertyFlagBits::eDeviceLocal );
-
-    context->logicalDevice.bindImageMemory( textureGPUBuffer.buffer.image, textureGPUBuffer.memory, 0 );
+    auto imageAllocationPair = context->vma.createImage( imageCreateInfo, allocationCreateInfo );
+    image = imageAllocationPair.first;
+    imageAllocation = imageAllocationPair.second;
 
     isLoadedToGPUMemory = true;
 
     vk::ImageViewCreateInfo imageViewCreateInfo { };
 
-    imageViewCreateInfo.image = textureGPUBuffer.buffer.image;
+    imageViewCreateInfo.image = image;
     imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
     imageViewCreateInfo.format = vk::Format::eR8G8B8A8Srgb;
     imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -113,7 +113,7 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
     PipelineBarrierArgs args { };
 
     args.mipLevel = mipLevels;
-    args.image = textureGPUBuffer.buffer.image;
+    args.image = image;
     args.oldLayout = vk::ImageLayout::eUndefined;
     args.newLayout = vk::ImageLayout::eTransferDstOptimal;
     args.sourceAccess = { };
@@ -122,8 +122,8 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
     args.destinationStage = vk::PipelineStageFlagBits::eTransfer;
 
     CopyBufferToImageArgs copyBufferToImageArgs { };
-    copyBufferToImageArgs.image = textureGPUBuffer.buffer.image;
-    copyBufferToImageArgs.sourceBuffer = stagingBuffer;
+    copyBufferToImageArgs.image = image;
+    copyBufferToImageArgs.sourceBuffer = stagingBuffer.first;
     copyBufferToImageArgs.width = width;
     copyBufferToImageArgs.height = height;
 
@@ -134,8 +134,7 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
             ->copyBufferToImage( copyBufferToImageArgs )
             ->execute( );
 
-    context->logicalDevice.destroyBuffer( stagingBuffer );
-    context->logicalDevice.freeMemory( stagingBufferMemory );
+    context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 
     vk::FormatProperties properties = context->physicalDevice.getFormatProperties( vk::Format::eR8G8B8A8Srgb );
 
@@ -148,7 +147,7 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< RenderContext > &context, pCom
     generateMipMaps( context, commandExecutor );
 }
 
-void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
+void Texture::generateMipMaps( std::shared_ptr< InstanceContext > &context,
                                std::shared_ptr< CommandExecutor > &commandExecutor ) const {
     int32_t mipWidth = width, mipHeight = height;
 
@@ -169,10 +168,9 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
      */
     for ( uint32_t index = 1; index < mipLevels; ++index ) {
         /* transition every index - 1 image as the source image */
-
         pipelineBarrierArgs.baseMipLevel = index - 1;
         pipelineBarrierArgs.mipLevel = 1;
-        pipelineBarrierArgs.image = textureGPUBuffer.buffer.image;
+        pipelineBarrierArgs.image = image;
         pipelineBarrierArgs.oldLayout = vk::ImageLayout::eTransferDstOptimal;
         pipelineBarrierArgs.newLayout = vk::ImageLayout::eTransferSrcOptimal;
         pipelineBarrierArgs.sourceAccess = vk::AccessFlagBits::eTransferWrite;
@@ -196,8 +194,8 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
         blitArgs.dstSubresource.mipLevel = index;
         blitArgs.dstSubresource.baseArrayLayer = 0;
         blitArgs.dstSubresource.layerCount = 1;
-        blitArgs.sourceImage = textureGPUBuffer.buffer.image;
-        blitArgs.destinationImage = textureGPUBuffer.buffer.image;
+        blitArgs.sourceImage = image;
+        blitArgs.destinationImage = image;
         blitArgs.sourceImageLayout = vk::ImageLayout::eTransferSrcOptimal;
         blitArgs.destinationImageLayout = vk::ImageLayout::eTransferDstOptimal;
 
@@ -207,7 +205,7 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
 
         pipelineBarrierArgs.baseMipLevel = index - 1;
         pipelineBarrierArgs.mipLevel = 1;
-        pipelineBarrierArgs.image = textureGPUBuffer.buffer.image;
+        pipelineBarrierArgs.image = image;
         pipelineBarrierArgs.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
         pipelineBarrierArgs.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         pipelineBarrierArgs.sourceAccess = vk::AccessFlagBits::eTransferRead;
@@ -223,7 +221,7 @@ void Texture::generateMipMaps( std::shared_ptr< RenderContext > &context,
 
     pipelineBarrierArgs.baseMipLevel = mipLevels - 1;
     pipelineBarrierArgs.mipLevel = 1;
-    pipelineBarrierArgs.image = textureGPUBuffer.buffer.image;
+    pipelineBarrierArgs.image = image;
     pipelineBarrierArgs.oldLayout = vk::ImageLayout::eTransferDstOptimal;
     pipelineBarrierArgs.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     pipelineBarrierArgs.sourceAccess = vk::AccessFlagBits::eTransferRead;
@@ -243,8 +241,7 @@ void Texture::unload( ) {
     if ( device != nullptr && isLoadedToGPUMemory ) {
         device.destroySampler( sampler );
         device.destroyImageView( imageView );
-        device.destroyImage( textureGPUBuffer.buffer.image );
-        device.freeMemory( textureGPUBuffer.memory );
+        context->vma.destroyImage( image, imageAllocation );
     }
 }
 

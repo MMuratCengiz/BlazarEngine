@@ -24,7 +24,7 @@ private:
     uint32_t poolSize = 3;
     uint32_t frameIndex = 0;
 
-    std::shared_ptr< RenderContext > context;
+    std::shared_ptr< InstanceContext > context;
     std::vector< FrameContext > frameContexts;
     std::vector< vk::CommandBuffer > buffers;
 
@@ -41,7 +41,7 @@ private:
     std::shared_ptr< RenderObject::Triangle2D > triangle;
     RenderObjects::Model model = RenderObjects::Model( PATH( "/assets/models/viking_room.obj" ) );
 public:
-    explicit Renderer( const std::shared_ptr< RenderContext > &context, const std::shared_ptr< ShaderLayout >& shaderLayout );
+    explicit Renderer( const std::shared_ptr< InstanceContext > &context, const std::shared_ptr< ShaderLayout >& shaderLayout );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );
     void render( );
     void freeBuffers( );

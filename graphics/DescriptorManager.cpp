@@ -7,7 +7,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-DescriptorManager::DescriptorManager( const std::shared_ptr< RenderContext >& context,
+DescriptorManager::DescriptorManager( const std::shared_ptr< InstanceContext >& context,
                                       const std::shared_ptr< ShaderLayout >& shaderLayout ) :
                                       context( context ), shaderLayout( shaderLayout ) {
     createDescriptorSets();
@@ -19,14 +19,14 @@ void DescriptorManager::createDescriptorSets( ) {
     vk::DescriptorSetLayoutCreateInfo createInfo { };
 
     const std::vector< DescriptorSetBinding > &descriptorSetBindings = shaderLayout->getDescriptorSetBindings( );
-    vk::DescriptorSetLayoutBinding vkDescriptorSetBindings[descriptorSetBindings.size( )];
+    std::vector< vk::DescriptorSetLayoutBinding > vkDescriptorSetBindings( shaderLayout->getDescriptorCount( ) );
 
     for ( uint8_t i = 0; i < shaderLayout->getDescriptorCount( ); ++i ) {
         vkDescriptorSetBindings[ i ] = descriptorSetBindings[ i ].binding;
     }
 
     createInfo.bindingCount = shaderLayout->getDescriptorCount( );
-    createInfo.pBindings = vkDescriptorSetBindings;
+    createInfo.pBindings = vkDescriptorSetBindings.data();
 
     context->descriptorSetLayout = context->logicalDevice.createDescriptorSetLayout( createInfo );
 
@@ -46,7 +46,7 @@ void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateIn
 
     vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
 
-    descriptorBufferInfo.buffer = updateInfo.memory.buffer.regular;
+    descriptorBufferInfo.buffer = updateInfo.buffer.regular;
     descriptorBufferInfo.offset = 0;
     descriptorBufferInfo.range = ref.size;
 
@@ -55,6 +55,7 @@ void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateIn
     writeDescriptorSet.pTexelBufferView = nullptr;
 
     context->logicalDevice.updateDescriptorSets( 1, &writeDescriptorSet, 0, nullptr );
+   
 }
 
 void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingUpdateInfo &texUpdateInfo ) {

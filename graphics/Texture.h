@@ -22,7 +22,7 @@ typedef struct TextureInfo {
     float maxLod;
 } TextureInfo;
 
-class RenderContext; // There is a circular dependency here
+class InstanceContext; // There is a circular dependency here
 
 class Texture {
 private:
@@ -39,10 +39,12 @@ private:
     std::string path;
     TextureInfo textureInfo;
 
-    DeviceMemory textureGPUBuffer { };
+    vk::Image image{ };
+    vma::Allocation imageAllocation{ };
     vk::Sampler sampler{ };
     vk::ImageView imageView{ };
     vk::Device device;
+    std::shared_ptr< InstanceContext > context;
 public:
     explicit Texture( uint8_t dimension, const std::string& path, TextureInfo sampler = defaultTextureInfo( ) );
     void unload();
@@ -58,10 +60,11 @@ public:
     [[nodiscard]] inline const bool &isLoadedIntoGPUMemory( ) const { return isLoadedToGPUMemory; };
     [[nodiscard]] inline const vk::Sampler &getSampler( ) const { return sampler; };
     [[nodiscard]] inline const vk::ImageView &getImageView( ) const { return imageView; };
-    [[nodiscard]] inline const DeviceMemory &getDeviceMemory( ) const { return textureGPUBuffer; };
+    [[nodiscard]] inline const vma::Allocation &getAllocation( ) const { return imageAllocation; };
+    [[nodiscard]] inline const vk::Image &getImage( ) const { return image; };
 
     [[nodiscard]] uint32_t size( ) const;
-    void loadIntoGPUMemory( std::shared_ptr< RenderContext > &context,
+    void loadIntoGPUMemory( std::shared_ptr< InstanceContext > &context,
                             std::shared_ptr< CommandExecutor > &commandExecutor );
 
 
@@ -81,7 +84,7 @@ public:
         return texInfo;
     }
 private:
-    void generateMipMaps( std::shared_ptr< RenderContext > &context, std::shared_ptr< CommandExecutor > &commandExecutor ) const;
+    void generateMipMaps( std::shared_ptr< InstanceContext > &context, std::shared_ptr< CommandExecutor > &commandExecutor ) const;
 };
 
 END_NAMESPACES

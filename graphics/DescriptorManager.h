@@ -2,7 +2,7 @@
 
 #include "../core/Common.h"
 #include "Texture.h"
-#include "RenderContext.h"
+#include "InstanceContext.h"
 #include "ShaderLayout.h"
 #include "GraphicsException.h"
 #include "RendererTypes.h"
@@ -18,7 +18,7 @@ typedef struct TextureDescription {
 typedef struct BindingUpdateInfo {
     uint32_t index{};
     vk::DescriptorSet parent{};
-    DeviceMemory memory;
+    DeviceBuffer buffer;
 } BindingUpdateInfo;
 
 typedef struct TextureBindingUpdateInfo {
@@ -26,17 +26,17 @@ typedef struct TextureBindingUpdateInfo {
     std::shared_ptr< Texture > texture;
 } TextureBindingUpdateInfo;
 
-class RenderContext;
+class InstanceContext;
 
 class DescriptorManager {
 private:
-    std::shared_ptr< RenderContext > context;
+    std::shared_ptr< InstanceContext > context;
     std::shared_ptr< ShaderLayout > shaderLayout;
 
     vk::Sampler sampler{ };
     vk::ImageView imageView{ };
 public:
-    explicit DescriptorManager( const std::shared_ptr< RenderContext >& renderContext,
+    explicit DescriptorManager( const std::shared_ptr< InstanceContext >& renderContext,
                        const std::shared_ptr< ShaderLayout >& shaderLayout );
 
     void updateUniformDescriptorSetBinding( const BindingUpdateInfo& updateInfo );

@@ -4,6 +4,7 @@
 
 #include "RenderDevice.h"
 
+
 NAMESPACES( SomeVulkan, Graphics )
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -34,7 +35,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
 }
 
 RenderDevice::RenderDevice( GLFWwindow *window ) {
-    context = std::make_shared< RenderContext >( );
+    context = std::make_shared< InstanceContext >( );
     context->window = window;
 
     vk::ApplicationInfo appInfo {
@@ -134,6 +135,7 @@ void RenderDevice::initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT
             instance, "vkCreateDebugUtilsMessengerEXT" );
 
     auto createInfoCast = static_cast< VkDebugUtilsMessengerCreateInfoEXT >( createInfo );
+
     if ( createDebugUtils == nullptr ||
          createDebugUtils( instance, &createInfoCast, nullptr, &debugMessenger ) != VK_SUCCESS ) {
         TRACE( COMPONENT_VKAPI, VERBOSITY_HIGH, "Failed to create Vk debugger." )
@@ -190,62 +192,44 @@ RenderDevice::createDeviceInfo( const vk::PhysicalDevice &physicalDevice, Device
 void RenderDevice::selectDevice( const DeviceInfo &deviceInfo ) {
     context->physicalDevice = deviceInfo.device;
     createLogicalDevice( );
+    initializeVMA( );
+    createRenderPass( );
 }
 
 void RenderDevice::setupQueueFamilies( ) {
-    if ( !queueFamiliesPrepared ) {
-        auto exists = [ & ]( QueueType bit ) -> bool {
-            return context->queueFamilies.find( bit ) != context->queueFamilies.end( );
-        };
+    auto exists = [ & ](  QueueType bit ) -> bool {
+        return context->queueFamilies.find( bit ) != context->queueFamilies.end( );
+    };
 
-        uint32_t queueFamilyCount;
-        context->physicalDevice.getQueueFamilyProperties( &queueFamilyCount, nullptr );
+    auto localQueueFamilies = context->physicalDevice.getQueueFamilyProperties( );
 
-        std::vector< vk::QueueFamilyProperties > localQueueFamilies( queueFamilyCount );
-        context->physicalDevice.getQueueFamilyProperties( &queueFamilyCount, localQueueFamilies.data( ) );
+    uint32_t index = 0;
+    for ( const vk::QueueFamilyProperties& property: localQueueFamilies ) {
+        bool hasGraphics = ( property.queueFlags & vk::QueueFlagBits::eGraphics ) == vk::QueueFlagBits::eGraphics;
+        bool hasTransfer = ( property.queueFlags & vk::QueueFlagBits::eTransfer ) == vk::QueueFlagBits::eTransfer;
 
-        uint32_t index = 0;
-        for ( vk::QueueFamilyProperties properties: localQueueFamilies ) {
-            addQueueFamily( index, properties, exists );
-
-            vk::Bool32 presentationSupport;
-            presentationSupport = context->physicalDevice.getSurfaceSupportKHR( index, context->surface );
-
-            if ( presentationSupport && !exists( QueueType::Presentation ) ) {
-                context->queueFamilies[ QueueType::Presentation ] = QueueFamily {
-                        .index = index,
-                        .properties = properties
-                };
-            }
-
-            ++index;
+        if ( hasGraphics && !exists( QueueType::Graphics ) ) {
+            context->queueFamilies[ QueueType::Graphics ] = QueueFamily { index, property };
+        } else if ( hasTransfer && !exists( QueueType::Transfer ) ) { // Try to fetch a unique transfer queue
+            context->queueFamilies[ QueueType::Transfer ] = QueueFamily { index, property };
         }
+
+        vk::Bool32 presentationSupport = context->physicalDevice.getSurfaceSupportKHR( index, context->surface );
+
+        if ( presentationSupport && !exists( QueueType::Presentation ) ) {
+            context->queueFamilies[ QueueType::Presentation ] = QueueFamily { index, property };
+        }
+
+        ++index;
     }
 
-    queueFamiliesPrepared = true;
-}
-
-void RenderDevice::addQueueFamily( uint32_t index, const vk::QueueFamilyProperties &properties,
-                                   T_FUNC::findQueueType &exists ) {
-    for ( QueueType queueType: queueTypes ) {
-        if ( QUEUE_TYPE_FLAGS.find( queueType ) != QUEUE_TYPE_FLAGS.end( ) ) {
-            auto flag = QUEUE_TYPE_FLAGS.at( queueType );
-
-            if ( properties.queueFlags & flag && !exists( queueType ) ) {
-                context->queueFamilies[ queueType ] = QueueFamily { .index = index, .properties = properties };
-            }
-        }
+    if ( !exists( QueueType::Transfer ) ) {
+        context->queueFamilies[ QueueType::Transfer ] = context->queueFamilies[ QueueType::Graphics ];
     }
 }
 
 void RenderDevice::createLogicalDevice( ) {
     setupQueueFamilies( );
-
-    if ( logicalDeviceCreated ) {
-        return;
-    }
-
-    logicalDeviceCreated = true;
 
     std::vector< vk::DeviceQueueCreateInfo > deviceQueueCreateInfos = createUniqueDeviceCreateInfos( );
 
@@ -276,14 +260,28 @@ void RenderDevice::createLogicalDevice( ) {
 
     glfwSetWindowUserPointer( context->window, this );
 
-    context->queues[ QueueType::Graphics ] = { };
-    context->queues[ QueueType::Presentation ] = { };
+    context->queues[ QueueType::Graphics ] = vk::Queue{ };
+    context->queues[ QueueType::Presentation ] = vk::Queue{ };
+    context->queues[ QueueType::Transfer ] = vk::Queue{ };
 
     context->logicalDevice.getQueue( context->queueFamilies[ QueueType::Graphics ].index, 0,
                                      &context->queues[ QueueType::Graphics ] );
 
     context->logicalDevice.getQueue( context->queueFamilies[ QueueType::Presentation ].index, 0,
                                      &context->queues[ QueueType::Presentation ] );
+
+    context->logicalDevice.getQueue( context->queueFamilies[ QueueType::Transfer ].index, 0,
+                                     &context->queues[ QueueType::Transfer ] );
+}
+
+void RenderDevice::initializeVMA( ) {
+    vma::AllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_1;
+    allocatorInfo.physicalDevice = context->physicalDevice;
+    allocatorInfo.device = context->logicalDevice;
+    allocatorInfo.instance = context->instance ;
+
+    context->vma = vma::createAllocator( allocatorInfo );
 }
 
 void RenderDevice::createSurface( ) {
@@ -358,15 +356,16 @@ RenderDevice::createRenderSurface( const std::vector< Shader > &shaders ) {
 RenderDevice::~RenderDevice( ) {
     destroyDebugUtils( );
 
-    if ( context->surface != VK_NULL_HANDLE ) {
+    if ( context->surface != nullptr ) {
         context->instance.destroySurfaceKHR( context->surface );
     }
 
-    if ( context->logicalDevice != VK_NULL_HANDLE ) {
+    if ( context->logicalDevice != nullptr ) {
+        context->vma.destroy();
         context->logicalDevice.destroy( );
     }
 
-    if ( context->instance != VK_NULL_HANDLE ) {
+    if ( context->instance != nullptr ) {
         context->instance.destroy( );
     }
 }
@@ -385,8 +384,108 @@ void RenderDevice::destroyDebugUtils( ) const {
     }
 }
 
-std::shared_ptr< RenderContext > RenderDevice::getContext( ) const {
+std::shared_ptr< InstanceContext > RenderDevice::getContext( ) const {
     return context;
+}
+
+void RenderDevice::createRenderPass( ) {
+    auto surfaceFormats = context->physicalDevice.getSurfaceFormatsKHR( context->surface );
+    auto presentModes = context->physicalDevice.getSurfacePresentModesKHR( context->surface );
+
+    auto presentMode = vk::PresentModeKHR::eFifo;
+    for ( auto mode: presentModes ) {
+        if ( mode == vk::PresentModeKHR::eMailbox ) {
+            presentMode = mode;
+        }
+    }
+
+    auto surfaceFormat = vk::SurfaceFormatKHR{ vk::Format::eB8G8R8A8Srgb, vk::ColorSpaceKHR::eSrgbNonlinear };
+    for ( auto format: surfaceFormats ) {
+        if ( format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear ) {
+            surfaceFormat = format;
+        }
+    }
+
+    context->imageFormat = surfaceFormat.format;
+    context->colorSpace = surfaceFormat.colorSpace;
+    context->presentMode = presentMode;
+
+    // Color Attachment
+    auto msaaSampleCount = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
+    vk::AttachmentDescription colorAttachmentDescription { };
+    colorAttachmentDescription.format = context->imageFormat;
+    colorAttachmentDescription.samples = msaaSampleCount;
+    colorAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
+    colorAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
+    colorAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+    colorAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+    colorAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
+    colorAttachmentDescription.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+
+    vk::AttachmentReference colorAttachmentReference { };
+    colorAttachmentReference.attachment = 0;
+    colorAttachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+    // --
+
+    // Depth attachment
+    vk::AttachmentDescription depthAttachmentDescription { };
+    depthAttachmentDescription.format = RenderUtilities::findSupportedDepthFormat( context->physicalDevice );
+    depthAttachmentDescription.samples = msaaSampleCount;
+    depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
+    depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+    depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+    depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
+    depthAttachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+    vk::AttachmentReference depthAttachmentReference { };
+    depthAttachmentReference.attachment = 1;
+    depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    // --
+
+    // Color Image Resolver for MSAA
+    vk::AttachmentDescription colorAttachmentResolve { };
+    colorAttachmentResolve.format = context->imageFormat;
+    colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
+    colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
+    colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
+    colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+    colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+    colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
+    colorAttachmentResolve.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+
+    vk::AttachmentReference colorAttachmentResolveReference { };
+    colorAttachmentResolveReference.attachment = 2;
+    colorAttachmentResolveReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+    // --
+
+    vk::SubpassDescription subPass { };
+    subPass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+    subPass.colorAttachmentCount = 1;
+    subPass.pColorAttachments = &colorAttachmentReference;
+    subPass.pDepthStencilAttachment = &depthAttachmentReference;
+    subPass.pResolveAttachments = &colorAttachmentResolveReference;
+
+    std::array< vk::AttachmentDescription, 3 > attachments {
+        colorAttachmentDescription, depthAttachmentDescription, colorAttachmentResolve };
+
+    vk::SubpassDependency dependency { };
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    dependency.srcAccessMask = { }; // TODO Recheck
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+
+    vk::RenderPassCreateInfo renderPassCreateInfo { };
+    renderPassCreateInfo.attachmentCount = attachments.size( );
+    renderPassCreateInfo.pAttachments = attachments.data( );
+    renderPassCreateInfo.subpassCount = 1;
+    renderPassCreateInfo.pSubpasses = &subPass;
+    renderPassCreateInfo.dependencyCount = 1;
+    renderPassCreateInfo.pDependencies = &dependency;
+
+    context->renderPass = context->logicalDevice.createRenderPass( renderPassCreateInfo );
 }
 
 END_NAMESPACES

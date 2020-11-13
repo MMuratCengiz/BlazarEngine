@@ -84,6 +84,22 @@ public:
         return vk::SampleCountFlagBits::e1;
     }
 
+    inline static vk::Format findSupportedDepthFormat( vk::PhysicalDevice physicalDevice ) {
+        vk::Format desiredFormats[] = { vk::Format::eD24UnormS8Uint, vk::Format::eD32SfloatS8Uint, vk::Format::eD32Sfloat };
+
+        for ( auto format: desiredFormats ) {
+            vk::FormatProperties properties = physicalDevice.getFormatProperties( format );
+
+            if ( ( properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment )
+                 == vk::FormatFeatureFlagBits::eDepthStencilAttachment ) {
+                return format;
+            }
+        }
+
+        return vk::Format::eD32Sfloat;
+    }
+
+
     inline static uint32_t getMatchingMemoryType( const pRenderContext &context,
                                                   const vk::MemoryPropertyFlags &memoryProperties,
                                                   const vk::MemoryRequirements &memoryRequirements ) {

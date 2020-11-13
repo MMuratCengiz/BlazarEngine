@@ -24,7 +24,7 @@ private:
     };
 
     static std::unordered_map< std::string, std::vector< char > > cachedShaders;
-    std::shared_ptr< RenderContext > context;
+    std::shared_ptr< InstanceContext > context;
     std::vector< Shader > shaders;
 
     // Todo see if we can make these all local again
@@ -56,7 +56,7 @@ private:
     std::shared_ptr< Renderer > renderer;
     std::shared_ptr< DefaultShaderLayout > shaderLayout = std::make_shared< DefaultShaderLayout >();
 public:
-    RenderSurface( const std::shared_ptr< RenderContext >&, std::vector< Shader > shaders );
+    RenderSurface( const std::shared_ptr< InstanceContext >&, std::vector< Shader > shaders );
 
     std::shared_ptr< Renderer >& getSurfaceRenderer();
     ~RenderSurface( );
@@ -65,14 +65,12 @@ private:
     void createSurface( );
 
     vk::ShaderModule createShaderModule( const std::string &filename );
-    vk::Format findSupportedDepthFormat( );
 
     static std::vector< char > readFile( const std::string &filename );
 
     void configureVertexInput( );
 
-    void createSwapChain( vk::SurfaceCapabilitiesKHR surfaceCapabilities, vk::SurfaceFormatKHR surfaceFormat,
-                          vk::PresentModeKHR presentMode );
+    void createSwapChain( const vk::SurfaceCapabilitiesKHR& surfaceCapabilities );
 
     void createImageView( vk::ImageView &imageView, const vk::Image& image, const vk::Format& format,
                           const vk::ImageAspectFlags& aspectFlags );

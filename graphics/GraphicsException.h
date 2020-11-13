@@ -17,11 +17,13 @@ private:
     std::string formattedError;
 
     static std::string sourceToStr( Source source ) {
-        std::string result = ( ( std::string[] ) {
-            "RenderDevice",
-            "RenderSurface",
-            "Renderer",
-            "Utilities" } )[ ( uint32_t ) source ];
+        std::string sourceList[] {
+                "RenderDevice",
+                "RenderSurface",
+                "Renderer",
+                "Utilities" };
+
+        std::string result = sourceList[ uint32_t( source ) ];
 
         return "[" + result + "]";
     }

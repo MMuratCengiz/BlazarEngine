@@ -9,7 +9,7 @@ NAMESPACES( SomeVulkan, Graphics )
 
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
-RenderSurface::RenderSurface( const std::shared_ptr< RenderContext > &context,
+RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
                               std::vector< Shader > shaders )
         : context( context ), shaders( std::move( shaders ) ) {
     pipelineCreateInfo.pDepthStencilState = nullptr;
@@ -19,7 +19,7 @@ RenderSurface::RenderSurface( const std::shared_ptr< RenderContext > &context,
     createPipeline( false );
 
     context->subscribeToEvent( EventType::SwapChainInvalidated, [ & ](
-            RenderContext *context, EventType eventType ) -> void {
+            InstanceContext *context, EventType eventType ) -> void {
         context->logicalDevice.waitIdle( );
 
         dispose( );
@@ -63,40 +63,21 @@ void RenderSurface::createPipeline( bool isReset ) {
 
     IFISNOTRESET( createRenderPass( ) )
 
+
     context->pipeline = context->logicalDevice.createGraphicsPipeline( nullptr, pipelineCreateInfo ).value;
 
     createFrameBuffers( );
 }
 
 void RenderSurface::createSurface( ) {
-    VkSurfaceCapabilitiesKHR capabilities;
+    vk::SurfaceCapabilitiesKHR capabilities;
 
     capabilities = context->physicalDevice.getSurfaceCapabilitiesKHR( context->surface );
-    auto formats = context->physicalDevice.getSurfaceFormatsKHR( context->surface );
-    auto presentModes = context->physicalDevice.getSurfacePresentModesKHR( context->surface );
 
-    std::function< bool( vk::SurfaceFormatKHR ) > formatCondition = [ ]( vk::SurfaceFormatKHR format ) -> bool {
-        return format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear;
-    };
-
-    std::function< bool( vk::PresentModeKHR ) > presentModeCondition = [ ]( vk::PresentModeKHR presentMode ) -> bool {
-        return presentMode == vk::PresentModeKHR::eMailbox;
-    };
-
-    vk::SurfaceFormatKHR selectedSurfaceFormat = Utilities::matchAndGetOrDefault( formats[ 0 ], formats,
-                                                                                  formatCondition );
-
-    vk::PresentModeKHR selectedPresentMode = Utilities::matchAndGetOrDefault( vk::PresentModeKHR::eFifo, presentModes,
-                                                                              presentModeCondition );
-
-    context->imageFormat = selectedSurfaceFormat.format;
-
-    createSwapChain( capabilities, selectedSurfaceFormat, selectedPresentMode );
+    createSwapChain( capabilities );
 }
 
-void RenderSurface::createSwapChain( vk::SurfaceCapabilitiesKHR surfaceCapabilities,
-                                     vk::SurfaceFormatKHR surfaceFormat,
-                                     vk::PresentModeKHR presentMode ) {
+void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR& surfaceCapabilities ) {
     chooseExtent2D( surfaceCapabilities );
 
     vk::SwapchainCreateInfoKHR createInfo { };
@@ -105,8 +86,8 @@ void RenderSurface::createSwapChain( vk::SurfaceCapabilitiesKHR surfaceCapabilit
 
     createInfo.surface = context->surface;
     createInfo.minImageCount = imageCount;
-    createInfo.imageFormat = surfaceFormat.format;
-    createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    createInfo.imageFormat = context->imageFormat;
+    createInfo.imageColorSpace = context->colorSpace;
     createInfo.imageExtent = context->surfaceExtent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
@@ -126,13 +107,13 @@ void RenderSurface::createSwapChain( vk::SurfaceCapabilitiesKHR surfaceCapabilit
 
     createInfo.preTransform = surfaceCapabilities.currentTransform;
     createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-    createInfo.presentMode = presentMode;
+    createInfo.presentMode = context->presentMode;
     createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = VK_NULL_HANDLE;
+    createInfo.oldSwapchain = nullptr;
 
     context->swapChain = context->logicalDevice.createSwapchainKHR( createInfo );
 
-    createSwapChainImages( surfaceFormat.format );
+    createSwapChainImages( context->imageFormat );
 }
 
 void RenderSurface::createSwapChainImages( vk::Format format ) {
@@ -282,13 +263,11 @@ void RenderSurface::configureColorBlend( ) {
 }
 
 void
-RenderSurface::configureDynamicState( ) {
-#ifdef CODE_COMMENTED
+RenderSurface::configureDynamicState( ) {/*
     dynamicStateCreateInfo.dynamicStateCount = 2;
     dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-#endif
+    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;*/
 }
 
 void
@@ -303,85 +282,9 @@ RenderSurface::createPipelineLayout( ) {
 }
 
 void RenderSurface::createRenderPass( ) {
-    // Color Attachment
-    vk::AttachmentDescription colorAttachmentDescription { };
-    colorAttachmentDescription.format = context->imageFormat;
-    colorAttachmentDescription.samples = msaaSampleCount;
-    colorAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-    colorAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-    colorAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-    colorAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-    colorAttachmentDescription.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
-
-    vk::AttachmentReference colorAttachmentReference { };
-    colorAttachmentReference.attachment = 0;
-    colorAttachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-    // --
-
-    // Depth attachment
-    vk::AttachmentDescription depthAttachmentDescription { };
-    depthAttachmentDescription.format = findSupportedDepthFormat( );
-    depthAttachmentDescription.samples = msaaSampleCount;
-    depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-    depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eDontCare;
-    depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-    depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-    depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-    depthAttachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-    vk::AttachmentReference depthAttachmentReference { };
-    depthAttachmentReference.attachment = 1;
-    depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    // --
-
-    // Color Image Resolver for MSAA
-    vk::AttachmentDescription colorAttachmentResolve { };
-    colorAttachmentResolve.format = context->imageFormat;
-    colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
-    colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
-    colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-    colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-    colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
-    colorAttachmentResolve.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-    vk::AttachmentReference colorAttachmentResolveReference { };
-    colorAttachmentResolveReference.attachment = 2;
-    colorAttachmentResolveReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-    // --
-
-    vk::SubpassDescription subPass { };
-    subPass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-    subPass.colorAttachmentCount = 1;
-    subPass.pColorAttachments = &colorAttachmentReference;
-    subPass.pDepthStencilAttachment = &depthAttachmentReference;
-    subPass.pResolveAttachments = &colorAttachmentResolveReference;
-
-    std::array< vk::AttachmentDescription, 3 > attachments { colorAttachmentDescription, depthAttachmentDescription,
-                                                             colorAttachmentResolve };
-
-    vk::SubpassDependency dependency { };
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    dependency.srcAccessMask = { }; // TODO Recheck
-    dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-
-    vk::RenderPassCreateInfo renderPassCreateInfo { };
-    renderPassCreateInfo.attachmentCount = attachments.size( );
-    renderPassCreateInfo.pAttachments = attachments.data( );
-    renderPassCreateInfo.subpassCount = 1;
-    renderPassCreateInfo.pSubpasses = &subPass;
-    renderPassCreateInfo.dependencyCount = 1;
-    renderPassCreateInfo.pDependencies = &dependency;
-
-    context->renderPass = context->logicalDevice.createRenderPass( renderPassCreateInfo );
-
     pipelineCreateInfo.renderPass = context->renderPass;
     pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineCreateInfo.basePipelineHandle = nullptr;
     pipelineCreateInfo.basePipelineIndex = -1;
 }
 
@@ -415,8 +318,6 @@ vk::ShaderModule RenderSurface::createShaderModule( const std::string &filename 
     vk::ShaderModuleCreateInfo shaderModuleCreateInfo { };
     shaderModuleCreateInfo.codeSize = data.size( );
     shaderModuleCreateInfo.pCode = reinterpret_cast< const uint32_t * >( data.data( ) );
-
-    vk::ShaderModule shaderModule;
 
     return context->logicalDevice.createShaderModule( shaderModuleCreateInfo );
 }
@@ -494,7 +395,7 @@ void RenderSurface::createSamplingResources( ) {
 }
 
 void RenderSurface::createDepthAttachmentImages( ) {
-    const vk::Format &format = findSupportedDepthFormat( );
+    const vk::Format &format = RenderUtilities::findSupportedDepthFormat( context->physicalDevice );
 
     vk::ImageCreateInfo imageCreateInfo { };
 
@@ -535,21 +436,6 @@ void RenderSurface::createDepthAttachmentImages( ) {
     depthStencilStateCreateInfo.back = vk::StencilOpState { };
 
     pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
-}
-
-vk::Format RenderSurface::findSupportedDepthFormat( ) {
-    vk::Format desiredFormats[] = { vk::Format::eD24UnormS8Uint, vk::Format::eD32SfloatS8Uint, vk::Format::eD32Sfloat };
-
-    for ( auto format: desiredFormats ) {
-        vk::FormatProperties properties = context->physicalDevice.getFormatProperties( format );
-
-        if ( ( properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment )
-             == vk::FormatFeatureFlagBits::eDepthStencilAttachment ) {
-            return format;
-        }
-    }
-
-    return vk::Format::eD32Sfloat;
 }
 
 RenderSurface::~RenderSurface( ) {

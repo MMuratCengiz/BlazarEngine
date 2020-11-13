@@ -6,7 +6,7 @@
 
 using namespace SomeVulkan::Graphics;
 
-CommandExecutor::CommandExecutor( const std::shared_ptr< RenderContext > &context ) : context( context ) {
+CommandExecutor::CommandExecutor( const std::shared_ptr< InstanceContext > &context ) : context( context ) {
     vk::CommandPoolCreateInfo commandPoolCreateInfo { };
 
     commandPoolCreateInfo.queueFamilyIndex = context->queueFamilies[ QueueType::Graphics ].index;
@@ -260,7 +260,7 @@ vk::Result CommandList::execute( ) {
     submitInfo.pCommandBuffers = buffers.data( );
 
     vk::Queue queue = executor->context->queues[ QueueType::Graphics ];
-    vk::Result result = queue.submit( 1, &submitInfo, VK_NULL_HANDLE );
+    vk::Result result = queue.submit( 1, &submitInfo, nullptr );
     queue.waitIdle( );
 
     return result;

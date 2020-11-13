@@ -12,7 +12,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-Renderer::Renderer( const std::shared_ptr< RenderContext > &context,
+Renderer::Renderer( const std::shared_ptr< InstanceContext > &context,
                     const std::shared_ptr< ShaderLayout > &shaderLayout )
         : context( context ), shaderLayout( shaderLayout ) {
     poolSize = context->swapChainImages.size( );
@@ -71,7 +71,7 @@ void Renderer::createFrameContexts( ) {
                 BindingUpdateInfo updateInfo {
                         index,
                         context->descriptorSets[ i ],
-                        fContext.ubo[ index ]
+                        fContext.ubo[ index ].buffer
                 };
 
                 context->descriptorManager->updateUniformDescriptorSetBinding( updateInfo );
@@ -168,7 +168,7 @@ void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable 
         BindingUpdateInfo texUpdateInfo {
                 .index = i++,
                 .parent = context->descriptorSets[ frameIndex ],
-                .memory = tex->getDeviceMemory( )
+                .buffer = { .image = tex->getImage() }
         };
 
         TextureBindingUpdateInfo textureBindingUpdateInfo { .updateInfo = texUpdateInfo, .texture = tex };
@@ -261,7 +261,7 @@ void Renderer::createSynchronizationStructures( const vk::Device &device ) {
     this->renderFinishedSemaphores.resize( this->poolSize );
 
     this->inFlightFences.resize( this->poolSize );
-    this->imagesInFlight.resize( this->context->swapChainImages.size( ), VK_NULL_HANDLE );
+    this->imagesInFlight.resize( this->context->swapChainImages.size( ), nullptr );
 
 
     for ( uint32_t i = 0; i < this->imageAvailableSemaphores.size( ); ++i ) {
@@ -281,7 +281,7 @@ void Renderer::render( ) {
     uint32_t nextImage;
     auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX,
                                                               imageAvailableSemaphores[ frameIndex ],
-                                                              VK_NULL_HANDLE );
+                                                              nullptr );
 
     if ( result.result == vk::Result::eErrorOutOfDateKHR ) {
         context->triggerEvent( EventType::SwapChainInvalidated );
@@ -292,7 +292,7 @@ void Renderer::render( ) {
 
     nextImage = result.value;
 
-    if ( imagesInFlight[ nextImage ] != VK_NULL_HANDLE ) {
+    if ( imagesInFlight[ nextImage ] != nullptr ) {
         waitResult = context->logicalDevice.waitForFences( 1, &imagesInFlight[ frameIndex ], true, UINT64_MAX );
         VkCheckResult( waitResult );
     }

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "../core/Common.h"
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
-#include "../core/Common.h"
 #include "RenderSurface.h"
 #include "RenderDeviceBuilder.h"
-#include "RenderContext.h"
+#include "InstanceContext.h"
 
 /*
  *
@@ -30,10 +30,6 @@ typedef const std::function< bool( QueueType index ) > &findQueueType;
 }
 
 class RenderDevice {
-public:
-    const std::unordered_map< QueueType, vk::QueueFlagBits > QUEUE_TYPE_FLAGS = {
-            { QueueType::Graphics, vk::QueueFlagBits::eGraphics },
-    };
 private:
     const std::unordered_map< std::string, bool > ENABLED_LAYERS {
             { "VK_LAYER_KHRONOS_validation", true },
@@ -45,6 +41,7 @@ private:
 
     const std::vector< QueueType > queueTypes = {
             QueueType::Graphics,
+            QueueType::Transfer,
             QueueType::Presentation
     };
 
@@ -52,10 +49,7 @@ private:
     std::unordered_map< std::string, bool > supportedExtensions;
     std::unordered_map< std::string, bool > supportedLayers;
 
-    bool queueFamiliesPrepared = false;
-    bool logicalDeviceCreated = false;
-
-    std::shared_ptr< RenderContext > context;
+    std::shared_ptr< InstanceContext > context;
 public:
     explicit RenderDevice( GLFWwindow *window );
 
@@ -64,7 +58,7 @@ public:
 
     void beforeDelete();
 
-    std::shared_ptr< RenderContext > getContext() const;
+    std::shared_ptr< InstanceContext > getContext() const;
     std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< Shader >& shaders );
 
     ~RenderDevice( );
@@ -77,8 +71,8 @@ private:
     void setupQueueFamilies( );
     void createLogicalDevice( );
     void createSurface( );
-
-    void addQueueFamily( uint32_t index, const vk::QueueFamilyProperties &properties, T_FUNC::findQueueType &exists );
+    void createRenderPass( );
+    void initializeVMA( );
 
     static std::unordered_map< std::string, bool > defaultRequiredExtensions();
     static bool defaultDeviceCapabilityCheck( const DeviceInfo& deviceInfo );

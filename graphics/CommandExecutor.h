@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../core/Common.h"
-#include "RenderContext.h"
+#include "InstanceContext.h"
 #include "CommanExecutorArguments.h"
 
 NAMESPACES( SomeVulkan, Graphics )
@@ -9,7 +9,7 @@ NAMESPACES( SomeVulkan, Graphics )
 class BeginCommandExecution;
 class CommandList;
 class RenderDevice;
-class RenderContext;
+class InstanceContext;
 
 typedef std::shared_ptr< CommandExecutor > pCommandExecutor;
 
@@ -19,10 +19,10 @@ private:
     friend class CommandList;
 
     vk::CommandPool commandPool { };
-    std::shared_ptr< RenderContext > context;
+    std::shared_ptr< InstanceContext > context;
 
 public:
-    explicit CommandExecutor( const std::shared_ptr< RenderContext > &context );
+    explicit CommandExecutor( const std::shared_ptr< InstanceContext > &context );
 
     std::shared_ptr< BeginCommandExecution > startCommandExecution( );
 

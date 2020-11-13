@@ -26,18 +26,8 @@ public:
     }
 };
 
-
 int main( ) {
-
     auto *game = new GameMain { };
-
-
-    const std::vector<float> vdata = {
-            -0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
-            0.5f, -0.5f, 1.0f,0.0f, 0.0f,
-            0.5f, 0.5f, 1.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f, 1.0f, 1.0f, 1.0f
-    };
 
     Game g( 800, 600, "Some Vulkan", game );
     g.play( );

@@ -5,6 +5,13 @@
 
 #define GLFW_INCLUDE_VULKAN
 
+#include <stdlib.h>
+#include <malloc.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
@@ -16,17 +23,13 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
-#include <assert.h>
 #include <memory>
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <cstring>
 #include "Time.h"
 #include "../external/loaders/stb_image.h"
-
-typedef struct StatusInfo {
-    int code;
-    std::string message;
-} StatusInfo;
+#include "../external/vma/vk_mem_alloc.hpp"
 
 #define PATH(P) std::string(ROOT_DIR) + P
 
@@ -71,7 +74,9 @@ public:
     }
 };
 
-#define range( var, from, to ) for ( uint32_t var = from; from < to; ++var )
-#define until( var, to ) for ( uint32_t var = 0; var < to; ++var )
+#define while_false( statement ) do { statement } while ( false )
+#define ASSERT_M( val, message ) while_false( if ( !( val ) ) { throw std::runtime_error( message ); } )
+#define ASSERT( val ) ASSERT_M( val, "assert val failed!" )
 
-#define VkCheckResult( R ) assert( R == vk::Result::eSuccess )
+#define NOT_NULL( val ) ASSERT_M( val != nullptr, "val cannot be null!" )
+#define VkCheckResult( R ) ASSERT( R == vk::Result::eSuccess )
