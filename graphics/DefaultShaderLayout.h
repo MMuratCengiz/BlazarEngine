@@ -2,7 +2,7 @@
 
 #include "../core/Common.h"
 #include "../graphics/ShaderLayout.h"
-#include <glm/glm.hpp>
+#include <glm/glm/glm.hpp>
 
 NAMESPACES( SomeVulkan, Graphics )
 

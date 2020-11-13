@@ -24,12 +24,12 @@
 #include <sstream>
 #include <functional>
 #include <memory>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
 #include <cstring>
 #include "Time.h"
-#include "../external/loaders/stb_image.h"
-#include "../external/vma/vk_mem_alloc.hpp"
+#include <stb/stb_image.h>
+#include <vma/vk_mem_alloc.hpp>
 
 #define PATH(P) std::string(ROOT_DIR) + P
 

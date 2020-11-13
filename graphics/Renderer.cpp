@@ -4,11 +4,11 @@
 
 #include "Renderer.h"
 #include "../input/GlobalEventHandler.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include "../external/loaders/stb_image.h"
+#include <stb/stb_image.h>
 
 NAMESPACES( SomeVulkan, Graphics )
 

@@ -36,8 +36,8 @@ set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
 
 set(Shaders shaders/glsl/fragment/default.glsl shaders/glsl/vertex/default.glsl renderobjects/Triangle2D.h graphics/CommandExecutor.cpp graphics/CommandExecutor.h)
 
-add_subdirectory(./external/glfw-3.3.2/)
-add_subdirectory(./external/glm/)
+add_subdirectory(./external/glfw)
+add_subdirectory(./external/glm)
 add_subdirectory(./external/assimp)
 
 ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
@@ -45,7 +45,6 @@ ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ADD_DEFINITIONS(-DDEBUG)
 ADD_DEFINITIONS(-DG_VERBOSITY=3)
 ADD_DEFINITIONS(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
-
 
 include_directories(
         external
@@ -56,7 +55,8 @@ include_directories(
 find_package(Vulkan REQUIRED)
 
 add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects})
-target_compile_options( SomeVulkan PRIVATE /w )
+
+#target_compile_options( SomeVulkan PRIVATE /w )
 target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING )
 
 link_directories(SomeVulkan
