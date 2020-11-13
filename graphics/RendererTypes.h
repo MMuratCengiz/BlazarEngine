@@ -43,6 +43,15 @@ union DeviceBufferSize {
     DBS_OP( >= )
     DBS_OP( == )
 
+
+	DeviceBufferSize(const uint32_t& other) {
+		size = other;
+	}
+
+	DeviceBufferSize(const vk::Extent2D& other) {
+		extent = other;
+	}
+
     bool operator ==( const uint32_t& other ) const {
         return size == other;
     }
@@ -75,12 +84,12 @@ union DeviceBuffer {
 
 
 struct DeviceMemory {
-    DeviceBuffer buffer;
+    DeviceBuffer buffer{ };
     DeviceBufferType bufferType = DeviceBufferType::Regular;
 
-    vk::DeviceMemory memory;
+    vk::DeviceMemory memory{ };
 
-    DeviceBufferSize currentMemorySize;
+    DeviceBufferSize currentMemorySize{ 0 };
     vk::MemoryPropertyFlags properties;
     vk::BufferUsageFlags bufferUsage;
 };
@@ -89,8 +98,8 @@ struct FrameContext {
     std::shared_ptr< CommandExecutor > commandExecutor;
     std::shared_ptr< CommandList > cachedBuffers;
 
-    DeviceMemory vbo;
-    DeviceMemory ibo;
+	DeviceMemory vbo{ };
+	DeviceMemory ibo{ };
     std::vector< DeviceMemory > ubo;
     std::vector< DeviceMemory > tbo;
     uint64_t vboOffset = 0;

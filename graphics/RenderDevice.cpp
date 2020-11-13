@@ -151,9 +151,7 @@ RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
     for ( auto it = devices.begin( ); it != devices.end( ); ) {
         vk::PhysicalDevice physicalDevice = *it;
 
-        DeviceInfo deviceInfo {
-                .device = physicalDevice
-        };
+        DeviceInfo deviceInfo{ physicalDevice };
 
         createDeviceInfo( physicalDevice, deviceInfo );
 
@@ -356,18 +354,10 @@ RenderDevice::createRenderSurface( const std::vector< Shader > &shaders ) {
 RenderDevice::~RenderDevice( ) {
     destroyDebugUtils( );
 
-    if ( context->surface != nullptr ) {
-        context->instance.destroySurfaceKHR( context->surface );
-    }
-
-    if ( context->logicalDevice != nullptr ) {
-        context->vma.destroy();
-        context->logicalDevice.destroy( );
-    }
-
-    if ( context->instance != nullptr ) {
-        context->instance.destroy( );
-    }
+    context->instance.destroySurfaceKHR( context->surface );
+    context->vma.destroy();
+    context->logicalDevice.destroy( );
+    context->instance.destroy( );
 }
 
 void RenderDevice::destroyDebugUtils( ) const {

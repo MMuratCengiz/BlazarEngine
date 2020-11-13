@@ -15,11 +15,11 @@ using namespace ECS;
 
 class Renderer {
 private:
-    const DeviceBufferSize INITIAL_VBO_SIZE = DeviceBufferSize { .size = 200 * 65536 * sizeof( float ) };
-    const DeviceBufferSize INITIAL_IBO_SIZE = DeviceBufferSize { .size = 100 * sizeof( uint32_t ) };
-    const DeviceBufferSize INITIAL_UBO_SIZE = DeviceBufferSize { .size = 3 * 4 * 4 * sizeof( float ) };
+    const DeviceBufferSize INITIAL_VBO_SIZE{ 200 * 65536 * sizeof(float) };
+    const DeviceBufferSize INITIAL_IBO_SIZE{ 100 * sizeof( uint32_t ) };
+    const DeviceBufferSize INITIAL_UBO_SIZE{ 3 * 4 * 4 * sizeof( float ) };
 
-    const DeviceBufferSize INITIAL_TEX_SIZE = DeviceBufferSize { .extent = { 100, 100 } };
+    const DeviceBufferSize INITIAL_TEX_SIZE = DeviceBufferSize { vk::Extent2D{ 100, 100 } };
 
     uint32_t poolSize = 3;
     uint32_t frameIndex = 0;
@@ -57,7 +57,7 @@ private:
 
     template< class T, class V = std::vector< T > >
     void transferData( const V &v, DeviceMemory &targetMemory, vk::DeviceSize offset ) {
-        transferData< T, V >( v, targetMemory, offset, DeviceBufferSize { .size = v.size() });
+        transferData< T, V >( v, targetMemory, offset, DeviceBufferSize { v.size() });
     }
 
     template< class T, class V = std::vector< T > >

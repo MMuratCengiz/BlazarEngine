@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(SomeVulkan)
 
-set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOptions.cmake")
 set(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/shaders/)
 
 function(add_shader SHADER_TYPE SHADER_NAME)
@@ -16,7 +15,7 @@ endfunction()
 add_shader(vertex default)
 add_shader(fragment default)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -36,31 +35,35 @@ set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
 
 set(Shaders shaders/glsl/fragment/default.glsl shaders/glsl/vertex/default.glsl renderobjects/Triangle2D.h graphics/CommandExecutor.cpp graphics/CommandExecutor.h)
 
-add_subdirectory(./external/glfw)
-add_subdirectory(./external/glm)
-add_subdirectory(./external/assimp)
+include_directories("${CMAKE_SOURCE_DIR}/external/glm")
+include_directories("${CMAKE_SOURCE_DIR}/external/stb") 
+include_directories("${CMAKE_SOURCE_DIR}/external/vma")
 
-ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
-ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
-ADD_DEFINITIONS(-DDEBUG)
-ADD_DEFINITIONS(-DG_VERBOSITY=3)
-ADD_DEFINITIONS(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/glfw)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/assimp)
 include_directories(
-        external
-        external/assimp/include
-        external/assimp/code
+        "${CMAKE_SOURCE_DIR}/external"
+        "${CMAKE_SOURCE_DIR}/external/assimp/include"
+        "${CMAKE_SOURCE_DIR}/external/assimp/code"
 )
+
+
+add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+add_definitions(-DDEBUG)
+add_definitions(-DG_VERBOSITY=3)
+add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(Vulkan REQUIRED)
 
 add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects})
 
-#target_compile_options( SomeVulkan PRIVATE /w )
-target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING )
+target_compile_options( SomeVulkan PRIVATE /w )
+target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING  )
 
 link_directories(SomeVulkan
-        ${Assimp_BINARY_DIR}
-        ${Assimp_BINARY_DIR}/lib)
+        ${ASSIMP_BINARY_DIR}
+        ${ASSIMP_BINARY_DIR}/lib)
 
 target_link_libraries(SomeVulkan glfw assimp Vulkan::Vulkan)

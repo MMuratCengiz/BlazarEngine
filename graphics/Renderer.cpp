@@ -4,11 +4,11 @@
 
 #include "Renderer.h"
 #include "../input/GlobalEventHandler.h"
-#include <glm/glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include <stb/stb_image.h>
+#include <stb_image.h>
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -18,9 +18,6 @@ Renderer::Renderer( const std::shared_ptr< InstanceContext > &context,
     poolSize = context->swapChainImages.size( );
 
     createFrameContexts( );
-
-/*    triangle = std::make_shared< RenderObject::Triangle2D >( );
-    addRenderObject( ENTITY_CAST( triangle ) );*/
 
     for ( const auto &gameObject: model.getEntities( ) ) {
         addRenderObject( gameObject );
@@ -36,10 +33,10 @@ Renderer::Renderer( const std::shared_ptr< InstanceContext > &context,
 }
 
 void Renderer::createFrameContexts( ) {
-    frameContexts.resize( poolSize, { } );
+    frameContexts.resize( poolSize, FrameContext{ } );
 
     for ( uint32_t i = 0; i < poolSize; ++i ) {
-
+        // TODO check again if this breaks
         FrameContext &fContext = frameContexts[ i ];
 
         fContext.commandExecutor = std::make_shared< CommandExecutor >( context );
@@ -54,7 +51,7 @@ void Renderer::createFrameContexts( ) {
         ensureMemorySize( INITIAL_IBO_SIZE, fContext.ibo );
         ensureMemorySize( INITIAL_VBO_SIZE, fContext.vbo );
 
-        fContext.ubo.resize( shaderLayout->getDescriptorCount( ), { } );
+        fContext.ubo.resize( shaderLayout->getDescriptorCount( ), DeviceMemory{ } );
 
         for ( uint32_t index = 0; index < shaderLayout->getDescriptorCount( ); ++index ) {
             const DescriptorSetBinding &binding = shaderLayout->getDescriptorSetBindings( )[ index ];
@@ -121,11 +118,11 @@ void Renderer::drawRenderObjects( ) {
 
     rotation += Core::Time::getDeltaTime( );
 
-    const MVP mvp {
-            .model = glm::rotate( glm::mat4( 1.0f ), glm::radians( rotation ), glm::vec3( 0.0f, 0.0f, 1.0f ) ),
-            .view  = glm::lookAt( v3( 0.0f, 2.0f, 1.0f ), v3( 0.0f, 0.0f, 0.0f ), v3( 0.0f, 0.0f, 1.0f ) ),
-            .projection = project
-    };
+    MVP mvp;
+    mvp.model = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    mvp.view = glm::lookAt(v3(0.0f, 2.0f, 1.0f), v3(0.0f, 0.0f, 0.0f), v3(0.0f, 0.0f, 1.0f));
+    mvp.projection = project;
+    
 
     transferData< float, MVP >( mvp, currentFrameContext.ubo[ 0 ], 0 );
 
@@ -155,23 +152,27 @@ void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable 
             currentFrameContext.vbo, offset );
 
     if ( drawDescription.indexedMode ) {
-        transferData< uint32_t >( drawDescription.indices, currentFrameContext.vbo, offset + vertexOffset,
-                                  DeviceBufferSize { .size = drawDescription.indices.size( ) * sizeof( uint32_t ) } );
+        DeviceBufferSize bufferSize( drawDescription.indices.size( ) * sizeof( uint32_t ) );
+
+        transferData< uint32_t >( drawDescription.indices, currentFrameContext.vbo, offset + vertexOffset, bufferSize );
     }
 
     uint32_t i = 1;
-    for ( auto &tex: drawDescription.textures ) {
-        tex->loadIntoGPUMemory( context, currentFrameContext.commandExecutor );
+    for (auto& tex : drawDescription.textures) {
+        tex->loadIntoGPUMemory(context, currentFrameContext.commandExecutor);
 
-        const DeviceBufferSize &size = DeviceBufferSize { .extent = { tex->getWidth( ), tex->getHeight( ) } };
+        DeviceBufferSize& size = DeviceBufferSize{ vk::Extent2D( tex->getWidth( ), tex->getHeight( ) ) };
 
-        BindingUpdateInfo texUpdateInfo {
-                .index = i++,
-                .parent = context->descriptorSets[ frameIndex ],
-                .buffer = { .image = tex->getImage() }
-        };
+        BindingUpdateInfo texUpdateInfo{ };
+        texUpdateInfo.index = i++;
+        texUpdateInfo.parent = context->descriptorSets[frameIndex];
+        texUpdateInfo.buffer = {};
+        texUpdateInfo.buffer.image = tex->getImage();
 
-        TextureBindingUpdateInfo textureBindingUpdateInfo { .updateInfo = texUpdateInfo, .texture = tex };
+        TextureBindingUpdateInfo textureBindingUpdateInfo{};
+        textureBindingUpdateInfo.updateInfo = texUpdateInfo;
+        textureBindingUpdateInfo.texture = tex;
+
         context->descriptorManager->updateTextureDescriptorSetBinding( textureBindingUpdateInfo );
     }
 
@@ -292,7 +293,7 @@ void Renderer::render( ) {
 
     nextImage = result.value;
 
-    if ( imagesInFlight[ nextImage ] != nullptr ) {
+    if ( nullptr != imagesInFlight[ nextImage ] ) {
         waitResult = context->logicalDevice.waitForFences( 1, &imagesInFlight[ frameIndex ], true, UINT64_MAX );
         VkCheckResult( waitResult );
     }
@@ -347,7 +348,7 @@ void Renderer::ensureEnoughTexBuffers( uint32_t size ) {
     std::vector< DeviceMemory > &tbo = frameContexts[ frameIndex ].tbo;
 
     if ( size > tbo.size( ) ) {
-        tbo.resize( size, { } );
+        tbo.resize( size );
         DeviceMemory &memory = tbo[ size - 1 ];
 
         memory.properties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;

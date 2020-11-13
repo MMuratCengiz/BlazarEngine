@@ -15,11 +15,12 @@ typedef struct TextureDescription {
     vk::ImageView imageView;
 } TextureDescription;
 
-typedef struct BindingUpdateInfo {
+struct BindingUpdateInfo {
     uint32_t index{};
     vk::DescriptorSet parent{};
     DeviceBuffer buffer;
-} BindingUpdateInfo;
+    BindingUpdateInfo() = default;
+};
 
 typedef struct TextureBindingUpdateInfo {
     BindingUpdateInfo updateInfo { };

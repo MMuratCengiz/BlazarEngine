@@ -238,7 +238,7 @@ Texture::~Texture( ) = default;
 void Texture::unload( ) {
     stbi_image_free( contents );
 
-    if ( device != nullptr && isLoadedToGPUMemory ) {
+    if ( isLoadedToGPUMemory ) {
         device.destroySampler( sampler );
         device.destroyImageView( imageView );
         context->vma.destroyImage( image, imageAllocation );
