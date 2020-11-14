@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include "core/Game.h"
+#include "graphics/GLSLShader.h"
 
 using namespace SomeVulkan;
 using namespace ECS;
@@ -27,6 +28,8 @@ public:
 };
 
 int main( ) {
+    Graphics::GLSLShader shader( Graphics::ShaderType2::Vertex, PATH( "/shaders/spirv/vertex/default.spv" ) );
+
     auto *game = new GameMain { };
 
     Game g( 800, 600, "Some Vulkan", game );

@@ -1,27 +1,38 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../core/common.h"
+
 #include <fstream>
+#include <spirv_cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_parser.hpp>
 
 NAMESPACES( SomeVulkan, Graphics )
 
-enum class ShaderType {
+enum class ShaderType2 {
     Vertex,
     Fragment
 };
 
-struct Shader {
-    ShaderType type;
-    std::string filename;
+struct DescriptorSetBinding2 {
+	uint16_t index;
+	vk::DescriptorType type;
+	vk::DescriptorSetLayoutBinding binding;
+	vk::DeviceSize size;
 };
 
 class GLSLShader {
 private:
-    std::vector< char > contents;
+	ShaderType2 type;
+
+	vk::VertexInputBindingDescription inputBindingDescription;
+
+    std::vector< vk::VertexInputAttributeDescription > vertexAttributeDescriptions;
+    std::vector< vk::DescriptorSetLayoutBinding > descriptorSetLayoutBindings;
+	std::vector< DescriptorSetBinding2 > descriptorSetBindings;
 public:
-    GLSLShader( ShaderType type, const std::string& path );
+    GLSLShader( ShaderType2 type, const std::string& path );
 private:
-    void readFile( const std::string &filename );
+    static std::vector< uint32_t > readFile( const std::string &filename );
 };
 
 END_NAMESPACES

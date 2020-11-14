@@ -34,20 +34,26 @@ set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h EC
 set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
 
 set(Shaders shaders/glsl/fragment/default.glsl shaders/glsl/vertex/default.glsl renderobjects/Triangle2D.h graphics/CommandExecutor.cpp graphics/CommandExecutor.h)
+set(SPVDir "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross")
+set(SPV ${SPVDir}/spirv.hpp ${SPVDir}/spirv_cfg.hpp ${SPVDir}/spirv_cfg.cpp ${SPVDir}/spirv_cpp.hpp ${SPVDir}/spirv_cpp.cpp ${SPVDir}/spirv_parser.hpp ${SPVDir}/spirv_parser.cpp ${SPVDir}/spirv_reflect.hpp ${SPVDir}/spirv_reflect.cpp ${SPVDir}/spirv_cross.hpp ${SPVDir}/spirv_cross.cpp ${SPVDir}/spirv_cross_util.hpp ${SPVDir}/spirv_cross_util.cpp ${SPVDir}/spirv_glsl.hpp ${SPVDir}/spirv_glsl.cpp ${SPVDir}/spirv_cross_parsed_ir.hpp ${SPVDir}/spirv_cross_parsed_ir.cpp)
 
 include_directories("${CMAKE_SOURCE_DIR}/external/glm")
 include_directories("${CMAKE_SOURCE_DIR}/external/stb") 
 include_directories("${CMAKE_SOURCE_DIR}/external/vma")
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/external/glfw)
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/glfw")
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/assimp")
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/external/assimp)
 include_directories(
-        "${CMAKE_SOURCE_DIR}/external"
         "${CMAKE_SOURCE_DIR}/external/assimp/include"
         "${CMAKE_SOURCE_DIR}/external/assimp/code"
+#        "${CMAKE_SOURCE_DIR}/core"
+#        "${CMAKE_SOURCE_DIR}/graphics"
+#        "${CMAKE_SOURCE_DIR}/input"
+#        "${CMAKE_SOURCE_DIR}/ecs"
+#        "${CMAKE_SOURCE_DIR}/renderobjects"
+#        "${CMAKE_SOURCE_DIR}/shaders"
 )
-
 
 add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -57,7 +63,7 @@ add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(Vulkan REQUIRED)
 
-add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects})
+add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${SPV} ) 
 
 target_compile_options( SomeVulkan PRIVATE /w )
 target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING  )
@@ -66,4 +72,5 @@ link_directories(SomeVulkan
         ${ASSIMP_BINARY_DIR}
         ${ASSIMP_BINARY_DIR}/lib)
 
-target_link_libraries(SomeVulkan glfw assimp Vulkan::Vulkan)
+target_link_libraries( SomeVulkan glfw assimp Vulkan::Vulkan )
+target_include_directories( SomeVulkan PUBLIC ${SPVDir} )

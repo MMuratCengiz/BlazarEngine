@@ -4,22 +4,44 @@
 
 #include "GLSLShader.h"
 
+#include <spirv_cross/spirv_cross.hpp>
+
 NAMESPACES( SomeVulkan, Graphics )
 
-void GLSLShader::readFile( const std::string &filename ) {
-    std::ifstream file( filename, std::ios::ate | std::ios::binary );
+GLSLShader::GLSLShader( ShaderType2 type, const std::string& path ) {
+	auto contents = readFile( path );
 
-    if ( !file.is_open( ) ) {
-        throw std::runtime_error( "failed to open file!" );
-    }
+	spirv_cross::Compiler compiler( move( contents ) );
 
-    size_t fileSize = static_cast<size_t>( file.tellg( ) );
-    contents.resize( fileSize );
+	auto shaderResources = compiler.get_shader_resources( );
 
-    file.seekg( 0 );
-    file.read( contents.data( ), fileSize );
+	auto stageInputs = shaderResources.stage_inputs;
 
-    file.close( );
+	vertexAttributeDescriptions.resize( stageInputs.size( ) );
+	
+	for ( const auto& resource : stageInputs ) {
+		
+	}
+}
+
+std::vector< uint32_t > GLSLShader::readFile( const std::string& filename ) {
+	FILE* file = fopen( filename.c_str( ), "rb" );
+	if ( !file ) {
+		throw std::runtime_error( "Failed to load shader: " + filename + "." );
+	}
+
+	fseek( file, 0, SEEK_END );
+	long fileSize = ftell( file ) / sizeof( uint32_t );
+	rewind( file );
+
+	std::vector< uint32_t > contents( fileSize );
+
+	if ( fread( contents.data( ), sizeof( uint32_t ), fileSize, file ) != size_t( fileSize ) ) {
+		contents.clear( );
+	}
+
+	fclose( file );
+	return contents;
 }
 
 END_NAMESPACES
