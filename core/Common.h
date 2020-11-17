@@ -9,6 +9,7 @@
 #include <malloc.h>
 
 #if defined(_WIN32)
+#include <atlstr.h>
 #include <windows.h>
 #endif
 

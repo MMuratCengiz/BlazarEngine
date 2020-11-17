@@ -71,6 +71,7 @@ public:
     vk::DescriptorPool descriptorPool;
     vk::DescriptorSetLayout descriptorSetLayout{ };
     vk::Viewport viewport { };
+
     std::vector< vk::DescriptorSet > descriptorSets{ };
     std::shared_ptr< DescriptorManager > descriptorManager; // todo maybe move everything related to descriptors?
 

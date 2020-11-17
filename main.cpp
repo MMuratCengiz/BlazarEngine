@@ -1,7 +1,7 @@
 
 #include <iostream>
 #include "core/Game.h"
-#include "graphics/GLSLShader.h"
+#include "graphics/GLSLShaderSet.h"
 
 using namespace SomeVulkan;
 using namespace ECS;
@@ -28,7 +28,11 @@ public:
 };
 
 int main( ) {
-    Graphics::GLSLShader shader( Graphics::ShaderType2::Vertex, PATH( "/shaders/spirv/vertex/default.spv" ) );
+    std::vector< Graphics::ShaderInfo > shaders{ };
+	shaders.emplace_back( Graphics::ShaderInfo{ vk::ShaderStageFlagBits::eVertex, PATH( "/shaders/spirv/vertex/default.spv" ) } );
+	shaders.emplace_back( Graphics::ShaderInfo{ vk::ShaderStageFlagBits::eFragment, PATH( "/shaders/spirv/fragment/default.spv" ) } );
+
+    Graphics::GLSLShaderSet shader( shaders );
 
     auto *game = new GameMain { };
 
