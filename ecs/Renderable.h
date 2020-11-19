@@ -2,26 +2,22 @@
 
 #include "../core/Common.h"
 #include "IComponent.h"
+#include "ECSUtilities.h"
 #include "../graphics/DrawDescription.h"
 
 NAMESPACES( SomeVulkan, ECS )
 
-class Renderable : public IComponent {
+struct Renderable : public IComponent {
 private:
     Graphics::DrawDescription drawDescription;
 public:
-    static const uint32_t UID;
+    [[nodiscard]] const Graphics::DrawDescription& getDrawDescription( ) {
+        return drawDescription;
+    }
 
-    uint32_t getId( ) override;
-
-    void setDrawDescription( Graphics::DrawDescription& vd );
-
-    [[nodiscard]] const Graphics::DrawDescription& getDrawDescription( ) const;
+    inline void setDrawDescription( Graphics::DrawDescription& vd ) {
+        drawDescription = std::move( vd );
+    }
 };
-
-
-#define RENDERABLE auto * renderable = new SomeVulkan::ECS::Renderable( );                     \
-                   vComponents.emplace_back( std::shared_ptr< SomeVulkan::ECS::IComponent > (  \
-                   reinterpret_cast< SomeVulkan::ECS::IComponent* > ( renderable ) ) );
 
 END_NAMESPACES

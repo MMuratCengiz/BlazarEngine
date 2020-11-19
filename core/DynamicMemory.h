@@ -10,14 +10,14 @@ NAMESPACES( SomeVulkan, Core )
 class DynamicMemory {
 private:
     char *buffer;
-    uint32_t currentSize;
-    uint32_t bufferSize;
+    uint64_t currentSize;
+    uint64_t bufferSize;
 public:
-    inline explicit DynamicMemory( uint32_t initialSize = 1024 ) : currentSize( 0 ), bufferSize( initialSize ) {
+    inline explicit DynamicMemory( uint64_t initialSize = 1024 ) : currentSize( 0 ), bufferSize( initialSize ) {
         buffer = static_cast< char * >( malloc( initialSize ) );
     }
 
-    void setInitialSize( uint32_t size ) {
+    void setInitialSize( uint64_t size ) {
         free( buffer );
         buffer = static_cast< char * >( malloc( size ) );
         bufferSize = size;
@@ -44,12 +44,12 @@ public:
         currentSize += additionalSize;
     }
 
-    const void *data( uint32_t offset = 0 ) const {
+    const void *data( uint64_t offset = 0 ) const {
         float * f = ( float * ) (void*)buffer;
         return static_cast< const void * >( buffer + offset );
     }
 
-    [[nodiscard]] const uint32_t &size( ) const {
+    [[nodiscard]] const uint64_t &size( ) const {
         return currentSize;
     }
 

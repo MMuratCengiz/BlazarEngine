@@ -28,11 +28,21 @@ void GLSLShaderSet::onEachShader( const ShaderInfo& shaderInfo ) {
 
 	uint32_t offsetIter = 0;
 
-	for ( const spirv_cross::Resource& resource : stageInputs ) {
-		SpvDecoration decoration = getDecoration( compiler, resource );
-		GLSLShaderSet::GLSLType gType = spvToGLSLType( decoration.type );
-		createVertexInput( offsetIter, gType, decoration.location );
-		offsetIter += gType.size;
+	// TODO is this fine? if so maybe throw an error if no vertex shader i
+	if ( shaderInfo.type == vk::ShaderStageFlagBits::eVertex ) {
+		for ( const spirv_cross::Resource& resource : stageInputs ) {
+			SpvDecoration decoration = getDecoration( compiler, resource );
+			GLSLShaderSet::GLSLType gType = spvToGLSLType( decoration.type );
+			createVertexInput( offsetIter, gType, decoration.location );
+			offsetIter += gType.size;
+		}
+
+		if ( interleavedMode ) {
+			vk::VertexInputBindingDescription& bindingDesc = inputBindingDescriptions.emplace_back( vk::VertexInputBindingDescription{ } );
+			bindingDesc.binding = 0;
+			bindingDesc.inputRate = vk::VertexInputRate::eVertex; // TODO investigate later for instanced rendering
+			bindingDesc.stride = offsetIter;
+		}
 	}
 
 	for ( const spirv_cross::Resource& resource : samplers ) {
@@ -53,13 +63,6 @@ void GLSLShaderSet::onEachShader( const ShaderInfo& shaderInfo ) {
 		createInfo.type = vk::DescriptorType::eUniformBuffer;
 
 		createDescriptorSetBinding( compiler, createInfo );
-	}
-
-	if ( !interleavedMode ) {
-		vk::VertexInputBindingDescription& bindingDesc = inputBindingDescriptions.emplace_back( vk::VertexInputBindingDescription{ } );
-		bindingDesc.binding = 0;
-		bindingDesc.inputRate = vk::VertexInputRate::eVertex; // TODO investigate later for instanced rendering
-		bindingDesc.stride = offsetIter;
 	}
 }
 
@@ -84,9 +87,9 @@ std::vector< uint32_t > GLSLShaderSet::readFile( const std::string& filename ) {
 }
 
 void GLSLShaderSet::ensureSetExists( uint32_t set ) {
-	if ( descriptorSets.find( set ) == descriptorSets.end( ) ) {
-		descriptorSets[ set ] = DescriptorSet{ };
-		descriptorSets[ set ].id = set;
+	if ( descriptorSetMap.find( set ) == descriptorSetMap.end( ) ) {
+		descriptorSetMap[ set ] = DescriptorSet{ };
+		descriptorSetMap[ set ].id = set;
 	}
 }
 
@@ -115,21 +118,24 @@ void GLSLShaderSet::createDescriptorSetBinding( const spirv_cross::Compiler& com
 
 	auto stages = compiler.get_entry_points_and_stages( );
 
-	DescriptorSet& descriptorSet = descriptorSets[ decoration.set ];
+	DescriptorSet& descriptorSet = descriptorSetMap[ decoration.set ];
 
-	DescriptorSetBinding2& binding = descriptorSet.descriptorSetBindings.emplace_back( DescriptorSetBinding2{ } );
+	vk::DescriptorSetLayoutBinding& layoutBinding = descriptorSet.descriptorSetLayoutBindings.emplace_back( vk::DescriptorSetLayoutBinding{ } );
+
+	layoutBinding.binding = decoration.binding;
+	layoutBinding.descriptorType = bindingCreateInfo.type;
+	layoutBinding.descriptorCount = decoration.arraySize;
+	layoutBinding.stageFlags = bindingCreateInfo.stage;
+
+	DescriptorSetBinding& binding = descriptorSet.descriptorSetBindings.emplace_back( DescriptorSetBinding{ } );
 	binding.index = descriptorSet.descriptorSetBindings.size( ) - 1;
 	binding.size = decoration.size;
 	binding.type = bindingCreateInfo.type;
 	binding.name = decoration.name;
-	binding.binding = {
-		/*binding           =*/decoration.binding,
-		/*descriptorType    =*/bindingCreateInfo.type,
-		/*descriptorCount   =*/decoration.arraySize,
-		/*stageFlags        =*/bindingCreateInfo.stage
-	};
+	binding.binding = layoutBinding;
 
 	descriptorSet.descriptorSetBindingMap[ decoration.name ] = binding;
+	descriptorSets.emplace_back( descriptorSet );
 }
 
 
@@ -208,9 +214,9 @@ GLSLShaderSet::SpvDecoration GLSLShaderSet::getDecoration( const spirv_cross::Co
 
 	decoration.set = compiler.get_decoration( resource.id, spv::DecorationDescriptorSet );
 	decoration.type = compiler.get_type( resource.type_id );
-	
+
 	if ( decoration.type.basetype == spirv_cross::SPIRType::Struct ) {
-		uint32_t memberCount = compiler.get_declared_struct_size( decoration.type ); 
+		uint32_t memberCount = compiler.get_declared_struct_size( decoration.type );
 		// Doesn't seem necessary at the moment:
 		// uint32_t m1_size = compiler.get_declared_struct_member_size( decoration.type, 0 );
 		decoration.size = memberCount;
@@ -218,14 +224,14 @@ GLSLShaderSet::SpvDecoration GLSLShaderSet::getDecoration( const spirv_cross::Co
 
 	decoration.location = compiler.get_decoration( resource.id, spv::DecorationLocation );
 	decoration.binding = compiler.get_decoration( resource.id, spv::DecorationBinding );
-	
+
 	uint32_t totalArraySize = 0;
 
 	for ( uint32_t dimensionSize : decoration.type.array ) {
 		totalArraySize += dimensionSize;
 	}
-	
-	decoration.arraySize = totalArraySize;
+
+	decoration.arraySize = totalArraySize == 0 ? 1 : decoration.size / totalArraySize;
 	decoration.name = resource.name;
 
 	ensureSetExists( decoration.set );

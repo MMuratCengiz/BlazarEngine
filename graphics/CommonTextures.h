@@ -12,12 +12,12 @@ typedef enum class TextureID {
 
 class CommonTextures {
 private:
-    static inline std::unordered_map< TextureID, std::shared_ptr< Texture > > textures = {
+    static inline std::unordered_map< TextureID, std::shared_ptr< TextureLoader > > textures = {
 //            { TextureID::TutTexture, std::make_shared< Texture >( 2, "/assets/textures/texture.jpg" )}
     };
 
 public:
-    static std::shared_ptr< Texture > getTexture( TextureID id ) {
+    static std::shared_ptr< TextureLoader > getTexture( TextureID id ) {
         return textures[ id ];
     }
 };

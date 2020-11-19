@@ -3,6 +3,7 @@
 #include "../core/Common.h"
 #include "RendererTypes.h"
 #include "CommandExecutor.h"
+#include "../ecs/CMaterial.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -24,7 +25,7 @@ typedef struct TextureInfo {
 
 class InstanceContext; // There is a circular dependency here
 
-class Texture {
+class TextureLoader {
 private:
 
     bool isLoadedToGPUMemory{};
@@ -46,9 +47,9 @@ private:
     vk::Device device;
     std::shared_ptr< InstanceContext > context;
 public:
-    explicit Texture( uint8_t dimension, const std::string& path, TextureInfo sampler = defaultTextureInfo( ) );
+    explicit TextureLoader( uint8_t dimension, const std::string& path, TextureInfo sampler = defaultTextureInfo( ) );
     void unload();
-    ~Texture( );
+    ~TextureLoader( );
 
     inline bool loaded( ) const { return contents != nullptr; }
     [[nodiscard]] inline const uint8_t &getDimension( ) const { return dimension; };

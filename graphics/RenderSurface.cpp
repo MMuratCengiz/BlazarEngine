@@ -10,8 +10,11 @@ NAMESPACES( SomeVulkan, Graphics )
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
 RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
-                              std::vector< Shader > shaders )
+                              std::vector< ShaderInfo > shaders )
         : context( context ), shaders( std::move( shaders ) ) {
+
+    glslShaderSet = std::make_shared< GLSLShaderSet >( this->shaders );
+
     pipelineCreateInfo.pDepthStencilState = nullptr;
 
     msaaSampleCount = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
@@ -48,11 +51,11 @@ void RenderSurface::createPipeline( bool isReset ) {
     IFISNOTRESET( createDescriptorPool( ) );
 
     if ( context->descriptorManager == nullptr ) {
-        context->descriptorManager = std::make_shared< DescriptorManager >( context, shaderLayout );
+        context->descriptorManager = std::make_shared< DescriptorManager >( context, glslShaderSet );
     }
 
     if ( renderer == nullptr ) {
-        renderer = std::make_shared< Renderer >( context, shaderLayout );
+        renderer = std::make_shared< Renderer >( context, glslShaderSet );
     }
 
     IFISNOTRESET( createPipelineLayout( ) )
@@ -150,22 +153,11 @@ void RenderSurface::chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabiliti
 }
 
 void RenderSurface::configureVertexInput( ) {
-    for ( const Shader &shader: shaders ) {
+    for ( const ShaderInfo &shader: shaders ) {
         vk::PipelineShaderStageCreateInfo createInfo { };
 
-        vk::ShaderStageFlagBits shaderStage { };
-
-        switch ( shader.type ) {
-            case ShaderType::Vertex:
-                shaderStage = vk::ShaderStageFlagBits::eVertex;
-                break;
-            case ShaderType::Fragment:
-                shaderStage = vk::ShaderStageFlagBits::eFragment;
-                break;
-        }
-
-        vk::ShaderModule shaderModule = this->createShaderModule( shader.filename );
-        createInfo.stage = shaderStage;
+        vk::ShaderModule shaderModule = this->createShaderModule( shader.path);
+        createInfo.stage = shader.type;
         createInfo.module = shaderModule;
         createInfo.pName = "main";
         createInfo.pNext = nullptr;
@@ -174,11 +166,11 @@ void RenderSurface::configureVertexInput( ) {
         shaderModules.emplace_back( shaderModule );
     }
 
-    const auto &attributeDescription = shaderLayout->getVertexAttributeDescriptions( );
-    const auto &bindingDescription = shaderLayout->getInputBindingDescription( );
+    const auto& attributeDescription = glslShaderSet->getVertexAttributeDescriptions( ); // shaderLayout->getVertexAttributeDescriptions( );
+    const auto& bindingDescriptions = glslShaderSet->getInputBindingDescriptions( ); // ->getInputBindingDescription( );
 
-    inputStateCreateInfo.vertexBindingDescriptionCount = 1;
-    inputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
+    inputStateCreateInfo.vertexBindingDescriptionCount = bindingDescriptions.size();
+    inputStateCreateInfo.pVertexBindingDescriptions = bindingDescriptions.data( );
     inputStateCreateInfo.vertexAttributeDescriptionCount = attributeDescription.size( );
     inputStateCreateInfo.pVertexAttributeDescriptions = attributeDescription.data( );
 

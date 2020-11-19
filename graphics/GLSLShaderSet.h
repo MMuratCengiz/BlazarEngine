@@ -12,7 +12,25 @@ TODO List:
 */
 NAMESPACES( SomeVulkan, Graphics )
 
-struct DescriptorSetBinding2 {
+typedef struct MVP {
+	glm::mat4x4 model;
+	glm::mat4x4 view;
+	glm::mat4x4 projection;
+
+	[[nodiscard]] uint32_t size( ) const {
+		return 3 /*Matrices*/ * 4 /*columns*/ * 4 /*rows*/;
+	}
+
+	static uint32_t fullSize( ) {
+		return 3 /*Matrices*/ * 4 /*columns*/ * 4 /*rows*/ * sizeof( float );
+	}
+
+	[[nodiscard]] const MVP* data( ) const {
+		return this;
+	}
+} MVP;
+
+struct DescriptorSetBinding {
 	uint16_t index;
 	vk::DescriptorType type;
 	vk::DescriptorSetLayoutBinding binding;
@@ -23,8 +41,8 @@ struct DescriptorSetBinding2 {
 struct DescriptorSet {
 	uint32_t id;
 	std::vector< vk::DescriptorSetLayoutBinding > descriptorSetLayoutBindings;
-	std::vector< DescriptorSetBinding2 > descriptorSetBindings;
-	std::unordered_map< std::string, DescriptorSetBinding2 > descriptorSetBindingMap;
+	std::vector< DescriptorSetBinding > descriptorSetBindings;
+	std::unordered_map< std::string, DescriptorSetBinding > descriptorSetBindingMap;
 };
 
 struct ShaderInfo {
@@ -58,11 +76,28 @@ private:
 
 	std::vector< vk::VertexInputBindingDescription > inputBindingDescriptions;
 	std::vector< vk::VertexInputAttributeDescription > vertexAttributeDescriptions;
-	std::unordered_map< uint32_t, DescriptorSet > descriptorSets;
+	std::unordered_map< uint32_t, DescriptorSet > descriptorSetMap;
+	std::vector< DescriptorSet > descriptorSets;
 
 	bool interleavedMode;
 public:
     GLSLShaderSet( const std::vector< ShaderInfo > shaders, const bool& interleavedMode = true );
+	
+	inline const std::vector< DescriptorSet >& getDescriptorSets( ) {
+		return descriptorSets;
+	}
+	
+	inline const DescriptorSet& getDescriptorSetBySetId( uint32_t id ) {
+		return descriptorSetMap[ id ];
+	}
+	
+	inline const std::vector< vk::VertexInputBindingDescription >& getInputBindingDescriptions( ) {
+		return inputBindingDescriptions;
+	}
+
+	inline const std::vector< vk::VertexInputAttributeDescription >& getVertexAttributeDescriptions( ) {
+		return vertexAttributeDescriptions;
+	}
 private:
 	void onEachShader( const ShaderInfo& shaderInfo );
     static std::vector< uint32_t > readFile( const std::string &filename );

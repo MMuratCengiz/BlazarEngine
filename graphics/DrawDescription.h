@@ -6,7 +6,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-class Texture;
+class TextureLoader;
 
 typedef enum AttributeCode {
     Vertices,
@@ -22,12 +22,13 @@ typedef struct AttributeDescription {
 
 struct DrawDescription {
     bool indexedMode = false;
+    bool bufferedToGPU = false;
 
     float vertexCount;
     Core::DynamicMemory vertexMemory{ };
 
     std::vector< uint32_t > indices;
-    std::vector< std::shared_ptr< Texture > > textures;
+    std::vector< std::shared_ptr< TextureLoader > > textures;
 };
 
 class DrawDescriptionUtilities {

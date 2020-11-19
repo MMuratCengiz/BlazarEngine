@@ -4,13 +4,11 @@
 
 NAMESPACES( SomeVulkan, ECS )
 
-class IComponent {
-public:
-    virtual uint32_t getId() = 0;
-
-    bool operator==( IComponent* com ) {
-        return com->getId() == this->getId();
-    }
+struct IComponent {
+	IComponent( ) = default;
+	virtual ~IComponent( ) { }
 };
+
+typedef std::shared_ptr< IComponent > pComponent;
 
 END_NAMESPACES

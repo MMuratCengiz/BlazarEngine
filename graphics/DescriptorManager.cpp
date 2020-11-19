@@ -8,8 +8,8 @@
 NAMESPACES( SomeVulkan, Graphics )
 
 DescriptorManager::DescriptorManager( const std::shared_ptr< InstanceContext >& context,
-                                      const std::shared_ptr< ShaderLayout >& shaderLayout ) :
-                                      context( context ), shaderLayout( shaderLayout ) {
+    const std::shared_ptr< GLSLShaderSet>& shaderSet ) :
+                                      context( context ), shaderSet( shaderSet ) {
     createDescriptorSets();
 }
 
@@ -18,14 +18,11 @@ void DescriptorManager::createDescriptorSets( ) {
 
     vk::DescriptorSetLayoutCreateInfo createInfo { };
 
-    const std::vector< DescriptorSetBinding > &descriptorSetBindings = shaderLayout->getDescriptorSetBindings( );
-    std::vector< vk::DescriptorSetLayoutBinding > vkDescriptorSetBindings( shaderLayout->getDescriptorCount( ) );
+    const std::vector< DescriptorSet > &descriptorSetBindings = shaderSet->getDescriptorSets( );
 
-    for ( uint8_t i = 0; i < shaderLayout->getDescriptorCount( ); ++i ) {
-        vkDescriptorSetBindings[ i ] = descriptorSetBindings[ i ].binding;
-    }
+    std::vector< vk::DescriptorSetLayoutBinding > vkDescriptorSetBindings = shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetLayoutBindings; 
 
-    createInfo.bindingCount = shaderLayout->getDescriptorCount( );
+    createInfo.bindingCount = vkDescriptorSetBindings.size();
     createInfo.pBindings = vkDescriptorSetBindings.data();
 
     context->descriptorSetLayout = context->logicalDevice.createDescriptorSetLayout( createInfo );
@@ -40,7 +37,7 @@ void DescriptorManager::createDescriptorSets( ) {
 }
 
 void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateInfo &updateInfo ) {
-    const DescriptorSetBinding& ref = shaderLayout->getDescriptorSetBindings()[ updateInfo.index ];
+    const DescriptorSetBinding& ref = shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetBindings[ updateInfo.index ];
 
     vk::DescriptorBufferInfo descriptorBufferInfo { };
 
@@ -76,7 +73,7 @@ void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingU
 }
 
 vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const BindingUpdateInfo &updateInfo ) {
-    const DescriptorSetBinding& ref = shaderLayout->getDescriptorSetBindings()[ updateInfo.index ];
+    const DescriptorSetBinding& ref = shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetBindings [ updateInfo.index ];
     vk::WriteDescriptorSet writeDescriptorSet { };
 
     writeDescriptorSet.dstSet = updateInfo.parent;

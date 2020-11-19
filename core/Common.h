@@ -9,8 +9,8 @@
 #include <malloc.h>
 
 #if defined(_WIN32)
-#include <atlstr.h>
-#include <windows.h>
+//#include <atlstr.h>
+//#include <windows.h>
 #endif
 
 #include <GLFW/glfw3.h>

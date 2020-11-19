@@ -344,7 +344,7 @@ void RenderDevice::beforeDelete( ) {
 }
 
 std::unique_ptr< RenderSurface >
-RenderDevice::createRenderSurface( const std::vector< Shader > &shaders ) {
+RenderDevice::createRenderSurface( const std::vector< ShaderInfo > &shaders ) {
     context->logicalDevice.waitIdle( );
 
     auto *renderSurface = new RenderSurface { context, shaders };

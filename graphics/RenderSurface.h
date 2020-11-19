@@ -2,7 +2,7 @@
 
 #include "../core/Common.h"
 #include "Renderer.h"
-#include "DefaultShaderLayout.h"
+#include "GLSLShaderSet.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -23,9 +23,11 @@ private:
             vk::DynamicState::eLineWidth,
     };
 
+    std::shared_ptr< GLSLShaderSet > glslShaderSet;
+
     static std::unordered_map< std::string, std::vector< char > > cachedShaders;
     std::shared_ptr< InstanceContext > context;
-    std::vector< Shader > shaders;
+    std::vector< ShaderInfo > shaders;
 
     // Todo see if we can make these all local again
     // Pipeline createInfo required structures in class scope
@@ -54,9 +56,8 @@ private:
 
     std::vector< vk::ShaderModule > shaderModules;
     std::shared_ptr< Renderer > renderer;
-    std::shared_ptr< DefaultShaderLayout > shaderLayout = std::make_shared< DefaultShaderLayout >();
 public:
-    RenderSurface( const std::shared_ptr< InstanceContext >&, std::vector< Shader > shaders );
+    RenderSurface( const std::shared_ptr< InstanceContext >&, std::vector< ShaderInfo > shaders );
 
     std::shared_ptr< Renderer >& getSurfaceRenderer();
     ~RenderSurface( );

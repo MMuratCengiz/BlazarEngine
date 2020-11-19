@@ -19,15 +19,16 @@ NAMESPACES( SomeVulkan, RenderObjects )
 class Model;
 
 class Mesh : public ECS::IGameEntity {
+public:
 	Graphics::DrawDescription drawDescription{ };
-	std::shared_ptr< Graphics::Texture > texture = std::make_shared< Graphics::Texture >( 2,
+	std::shared_ptr< Graphics::TextureLoader > texture = std::make_shared< Graphics::TextureLoader >( 2,
 		"/assets/textures/viking_room.png" );
 
 	friend class Model;
 
-	START_COMPONENTS
-		RENDERABLE
-	END_COMPONENTS
+	Mesh( ) {
+		createComponent< ECS::Renderable >( );
+	}
 };
 
 class Model {

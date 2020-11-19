@@ -89,11 +89,11 @@ public:
 
         GlobalEventHandler::Instance( ).addWindowResizeCallback( window, ( void * ) vk.get( ), &windowResizeCb );
 
-        std::vector< Shader > shaders( 2 );
-        shaders[ 0 ].type = ShaderType::Vertex;
-		shaders[ 0 ].filename = PATH( "/shaders/spirv/vertex/default.spv" );
-		shaders[ 1 ].type = ShaderType::Fragment;
-		shaders[ 1 ].filename = PATH( "/shaders/spirv/fragment/default.spv" );
+        std::vector< ShaderInfo > shaders( 2 );
+        shaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
+		shaders[ 0 ].path = PATH( "/shaders/spirv/vertex/default.spv" );
+        shaders[ 1 ].type = vk::ShaderStageFlagBits::eFragment;
+		shaders[ 1 ].path = PATH( "/shaders/spirv/fragment/default.spv" );
 
         auto renderSurface = vk->createRenderSurface( shaders );
         auto renderer = renderSurface->getSurfaceRenderer( );

@@ -6,7 +6,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-Texture::Texture( uint8_t dimension, const std::string &path, TextureInfo textureInfo )
+TextureLoader::TextureLoader( uint8_t dimension, const std::string &path, TextureInfo textureInfo )
         : dimension( dimension ), path( path ), textureInfo( textureInfo ) {
     int lWidth, lHeight;
 
@@ -24,11 +24,11 @@ Texture::Texture( uint8_t dimension, const std::string &path, TextureInfo textur
     mipLevels = std::floor( std::log2( std::max( width, height ) ) ) + 1;
 }
 
-uint32_t Texture::size( ) const {
+uint32_t TextureLoader::size( ) const {
     return getWidth( ) * getHeight( ) * 4;
 }
 
-void Texture::loadIntoGPUMemory( std::shared_ptr< InstanceContext > &context, pCommandExecutor &commandExecutor ) {
+void TextureLoader::loadIntoGPUMemory( std::shared_ptr< InstanceContext > &context, pCommandExecutor &commandExecutor ) {
     if ( isLoadedToGPUMemory ) {
         return;
     }
@@ -147,7 +147,7 @@ void Texture::loadIntoGPUMemory( std::shared_ptr< InstanceContext > &context, pC
     generateMipMaps( context, commandExecutor );
 }
 
-void Texture::generateMipMaps( std::shared_ptr< InstanceContext > &context,
+void TextureLoader::generateMipMaps( std::shared_ptr< InstanceContext > &context,
                                std::shared_ptr< CommandExecutor > &commandExecutor ) const {
     int32_t mipWidth = width, mipHeight = height;
 
@@ -233,9 +233,9 @@ void Texture::generateMipMaps( std::shared_ptr< InstanceContext > &context,
     cmdBuffer->execute( );
 }
 
-Texture::~Texture( ) = default;
+TextureLoader::~TextureLoader( ) = default;
 
-void Texture::unload( ) {
+void TextureLoader::unload( ) {
     stbi_image_free( contents );
 
     if ( isLoadedToGPUMemory ) {

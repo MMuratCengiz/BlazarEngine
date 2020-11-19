@@ -24,14 +24,16 @@ set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h) 
 
 set(Core core/Game.h core/Common.h core/Time.h)
-set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp graphics/DefaultShaderLayout.h graphics/DrawDescription.h graphics/RenderUtilities.h graphics/InstanceContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h graphics/ShaderLayout.h graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp graphics/CommanExecutorArguments.h graphics/ClientSideLock.h graphics/VmaImplementation.cpp graphics/RenderPipeline.cpp graphics/RenderPipeline.h graphics/GLSLShaderSet.cpp graphics/GLSLShaderSet.h)
+set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp  graphics/DrawDescription.h graphics/RenderUtilities.h graphics/InstanceContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h  graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp graphics/CommanExecutorArguments.h graphics/ClientSideLock.h graphics/VmaImplementation.cpp graphics/RenderPipeline.cpp graphics/RenderPipeline.h graphics/GLSLShaderSet.cpp graphics/GLSLShaderSet.h "graphics/SMeshLoader.h" "graphics/SMeshLoader.cpp" graphics/ObjectBuffer.h)
 set(Input input/GlobalEventHandler.cpp input/GlobalEventHandler.h core/DynamicMemory.h)
-set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h ecs/Renderable.cpp)
+set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h  ecs/CMesh  "ecs/ECSUtilities.h" "ecs/CMaterial.h" "ecs/ISystem.h")
 set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
+set(SampleGame samples/SampleHouse.h)
 
 set(Shaders shaders/glsl/fragment/default.glsl shaders/glsl/vertex/default.glsl renderobjects/Triangle2D.h graphics/CommandExecutor.cpp graphics/CommandExecutor.h)
 set(SPVDir "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross")
@@ -60,14 +62,14 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-DDEBUG)
 add_definitions(-DG_VERBOSITY=3)
 add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
-
+            
 find_package(Vulkan REQUIRED)
 
 add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${SPV} ) 
 
-target_compile_options( SomeVulkan PRIVATE /w )
 target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING  )
 
+            
 link_directories(SomeVulkan
         ${ASSIMP_BINARY_DIR}
         ${ASSIMP_BINARY_DIR}/lib)

@@ -12,14 +12,12 @@ using namespace Graphics;
 
 class Triangle2D : public SomeVulkan::ECS::IGameEntity {
     Graphics::DrawDescription drawDescription { };
-    std::shared_ptr< Texture > tex;
-
-    START_COMPONENTS
-        RENDERABLE
-    END_COMPONENTS
+    std::shared_ptr< TextureLoader > tex;
 
     Triangle2D( ) {
-        tex = std::make_shared< Texture >( 2, "/assets/textures/container.jpg" );
+        auto renderable = createComponent< ECS::Renderable >( );
+
+        tex = std::make_shared< TextureLoader >( 2, "/assets/textures/container.jpg" );
 
         drawDescription.indexedMode = true;
 
@@ -36,7 +34,7 @@ class Triangle2D : public SomeVulkan::ECS::IGameEntity {
 
         drawDescription.textures.emplace_back( tex );
 
-        getComponent< Renderable >( )->setDrawDescription( drawDescription );
+        renderable->setDrawDescription( drawDescription );
     };
 
 };

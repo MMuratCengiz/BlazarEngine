@@ -12,9 +12,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-Renderer::Renderer( const std::shared_ptr< InstanceContext > &context,
-                    const std::shared_ptr< ShaderLayout > &shaderLayout )
-        : context( context ), shaderLayout( shaderLayout ) {
+Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, const std::shared_ptr< GLSLShaderSet > &shaderSet ) : context( context ), shaderSet( shaderSet ) {
     poolSize = context->swapChainImages.size( );
 
     createFrameContexts( );
@@ -33,7 +31,7 @@ Renderer::Renderer( const std::shared_ptr< InstanceContext > &context,
 }
 
 void Renderer::createFrameContexts( ) {
-    frameContexts.resize( poolSize, FrameContext{ } );
+    frameContexts.resize( poolSize, FrameContext { } );
 
     for ( uint32_t i = 0; i < poolSize; ++i ) {
         // TODO check again if this breaks
@@ -51,10 +49,10 @@ void Renderer::createFrameContexts( ) {
         ensureMemorySize( INITIAL_IBO_SIZE, fContext.ibo );
         ensureMemorySize( INITIAL_VBO_SIZE, fContext.vbo );
 
-        fContext.ubo.resize( shaderLayout->getDescriptorCount( ), DeviceMemory{ } );
+        fContext.ubo.resize( shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetBindings.size( ), DeviceMemory { } );
 
-        for ( uint32_t index = 0; index < shaderLayout->getDescriptorCount( ); ++index ) {
-            const DescriptorSetBinding &binding = shaderLayout->getDescriptorSetBindings( )[ index ];
+        for ( uint32_t index = 0; index < fContext.ubo.size( ); ++index ) {
+            const DescriptorSetBinding &binding = shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetBindings[ index ];
 
             fContext.ubo[ index ].properties = vk::MemoryPropertyFlagBits::eHostVisible |
                                                vk::MemoryPropertyFlagBits::eHostCoherent;
@@ -119,10 +117,10 @@ void Renderer::drawRenderObjects( ) {
     rotation += Core::Time::getDeltaTime( );
 
     MVP mvp;
-    mvp.model = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-    mvp.view = glm::lookAt(v3(0.0f, 2.0f, 1.0f), v3(0.0f, 0.0f, 0.0f), v3(0.0f, 0.0f, 1.0f));
+    mvp.model = glm::rotate( glm::mat4( 1.0f ), glm::radians( rotation ), glm::vec3( 0.0f, 0.0f, 1.0f ) );
+    mvp.view = glm::lookAt( v3( 0.0f, 2.0f, 1.0f ), v3( 0.0f, 0.0f, 0.0f ), v3( 0.0f, 0.0f, 1.0f ) );
     mvp.projection = project;
-    
+
 
     transferData< float, MVP >( mvp, currentFrameContext.ubo[ 0 ], 0 );
 
@@ -158,18 +156,18 @@ void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable 
     }
 
     uint32_t i = 1;
-    for (auto& tex : drawDescription.textures) {
-        tex->loadIntoGPUMemory(context, currentFrameContext.commandExecutor);
+    for ( auto &tex : drawDescription.textures ) {
+        tex->loadIntoGPUMemory( context, currentFrameContext.commandExecutor );
 
-        DeviceBufferSize& size = DeviceBufferSize{ vk::Extent2D( tex->getWidth( ), tex->getHeight( ) ) };
+        DeviceBufferSize size = DeviceBufferSize { vk::Extent2D( tex->getWidth( ), tex->getHeight( ) ) };
 
-        BindingUpdateInfo texUpdateInfo{ };
+        BindingUpdateInfo texUpdateInfo { };
         texUpdateInfo.index = i++;
-        texUpdateInfo.parent = context->descriptorSets[frameIndex];
-        texUpdateInfo.buffer = {};
-        texUpdateInfo.buffer.image = tex->getImage();
+        texUpdateInfo.parent = context->descriptorSets[ frameIndex ];
+        texUpdateInfo.buffer = { };
+        texUpdateInfo.buffer.image = tex->getImage( );
 
-        TextureBindingUpdateInfo textureBindingUpdateInfo{};
+        TextureBindingUpdateInfo textureBindingUpdateInfo { };
         textureBindingUpdateInfo.updateInfo = texUpdateInfo;
         textureBindingUpdateInfo.texture = tex;
 
@@ -293,14 +291,14 @@ void Renderer::render( ) {
 
     nextImage = result.value;
 
-    if ( nullptr != imagesInFlight[ nextImage ] ) {
+/*    if ( std::nullptr_t != imagesInFlight[ nextImage ] ) {
         waitResult = context->logicalDevice.waitForFences( 1, &imagesInFlight[ frameIndex ], true, UINT64_MAX );
         VkCheckResult( waitResult );
-    }
+    }*/
 
     drawRenderObjects( );
 
-    imagesInFlight[ nextImage ] = inFlightFences[ frameIndex ];
+//    imagesInFlight[ nextImage ] = inFlightFences[ frameIndex ];
 
     vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <typeindex>
+#include <typeinfo>
 #include "../core/Common.h"
 #include "IComponent.h"
 
@@ -7,47 +9,29 @@ NAMESPACES(SomeVulkan, ECS)
 
 class IGameEntity {
 private:
-    std::unordered_map< uint32_t, std::shared_ptr< IComponent > > componentMap;
-    bool componentMapInitialized = false;
-
-    void initializeComponents() {
-        if ( !componentMapInitialized ) {
-            for ( auto component: components() ) {
-                componentMap[ component->getId() ] = component;
-            }
-
-            componentMapInitialized = true;
-        }
-    }
-
-protected:
-    virtual std::vector< std::shared_ptr< IComponent > > components() = 0;
+    std::unordered_map< std::type_index, std::shared_ptr< IComponent > > componentMap;
 public:
     IGameEntity() = default;
 
-    bool hasComponent( uint32_t index ) {
-        initializeComponents();
-        return componentMap.find( index ) != componentMap.end();
+    template< class T >
+    bool hasComponent( ) {
+        return componentMap.find( typeid( T )) != componentMap.end();
     }
 
     template< class CastAs >
     std::shared_ptr< CastAs > getComponent( ) {
-        initializeComponents();
-        return std::dynamic_pointer_cast< CastAs >( componentMap[ CastAs::UID ] );
+        return std::dynamic_pointer_cast< CastAs >( componentMap[ typeid( CastAs ) ] );
     }
 
     template< class CType >
     std::shared_ptr< CType > createComponent( ) {
-        CType cType = std::make_shared< CType >( );
-        componentMap[ cType->getId() ] = cType;
+        componentMap[ typeid( CType ) ] = std::dynamic_pointer_cast< IComponent >( std::make_shared< CType >( ) );
+        return getComponent< CType >();
     }
+
+    virtual ~IGameEntity( ) = default;
 };
 
-#define START_COMPONENTS private: \
-    std::vector< std::shared_ptr< SomeVulkan::ECS::IComponent > > vComponents; \
-    public:                                                                    \
-    std::vector< std::shared_ptr< SomeVulkan::ECS::IComponent > > components() override {
-
-#define END_COMPONENTS return vComponents; }
+typedef std::shared_ptr< IGameEntity > pGameEntity;
 
 END_NAMESPACES

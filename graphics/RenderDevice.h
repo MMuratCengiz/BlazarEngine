@@ -59,7 +59,7 @@ public:
     void beforeDelete();
 
     std::shared_ptr< InstanceContext > getContext() const;
-    std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< Shader >& shaders );
+    std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< ShaderInfo >& shaders );
 
     ~RenderDevice( );
 private:

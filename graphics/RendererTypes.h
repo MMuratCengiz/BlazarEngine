@@ -44,7 +44,7 @@ union DeviceBufferSize {
     DBS_OP( == )
 
 
-	DeviceBufferSize(const uint32_t& other) {
+	DeviceBufferSize(const uint64_t& other) {
 		size = other;
 	}
 
@@ -52,7 +52,7 @@ union DeviceBufferSize {
 		extent = other;
 	}
 
-    bool operator ==( const uint32_t& other ) const {
+    bool operator ==( const uint64_t& other ) const {
         return size == other;
     }
 
@@ -60,7 +60,7 @@ union DeviceBufferSize {
         return extent.width == other.width && extent.height == other.height;
     }
 
-    DeviceBufferSize* operator =( const uint32_t& other ) {
+    DeviceBufferSize* operator =( const uint64_t& other ) {
         size = other;
         return this;
     }
