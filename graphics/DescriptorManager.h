@@ -1,31 +1,28 @@
 #pragma once
 
 #include "../core/Common.h"
-#include "Texture.h"
 #include "InstanceContext.h"
 #include "GLSLShaderSet.h"
 #include "GraphicsException.h"
 #include "RendererTypes.h"
+#include "STextureLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
-class TextureLoader;
-
-typedef struct TextureDescription {
+struct TextureDescription {
     vk::ImageView imageView;
-} TextureDescription;
+};
 
 struct BindingUpdateInfo {
     uint32_t index{};
     vk::DescriptorSet parent{};
     DeviceBuffer buffer;
-    BindingUpdateInfo() = default;
 };
 
-typedef struct TextureBindingUpdateInfo {
+struct TextureBindingUpdateInfo {
     BindingUpdateInfo updateInfo { };
-    std::shared_ptr< TextureLoader > texture;
-} TextureBindingUpdateInfo;
+    TextureObjectPart texture{ };
+};
 
 class InstanceContext;
 
@@ -37,8 +34,7 @@ private:
     vk::Sampler sampler{ };
     vk::ImageView imageView{ };
 public:
-    explicit DescriptorManager( const std::shared_ptr< InstanceContext >& renderContext,
-                       const std::shared_ptr< GLSLShaderSet>& shaderSet );
+    explicit DescriptorManager( const std::shared_ptr< InstanceContext >& renderContext, const std::shared_ptr< GLSLShaderSet>& shaderSet );
 
     void updateUniformDescriptorSetBinding( const BindingUpdateInfo& updateInfo );
     void updateTextureDescriptorSetBinding( const TextureBindingUpdateInfo& updateInfo );

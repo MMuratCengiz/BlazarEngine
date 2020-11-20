@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../core/Common.h"
-#include "../graphics/DescriptorManager.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -35,8 +34,6 @@ class DescriptorManager;
 namespace FunctionDefinitions {
 typedef std::function< void( InstanceContext *context, EventType eventType ) > eventCallback;
 }
-
-typedef std::shared_ptr< InstanceContext > pRenderContext;
 /*
  * TODO
  * Split this into DeviceContext and Pipeline context, because we may have different pipelines for every device,
@@ -72,8 +69,7 @@ public:
     vk::DescriptorSetLayout descriptorSetLayout{ };
     vk::Viewport viewport { };
 
-    std::vector< vk::DescriptorSet > descriptorSets{ };
-    std::shared_ptr< DescriptorManager > descriptorManager; // todo maybe move everything related to descriptors?
+    std::vector< vk::DescriptorSet > descriptorSets{ };// todo maybe move everything related to descriptors?
 
     GLFWwindow *window;
     std::unordered_map< QueueType, QueueFamily > queueFamilies;
@@ -102,5 +98,7 @@ private:
         }
     }
 };
+
+typedef std::shared_ptr< InstanceContext > pInstanceContext;
 
 END_NAMESPACES

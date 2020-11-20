@@ -50,10 +50,6 @@ void RenderSurface::createPipeline( bool isReset ) {
 
     IFISNOTRESET( createDescriptorPool( ) );
 
-    if ( context->descriptorManager == nullptr ) {
-        context->descriptorManager = std::make_shared< DescriptorManager >( context, glslShaderSet );
-    }
-
     if ( renderer == nullptr ) {
         renderer = std::make_shared< Renderer >( context, glslShaderSet );
     }

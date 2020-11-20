@@ -8,7 +8,7 @@ void SMeshLoader::beforeFrame(  ObjectBuffer& objectBuffer, const ECS::CMesh& me
         loadModel( mesh );
     }
 
-    objectBuffer.parts.emplace( loadedModels[ mesh.path ].parts.begin() );
+    objectBuffer = loadedModels[ mesh.path ];
 }
 
 void SMeshLoader::loadModel( const SomeVulkan::ECS::CMesh& mesh ) {
@@ -39,7 +39,7 @@ void SMeshLoader::onEachNode( ObjectBuffer& buffer, const aiScene* scene, const 
 void SMeshLoader::onEachMesh( ObjectBuffer& buffer, const aiMesh* mesh ) {
     ObjectBufferPart& bufferPart = buffer.parts.emplace_back( ObjectBufferPart{ } );
 
-    bufferPart.vertexCount = mesh->mNumVertices * 5;
+    bufferPart.vertexCount = mesh->mNumVertices * 3;
 
     Core::DynamicMemory memory{ mesh->mNumVertices * 5 * sizeof( float ) };
 
@@ -55,28 +55,26 @@ void SMeshLoader::onEachMesh( ObjectBuffer& buffer, const aiMesh* mesh ) {
         }
     }
 
-    std::vector< uint64_t > indices;
-
     for ( unsigned int f = 0; f < mesh->mNumFaces; f++ ) {
         const aiFace& face = mesh->mFaces[ f ];
 
         for ( unsigned int j = 0; j < face.mNumIndices; j++ ) {
-            indices.emplace_back( face.mIndices[ j ] );
+            bufferPart.indices.emplace_back( face.mIndices[ j ] );
         }
     }
 
-    bufferPart.indexCount = indices.size();
+    bufferPart.indexCount = bufferPart.indices.size();
 
     copyVertexBuffer( bufferPart, memory );
-    if ( !indices.empty() ) {
-        copyIndexBuffer( bufferPart, indices );
+    if ( !bufferPart.indices.empty() ) {
+        copyIndexBuffer( bufferPart, bufferPart.indices );
     }
 }
 
 void SMeshLoader::copyVertexBuffer( ObjectBufferPart &bufferPart, const Core::DynamicMemory &memory ) {
     std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
-    initStagingBuffer( stagingBuffer, memory.data(), memory.size() );
+    RenderUtilities::initStagingBuffer( context, stagingBuffer, memory.data(), memory.size() );
 
     vk::BufferCreateInfo bufferCreateInfo{ };
     bufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer;
@@ -94,48 +92,45 @@ void SMeshLoader::copyVertexBuffer( ObjectBufferPart &bufferPart, const Core::Dy
             ->beginCommand( )
             ->copyBuffer( memory.size(), stagingBuffer.first, bufferPart.vertexBuffer.first )
             ->execute( );
+
+    context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-void SMeshLoader::copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vector< uint64_t > &indices ) {
+void SMeshLoader::copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vector< uint32_t > &indices ) {
     std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
-    initStagingBuffer( stagingBuffer, indices.data(), indices.size() );
+    RenderUtilities::initStagingBuffer( context, stagingBuffer, indices.data(), indices.size() * sizeof( uint64_t ) );
 
     vk::BufferCreateInfo bufferCreateInfo{ };
     bufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer;
-    bufferCreateInfo.size = indices.size( );
+    bufferCreateInfo.size = indices.size( ) * sizeof( uint32_t );
     bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
     vma::AllocationCreateInfo allocationInfo{ };
     allocationInfo.usage = vma::MemoryUsage::eGpuOnly;
     allocationInfo.requiredFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
-    bufferPart.vertexBuffer = context->vma.createBuffer( bufferCreateInfo, allocationInfo );
+    bufferPart.indexBuffer = context->vma.createBuffer( bufferCreateInfo, allocationInfo );
 
     commandExecutor->startCommandExecution( )
             ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 )
             ->beginCommand( )
-            ->copyBuffer( indices.size(), stagingBuffer.first, bufferPart.indexBuffer.first )
+            ->copyBuffer( indices.size() * sizeof( uint32_t ), stagingBuffer.first, bufferPart.indexBuffer.first )
             ->execute( );
+
+    context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-void SMeshLoader::initStagingBuffer( std::pair< vk::Buffer, vma::Allocation > &stagingBuffer, const void * data, const uint64_t &size ) {
-    vk::BufferCreateInfo stagingBufferCreateInfo{ };
-
-    stagingBufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-    stagingBufferCreateInfo.size = size;
-    stagingBufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-
-    vma::AllocationCreateInfo stagingAllocationInfo{ };
-    stagingAllocationInfo.usage = vma::MemoryUsage::eCpuToGpu;
-    stagingAllocationInfo.requiredFlags = vk::MemoryPropertyFlagBits::eHostVisible;
-    stagingAllocationInfo.preferredFlags = vk::MemoryPropertyFlagBits::eHostCoherent;
-
-    stagingBuffer = context->vma.createBuffer( stagingBufferCreateInfo, stagingAllocationInfo );
-
-    void * deviceMemory = context->vma.mapMemory( stagingBuffer.second );
-    memcpy( deviceMemory, data, size );
-    context->vma.unmapMemory( stagingBuffer.second );
+SMeshLoader::~SMeshLoader( ) {
+    for ( auto& pair: loadedModels ) {
+        for ( auto& buffer: pair.second.parts ) {
+            context->vma.destroyBuffer( buffer.vertexBuffer.first, buffer.vertexBuffer.second );
+            if ( buffer.indexCount > 0 ) {
+                context->vma.destroyBuffer( buffer.indexBuffer.first, buffer.indexBuffer.second );
+            }
+        }
+    }
 }
+
 
 END_NAMESPACES

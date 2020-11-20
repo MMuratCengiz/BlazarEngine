@@ -10,6 +10,7 @@ struct ObjectBufferPart {
 
     std::pair< vk::Buffer, vma::Allocation > vertexBuffer;
     std::pair< vk::Buffer, vma::Allocation > indexBuffer;
+    std::vector< uint32_t > indices;
 };
 
 struct ObjectBuffer {

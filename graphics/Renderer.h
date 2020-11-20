@@ -7,6 +7,10 @@
 #include "RendererTypes.h"
 #include "../renderobjects/Model.h"
 #include "../renderobjects/Triangle2D.h"
+#include "SMeshLoader.h"
+#include "GLSLShaderSet.h"
+#include "STextureLoader.h"
+#include "DescriptorManager.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -24,6 +28,8 @@ private:
     uint32_t frameIndex = 0;
 
     std::shared_ptr< InstanceContext > context;
+    std::shared_ptr< DescriptorManager > descriptorManager;
+
     std::vector< FrameContext > frameContexts;
     std::vector< vk::CommandBuffer > buffers;
 
@@ -31,7 +37,7 @@ private:
     std::vector< vk::Semaphore > renderFinishedSemaphores;
     std::vector< vk::Fence > imagesInFlight;
     std::vector< vk::Fence > inFlightFences;
-    std::vector< std::shared_ptr< Renderable > > renderObjects;
+    std::vector< pGameEntity > gameEntities;
 
     bool frameBufferResized = false;
     vk::DeviceSize currentVbBufferSize = 0;
@@ -39,6 +45,10 @@ private:
     std::shared_ptr< GLSLShaderSet > shaderSet;
     std::shared_ptr< RenderObject::Triangle2D > triangle;
     RenderObjects::Model model = RenderObjects::Model( PATH( "/assets/models/viking_room.obj" ) );
+    pGameEntity sampleHouse;
+
+    std::shared_ptr< SMeshLoader > meshLoader;
+    std::shared_ptr< STextureLoader > textureLoader;
 public:
     explicit Renderer( const std::shared_ptr< InstanceContext > &context, const std::shared_ptr< GLSLShaderSet > &shaderSet );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );
@@ -74,7 +84,7 @@ private:
     }
 
     void drawRenderObjects( );
-    void refreshCommands( const std::shared_ptr< Renderable > &renderable );
+    void refreshCommands( const pGameEntity &entity );
     void ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &memory );
     void allocateDeviceMemory( const DeviceBufferSize &size, DeviceMemory &dm );
     void createSynchronizationStructures( const vk::Device &device );

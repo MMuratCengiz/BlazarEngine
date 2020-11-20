@@ -115,17 +115,17 @@ CommandList *CommandList::bindRenderPass( vk::PipelineBindPoint bindPoint ) {
     return this;
 }
 
-CommandList *CommandList::drawIndexed( const std::vector< uint32_t > &indices ) {
+CommandList *CommandList::drawIndexed( const uint32_t &indexCount ) {
     ENSURE_FILTER
 
     for ( vk::CommandBuffer buffer: buffers ) {
-        buffer.drawIndexed( static_cast< uint32_t >( indices.size() ), 1, 0, 0, 0 );
+        buffer.drawIndexed( indexCount, 1, 0, 0, 0 );
     }
 
     return this;
 }
 
-CommandList *CommandList::draw( uint32_t vertexCount ) {
+CommandList *CommandList::draw( const uint64_t& vertexCount ) {
     ENSURE_FILTER
 
     for ( vk::CommandBuffer buffer: buffers ) {
@@ -140,6 +140,16 @@ CommandList *CommandList::bindVertexMemory( const vk::Buffer &vertexBuffer, cons
 
     for ( vk::CommandBuffer &buffer: buffers ) {
         buffer.bindVertexBuffers( 0, 1, &vertexBuffer, &offset );
+    }
+
+    return this;
+}
+
+CommandList *CommandList::bindVertexMemories( const std::vector< vk::Buffer > &vertexBuffers, const std::vector< vk::DeviceSize > &offsets ) {
+    ENSURE_FILTER
+
+    for ( vk::CommandBuffer &buffer: buffers ) {
+        buffer.bindVertexBuffers( 0, vertexBuffers.size(), vertexBuffers.data(), offsets.data() );
     }
 
     return this;

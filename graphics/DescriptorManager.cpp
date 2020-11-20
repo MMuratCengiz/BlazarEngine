@@ -20,7 +20,7 @@ void DescriptorManager::createDescriptorSets( ) {
 
     const std::vector< DescriptorSet > &descriptorSetBindings = shaderSet->getDescriptorSets( );
 
-    std::vector< vk::DescriptorSetLayoutBinding > vkDescriptorSetBindings = shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetLayoutBindings; 
+    std::vector< vk::DescriptorSetLayoutBinding > vkDescriptorSetBindings = shaderSet->getDescriptorSetBySetId( 0 ).descriptorSetLayoutBindings;
 
     createInfo.bindingCount = vkDescriptorSetBindings.size();
     createInfo.pBindings = vkDescriptorSetBindings.data();
@@ -62,8 +62,8 @@ void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingU
     vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
 
     descriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    descriptorImageInfo.imageView = texUpdateInfo.texture->getImageView();
-    descriptorImageInfo.sampler =  texUpdateInfo.texture->getSampler();
+    descriptorImageInfo.imageView = texUpdateInfo.texture.imageView;
+    descriptorImageInfo.sampler =  texUpdateInfo.texture.sampler;
 
     writeDescriptorSet.pImageInfo = &descriptorImageInfo;
     writeDescriptorSet.pBufferInfo = nullptr;
@@ -88,7 +88,6 @@ vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const Bin
 DescriptorManager::~DescriptorManager( ) {
     context->logicalDevice.destroySampler( sampler );
     context->logicalDevice.destroyImageView( imageView );
-    context->logicalDevice.destroyDescriptorSetLayout( context->descriptorSetLayout );
 }
 
 END_NAMESPACES

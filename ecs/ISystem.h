@@ -5,6 +5,7 @@
 
 NAMESPACES( SomeVulkan, ECS )
 
+struct NoInput { };
 template< class ComponentType, class Input >
 class ISystem {
 protected:

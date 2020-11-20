@@ -29,9 +29,9 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h) 
 
 set(Core core/Game.h core/Common.h core/Time.h)
-set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp  graphics/DrawDescription.h graphics/RenderUtilities.h graphics/InstanceContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h  graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp graphics/CommanExecutorArguments.h graphics/ClientSideLock.h graphics/VmaImplementation.cpp graphics/RenderPipeline.cpp graphics/RenderPipeline.h graphics/GLSLShaderSet.cpp graphics/GLSLShaderSet.h "graphics/SMeshLoader.h" "graphics/SMeshLoader.cpp" graphics/ObjectBuffer.h)
+set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp  graphics/DrawDescription.h graphics/RenderUtilities.h graphics/InstanceContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h  graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp graphics/CommanExecutorArguments.h graphics/ClientSideLock.h graphics/VmaImplementation.cpp graphics/RenderPipeline.cpp graphics/RenderPipeline.h graphics/GLSLShaderSet.cpp graphics/GLSLShaderSet.h "graphics/SMeshLoader.h" "graphics/SMeshLoader.cpp" graphics/ObjectBuffer.h graphics/STextureLoader.cpp graphics/STextureLoader.h graphics/RenderUtilities.cpp)
 set(Input input/GlobalEventHandler.cpp input/GlobalEventHandler.h core/DynamicMemory.h)
-set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h  ecs/CMesh  "ecs/ECSUtilities.h" "ecs/CMaterial.h" "ecs/ISystem.h")
+set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h  ecs/CMesh  "ecs/ECSUtilities.h" "ecs/CMaterial.h" "ecs/ISystem.h" ecs/CTransform.h)
 set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
 set(SampleGame samples/SampleHouse.h)
 

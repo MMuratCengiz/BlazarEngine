@@ -56,7 +56,6 @@ public:
     [[nodiscard]] inline const uint32_t &getWidth( ) const { return width; }
     [[nodiscard]] inline const uint32_t &getHeight( ) const { return height; };
     [[nodiscard]] inline const int &getChannels( ) const { return channels; };
-    [[nodiscard]] inline const stbi_uc *data( ) const { return contents; };
     [[nodiscard]] inline const TextureInfo &getTextureInfo( ) const { return textureInfo; };
     [[nodiscard]] inline const bool &isLoadedIntoGPUMemory( ) const { return isLoadedToGPUMemory; };
     [[nodiscard]] inline const vk::Sampler &getSampler( ) const { return sampler; };

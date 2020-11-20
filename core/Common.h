@@ -81,3 +81,5 @@ public:
 
 #define NOT_NULL( val ) ASSERT_M( val != nullptr, "val cannot be null!" )
 #define VkCheckResult( R ) ASSERT( R == vk::Result::eSuccess )
+#define IS_NULL( val ) ( val == nullptr )
+#define FUNCTION_BREAK( condition ) if ( condition ) return;

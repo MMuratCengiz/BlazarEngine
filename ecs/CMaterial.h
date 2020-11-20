@@ -29,15 +29,15 @@ namespace Material {
 
 	struct TextureInfo {
 		std::string path;
-		Filter magFilter;
-		Filter minFilter;
-		AddressMode U;
-		AddressMode V;
-		AddressMode W;
-		MipmapMode mipmapMode;
-		float mipLodBias;
-		float minLod;
-		float maxLod;
+		Filter magFilter = Filter::Linear;
+		Filter minFilter = Filter::Linear;
+		AddressMode U = AddressMode::Repeat;
+		AddressMode V = AddressMode::Repeat;;
+		AddressMode W = AddressMode::Repeat;;
+		MipmapMode mipmapMode = MipmapMode::eLinear;
+		float mipLodBias = 0.0f;
+		float minLod = 0.0f;
+		float maxLod = 0.0f;
 	};
 };
 

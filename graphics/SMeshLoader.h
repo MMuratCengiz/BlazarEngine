@@ -5,6 +5,8 @@
 #include "../ecs/CMesh.h"
 #include "ObjectBuffer.h"
 #include "InstanceContext.h"
+#include "CommandExecutor.h"
+#include "RenderUtilities.h"
 #include "../core/DynamicMemory.h"
 
 #include <assimp/Importer.hpp>
@@ -26,13 +28,14 @@ public:
     : context( std::move( context ) ), commandExecutor( commandExecutor ) { }
 
     void beforeFrame( ObjectBuffer &objectBuffer, const ECS::CMesh &mesh ) override;
+
+    ~SMeshLoader();
 private:
     void loadModel( const ECS::CMesh &mesh );
     void onEachNode( ObjectBuffer &buffer, const aiScene *scene, const aiNode *pNode );
     void onEachMesh( ObjectBuffer &buffer, const aiMesh *mesh );
     void copyVertexBuffer( ObjectBufferPart &bufferPart, const Core::DynamicMemory& memory );
-    void copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vector< uint64_t > &indices );
-    void initStagingBuffer( std::pair< vk::Buffer, vma::Allocation > &stagingBuffer, const void * data, const uint64_t &size );
+    void copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vector< uint32_t > &indices );
 };
 
 END_NAMESPACES

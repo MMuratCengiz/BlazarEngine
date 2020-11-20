@@ -19,40 +19,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15e90ff6-bc0a-448a-b28f-ecc49ba24583" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/graphics/ObjectBuffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ecs/CTransform.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/graphics/RenderUtilities.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/graphics/STextureLoader.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/graphics/STextureLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/models/textures/awesomeface.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/models/textures/container.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/models/textures/texture.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/models/textures/viking_room.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/core/Common.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/Common.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/DynamicMemory.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/DynamicMemory.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/Game.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/Game.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/IComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/IComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/IGameEntity.h" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/IGameEntity.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/Renderable.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/Renderable.h" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/Renderable.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/CommonTextures.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/CommonTextures.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/DefaultShaderLayout.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/CMaterial.h" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/CMaterial.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/ISystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/ISystem.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/CommandExecutor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/CommandExecutor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/CommandExecutor.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/CommandExecutor.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/DescriptorManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/DescriptorManager.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/DescriptorManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/DescriptorManager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/DrawDescription.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/DrawDescription.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/GLSLShaderSet.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/GLSLShaderSet.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/GLSLShaderSet.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/GLSLShaderSet.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderDevice.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/RenderDevice.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderDevice.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/RenderDevice.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/InstanceContext.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/InstanceContext.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/ObjectBuffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/ObjectBuffer.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/RenderSurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/RenderSurface.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderSurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/RenderSurface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/RenderUtilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/RenderUtilities.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/Renderer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/Renderer.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/Renderer.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/Renderer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RendererTypes.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/RendererTypes.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/ShaderLayout.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/SMeshLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/SMeshLoader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphics/SMeshLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/SMeshLoader.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/Texture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/Texture.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graphics/Texture.h" beforeDir="false" afterPath="$PROJECT_DIR$/graphics/Texture.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderobjects/Model.h" beforeDir="false" afterPath="$PROJECT_DIR$/renderobjects/Model.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderobjects/Triangle2D.h" beforeDir="false" afterPath="$PROJECT_DIR$/renderobjects/Triangle2D.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,10 +67,17 @@
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="cf.advertisement.text.has.clang-format" value="true" />
     <property name="cf.first.check.clang-format" value="false" />
-    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="reference.settings.project.statistic.project.settings" />
   </component>
   <component name="RunManager" selected="CMake Application.SomeVulkan">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="SomeVulkan" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="SomeVulkan" TARGET_NAME="SomeVulkan" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="SomeVulkan" RUN_TARGET_NAME="SomeVulkan">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -110,11 +108,6 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <list>
       <item itemvalue="CMake Application.SomeVulkan" />
       <item itemvalue="CMake Application.assimp" />
@@ -131,7 +124,9 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1605742025582</updated>
-      <workItem from="1605742028887" duration="5906000" />
+      <workItem from="1605742028887" duration="12683000" />
+      <workItem from="1605795238473" duration="2770000" />
+      <workItem from="1605808170270" duration="15965000" />
     </task>
     <servers />
   </component>
@@ -147,49 +142,96 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1010" y="490" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1605743594745" />
-    <state width="2517" height="474" key="GridCell.Tab.0.bottom" timestamp="1605743653806">
+    <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser" timestamp="1605751564497">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653806" />
-    <state width="2517" height="474" key="GridCell.Tab.0.center" timestamp="1605743653806">
+    <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1605751564497" />
+    <state x="1035" y="403" key="#xdebugger.evaluate" timestamp="1605830736725">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653806" />
-    <state width="2517" height="474" key="GridCell.Tab.0.left" timestamp="1605743653806">
+    <state x="1035" y="403" key="#xdebugger.evaluate/0.0.2560.1400@0.0.2560.1400" timestamp="1605830736725" />
+    <state width="719" height="466" key="DebuggerActiveHint" timestamp="1605830951691">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653806" />
-    <state width="2517" height="474" key="GridCell.Tab.0.right" timestamp="1605743653806">
+    <state width="719" height="466" key="DebuggerActiveHint/0.0.2560.1400@0.0.2560.1400" timestamp="1605830951691" />
+    <state x="1086" y="280" key="FileChooserDialogImpl" timestamp="1605808093219">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653806" />
-    <state width="2517" height="474" key="GridCell.Tab.1.bottom" timestamp="1605743653690">
+    <state x="1086" y="280" key="FileChooserDialogImpl/0.0.2560.1400@0.0.2560.1400" timestamp="1605808093219" />
+    <state width="2517" height="491" key="GridCell.Tab.0.bottom" timestamp="1605831550033">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653689" />
-    <state width="2517" height="474" key="GridCell.Tab.1.center" timestamp="1605743653689">
+    <state width="2517" height="491" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1605831550033" />
+    <state width="2517" height="491" key="GridCell.Tab.0.center" timestamp="1605831550032">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653689" />
-    <state width="2517" height="474" key="GridCell.Tab.1.left" timestamp="1605743653689">
+    <state width="2517" height="491" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1605831550032" />
+    <state width="2517" height="491" key="GridCell.Tab.0.left" timestamp="1605831550032">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653689" />
-    <state width="2517" height="474" key="GridCell.Tab.1.right" timestamp="1605743653689">
+    <state width="2517" height="491" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1605831550032" />
+    <state width="2517" height="491" key="GridCell.Tab.0.right" timestamp="1605831550033">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="474" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1605743653689" />
-    <state x="781" y="345" key="SettingsEditor" timestamp="1605743747714">
+    <state width="2517" height="491" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1605831550033" />
+    <state width="2517" height="491" key="GridCell.Tab.1.bottom" timestamp="1605831549942">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="781" y="345" key="SettingsEditor/0.0.2560.1400@0.0.2560.1400" timestamp="1605743747714" />
-    <state x="1118" y="517" width="448" height="425" key="refactoring.ChangeSignatureDialog" timestamp="1605749933894">
+    <state width="2517" height="491" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1605831549942" />
+    <state width="2517" height="491" key="GridCell.Tab.1.center" timestamp="1605831549942">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1118" y="517" width="448" height="425" key="refactoring.ChangeSignatureDialog/0.0.2560.1400@0.0.2560.1400" timestamp="1605749933894" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1605746363450">
+    <state width="2517" height="491" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1605831549942" />
+    <state width="2517" height="491" key="GridCell.Tab.1.left" timestamp="1605831549942">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1605746363450" />
+    <state width="2517" height="491" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1605831549942" />
+    <state width="2517" height="491" key="GridCell.Tab.1.right" timestamp="1605831549942">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2517" height="491" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1605831549942" />
+    <state x="683" y="331" width="1674" height="984" key="IDE.errors.dialog" timestamp="1605795192040">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="683" y="331" width="1674" height="984" key="IDE.errors.dialog/0.0.2560.1400@0.0.2560.1400" timestamp="1605795192040" />
+    <state x="807" y="185" width="998" height="708" key="SettingsEditor" timestamp="1605808246769">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="807" y="185" width="998" height="708" key="SettingsEditor/0.0.2560.1400@0.0.2560.1400" timestamp="1605808246769" />
+    <state width="1288" height="708" key="XDebugger.FullValuePopup" timestamp="1605830224634">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1288" height="708" key="XDebugger.FullValuePopup/0.0.2560.1400@0.0.2560.1400" timestamp="1605830224634" />
+    <state x="987" y="433" width="585" height="564" key="find.popup" timestamp="1605829746537">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="987" y="433" width="585" height="564" key="find.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1605829746537" />
+    <state x="1118" y="517" width="448" height="425" key="refactoring.ChangeSignatureDialog" timestamp="1605753299168">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1118" y="517" width="448" height="425" key="refactoring.ChangeSignatureDialog/0.0.2560.1400@0.0.2560.1400" timestamp="1605753299168" />
+    <state x="936" y="330" key="run.anything.popup" timestamp="1605830494311">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="936" y="330" key="run.anything.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1605830494311" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1605825762906">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1605825762906" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/core/DynamicMemory.h</url>
+          <line>62</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

@@ -11,8 +11,6 @@ class CommandList;
 class RenderDevice;
 class InstanceContext;
 
-typedef std::shared_ptr< CommandExecutor > pCommandExecutor;
-
 class CommandExecutor {
 private:
     friend class BeginCommandExecution;
@@ -66,13 +64,14 @@ public:
     CommandList *endRenderPass( );
     CommandList *bindRenderPass( vk::PipelineBindPoint bindPoint );
     CommandList *bindVertexMemory( const vk::Buffer &vertexBuffer, const vk::DeviceSize &offset );
+    CommandList *bindVertexMemories( const std::vector< vk::Buffer > &vertexBuffers, const std::vector< vk::DeviceSize > &offsets );
     CommandList *bindIndexMemory( vk::Buffer indexBuffer, const vk::DeviceSize &offset );
     CommandList *bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const vk::DescriptorSet &descriptorSet );
-    CommandList *drawIndexed( const std::vector< uint32_t > &indices );
+    CommandList *drawIndexed( const uint32_t &indexCount );
     CommandList *blitImage( const ImageBlitArgs & args );
     CommandList *pipelineBarrier( const PipelineBarrierArgs& args );
     CommandList *copyBufferToImage( const CopyBufferToImageArgs& args );
-    CommandList *draw( uint32_t vertexCount );
+    CommandList *draw( const uint64_t& vertexCount );
     CommandList *filter( bool condition );
     CommandList *otherwise( );
     CommandList *endFilter( );
@@ -85,5 +84,7 @@ public:
 private:
     [[nodiscard]] bool passesFilter( ) const;
 };
+
+typedef std::shared_ptr< CommandExecutor > pCommandExecutor;
 
 END_NAMESPACES

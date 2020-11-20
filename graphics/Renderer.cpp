@@ -4,6 +4,7 @@
 
 #include "Renderer.h"
 #include "../input/GlobalEventHandler.h"
+#include "../ecs/CMesh.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -15,11 +16,28 @@ NAMESPACES( SomeVulkan, Graphics )
 Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, const std::shared_ptr< GLSLShaderSet > &shaderSet ) : context( context ), shaderSet( shaderSet ) {
     poolSize = context->swapChainImages.size( );
 
+    if ( descriptorManager == nullptr ) {
+        descriptorManager = std::make_shared< DescriptorManager >( context, shaderSet );
+    }
+
     createFrameContexts( );
 
     for ( const auto &gameObject: model.getEntities( ) ) {
-        addRenderObject( gameObject );
+//        addRenderObject( gameObject );
     }
+
+    meshLoader = std::make_shared< SMeshLoader >( context, frameContexts[ 0 ].commandExecutor );
+    textureLoader = std::make_shared< STextureLoader >( context, frameContexts[ 0 ].commandExecutor );
+
+    sampleHouse = std::make_shared< IGameEntity >( );
+    auto mesh = sampleHouse->createComponent< ECS::CMesh >();
+    mesh->path = PATH( "/assets/models/viking_room.obj" );
+
+    auto texture = sampleHouse->createComponent< ECS::CMaterial >();
+    auto& texInfo = texture->textures.emplace_back( Material::TextureInfo{  } );
+    texInfo.path = "/assets/textures/viking_room.png";
+
+    addRenderObject( sampleHouse );
 
     createSynchronizationStructures( context->logicalDevice );
 
@@ -69,14 +87,13 @@ void Renderer::createFrameContexts( ) {
                         fContext.ubo[ index ].buffer
                 };
 
-                context->descriptorManager->updateUniformDescriptorSetBinding( updateInfo );
+                descriptorManager->updateUniformDescriptorSetBinding( updateInfo );
             }
 
             if ( binding.type == vk::DescriptorType::eCombinedImageSampler ) {
                 fContext.ubo[ index ].bufferUsage = vk::BufferUsageFlagBits::eUniformTexelBuffer;
                 fContext.ubo[ index ].bufferType = DeviceBufferType::Image;
             }
-
         }
     }
 }
@@ -121,10 +138,9 @@ void Renderer::drawRenderObjects( ) {
     mvp.view = glm::lookAt( v3( 0.0f, 2.0f, 1.0f ), v3( 0.0f, 0.0f, 0.0f ), v3( 0.0f, 0.0f, 1.0f ) );
     mvp.projection = project;
 
-
     transferData< float, MVP >( mvp, currentFrameContext.ubo[ 0 ], 0 );
 
-    for ( const auto &renderObject: renderObjects ) {
+    for ( const auto &renderObject: gameEntities ) {
         refreshCommands( renderObject );
     }
 
@@ -134,57 +150,67 @@ void Renderer::drawRenderObjects( ) {
 }
 
 
-void Renderer::refreshCommands( const std::shared_ptr< Renderable > &renderable ) {
-    const DrawDescription &drawDescription = renderable->getDrawDescription( );
+void Renderer::refreshCommands( const pGameEntity &entity ) {
+    const auto& meshComponent = entity->getComponent< CMesh >();
+    const auto& materialComponent = entity->getComponent< CMaterial >();
 
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
-
     std::vector< vk::Framebuffer > &frameBuffers = context->frameBuffers;
 
-    VkDeviceSize offset = currentFrameContext.vboOffset;
-    VkDeviceSize vertexOffset = drawDescription.vertexMemory.size( );
-    VkDeviceSize indexOffset = drawDescription.indices.size( ) * sizeof( uint32_t );
+    if ( !IS_NULL( materialComponent )) {
+        TextureObject textureObject{ };
+        textureLoader->beforeFrame( textureObject, *materialComponent );
 
-    transferData< char, Core::DynamicMemory >(
-            drawDescription.vertexMemory,
-            currentFrameContext.vbo, offset );
+        uint32_t i = 1;
+        for ( auto& part: textureObject.parts ) {
+            BindingUpdateInfo texUpdateInfo { };
+            texUpdateInfo.index = i++;
+            texUpdateInfo.parent = context->descriptorSets[ frameIndex ];
+            texUpdateInfo.buffer = { };
+            texUpdateInfo.buffer.image = part.image;
 
-    if ( drawDescription.indexedMode ) {
-        DeviceBufferSize bufferSize( drawDescription.indices.size( ) * sizeof( uint32_t ) );
+            TextureBindingUpdateInfo textureBindingUpdateInfo { };
+            textureBindingUpdateInfo.updateInfo = texUpdateInfo;
+            textureBindingUpdateInfo.texture = part;
 
-        transferData< uint32_t >( drawDescription.indices, currentFrameContext.vbo, offset + vertexOffset, bufferSize );
+            descriptorManager->updateTextureDescriptorSetBinding( textureBindingUpdateInfo );
+            currentFrameContext.cachedBuffers->bindDescriptorSet( context->pipelineLayout, context->descriptorSets[ frameIndex ] );
+        }
     }
 
-    uint32_t i = 1;
-    for ( auto &tex : drawDescription.textures ) {
-        tex->loadIntoGPUMemory( context, currentFrameContext.commandExecutor );
+    FUNCTION_BREAK( IS_NULL( meshComponent ) )
 
-        DeviceBufferSize size = DeviceBufferSize { vk::Extent2D( tex->getWidth( ), tex->getHeight( ) ) };
+    ObjectBuffer objectBuffer{ };
 
-        BindingUpdateInfo texUpdateInfo { };
-        texUpdateInfo.index = i++;
-        texUpdateInfo.parent = context->descriptorSets[ frameIndex ];
-        texUpdateInfo.buffer = { };
-        texUpdateInfo.buffer.image = tex->getImage( );
+    std::vector< uint64_t > offsets;
+    std::vector< vk::Buffer > vbuffers;
+    std::vector< vk::Buffer > ibuffers;
 
-        TextureBindingUpdateInfo textureBindingUpdateInfo { };
-        textureBindingUpdateInfo.updateInfo = texUpdateInfo;
-        textureBindingUpdateInfo.texture = tex;
+    uint64_t totalVertexCount = 0;
+    uint64_t totalIndexCount = 0;
 
-        context->descriptorManager->updateTextureDescriptorSetBinding( textureBindingUpdateInfo );
+    meshLoader->beforeFrame( objectBuffer, *meshComponent );
+
+    for ( auto& part: objectBuffer.parts ) {
+        vbuffers.emplace_back( part.vertexBuffer.first );
+        offsets.emplace_back( 0 ); // ?
+
+        if ( part.indexCount > 0 ) {
+            ibuffers.emplace_back( part.indexBuffer.first );
+            totalIndexCount += part.indexCount;
+        }
+
+        totalVertexCount += part.vertexCount;
     }
 
-    currentFrameContext.cachedBuffers
-            ->bindVertexMemory( currentFrameContext.vbo.buffer.regular, offset )
-            ->bindDescriptorSet( context->pipelineLayout, context->descriptorSets[ frameIndex ] )
-            ->filter( drawDescription.indexedMode )
-            ->bindIndexMemory( currentFrameContext.vbo.buffer.regular, offset + vertexOffset )
-            ->drawIndexed( drawDescription.indices )
-            ->otherwise( )
-            ->draw( drawDescription.vertexCount )
-            ->endFilter( );
+    currentFrameContext.cachedBuffers->bindVertexMemory( vbuffers[0], offsets[0] );
 
-    currentFrameContext.vboOffset += vertexOffset + indexOffset;
+    if ( !ibuffers.empty() ) {
+        currentFrameContext.cachedBuffers->bindIndexMemory( ibuffers[0], offsets[0] );
+        currentFrameContext.cachedBuffers->drawIndexed( totalIndexCount );
+    } else {
+        currentFrameContext.cachedBuffers->draw( totalVertexCount );
+    }
 }
 
 void Renderer::ensureMemorySize( const DeviceBufferSize &requiredSize, DeviceMemory &dm ) {
@@ -262,7 +288,6 @@ void Renderer::createSynchronizationStructures( const vk::Device &device ) {
     this->inFlightFences.resize( this->poolSize );
     this->imagesInFlight.resize( this->context->swapChainImages.size( ), nullptr );
 
-
     for ( uint32_t i = 0; i < this->imageAvailableSemaphores.size( ); ++i ) {
         this->imageAvailableSemaphores[ i ] = device.createSemaphore( semaphoreCreateInfo );
         this->renderFinishedSemaphores[ i ] = device.createSemaphore( semaphoreCreateInfo );
@@ -278,9 +303,7 @@ void Renderer::render( ) {
     VkCheckResult( waitResult );
 
     uint32_t nextImage;
-    auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX,
-                                                              imageAvailableSemaphores[ frameIndex ],
-                                                              nullptr );
+    auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX, imageAvailableSemaphores[ frameIndex ], nullptr );
 
     if ( result.result == vk::Result::eErrorOutOfDateKHR ) {
         context->triggerEvent( EventType::SwapChainInvalidated );
@@ -329,8 +352,7 @@ void Renderer::render( ) {
 
     auto presentResult = context->queues[ QueueType::Presentation ].presentKHR( presentInfo );
 
-    if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR
-         || frameBufferResized ) {
+    if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || frameBufferResized ) {
         frameBufferResized = false;
         context->triggerEvent( EventType::SwapChainInvalidated );
         return;
@@ -363,12 +385,6 @@ void Renderer::freeBuffers( ) {
 }
 
 Renderer::~Renderer( ) {
-    for ( auto &renderable: renderObjects ) {
-        for ( auto &tex: renderable->getDrawDescription( ).textures ) {
-            tex->unload( );
-        }
-    }
-
     clearDeviceMemory( );
 
     for ( uint32_t index = 0; index < imageAvailableSemaphores.size( ); ++index ) {
@@ -379,11 +395,7 @@ Renderer::~Renderer( ) {
 }
 
 void Renderer::addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity ) {
-    std::shared_ptr< ECS::Renderable > renderable = gameEntity->getComponent< ECS::Renderable >( );
-
-    if ( renderable != nullptr ) {
-        renderObjects.emplace_back( renderable );
-    }
+    gameEntities.emplace_back( gameEntity );
 }
 
 void Renderer::clearDeviceMemory( ) {
