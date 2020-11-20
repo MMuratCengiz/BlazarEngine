@@ -6,7 +6,9 @@
 NAMESPACES( SomeVulkan, ECS )
 
 struct CTransform: public IComponent {
-    glm::mat4x4 model;
+    glm::vec3 position;
+    glm::vec3 rotation;
+    glm::vec3 scale;
 };
 
 

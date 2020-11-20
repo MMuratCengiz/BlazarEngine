@@ -29,13 +29,15 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h) 
 
 set(Core core/Game.h core/Common.h core/Time.h)
-set(Graphics graphics/RenderDevice.cpp graphics/RenderDevice.h graphics/RenderSurface.cpp graphics/RenderSurface.h graphics/Renderer.cpp graphics/Renderer.h graphics/RenderDeviceBuilder.h graphics/RenderDeviceBuilder.cpp  graphics/DrawDescription.h graphics/RenderUtilities.h graphics/InstanceContext.h graphics/GraphicsException.h core/Time.cpp graphics/RendererTypes.h  graphics/CommonTextures.h graphics/DescriptorManager.cpp graphics/DescriptorManager.h graphics/Texture.h graphics/Texture.cpp graphics/CommanExecutorArguments.h graphics/ClientSideLock.h graphics/VmaImplementation.cpp graphics/RenderPipeline.cpp graphics/RenderPipeline.h graphics/GLSLShaderSet.cpp graphics/GLSLShaderSet.h "graphics/SMeshLoader.h" "graphics/SMeshLoader.cpp" graphics/ObjectBuffer.h graphics/STextureLoader.cpp graphics/STextureLoader.h graphics/RenderUtilities.cpp)
-set(Input input/GlobalEventHandler.cpp input/GlobalEventHandler.h core/DynamicMemory.h)
-set(ECS ecs/IGameEntity.h ecs/IGameEntity.h ecs/Renderable.h ecs/IComponent.h ECS.h  ecs/CMesh  "ecs/ECSUtilities.h" "ecs/CMaterial.h" "ecs/ISystem.h" ecs/CTransform.h)
-set(RenderObjects renderobjects/Triangle2D.h renderobjects/Model.h)
-set(SampleGame samples/SampleHouse.h)
+set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h core/Time.cpp Graphics/RendererTypes.h Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/Texture.h Graphics/Texture.cpp Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/RenderPipeline.cpp Graphics/RenderPipeline.h Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/SMeshLoader.h" "Graphics/SMeshLoader.cpp" Graphics/ObjectBuffer.h Graphics/STextureLoader.cpp Graphics/STextureLoader.h Graphics/RenderUtilities.cpp)
+set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h core/DynamicMemory.h)
+set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h)
+set(RenderObjects RenderObjects/Triangle2D.h RenderObjects/Model.h)
+set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp)
 
-set(Shaders shaders/glsl/fragment/default.glsl shaders/glsl/vertex/default.glsl renderobjects/Triangle2D.h graphics/CommandExecutor.cpp graphics/CommandExecutor.h)
+set(SampleGame Samples/SampleHouse.h)
+
+set(Shaders Shaders/GLSL/Fragment/default.glsl Shaders/GLSL/Vertex/default.glsl RenderObjects/Triangle2D.h Graphics/CommandExecutor.cpp Graphics/CommandExecutor.h)
 set(SPVDir "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross")
 set(SPV ${SPVDir}/spirv.hpp ${SPVDir}/spirv_cfg.hpp ${SPVDir}/spirv_cfg.cpp ${SPVDir}/spirv_cpp.hpp ${SPVDir}/spirv_cpp.cpp ${SPVDir}/spirv_parser.hpp ${SPVDir}/spirv_parser.cpp ${SPVDir}/spirv_reflect.hpp ${SPVDir}/spirv_reflect.cpp ${SPVDir}/spirv_cross.hpp ${SPVDir}/spirv_cross.cpp ${SPVDir}/spirv_cross_util.hpp ${SPVDir}/spirv_cross_util.cpp ${SPVDir}/spirv_glsl.hpp ${SPVDir}/spirv_glsl.cpp ${SPVDir}/spirv_cross_parsed_ir.hpp ${SPVDir}/spirv_cross_parsed_ir.cpp)
 
@@ -49,12 +51,6 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/external/assimp")
 include_directories(
         "${CMAKE_SOURCE_DIR}/external/assimp/include"
         "${CMAKE_SOURCE_DIR}/external/assimp/code"
-#        "${CMAKE_SOURCE_DIR}/core"
-#        "${CMAKE_SOURCE_DIR}/graphics"
-#        "${CMAKE_SOURCE_DIR}/input"
-#        "${CMAKE_SOURCE_DIR}/ecs"
-#        "${CMAKE_SOURCE_DIR}/renderobjects"
-#        "${CMAKE_SOURCE_DIR}/shaders"
 )
 
 add_definitions(-D_SCL_SECURE_NO_WARNINGS)
@@ -65,7 +61,7 @@ add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
             
 find_package(Vulkan REQUIRED)
 
-add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${SPV} ) 
+add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${SPV} )
 
 target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING  )
 
