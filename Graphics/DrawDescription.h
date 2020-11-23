@@ -2,7 +2,6 @@
 
 #include "../core/Common.h"
 #include "../core/DynamicMemory.h"
-#include "Texture.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 

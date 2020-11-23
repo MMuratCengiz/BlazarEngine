@@ -1,14 +1,24 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "IComponent.h"
 
 NAMESPACES( SomeVulkan, ECS )
 
-struct CTransform: public IComponent {
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
+enum class RotationUnit {
+    Radians,
+    Degrees
+};
+
+struct Rotation {
+    RotationUnit rotationUnit { RotationUnit::Degrees };
+    glm::vec3 euler { 0.0f };
+};
+
+struct CTransform : public IComponent {
+    glm::vec3 position { 0.0f };
+    glm::vec3 scale { 1.0f };
+    Rotation rotation { };
 };
 
 

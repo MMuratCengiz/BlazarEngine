@@ -1,18 +1,20 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include <string>
 #include <utility>
 #include <functional>
 #include <iostream>
-#include "../graphics/RenderDevice.h"
-#include "../input/GlobalEventHandler.h"
-#include "../renderobjects/Triangle2D.h"
+#include "../Graphics/RenderDevice.h"
+#include "../Input/GlobalEventHandler.h"
+#include "../Scene/FpsCamera.h"
 #include <chrono>
 
 using namespace SomeVulkan::Core;
 using namespace SomeVulkan::Input;
 using namespace SomeVulkan::Graphics;
+using namespace SomeVulkan::Scene;
+using namespace SomeVulkan::ECS;
 
 static void windowResizeCb( void *userPointer, int width, int height ) {
     if ( width > 0 && height > 0 ) {
@@ -89,19 +91,36 @@ public:
 
         GlobalEventHandler::Instance( ).addWindowResizeCallback( window, ( void * ) vk.get( ), &windowResizeCb );
 
+        auto camera = std::make_shared< FpsCamera >( glm::vec3( 1.4f, 2.0f, -1.0f ), glm::vec3( 0.0f ) );
+
         std::vector< ShaderInfo > shaders( 2 );
         shaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
-		shaders[ 0 ].path = PATH( "/shaders/spirv/vertex/default.spv" );
+		shaders[ 0 ].path = PATH( "/Shaders/SPIRV/Vertex/default.spv" );
         shaders[ 1 ].type = vk::ShaderStageFlagBits::eFragment;
-		shaders[ 1 ].path = PATH( "/shaders/spirv/fragment/default.spv" );
+		shaders[ 1 ].path = PATH( "/Shaders/SPIRV/Fragment/default.spv" );
 
-        auto renderSurface = vk->createRenderSurface( shaders );
+        auto renderSurface = vk->createRenderSurface( shaders, camera );
         auto renderer = renderSurface->getSurfaceRenderer( );
+
+        auto sampleHouse = std::make_shared< IGameEntity >( );
+        auto mesh = sampleHouse->createComponent< CMesh >( );
+        mesh->path = PATH( "/assets/models/viking_room.obj" );
+
+        auto texture = sampleHouse->createComponent< CMaterial >( );
+        auto &texInfo = texture->textures.emplace_back( Material::TextureInfo { } );
+        texInfo.path = "/assets/textures/viking_room.png";
+
+        auto transform = sampleHouse->createComponent< CTransform >( );
+        transform->rotation.euler.x = -90.0f;
+
+        renderer->addRenderObject( sampleHouse );
 
         this->playable->init( vk );
 
         auto start = nowInSeconds( );
         uint32_t fpsCounter = 0;
+
+        int rotationIndex = 0;
 
         while ( !glfwWindowShouldClose( window ) ) {
             Time::tick();
@@ -118,11 +137,26 @@ public:
             glfwSwapBuffers( window );
             glfwPollEvents( );
 
+            if ( glfwGetKey( window, GLFW_KEY_C ) == GLFW_PRESS ) {
+                rotationIndex++;
+                if ( rotationIndex >= 3 ) {
+                    rotationIndex = 0;
+                }
+            }
+
+            if ( glfwGetKey( window, GLFW_KEY_R ) == GLFW_PRESS ) {
+                transform->rotation.euler[ rotationIndex ] += Time::getDeltaTime();
+            }
+
+            camera->processKeyboardEvents( window );
+            camera->processMouseEvents( window);
+
             if ( nowInSeconds( ) - start > 1 ) {
                 start = nowInSeconds( );
                 std::stringstream s;
-                s << "FPS: " << fpsCounter;
+                s << "FPS: " << fpsCounter << " Camera Position " << camera->getPosition().x << camera->getPosition().y << camera->getPosition().z;
                 TRACE( COMPONENT_GAMEH, VERBOSITY_CRITICAL, s.str( ).c_str( ) );
+
                 fpsCounter = 0;
             }
 
@@ -130,6 +164,7 @@ public:
         }
 
         vk->beforeDelete( );
+        sampleHouse.reset();
     }
 
     ~Game( ) {

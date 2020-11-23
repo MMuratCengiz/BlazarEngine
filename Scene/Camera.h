@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 
 NAMESPACES( SomeVulkan, Scene )
 

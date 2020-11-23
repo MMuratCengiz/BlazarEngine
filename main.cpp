@@ -1,6 +1,5 @@
 #include <iostream>
-#include "core/Game.h"
-#include "graphics/GLSLShaderSet.h"
+#include "Core/Game.h"
 
 using namespace SomeVulkan;
 using namespace ECS;

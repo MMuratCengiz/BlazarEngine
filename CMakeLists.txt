@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 project(SomeVulkan)
 
-set(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/shaders/)
+set(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/Shaders/)
 
 function(add_shader SHADER_TYPE SHADER_NAME)
-    set(INPUT_FILE "${SHADER_ROOT_DIR}glsl/${SHADER_TYPE}/${SHADER_NAME}.glsl")
-    set(OUTPUT_FILE "${SHADER_ROOT_DIR}spirv/${SHADER_TYPE}/${SHADER_NAME}.spv")
+    set(INPUT_FILE "${SHADER_ROOT_DIR}GLSL/${SHADER_TYPE}/${SHADER_NAME}.glsl")
+    set(OUTPUT_FILE "${SHADER_ROOT_DIR}SPIRV/${SHADER_TYPE}/${SHADER_NAME}.spv")
 
     #remember to add glslc to environment path
     execute_process(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE} )
@@ -26,18 +26,17 @@ set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
-set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h) 
+set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h)
 
-set(Core core/Game.h core/Common.h core/Time.h)
-set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h core/Time.cpp Graphics/RendererTypes.h Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/Texture.h Graphics/Texture.cpp Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/RenderPipeline.cpp Graphics/RenderPipeline.h Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/SMeshLoader.h" "Graphics/SMeshLoader.cpp" Graphics/ObjectBuffer.h Graphics/STextureLoader.cpp Graphics/STextureLoader.h Graphics/RenderUtilities.cpp)
-set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h core/DynamicMemory.h)
+set(Core Core/Game.h Core/Common.h Core/Time.h Scene/World.h)
+set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h Core/Time.cpp Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/RenderPipeline.cpp Graphics/RenderPipeline.h Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/SMeshLoader.h" "Graphics/SMeshLoader.cpp" Graphics/STextureLoader.cpp Graphics/STextureLoader.h Graphics/RenderUtilities.cpp Graphics/STransformLoader.cpp Graphics/STransformLoader.h Graphics/SCameraLoader.cpp Graphics/SCameraLoader.h)
+set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h Core/DynamicMemory.h)
 set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h)
-set(RenderObjects RenderObjects/Triangle2D.h RenderObjects/Model.h)
-set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp)
+set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp Scene/Scene.h)
 
 set(SampleGame Samples/SampleHouse.h)
 
-set(Shaders Shaders/GLSL/Fragment/default.glsl Shaders/GLSL/Vertex/default.glsl RenderObjects/Triangle2D.h Graphics/CommandExecutor.cpp Graphics/CommandExecutor.h)
+set(Shaders Shaders/GLSL/Fragment/default.glsl Shaders/GLSL/Vertex/default.glsl Graphics/CommandExecutor.cpp Graphics/CommandExecutor.h)
 set(SPVDir "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross")
 set(SPV ${SPVDir}/spirv.hpp ${SPVDir}/spirv_cfg.hpp ${SPVDir}/spirv_cfg.cpp ${SPVDir}/spirv_cpp.hpp ${SPVDir}/spirv_cpp.cpp ${SPVDir}/spirv_parser.hpp ${SPVDir}/spirv_parser.cpp ${SPVDir}/spirv_reflect.hpp ${SPVDir}/spirv_reflect.cpp ${SPVDir}/spirv_cross.hpp ${SPVDir}/spirv_cross.cpp ${SPVDir}/spirv_cross_util.hpp ${SPVDir}/spirv_cross_util.cpp ${SPVDir}/spirv_glsl.hpp ${SPVDir}/spirv_glsl.cpp ${SPVDir}/spirv_cross_parsed_ir.hpp ${SPVDir}/spirv_cross_parsed_ir.cpp)
 

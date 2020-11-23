@@ -3,13 +3,17 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-void SMeshLoader::beforeFrame(  ObjectBuffer& objectBuffer, const ECS::CMesh& mesh ) {
+void SMeshLoader::cache( const ECS::CMesh &mesh ) {
     if ( loadedModels.find( mesh.path ) == loadedModels.end() ) {
         loadModel( mesh );
     }
+}
 
+void SMeshLoader::load( ObjectBufferList& objectBuffer, const ECS::CMesh& mesh ) {
+    cache( mesh );
     objectBuffer = loadedModels[ mesh.path ];
 }
+
 
 void SMeshLoader::loadModel( const SomeVulkan::ECS::CMesh& mesh ) {
     const aiScene* scene = importer.ReadFile( mesh.path, aiProcess_Triangulate | aiProcess_FlipUVs );
@@ -20,12 +24,11 @@ void SMeshLoader::loadModel( const SomeVulkan::ECS::CMesh& mesh ) {
         throw std::runtime_error( ss.str( ) );
     }
 
-    loadedModels[ mesh.path ] = ObjectBuffer{ };
+    loadedModels[ mesh.path ] = ObjectBufferList{ };
     onEachNode( loadedModels[ mesh.path ], scene, scene->mRootNode );
 }
 
-
-void SMeshLoader::onEachNode( ObjectBuffer& buffer, const aiScene* scene, const aiNode* pNode ) {
+void SMeshLoader::onEachNode( ObjectBufferList& buffer, const aiScene* scene, const aiNode* pNode ) {
     for ( unsigned int i = 0; i < pNode->mNumChildren; ++i ) {
         onEachNode( buffer, scene, pNode->mChildren[ i ] );
     }
@@ -36,8 +39,8 @@ void SMeshLoader::onEachNode( ObjectBuffer& buffer, const aiScene* scene, const 
     }
 }
 
-void SMeshLoader::onEachMesh( ObjectBuffer& buffer, const aiMesh* mesh ) {
-    ObjectBufferPart& bufferPart = buffer.parts.emplace_back( ObjectBufferPart{ } );
+void SMeshLoader::onEachMesh( ObjectBufferList& buffer, const aiMesh* mesh ) {
+    ObjectBuffer& bufferPart = buffer.buffers.emplace_back( ObjectBuffer{ } );
 
     bufferPart.vertexCount = mesh->mNumVertices * 3;
 
@@ -71,7 +74,7 @@ void SMeshLoader::onEachMesh( ObjectBuffer& buffer, const aiMesh* mesh ) {
     }
 }
 
-void SMeshLoader::copyVertexBuffer( ObjectBufferPart &bufferPart, const Core::DynamicMemory &memory ) {
+void SMeshLoader::copyVertexBuffer( ObjectBuffer &bufferPart, const Core::DynamicMemory &memory ) {
     std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
     RenderUtilities::initStagingBuffer( context, stagingBuffer, memory.data(), memory.size() );
@@ -96,10 +99,10 @@ void SMeshLoader::copyVertexBuffer( ObjectBufferPart &bufferPart, const Core::Dy
     context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-void SMeshLoader::copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vector< uint32_t > &indices ) {
+void SMeshLoader::copyIndexBuffer( ObjectBuffer &bufferPart, const std::vector< uint32_t > &indices ) {
     std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
-    RenderUtilities::initStagingBuffer( context, stagingBuffer, indices.data(), indices.size() * sizeof( uint64_t ) );
+    RenderUtilities::initStagingBuffer( context, stagingBuffer, indices.data(), indices.size() * sizeof( uint32_t ) );
 
     vk::BufferCreateInfo bufferCreateInfo{ };
     bufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer;
@@ -123,7 +126,7 @@ void SMeshLoader::copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vect
 
 SMeshLoader::~SMeshLoader( ) {
     for ( auto& pair: loadedModels ) {
-        for ( auto& buffer: pair.second.parts ) {
+        for ( auto& buffer: pair.second.buffers ) {
             context->vma.destroyBuffer( buffer.vertexBuffer.first, buffer.vertexBuffer.second );
             if ( buffer.indexCount > 0 ) {
                 context->vma.destroyBuffer( buffer.indexBuffer.first, buffer.indexBuffer.second );

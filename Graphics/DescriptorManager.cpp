@@ -43,7 +43,7 @@ void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateIn
 
     vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( updateInfo );
 
-    descriptorBufferInfo.buffer = updateInfo.buffer.regular;
+    descriptorBufferInfo.buffer = updateInfo.buffer.first;
     descriptorBufferInfo.offset = 0;
     descriptorBufferInfo.range = ref.size;
 
@@ -52,7 +52,6 @@ void DescriptorManager::updateUniformDescriptorSetBinding( const BindingUpdateIn
     writeDescriptorSet.pTexelBufferView = nullptr;
 
     context->logicalDevice.updateDescriptorSets( 1, &writeDescriptorSet, 0, nullptr );
-   
 }
 
 void DescriptorManager::updateTextureDescriptorSetBinding( const TextureBindingUpdateInfo &texUpdateInfo ) {

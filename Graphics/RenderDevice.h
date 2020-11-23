@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 #include "RenderSurface.h"
 #include "RenderDeviceBuilder.h"
 #include "InstanceContext.h"
+#include "../Scene/FpsCamera.h"
 
 /*
  *
@@ -59,7 +60,7 @@ public:
     void beforeDelete();
 
     std::shared_ptr< InstanceContext > getContext() const;
-    std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< ShaderInfo >& shaders );
+    std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< ShaderInfo >& shaders, std::shared_ptr< Scene::FpsCamera > camera );
 
     ~RenderDevice( );
 private:

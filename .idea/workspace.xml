@@ -19,63 +19,51 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15e90ff6-bc0a-448a-b28f-ecc49ba24583" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Scene/Camera.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Scene/FpsCamera.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Scene/FpsCamera.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Graphics/SCameraLoader.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Graphics/SCameraLoader.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Graphics/STransformLoader.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Graphics/STransformLoader.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Samples/SampleGame.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Samples/SampleGame.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Scene/Scene.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Scene/World.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/CMaterial.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/CMaterial.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/CMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/CMesh.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/CTransform.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/CTransform.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/ECSUtilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/ECSUtilities.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/IComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/IComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/IGameEntity.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/IGameEntity.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/ISystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/ISystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/Renderable.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/Renderable.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ECS/CTransform.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/CTransform.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/DescriptorManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/DescriptorManager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/DescriptorManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/DescriptorManager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/DrawDescription.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/DrawDescription.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/ObjectBuffer.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RenderDevice.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDevice.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RenderDevice.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDevice.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RenderSurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/Renderer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Renderer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/Renderer.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Renderer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RendererTypes.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/SMeshLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/SMeshLoader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/SMeshLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/SMeshLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/STextureLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/STextureLoader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/STextureLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/STextureLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/Texture.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/Texture.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RenderObjects/Model.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RenderObjects/Triangle2D.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Scene/Camera.h" beforeDir="false" afterPath="$PROJECT_DIR$/Scene/Camera.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Scene/FpsCamera.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Scene/FpsCamera.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Scene/FpsCamera.h" beforeDir="false" afterPath="$PROJECT_DIR$/Scene/FpsCamera.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/GLSL/Fragment/default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Fragment/default.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/GLSL/Vertex/default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Vertex/default.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/SPIRV/Fragment/default.spv" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/SPIRV/Fragment/default.spv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/SPIRV/Vertex/default.spv" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/SPIRV/Vertex/default.spv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/Common.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/DynamicMemory.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/DynamicMemory.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/Game.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Game.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/Time.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Time.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/Time.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Time.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/ClientSideLock.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/ClientSideLock.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/CommanExecutorArguments.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommanExecutorArguments.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/CommandExecutor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommandExecutor.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/CommandExecutor.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommandExecutor.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/CommonTextures.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommonTextures.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/DescriptorManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/DescriptorManager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/DescriptorManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/DescriptorManager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/DrawDescription.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/DrawDescription.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/GLSLShaderSet.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/GLSLShaderSet.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/GLSLShaderSet.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/GLSLShaderSet.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/GraphicsException.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/GraphicsException.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/InstanceContext.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/InstanceContext.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/ObjectBuffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/ObjectBuffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderDevice.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDevice.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderDevice.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDevice.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderDeviceBuilder.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDeviceBuilder.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderDeviceBuilder.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDeviceBuilder.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderPipeline.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderPipeline.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderPipeline.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderPipeline.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderSurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderSurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderUtilities.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderUtilities.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RenderUtilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderUtilities.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/Renderer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Renderer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/Renderer.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Renderer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/RendererTypes.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RendererTypes.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/SMeshLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/SMeshLoader.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/SMeshLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/SMeshLoader.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/STextureLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/STextureLoader.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/STextureLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/STextureLoader.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/Texture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Texture.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/Texture.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Texture.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graphics/VmaImplementation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/VmaImplementation.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input/GlobalEventHandler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Input/GlobalEventHandler.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input/GlobalEventHandler.h" beforeDir="false" afterPath="$PROJECT_DIR$/Input/GlobalEventHandler.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderobjects/Model.h" beforeDir="false" afterPath="$PROJECT_DIR$/RenderObjects/Model.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderobjects/Triangle2D.h" beforeDir="false" afterPath="$PROJECT_DIR$/RenderObjects/Triangle2D.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/SampleHouse.h" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleHouse.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shaders/glsl/fragment/default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Fragment/default.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shaders/glsl/vertex/default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Vertex/default.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shaders/spirv/fragment/default.spv" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/SPIRV/Fragment/default.spv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shaders/spirv/vertex/default.spv" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/SPIRV/Vertex/default.spv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,6 +94,9 @@
     <property name="settings.editor.selected.configurable" value="reference.settings.project.statistic.project.settings" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Murat\CLionProjects\SomeVulkan\Scene" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Murat\CLionProjects\SomeVulkan\Scene" />
     </key>
@@ -164,7 +155,7 @@
       <updated>1605742025582</updated>
       <workItem from="1605742028887" duration="12683000" />
       <workItem from="1605795238473" duration="2770000" />
-      <workItem from="1605808170270" duration="18393000" />
+      <workItem from="1605808170270" duration="50982000" />
     </task>
     <servers />
   </component>
@@ -180,54 +171,58 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1010" y="490" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1605743594745" />
-    <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser" timestamp="1605751564497">
+    <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser" timestamp="1605983820874">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1605751564497" />
+    <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1605983820874" />
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1606006032254">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1010" y="447" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.2560.1400@0.0.2560.1400" timestamp="1606006032254" />
     <state x="1035" y="403" key="#xdebugger.evaluate" timestamp="1605830736725">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1035" y="403" key="#xdebugger.evaluate/0.0.2560.1400@0.0.2560.1400" timestamp="1605830736725" />
-    <state width="719" height="466" key="DebuggerActiveHint" timestamp="1605830951691">
+    <state width="719" height="466" key="DebuggerActiveHint" timestamp="1606099827671">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="719" height="466" key="DebuggerActiveHint/0.0.2560.1400@0.0.2560.1400" timestamp="1605830951691" />
+    <state width="719" height="466" key="DebuggerActiveHint/0.0.2560.1400@0.0.2560.1400" timestamp="1606099827671" />
     <state x="1086" y="280" key="FileChooserDialogImpl" timestamp="1605808093219">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1086" y="280" key="FileChooserDialogImpl/0.0.2560.1400@0.0.2560.1400" timestamp="1605808093219" />
-    <state width="2517" height="491" key="GridCell.Tab.0.bottom" timestamp="1605888943673">
+    <state width="2517" height="491" key="GridCell.Tab.0.bottom" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943673" />
-    <state width="2517" height="491" key="GridCell.Tab.0.center" timestamp="1605888943673">
+    <state width="2517" height="491" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.0.center" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943673" />
-    <state width="2517" height="491" key="GridCell.Tab.0.left" timestamp="1605888943673">
+    <state width="2517" height="491" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.0.left" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943673" />
-    <state width="2517" height="491" key="GridCell.Tab.0.right" timestamp="1605888943673">
+    <state width="2517" height="491" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.0.right" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943673" />
-    <state width="2517" height="491" key="GridCell.Tab.1.bottom" timestamp="1605888943674">
+    <state width="2517" height="491" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.1.bottom" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943674" />
-    <state width="2517" height="491" key="GridCell.Tab.1.center" timestamp="1605888943673">
+    <state width="2517" height="491" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.1.center" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943673" />
-    <state width="2517" height="491" key="GridCell.Tab.1.left" timestamp="1605888943673">
+    <state width="2517" height="491" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.1.left" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943673" />
-    <state width="2517" height="491" key="GridCell.Tab.1.right" timestamp="1605888943674">
+    <state width="2517" height="491" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
+    <state width="2517" height="491" key="GridCell.Tab.1.right" timestamp="1606099983356">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1605888943674" />
+    <state width="2517" height="491" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1606099983356" />
     <state x="683" y="331" width="1674" height="984" key="IDE.errors.dialog" timestamp="1605795192040">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -252,16 +247,16 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="936" y="330" key="run.anything.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1605830494311" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1605825762906">
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1606049513032">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1605825762906" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1606049513032" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/core/DynamicMemory.h</url>
+          <url>file://$PROJECT_DIR$/Core/DynamicMemory.h</url>
           <line>62</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>

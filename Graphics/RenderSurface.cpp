@@ -9,9 +9,8 @@ NAMESPACES( SomeVulkan, Graphics )
 
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
-RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
-                              std::vector< ShaderInfo > shaders )
-        : context( context ), shaders( std::move( shaders ) ) {
+RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context, std::vector< ShaderInfo > shaders, std::shared_ptr< Scene::FpsCamera > camera )
+        : context( context ), shaders( std::move( shaders ) ), camera( std::move( camera ) ) {
 
     glslShaderSet = std::make_shared< GLSLShaderSet >( this->shaders );
 
@@ -51,7 +50,7 @@ void RenderSurface::createPipeline( bool isReset ) {
     IFISNOTRESET( createDescriptorPool( ) );
 
     if ( renderer == nullptr ) {
-        renderer = std::make_shared< Renderer >( context, glslShaderSet );
+        renderer = std::make_shared< Renderer >( context, camera, glslShaderSet );
     }
 
     IFISNOTRESET( createPipelineLayout( ) )

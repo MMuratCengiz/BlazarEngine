@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "InstanceContext.h"
 #include "GLSLShaderSet.h"
 #include "GraphicsException.h"
-#include "RendererTypes.h"
 #include "STextureLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
@@ -16,12 +15,12 @@ struct TextureDescription {
 struct BindingUpdateInfo {
     uint32_t index{};
     vk::DescriptorSet parent{};
-    DeviceBuffer buffer;
+    std::pair< vk::Buffer, vma::Allocation > buffer;
 };
 
 struct TextureBindingUpdateInfo {
     BindingUpdateInfo updateInfo { };
-    TextureObjectPart texture{ };
+    TextureBuffer texture{ };
 };
 
 class InstanceContext;

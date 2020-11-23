@@ -6,14 +6,22 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-void SomeVulkan::Graphics::STextureLoader::beforeFrame( TextureObject &input, const ECS::CMaterial &material ) {
+void STextureLoader::cache( const ECS::CMaterial &material ) {
     for ( const auto &texture: material.textures ) {
         if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) ) {
-            load( texture );
+            loadInner( texture );
+        }
+    }
+}
+
+void SomeVulkan::Graphics::STextureLoader::load( TextureBufferList &input, const ECS::CMaterial &material ) {
+    for ( const auto &texture: material.textures ) {
+        if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) ) {
+            loadInner( texture );
         }
 
-        TextureObjectPart &part = loadedTextures[ texture.path ];
-        TextureObjectPart &partToCopyTo = input.parts.emplace_back( TextureObjectPart { } );
+        TextureBuffer &part = loadedTextures[ texture.path ];
+        TextureBuffer &partToCopyTo = input.texturesObjects.emplace_back( TextureBuffer { } );
 
         partToCopyTo.image = part.image;
         partToCopyTo.sampler = part.sampler;
@@ -21,9 +29,9 @@ void SomeVulkan::Graphics::STextureLoader::beforeFrame( TextureObject &input, co
     }
 }
 
-void SomeVulkan::Graphics::STextureLoader::load( const ECS::Material::TextureInfo &texture ) {
-    loadedTextures[ texture.path ] = TextureObjectPart { };
-    TextureObjectPart &part = loadedTextures[ texture.path ];
+void SomeVulkan::Graphics::STextureLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
+    loadedTextures[ texture.path ] = TextureBuffer { };
+    TextureBuffer &part = loadedTextures[ texture.path ];
 
     int width, height, channels;
 
@@ -114,7 +122,7 @@ void SomeVulkan::Graphics::STextureLoader::load( const ECS::Material::TextureInf
     stbi_image_free( contents );
 }
 
-void STextureLoader::generateMipMaps( TextureObjectPart &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const {
+void STextureLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const {
     int32_t mipWidth = width, mipHeight = height;
 
     auto cmdBuffer = commandExecutor->startCommandExecution( )->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 );

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Camera.h"
+#include "../Core/Time.h"
 
 NAMESPACES( SomeVulkan, Scene )
 
@@ -11,7 +12,7 @@ private:
 
     glm::vec3 position;
     glm::vec3 right;
-    glm::vec3 target;
+    glm::vec3 front;
     glm::vec3 up;
 
     glm::vec3 worldUp;
@@ -26,10 +27,10 @@ private:
 
     void calculateView();
 public:
-    FpsCamera( glm::vec3 position, glm::vec3 target );
+    FpsCamera( glm::vec3 position, glm::vec3 front = glm::vec3( 0.0f, 0.0f, -1.0f ) );
 
-    void processKeyboardEvents( GLFWwindow* window, float deltaTime );
-    void processMouseEvents( GLFWwindow* window, double mouseX, double mouseY, float deltaTime );
+    void processKeyboardEvents( GLFWwindow* window );
+    void processMouseEvents( GLFWwindow* window );
     glm::mat4 getView() override;
     glm::mat4 getProjection() override;
     glm::vec3 getPosition() override;

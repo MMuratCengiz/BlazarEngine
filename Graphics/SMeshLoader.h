@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../core/Common.h"
-#include "../ecs/ISystem.h"
-#include "../ecs/CMesh.h"
-#include "ObjectBuffer.h"
+#include "../Core/Common.h"
+#include "../Core/DynamicMemory.h"
+#include "../ECS/ISystem.h"
+#include "../ECS/CMesh.h"
 #include "InstanceContext.h"
 #include "CommandExecutor.h"
 #include "RenderUtilities.h"
-#include "../core/DynamicMemory.h"
 
 #include <assimp/Importer.hpp>
 #include <utility>
@@ -16,26 +15,41 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-class SMeshLoader : public ECS::ISystem< ECS::CMesh, ObjectBuffer > {
+struct ObjectBuffer {
+    uint64_t vertexCount;
+    uint64_t indexCount;
+
+    std::pair< vk::Buffer, vma::Allocation > vertexBuffer;
+    std::pair< vk::Buffer, vma::Allocation > indexBuffer;
+    std::vector< uint32_t > indices;
+};
+
+struct ObjectBufferList {
+    std::vector< ObjectBuffer > buffers;
+};
+
+
+class SMeshLoader {
     Assimp::Importer importer;
 
     std::shared_ptr< InstanceContext > context;
     pCommandExecutor commandExecutor;
 
-    std::unordered_map< std::string, ObjectBuffer > loadedModels;
+    std::unordered_map< std::string, ObjectBufferList > loadedModels;
 public:
     inline explicit SMeshLoader( std::shared_ptr< InstanceContext > context, pCommandExecutor &commandExecutor )
     : context( std::move( context ) ), commandExecutor( commandExecutor ) { }
 
-    void beforeFrame( ObjectBuffer &objectBuffer, const ECS::CMesh &mesh ) override;
+    void cache( const ECS::CMesh &mesh );
+    void load( ObjectBufferList &objectBuffer, const ECS::CMesh &mesh );
 
     ~SMeshLoader();
 private:
     void loadModel( const ECS::CMesh &mesh );
-    void onEachNode( ObjectBuffer &buffer, const aiScene *scene, const aiNode *pNode );
-    void onEachMesh( ObjectBuffer &buffer, const aiMesh *mesh );
-    void copyVertexBuffer( ObjectBufferPart &bufferPart, const Core::DynamicMemory& memory );
-    void copyIndexBuffer( ObjectBufferPart &bufferPart, const std::vector< uint32_t > &indices );
+    void onEachNode( ObjectBufferList &buffer, const aiScene *scene, const aiNode *pNode );
+    void onEachMesh( ObjectBufferList &buffer, const aiMesh *mesh );
+    void copyVertexBuffer( ObjectBuffer &bufferPart, const Core::DynamicMemory& memory );
+    void copyIndexBuffer( ObjectBuffer &bufferPart, const std::vector< uint32_t > &indices );
 };
 
 END_NAMESPACES

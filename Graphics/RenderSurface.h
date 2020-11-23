@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "Renderer.h"
 #include "GLSLShaderSet.h"
+#include "../Scene/FpsCamera.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -56,8 +57,9 @@ private:
 
     std::vector< vk::ShaderModule > shaderModules;
     std::shared_ptr< Renderer > renderer;
+    std::shared_ptr< Scene::FpsCamera > camera;
 public:
-    RenderSurface( const std::shared_ptr< InstanceContext >&, std::vector< ShaderInfo > shaders );
+    RenderSurface( const std::shared_ptr< InstanceContext >&, std::vector< ShaderInfo > shaders, std::shared_ptr< Scene::FpsCamera > camera );
 
     std::shared_ptr< Renderer >& getSurfaceRenderer();
     ~RenderSurface( );
