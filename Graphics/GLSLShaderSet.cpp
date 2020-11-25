@@ -203,8 +203,13 @@ GLSLShaderSet::GLSLType GLSLShaderSet::spvToGLSLType( const spirv_cross::SPIRTyp
 		break;
 	}
 
-#undef makeFormat_1 makeFormat_2 makeFormat_3 makeFormat_4
-#undef makeFormat mfc not_supported()
+#undef makeFormat_1
+#undef makeFormat_2
+#undef makeFormat_3
+#undef makeFormat_4
+#undef makeFormat
+#undef mfc
+#undef not_supported
 
 	return GLSLType{ format, size * type.vecsize };
 }

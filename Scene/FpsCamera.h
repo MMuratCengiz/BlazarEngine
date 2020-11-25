@@ -7,28 +7,28 @@ NAMESPACES( SomeVulkan, Scene )
 
 class FpsCamera : public Camera {
 private:
-    glm::mat4 view;
-    glm::mat4 projection;
+    glm::mat4 view{};
+    glm::mat4 projection{};
 
-    glm::vec3 position;
-    glm::vec3 right;
-    glm::vec3 front;
-    glm::vec3 up;
+    glm::vec3 position{};
+    glm::vec3 right{};
+    glm::vec3 front{};
+    glm::vec3 up{};
 
-    glm::vec3 worldUp;
+    glm::vec3 worldUp{};
 
     GLfloat pitch;
     GLfloat yaw;
 
-    bool firstMouseMove;
+    bool firstMouseMove{};
 
-    GLfloat lastMouseY;
-    GLfloat lastMouseX;
+    GLfloat lastMouseY{};
+    GLfloat lastMouseX{};
 
     void calculateView();
 public:
-    FpsCamera( glm::vec3 position, glm::vec3 front = glm::vec3( 0.0f, 0.0f, -1.0f ) );
-
+    explicit FpsCamera( glm::vec3 position, glm::vec3 front = glm::vec3( 0.0f, 0.0f, -1.0f ) );
+    void updateAspectRatio( const uint32_t& windowWidth,  const uint32_t& windowHeight );
     void processKeyboardEvents( GLFWwindow* window );
     void processMouseEvents( GLFWwindow* window );
     glm::mat4 getView() override;

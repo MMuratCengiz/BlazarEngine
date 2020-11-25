@@ -60,7 +60,7 @@ public:
     void beforeDelete();
 
     std::shared_ptr< InstanceContext > getContext() const;
-    std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< ShaderInfo >& shaders, std::shared_ptr< Scene::FpsCamera > camera );
+    std::unique_ptr< RenderSurface > createRenderSurface( const std::vector< ShaderInfo >& shaders, const std::shared_ptr< Scene::Camera >& camera );
 
     ~RenderDevice( );
 private:

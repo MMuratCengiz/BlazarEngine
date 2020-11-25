@@ -1,22 +1,15 @@
 #pragma once
 
-#include "../core/Common.h"
-#include "../ecs/IGameEntity.h"
+#include "../Core/Common.h"
+#include "../ECS/IGameEntity.h"
 
 NAMESPACES( SomeVulkan, ECS )
 
-struct NoInput { };
-template< class ComponentType, class Input >
 class ISystem {
 protected:
 public:
-	pComponent& requiredEntityComponent( pGameEntity& entity ) {
-		return entity->getComponent< ComponentType >( );
-	}
-
-	virtual void beforeFrame( Input& input, const ComponentType& ) { }
-	virtual void onFrame(  const ComponentType& ) { }
-	virtual void postFrame( const ComponentType& ) { }
+	virtual std::vector< std::type_index > getManagedComponents( ) = 0;
+    virtual void update( std::shared_ptr< IComponent > component ) = 0;
 };
 
 END_NAMESPACES

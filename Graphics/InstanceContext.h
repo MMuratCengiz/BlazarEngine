@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -24,25 +24,17 @@ enum class QueueType {
     Transfer,
 };
 
-typedef enum class EventType {
-    SwapChainInvalidated
-} EventType;
 
-class InstanceContext;
+struct InstanceContext;
 class DescriptorManager;
 
-namespace FunctionDefinitions {
-typedef std::function< void( InstanceContext *context, EventType eventType ) > eventCallback;
-}
 /*
  * TODO
  * Split this into DeviceContext and Pipeline context, because we may have different pipelines for every device,
  * ie. different shaders
  */
 
-class InstanceContext {
-private:
-    std::unordered_map< EventType, std::vector< FunctionDefinitions::eventCallback > > eventSubscribers;
+struct InstanceContext {
 public:
     vk::Instance instance;
     vk::PhysicalDevice physicalDevice;
@@ -74,29 +66,6 @@ public:
     GLFWwindow *window;
     std::unordered_map< QueueType, QueueFamily > queueFamilies;
     std::unordered_map< QueueType, vk::Queue > queues;
-
-
-    // Todo move these somewhere else, maybe global event handlers?
-    void subscribeToEvent( EventType event, const FunctionDefinitions::eventCallback& cb ) {
-        ensureMapContainsEvent( event );
-        eventSubscribers[ event ].emplace_back( cb );
-    }
-
-    // Todo move these somewhere else
-    void triggerEvent( EventType event ) {
-        ensureMapContainsEvent( event );
-
-        for ( const auto& cb: eventSubscribers[ event ] ) {
-            cb( this, event );
-        }
-    }
-
-private:
-    void ensureMapContainsEvent( EventType event ) {
-        if ( eventSubscribers.find( event ) == eventSubscribers.end( ) ) {
-            eventSubscribers[ event ] = { };
-        }
-    }
 };
 
 typedef std::shared_ptr< InstanceContext > pInstanceContext;

@@ -1,14 +1,27 @@
 #pragma once
 
-#include "../ecs/IGameEntity.h"
-#include "../ecs/CMesh.h"
-#include "../ecs/CMaterial.h"
+#include "../ECS/IGameEntity.h"
+#include "../ECS/CMesh.h"
+#include "../ECS/CMaterial.h"
+#include "../ECS/CTransform.h"
 
-class SampleHouse : public IGameEntity {
+namespace Sample {
+
+
+class SampleHouse : public SomeVulkan::ECS::IGameEntity {
+public:
 	SampleHouse( ) {
-		auto& material = createComponent< ECS::CMaterial >( );
-		auto& mesh = createComponent< ECS::CMesh>( );
+        auto mesh = createComponent< SomeVulkan::ECS::CMesh >( );
+        mesh->path = PATH( "/assets/models/viking_room.obj" );
 
-		mesh->path = PATH( );
+        auto texture = createComponent< SomeVulkan::ECS::CMaterial >( );
+        auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );
+        texInfo.path = "/assets/textures/viking_room.png";
+
+        auto transform = createComponent< SomeVulkan::ECS::CTransform >( );
+        transform->position = glm::vec3( 0.0f, 0.4f, -0.8f );
+        transform->rotation.euler = glm::vec3( -90.0f, 90.0f, 0.0f );
 	}
 };
+
+}

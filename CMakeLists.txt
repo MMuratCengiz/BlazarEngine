@@ -28,11 +28,12 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h)
 
-set(Core Core/Game.h Core/Common.h Core/Time.h Scene/World.h)
-set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h Core/Time.cpp Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/RenderPipeline.cpp Graphics/RenderPipeline.h Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/SMeshLoader.h" "Graphics/SMeshLoader.cpp" Graphics/STextureLoader.cpp Graphics/STextureLoader.h Graphics/RenderUtilities.cpp Graphics/STransformLoader.cpp Graphics/STransformLoader.h Graphics/SCameraLoader.cpp Graphics/SCameraLoader.h)
-set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h Core/DynamicMemory.h)
+set(Core Core/Common.h Core/Time.h Scene/World.h)
+set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h Core/Time.cpp Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/RenderPipeline.cpp Graphics/RenderPipeline.h Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/MeshLoader.h" "Graphics/MeshLoader.cpp" Graphics/TextureLoader.cpp Graphics/TextureLoader.h Graphics/RenderUtilities.cpp Graphics/TransformLoader.cpp Graphics/TransformLoader.h Graphics/CameraLoader.cpp Graphics/CameraLoader.h Graphics/BuiltinPrimitives.h)
+set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h Core/DynamicMemory.h Input/ActionMap.cpp Input/ActionMap.h Input/EventHandler.cpp Input/EventHandler.h)
 set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h)
-set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp Scene/Scene.h)
+set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp Scene/Scene.h Scene/FPSCounter.h Scene/IPlayable.h Scene/Window.h)
+set(Samples Samples/SampleGame.h Samples/SampleGame.cpp Samples/SampleHouse.h Samples/SampleFloor.h)
 
 set(SampleGame Samples/SampleHouse.h)
 
@@ -60,7 +61,7 @@ add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
             
 find_package(Vulkan REQUIRED)
 
-add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${SPV} )
+add_executable(SomeVulkan main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV} )
 
 target_compile_definitions( SomeVulkan PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING  )
 

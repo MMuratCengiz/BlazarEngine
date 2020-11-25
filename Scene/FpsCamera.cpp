@@ -1,24 +1,26 @@
 #include "FpsCamera.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 NAMESPACES( SomeVulkan, Scene )
 
 FpsCamera::FpsCamera( glm::vec3 position, glm::vec3 front ) {
     this->position = position;
-    this->front = front;
 
+    this->right = glm::vec3( 1.0f, 0.0f, 0.0f );
     this->yaw = -90.0f;
     this->pitch = 0.0f;
-    this->worldUp = glm::vec3( 0.0f, -1.0f, 0.0f );
+    this->worldUp = glm::vec3( 0.0f, 1.0f, 0.0f );
+    this->front = glm::cross( right, worldUp );
     // todo dynamic
 
     this->projection = glm::perspective( glm::radians( 60.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
     this->projection[ 1 ][ 1 ] = -this->projection[ 1 ][ 1 ];
 
     calculateView( );
+}
+
+void FpsCamera::updateAspectRatio( const uint32_t &windowWidth, const uint32_t &windowHeight ) {
+    this->projection = glm::perspective( glm::radians( 60.0f ), windowWidth / ( float ) windowHeight, 0.1f, 100.0f );
+    this->projection[ 1 ][ 1 ] *= -1.0f;
 }
 
 void FpsCamera::processKeyboardEvents( GLFWwindow *window ) {
@@ -40,7 +42,7 @@ void FpsCamera::processKeyboardEvents( GLFWwindow *window ) {
         position += right * sensitivity;
     }
 
-//    calculateView( );
+    calculateView( );
 }
 
 void FpsCamera::processMouseEvents( GLFWwindow *window ) {
@@ -70,14 +72,14 @@ void FpsCamera::processMouseEvents( GLFWwindow *window ) {
         pitch = -89.0f;
     }
 
-    glm::vec3 front;
+    glm::vec3 newFront;
 
-    front.x = cos( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
-    front.y = sin( glm::radians( pitch ) );
-    front.z = sin( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
-    front = glm::normalize( front );
+    newFront.x = cos( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
+    newFront.y = sin( glm::radians( pitch ) );
+    newFront.z = sin( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
+    this->front = glm::normalize( newFront );
 
-//    calculateView( );
+    calculateView( );
 }
 
 void FpsCamera::calculateView( ) {

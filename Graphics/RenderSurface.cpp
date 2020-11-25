@@ -3,14 +3,15 @@
 //
 
 #include <fstream>
+#include <utility>
 #include "RenderSurface.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
-RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context, std::vector< ShaderInfo > shaders, std::shared_ptr< Scene::FpsCamera > camera )
-        : context( context ), shaders( std::move( shaders ) ), camera( std::move( camera ) ) {
+RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context, std::vector< ShaderInfo > shaders, std::shared_ptr< Scene::Camera >  camera )
+        : context( context ), shaders( std::move( shaders ) ), camera(std::move( camera )) {
 
     glslShaderSet = std::make_shared< GLSLShaderSet >( this->shaders );
 
@@ -20,8 +21,7 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
 
     createPipeline( false );
 
-    context->subscribeToEvent( EventType::SwapChainInvalidated, [ & ](
-            InstanceContext *context, EventType eventType ) -> void {
+    Input::GlobalEventHandler::Instance().subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( Input::EventType eventType, const Input::pEventParameters& parameters ) -> void {
         context->logicalDevice.waitIdle( );
 
         dispose( );

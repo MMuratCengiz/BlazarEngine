@@ -7,6 +7,7 @@
 #include "../ECS/CMesh.h"
 #include "../ECS/CTransform.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -14,8 +15,8 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, const std::shared_ptr< GLSLShaderSet > &shaderSet )
-        : context( context ), camera( std::move( camera ) ), shaderSet( shaderSet ) {
+Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera >  camera, const std::shared_ptr< GLSLShaderSet > &shaderSet )
+        : context( context ), camera(std::move( camera )), shaderSet( shaderSet ) {
     poolSize = context->swapChainImages.size( );
 
     if ( descriptorManager == nullptr ) {
@@ -24,16 +25,15 @@ Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shar
 
     createFrameContexts( );
 
-    meshLoader = std::make_shared< SMeshLoader >( context, frameContexts[ 0 ].commandExecutor );
-    textureLoader = std::make_shared< STextureLoader >( context, frameContexts[ 0 ].commandExecutor );
+    meshLoader = std::make_shared< MeshLoader >( context, frameContexts[ 0 ].commandExecutor );
+    textureLoader = std::make_shared< TextureLoader >( context, frameContexts[ 0 ].commandExecutor );
 
     createSynchronizationStructures( context->logicalDevice );
 
-    auto pFunction = [ ]( void *userP, int width, int height ) -> void {
-        ( ( Renderer * ) userP )->frameBufferResized = true;
-    };
-
-    SomeVulkan::Input::GlobalEventHandler::Instance( ).addWindowResizeCallback( context->window, this, pFunction );
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [&]( const Input::EventType& event,
+            const Input::pEventParameters& parameters ) {
+        frameBufferResized = true;
+    } );
 }
 
 void Renderer::createFrameContexts( ) {
@@ -44,8 +44,8 @@ void Renderer::createFrameContexts( ) {
 
         fContext.commandExecutor = std::make_shared< CommandExecutor >( context );
 
-        fContext.transformLoader = std::make_shared< STransformLoader >( context );
-        fContext.cameraLoader = std::make_shared< SCameraLoader >( context, camera );
+        fContext.transformLoader = std::make_shared< TransformLoader >( context );
+        fContext.cameraLoader = std::make_shared< CameraLoader >( context, camera );
 
         BindingUpdateInfo updateInfo {
                 0,
@@ -80,6 +80,7 @@ void Renderer::drawRenderObjects( ) {
     currentFrameContext.cachedBuffers
             ->beginCommand( )
             ->beginRenderPass( context->frameBuffers.data( ), colorClear )
+            ->bindDescriptorSet( context->pipelineLayout, context->descriptorSets[ frameIndex ] )
             ->bindRenderPass( vk::PipelineBindPoint::eGraphics );
 
     for ( const auto &renderObject: gameEntities ) {
@@ -119,7 +120,6 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
             textureBindingUpdateInfo.texture = part;
 
             descriptorManager->updateTextureDescriptorSetBinding( textureBindingUpdateInfo );
-            currentFrameContext.cachedBuffers->bindDescriptorSet( context->pipelineLayout, context->descriptorSets[ frameIndex ] );
         }
     }
 
@@ -188,7 +188,7 @@ void Renderer::render( ) {
     auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX, imageAvailableSemaphores[ frameIndex ], nullptr );
 
     if ( result.result == vk::Result::eErrorOutOfDateKHR ) {
-        context->triggerEvent( EventType::SwapChainInvalidated );
+        Input::GlobalEventHandler::Instance().triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
         return;
     } else if ( result.result != vk::Result::eSuccess && result.result == vk::Result::eSuboptimalKHR ) {
         throw std::runtime_error( "failed to acquire swap chain image!" );
@@ -236,7 +236,7 @@ void Renderer::render( ) {
 
     if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || frameBufferResized ) {
         frameBufferResized = false;
-        context->triggerEvent( EventType::SwapChainInvalidated );
+        Input::GlobalEventHandler::Instance().triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
         return;
     } else if ( presentResult != vk::Result::eSuccess ) {
         throw std::runtime_error( "failed to acquire swap chain image!" );

@@ -4,11 +4,11 @@
 #include "CommandExecutor.h"
 #include "../ECS.h"
 #include "RenderUtilities.h"
-#include "SMeshLoader.h"
+#include "MeshLoader.h"
 #include "GLSLShaderSet.h"
-#include "STextureLoader.h"
-#include "SCameraLoader.h"
-#include "STransformLoader.h"
+#include "TextureLoader.h"
+#include "CameraLoader.h"
+#include "TransformLoader.h"
 #include "DescriptorManager.h"
 
 NAMESPACES( SomeVulkan, Graphics )
@@ -18,8 +18,8 @@ using namespace ECS;
 struct FrameContext {
     std::shared_ptr< CommandExecutor > commandExecutor;
     std::shared_ptr< CommandList > cachedBuffers;
-    std::shared_ptr< STransformLoader > transformLoader;
-    std::shared_ptr< SCameraLoader > cameraLoader;
+    std::shared_ptr< TransformLoader > transformLoader;
+    std::shared_ptr< CameraLoader > cameraLoader;
 };
 
 class Renderer {
@@ -45,10 +45,10 @@ private:
     std::shared_ptr< GLSLShaderSet > shaderSet;
     std::shared_ptr< Scene::Camera > camera;
 
-    std::shared_ptr< SMeshLoader > meshLoader;
-    std::shared_ptr< STextureLoader > textureLoader;
+    std::shared_ptr< MeshLoader > meshLoader;
+    std::shared_ptr< TextureLoader > textureLoader;
 public:
-    explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, const std::shared_ptr< GLSLShaderSet > &shaderSet );
+    explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera >  camera, const std::shared_ptr< GLSLShaderSet > &shaderSet );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );
     void render( );
     void freeBuffers( );

@@ -2,6 +2,7 @@
 
 #include "../Core/Common.h"
 #include "../ECS/IGameEntity.h"
+#include "../ECS/ISystem.h"
 #include "Camera.h"
 
 NAMESPACES( SomeVulkan, Scene )

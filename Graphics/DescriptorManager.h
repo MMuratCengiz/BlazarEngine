@@ -4,7 +4,7 @@
 #include "InstanceContext.h"
 #include "GLSLShaderSet.h"
 #include "GraphicsException.h"
-#include "STextureLoader.h"
+#include "TextureLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
