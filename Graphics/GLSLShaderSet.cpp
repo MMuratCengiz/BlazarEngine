@@ -9,7 +9,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-GLSLShaderSet::GLSLShaderSet( const std::vector< ShaderInfo > shaderInfos, const bool& interleavedMode ) : interleavedMode( interleavedMode ) {
+GLSLShaderSet::GLSLShaderSet( const std::vector< ShaderInfo >& shaderInfos, const bool& interleavedMode ) : interleavedMode( interleavedMode ) {
 	for ( const ShaderInfo& shaderInfo : shaderInfos ) {
 		onEachShader( shaderInfo );
 	}

@@ -17,6 +17,7 @@ public:
     std::pair< vk::Buffer, vma::Allocation >& getBuffer();
     void load( const std::shared_ptr< ECS::CTransform > &type );
     ~TransformLoader();
+    static glm::mat4 getModelMatrix( const std::shared_ptr< ECS::CTransform > &transform ) ;
 };
 
 END_NAMESPACES

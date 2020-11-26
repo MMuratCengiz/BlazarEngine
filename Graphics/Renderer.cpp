@@ -15,13 +15,9 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera >  camera, const std::shared_ptr< GLSLShaderSet > &shaderSet )
-        : context( context ), camera(std::move( camera )), shaderSet( shaderSet ) {
+Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, std::shared_ptr< PipelineSelector > pipelineSelector )
+        : context( context ), camera( std::move( camera ) ), pipelineSelector( std::move( pipelineSelector ) ) {
     poolSize = context->swapChainImages.size( );
-
-    if ( descriptorManager == nullptr ) {
-        descriptorManager = std::make_shared< DescriptorManager >( context, shaderSet );
-    }
 
     createFrameContexts( );
 
@@ -47,18 +43,9 @@ void Renderer::createFrameContexts( ) {
         fContext.transformLoader = std::make_shared< TransformLoader >( context );
         fContext.cameraLoader = std::make_shared< CameraLoader >( context, camera );
 
-        BindingUpdateInfo updateInfo {
-                0,
-                context->descriptorSets[ i ],
-                fContext.cameraLoader->getBuffer()
-        };
-
-        descriptorManager->updateUniformDescriptorSetBinding( updateInfo );
-
-        updateInfo.index = 1;
-        updateInfo.buffer = fContext.transformLoader->getBuffer();
-
-        descriptorManager->updateUniformDescriptorSetBinding( updateInfo );
+        for ( const PipelineInstance& instance: pipelineSelector->selectAll() ) {
+            instance.descriptorManager->updateViewProjection( i, fContext.cameraLoader->getBuffer() );
+        }
     }
 }
 
@@ -79,9 +66,7 @@ void Renderer::drawRenderObjects( ) {
 
     currentFrameContext.cachedBuffers
             ->beginCommand( )
-            ->beginRenderPass( context->frameBuffers.data( ), colorClear )
-            ->bindDescriptorSet( context->pipelineLayout, context->descriptorSets[ frameIndex ] )
-            ->bindRenderPass( vk::PipelineBindPoint::eGraphics );
+            ->beginRenderPass( context->frameBuffers.data( ), colorClear );
 
     for ( const auto &renderObject: gameEntities ) {
         refreshCommands( renderObject );
@@ -101,60 +86,62 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
     std::vector< vk::Framebuffer > &frameBuffers = context->frameBuffers;
 
+    PipelineInstance& pipeline = pipelineSelector->selectPipeline( entity );
+    auto& manager = pipeline.descriptorManager;
+
+    std::vector< vk::DescriptorSet > setsToBind;
+
+    currentFrameContext.cachedBuffers->bindRenderPass( pipeline.pipeline, vk::PipelineBindPoint::eGraphics );
+    currentFrameContext.cachedBuffers->setViewport( context->viewport )->setViewScissor( context->viewScissor );
+
+    setsToBind.emplace_back( manager->getViewProjectionDescriptorSet( frameIndex ) );
+
+
     if ( !IS_NULL( transformComponent ) ) {
-        currentFrameContext.transformLoader->load( transformComponent );
+        // currentFrameContext.transformLoader->load( transformComponent );
+
+        const glm::mat4 &model = TransformLoader::getModelMatrix( transformComponent );
+
+        currentFrameContext.cachedBuffers->pushConstant(
+                pipeline.layout,
+                vk::ShaderStageFlagBits::eVertex,
+                4 * 4 * sizeof( float ),
+                &model
+        );
     }
 
     if ( !IS_NULL( materialComponent ) ) {
         TextureBufferList textureObject { };
         textureLoader->load( textureObject, *materialComponent );
 
-        uint32_t i = 2;
+        uint32_t i = 0;
         for ( auto &part: textureObject.texturesObjects ) {
-            BindingUpdateInfo texUpdateInfo { };
-            texUpdateInfo.index = i++;
-            texUpdateInfo.parent = context->descriptorSets[ frameIndex ];
+            std::string &path = materialComponent->textures[ i ].path;
 
-            TextureBindingUpdateInfo textureBindingUpdateInfo { };
-            textureBindingUpdateInfo.updateInfo = texUpdateInfo;
-            textureBindingUpdateInfo.texture = part;
+            if ( ! manager->existsSetForTexture( frameIndex, path ) ) {
+                manager->updateTexture( frameIndex, path, part );
+            }
 
-            descriptorManager->updateTextureDescriptorSetBinding( textureBindingUpdateInfo );
+            setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, path, i ) );
         }
     }
 
     FUNCTION_BREAK( IS_NULL( meshComponent ) )
 
     ObjectBufferList objectBuffer { };
-
-    std::vector< uint64_t > offsets;
-    std::vector< vk::Buffer > vbuffers;
-    std::vector< vk::Buffer > ibuffers;
-
-    uint64_t totalVertexCount = 0;
-    uint64_t totalIndexCount = 0;
-
     meshLoader->load( objectBuffer, *meshComponent );
 
+    uint32_t offset = 0;
     for ( auto &part: objectBuffer.buffers ) {
-        vbuffers.emplace_back( part.vertexBuffer.first );
-        offsets.emplace_back( 0 ); // ?
+        currentFrameContext.cachedBuffers->bindDescriptorSet( pipeline.layout, setsToBind );
+        currentFrameContext.cachedBuffers->bindVertexMemory( part.vertexBuffer.first , offset );
 
         if ( part.indexCount > 0 ) {
-            ibuffers.emplace_back( part.indexBuffer.first );
-            totalIndexCount += part.indexCount;
+            currentFrameContext.cachedBuffers->bindIndexMemory( part.indexBuffer.first, offset );
+            currentFrameContext.cachedBuffers->drawIndexed( part.indexCount );
+        } else {
+            currentFrameContext.cachedBuffers->draw( part.vertexCount );
         }
-
-        totalVertexCount += part.vertexCount;
-    }
-
-    currentFrameContext.cachedBuffers->bindVertexMemory( vbuffers[ 0 ], offsets[ 0 ] );
-
-    if ( !ibuffers.empty( ) ) {
-        currentFrameContext.cachedBuffers->bindIndexMemory( ibuffers[ 0 ], offsets[ 0 ] );
-        currentFrameContext.cachedBuffers->drawIndexed( totalIndexCount );
-    } else {
-        currentFrameContext.cachedBuffers->draw( totalVertexCount );
     }
 }
 

@@ -3,10 +3,13 @@
 #include "../Core/Common.h"
 #include "Renderer.h"
 #include "GLSLShaderSet.h"
+#include "PipelineSelector.h"
 #include "../Scene/FpsCamera.h"
 #include "../Input/GlobalEventHandler.h"
 
 NAMESPACES( SomeVulkan, Graphics )
+
+#define ENGINE_CORE_PIPELINE "EngineCorePipeline"
 
 enum class ShaderType {
     Vertex,
@@ -18,21 +21,10 @@ struct Shader {
     std::string filename;
 };
 
-class RenderSurface {
-private:
-    const vk::DynamicState dynamicStates[2] = {
-            vk::DynamicState::eViewport,
-            vk::DynamicState::eLineWidth,
-    };
-
-    std::shared_ptr< GLSLShaderSet > glslShaderSet;
-
-    static std::unordered_map< std::string, std::vector< char > > cachedShaders;
-    std::shared_ptr< InstanceContext > context;
-    std::vector< ShaderInfo > shaders;
-
-    // Todo see if we can make these all local again
+struct PipelineCreateInfos {
     // Pipeline createInfo required structures in class scope
+    std::vector< vk::PipelineShaderStageCreateInfo > pipelineStageCreateInfos;
+    vk::PushConstantRange pushConstantRange{};
     vk::PipelineColorBlendAttachmentState colorBlendAttachment { };
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo { };
     vk::PipelineColorBlendStateCreateInfo colorBlending { };
@@ -45,7 +37,20 @@ private:
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo { };
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{ };
     vk::Rect2D viewScissor { };
+    std::vector< ShaderInfo > shaders;
+    std::shared_ptr< GLSLShaderSet > shaderSet;
     // --
+};
+
+class RenderSurface {
+private:
+    const vk::DynamicState dynamicStates[2] = {
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eLineWidth,
+    };
+
+    static std::unordered_map< std::string, std::vector< char > > cachedShaders;
+    std::shared_ptr< InstanceContext > context;
 
     // To be moved, maybe?
     vk::Image samplingImage;
@@ -54,43 +59,42 @@ private:
     vk::SampleCountFlagBits msaaSampleCount;
     // --
 
-    std::vector< vk::PipelineShaderStageCreateInfo > pipelineStageCreateInfos;
+    std::shared_ptr< PipelineSelector > pipelineSelector;
+    std::vector< PipelineInstance > pipelineInstances;
+
+    PipelineSelectorFunc enginePipelineSelector;
 
     std::vector< vk::ShaderModule > shaderModules;
     std::shared_ptr< Renderer > renderer;
     std::shared_ptr< Scene::Camera > camera;
 public:
-    RenderSurface( const std::shared_ptr< InstanceContext >&, std::vector< ShaderInfo > shaders, std::shared_ptr< Scene::Camera >  camera );
+    RenderSurface( const std::shared_ptr< InstanceContext >&, std::shared_ptr< Scene::Camera >  camera );
 
     std::shared_ptr< Renderer >& getSurfaceRenderer();
     ~RenderSurface( );
 private:
-    void createPipeline( bool isReset  );
+    void createPipelines( );
+    void createPipeline(  PipelineInstance &instance, const std::vector< ShaderInfo >& shaderInfo, const std::shared_ptr< GLSLShaderSet >& glslShaderSet );
     void createSurface( );
-
+    void updateViewport( const uint32_t& width, const uint32_t& height );
     vk::ShaderModule createShaderModule( const std::string &filename );
-
     static std::vector< char > readFile( const std::string &filename );
-
-    void configureVertexInput( );
-
+    void configureVertexInput( PipelineCreateInfos& createInfo );
     void createSwapChain( const vk::SurfaceCapabilitiesKHR& surfaceCapabilities );
-
-    void createImageView( vk::ImageView &imageView, const vk::Image& image, const vk::Format& format,
-                          const vk::ImageAspectFlags& aspectFlags );
+    void createImageView( vk::ImageView &imageView, const vk::Image& image, const vk::Format& format, const vk::ImageAspectFlags& aspectFlags );
     void createSamplingResources( );
-    void configureColorBlend( );
-    void configureRasterization( );
-    void configureViewport( );
-    void configureMultisampling( );
-    void configureDynamicState( );
-    void createPipelineLayout( );
-    void createRenderPass( );
+    void configureColorBlend( PipelineCreateInfos &createInfo );
+    void configureRasterization( PipelineCreateInfos &createInfo );
+    void configureViewport( PipelineCreateInfos &createInfo );
+    void configureMultisampling( PipelineCreateInfos &createInfo );
+    void configureDynamicState( PipelineCreateInfos &createInfo );
+    void createPipelineLayout( PipelineCreateInfos& createInfo, PipelineInstance& instance );
+    void createRenderPass( PipelineCreateInfos& createInfo );
     void createFrameBuffers( );
-    void createDepthAttachmentImages( );
-    void createDescriptorPool( );
+    void createDepthAttachmentImages( PipelineCreateInfos& createInfo );
     void chooseExtent2D( const vk::SurfaceCapabilitiesKHR& capabilities );
     void createSwapChainImages( vk::Format format );
     void dispose();
+    void createDepthImages( );
 };
 END_NAMESPACES

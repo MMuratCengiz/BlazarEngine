@@ -62,11 +62,14 @@ public:
     CommandList *copyBuffer( const vk::DeviceSize &size, vk::Buffer &src, vk::Buffer &dst );
     CommandList *beginRenderPass( const vk::Framebuffer frameBuffers[], const vk::ClearColorValue &clearValue );
     CommandList *endRenderPass( );
-    CommandList *bindRenderPass( vk::PipelineBindPoint bindPoint );
+    CommandList *pushConstant( const vk::PipelineLayout& layout, const vk::ShaderStageFlags& shaderStages, const uint32_t& size, const void * data );
+    CommandList *setViewport( const vk::Viewport& viewport );
+    CommandList *setViewScissor( const vk::Rect2D& scissor  );
+    CommandList *bindRenderPass( const vk::Pipeline& pipeline, const vk::PipelineBindPoint& bindPoint );
     CommandList *bindVertexMemory( const vk::Buffer &vertexBuffer, const vk::DeviceSize &offset );
     CommandList *bindVertexMemories( const std::vector< vk::Buffer > &vertexBuffers, const std::vector< vk::DeviceSize > &offsets );
     CommandList *bindIndexMemory( vk::Buffer indexBuffer, const vk::DeviceSize &offset );
-    CommandList *bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const vk::DescriptorSet &descriptorSet );
+    CommandList *bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const std::vector< vk::DescriptorSet > descriptorSet );
     CommandList *drawIndexed( const uint32_t &indexCount );
     CommandList *blitImage( const ImageBlitArgs & args );
     CommandList *pipelineBarrier( const PipelineBarrierArgs& args );

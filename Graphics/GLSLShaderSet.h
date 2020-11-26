@@ -81,7 +81,7 @@ private:
 
 	bool interleavedMode;
 public:
-    GLSLShaderSet( const std::vector< ShaderInfo > shaders, const bool& interleavedMode = true );
+    explicit GLSLShaderSet( const std::vector< ShaderInfo >& shaders, const bool& interleavedMode = true );
 	
 	inline const std::vector< DescriptorSet >& getDescriptorSets( ) {
 		return descriptorSets;

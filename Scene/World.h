@@ -38,17 +38,10 @@ public:
                     return devices[ 0 ];
                 } ).create( );
 
-        std::vector< Graphics::ShaderInfo > shaders( 2 );
-
-        shaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
-        shaders[ 0 ].path = PATH( "/Shaders/SPIRV/Vertex/default.spv" );
-        shaders[ 1 ].type = vk::ShaderStageFlagBits::eFragment;
-        shaders[ 1 ].path = PATH( "/Shaders/SPIRV/Fragment/default.spv" );
-
         Input::GlobalEventHandler::Instance().initWindowEvents( window->getWindow() );
-        camera = std::make_shared< FpsCamera >( glm::vec3( 0.0f, 0.5f, -1.0f ) );
+        camera = std::make_shared< FpsCamera >( glm::vec3( -0.6f, 3.2f, 5.4f ) );
 
-        renderSurface = vk->createRenderSurface( shaders, camera );
+        renderSurface = vk->createRenderSurface( camera );
         renderer = renderSurface->getSurfaceRenderer( );
 
         eventHandler = std::make_shared< Input::EventHandler >( window->getWindow() );

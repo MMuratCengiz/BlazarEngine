@@ -344,10 +344,10 @@ void RenderDevice::beforeDelete( ) {
 }
 
 std::unique_ptr< RenderSurface >
-RenderDevice::createRenderSurface( const std::vector< ShaderInfo > &shaders, const std::shared_ptr< Scene::Camera >& camera ) {
+RenderDevice::createRenderSurface( const std::shared_ptr< Scene::Camera >& camera ) {
     context->logicalDevice.waitIdle( );
 
-    auto *renderSurface = new RenderSurface { context, shaders, camera };
+    auto *renderSurface = new RenderSurface { context, camera };
     return std::unique_ptr< RenderSurface >( renderSurface );
 }
 

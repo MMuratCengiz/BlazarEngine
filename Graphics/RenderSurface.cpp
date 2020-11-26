@@ -10,61 +10,94 @@ NAMESPACES( SomeVulkan, Graphics )
 
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
-RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context, std::vector< ShaderInfo > shaders, std::shared_ptr< Scene::Camera >  camera )
-        : context( context ), shaders( std::move( shaders ) ), camera(std::move( camera )) {
-
-    glslShaderSet = std::make_shared< GLSLShaderSet >( this->shaders );
-
-    pipelineCreateInfo.pDepthStencilState = nullptr;
-
+RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera )
+        : context( context ), camera( std::move( camera ) ) {
+    pipelineSelector = std::make_shared< PipelineSelector >( );
     msaaSampleCount = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
 
-    createPipeline( false );
+    createSurface( );
+    createPipelines( );
+    createDepthImages( );
+    createSamplingResources( );
+    createFrameBuffers( );
 
-    Input::GlobalEventHandler::Instance().subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( Input::EventType eventType, const Input::pEventParameters& parameters ) -> void {
+    enginePipelineSelector = []( const std::shared_ptr< ECS::IGameEntity >& entity ) {
+        return ENGINE_CORE_PIPELINE;
+    };
+
+    pipelineSelector->addSelector( PipelineSelectorPair{ 1, enginePipelineSelector } );
+
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams ) {
+        auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
         context->logicalDevice.waitIdle( );
 
-        dispose( );
-        createPipeline( true );
+        updateViewport( parameters->width, parameters->height );
     } );
-}
 
-void RenderSurface::createPipeline( bool isReset ) {
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams ) {
+        context->logicalDevice.waitIdle( );
 
-#define IFISNOTRESET( F ) if ( !isReset ) { F; }
-
-    createSurface( );
-
-    IFISNOTRESET( configureVertexInput( ) )
-
-    configureViewport( );
-
-    IFISNOTRESET( configureRasterization( ) )
-
-    IFISNOTRESET( configureMultisampling( ) )
-
-    IFISNOTRESET( configureColorBlend( ) )
-
-    configureDynamicState( );
-
-    IFISNOTRESET( createDescriptorPool( ) );
+        dispose();
+        createSurface( );
+        createDepthImages( );
+        createSamplingResources( );
+        createFrameBuffers( );
+    } );
 
     if ( renderer == nullptr ) {
-        renderer = std::make_shared< Renderer >( context, camera, glslShaderSet );
+        renderer = std::make_shared< Renderer >( context, this->camera, pipelineSelector );
     }
+}
 
-    IFISNOTRESET( createPipelineLayout( ) )
+void RenderSurface::createPipelines( ) {
+    // create default pipelines
+    std::vector< Graphics::ShaderInfo > shaders( 2 );
 
-    createSamplingResources( );
+    shaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
+    shaders[ 0 ].path = PATH( "/Shaders/SPIRV/Vertex/default.spv" );
+    shaders[ 1 ].type = vk::ShaderStageFlagBits::eFragment;
+    shaders[ 1 ].path = PATH( "/Shaders/SPIRV/Fragment/default.spv" );
 
-    createDepthAttachmentImages( );
+    auto glslShaderSet = std::make_shared< GLSLShaderSet >( shaders );
 
-    IFISNOTRESET( createRenderPass( ) )
+    PipelineInstance &instance = pipelineInstances.emplace_back( );
+    instance.name = ENGINE_CORE_PIPELINE;
+
+    createPipeline( instance, shaders, glslShaderSet );
+
+    pipelineSelector->createPipelineInstance( instance );
+}
+
+void RenderSurface::createPipeline(  PipelineInstance &instance, const std::vector< ShaderInfo > &shaderInfos, const std::shared_ptr< GLSLShaderSet >& glslShaderSet ) {
+    PipelineCreateInfos createInfo { };
 
 
-    context->pipeline = context->logicalDevice.createGraphicsPipeline( nullptr, pipelineCreateInfo ).value;
+    instance.descriptorManager = std::make_shared< DescriptorManager >( context, glslShaderSet );
 
-    createFrameBuffers( );
+    createInfo.shaders = shaderInfos;
+    createInfo.shaderSet = glslShaderSet;
+
+    createInfo.pipelineCreateInfo.pDepthStencilState = nullptr;
+
+    configureVertexInput( createInfo );
+
+    configureViewport( createInfo );
+
+    configureRasterization( createInfo );
+
+    configureMultisampling( createInfo );
+
+    configureColorBlend( createInfo );
+
+    configureDynamicState( createInfo );
+
+    createPipelineLayout( createInfo, instance );
+
+    createDepthAttachmentImages( createInfo );
+
+    createRenderPass( createInfo );
+
+    instance.pipeline = context->logicalDevice.createGraphicsPipeline( nullptr, createInfo.pipelineCreateInfo ).value;
 }
 
 void RenderSurface::createSurface( ) {
@@ -75,8 +108,9 @@ void RenderSurface::createSurface( ) {
     createSwapChain( capabilities );
 }
 
-void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR& surfaceCapabilities ) {
+void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCapabilities ) {
     chooseExtent2D( surfaceCapabilities );
+    updateViewport( surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height );
 
     vk::SwapchainCreateInfoKHR createInfo { };
 
@@ -107,7 +141,7 @@ void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR& surfaceCa
     createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
     createInfo.presentMode = context->presentMode;
     createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = nullptr;
+    createInfo.oldSwapchain = context->swapChain;
 
     context->swapChain = context->logicalDevice.createSwapchainKHR( createInfo );
 
@@ -117,7 +151,7 @@ void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR& surfaceCa
 void RenderSurface::createSwapChainImages( vk::Format format ) {
     context->swapChainImages = context->logicalDevice.getSwapchainImagesKHR( context->swapChain );
 
-    context->imageViews.resize( context->swapChainImages.size() );
+    context->imageViews.resize( context->swapChainImages.size( ) );
 
     int index = 0;
     for ( auto image: context->swapChainImages ) {
@@ -140,139 +174,145 @@ void RenderSurface::chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabiliti
     auto w = static_cast<uint32_t>( width );
     auto h = static_cast<uint32_t>( height );
 
-    context->surfaceExtent.width = std::clamp( w, capabilities.minImageExtent.width,
-                                               capabilities.maxImageExtent.width );
-    context->surfaceExtent.height = std::clamp( h, capabilities.minImageExtent.height,
-                                                capabilities.maxImageExtent.height );
-
+    context->surfaceExtent.width = std::clamp( w, capabilities.minImageExtent.width, capabilities.maxImageExtent.width );
+    context->surfaceExtent.height = std::clamp( h, capabilities.minImageExtent.height, capabilities.maxImageExtent.height );
 }
 
-void RenderSurface::configureVertexInput( ) {
-    for ( const ShaderInfo &shader: shaders ) {
-        vk::PipelineShaderStageCreateInfo createInfo { };
-
-        vk::ShaderModule shaderModule = this->createShaderModule( shader.path);
-        createInfo.stage = shader.type;
-        createInfo.module = shaderModule;
-        createInfo.pName = "main";
-        createInfo.pNext = nullptr;
-
-        pipelineStageCreateInfos.emplace_back( createInfo );
-        shaderModules.emplace_back( shaderModule );
-    }
-
-    const auto& attributeDescription = glslShaderSet->getVertexAttributeDescriptions( ); // shaderLayout->getVertexAttributeDescriptions( );
-    const auto& bindingDescriptions = glslShaderSet->getInputBindingDescriptions( ); // ->getInputBindingDescription( );
-
-    inputStateCreateInfo.vertexBindingDescriptionCount = bindingDescriptions.size();
-    inputStateCreateInfo.pVertexBindingDescriptions = bindingDescriptions.data( );
-    inputStateCreateInfo.vertexAttributeDescriptionCount = attributeDescription.size( );
-    inputStateCreateInfo.pVertexAttributeDescriptions = attributeDescription.data( );
-
-    inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
-
-    pipelineCreateInfo.stageCount = static_cast< uint32_t >( pipelineStageCreateInfos.size( ) );
-    pipelineCreateInfo.pStages = pipelineStageCreateInfos.data( );
-    pipelineCreateInfo.pVertexInputState = &inputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
-}
-
-void RenderSurface::configureMultisampling( ) {
-    multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-    multisampleStateCreateInfo.rasterizationSamples = msaaSampleCount;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
-    multisampleStateCreateInfo.pSampleMask = nullptr;
-    multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
-    multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
-    multisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
-    multisampleStateCreateInfo.minSampleShading = .2f;
-
-    pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-}
-
-void RenderSurface::configureViewport( ) {
+void RenderSurface::updateViewport( const uint32_t &width, const uint32_t &height ) {
     context->viewport.x = 0.0f;
     context->viewport.y = 0.0f;
-    context->viewport.width = context->surfaceExtent.width;
-    context->viewport.height = context->surfaceExtent.height;
+    context->viewport.width = width;
+    context->viewport.height = height;
     context->viewport.minDepth = 0.0f;
     context->viewport.maxDepth = 1.0f;
 
-    viewScissor.offset = vk::Offset2D { 0, 0 };
-    viewScissor.extent = context->surfaceExtent;
-
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.pViewports = &context->viewport;
-    viewportStateCreateInfo.scissorCount = 1;
-    viewportStateCreateInfo.pScissors = &viewScissor;
-
-    pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+    context->viewScissor.offset = vk::Offset2D( 0, 0 );
+    context->viewScissor.extent = vk::Extent2D( width, height );
 }
 
-void RenderSurface::configureRasterization( ) {
-    rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+void RenderSurface::configureVertexInput( PipelineCreateInfos &createInfo ) {
+    for ( const ShaderInfo &shader: createInfo.shaders ) {
+        vk::PipelineShaderStageCreateInfo shaderStageCreateInfo { };
 
-    pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
+        vk::ShaderModule shaderModule = this->createShaderModule( shader.path );
+        shaderStageCreateInfo.stage = shader.type;
+        shaderStageCreateInfo.module = shaderModule;
+        shaderStageCreateInfo.pName = "main";
+        shaderStageCreateInfo.pNext = nullptr;
+
+        createInfo.pipelineStageCreateInfos.emplace_back( shaderStageCreateInfo );
+        shaderModules.emplace_back( shaderModule );
+    }
+
+    const auto &attributeDescription = createInfo.shaderSet->getVertexAttributeDescriptions( );
+    const auto &bindingDescriptions = createInfo.shaderSet->getInputBindingDescriptions( );
+
+    createInfo.inputStateCreateInfo.vertexBindingDescriptionCount = bindingDescriptions.size( );
+    createInfo.inputStateCreateInfo.pVertexBindingDescriptions = bindingDescriptions.data( );
+    createInfo.inputStateCreateInfo.vertexAttributeDescriptionCount = attributeDescription.size( );
+    createInfo.inputStateCreateInfo.pVertexAttributeDescriptions = attributeDescription.data( );
+
+    createInfo.inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
+    createInfo.inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+    createInfo.pipelineCreateInfo.stageCount = static_cast< uint32_t >( createInfo.pipelineStageCreateInfos.size( ) );
+    createInfo.pipelineCreateInfo.pStages = createInfo.pipelineStageCreateInfos.data( );
+    createInfo.pipelineCreateInfo.pVertexInputState = &createInfo.inputStateCreateInfo;
+    createInfo.pipelineCreateInfo.pInputAssemblyState = &createInfo.inputAssemblyCreateInfo;
 }
 
-void RenderSurface::configureColorBlend( ) {
-    colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                          vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    colorBlendAttachment.blendEnable = false;
-    colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;
-    colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;
-    colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
-    colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-    colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-    colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
+void RenderSurface::configureMultisampling( PipelineCreateInfos &createInfo ) {
+    createInfo.multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+    createInfo.multisampleStateCreateInfo.rasterizationSamples = msaaSampleCount;
+    createInfo.multisampleStateCreateInfo.minSampleShading = 1.0f;
+    createInfo.multisampleStateCreateInfo.pSampleMask = nullptr;
+    createInfo.multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
+    createInfo.multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
+    createInfo.multisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
+    createInfo.multisampleStateCreateInfo.minSampleShading = .2f;
+
+    createInfo.pipelineCreateInfo.pMultisampleState = &createInfo.multisampleStateCreateInfo;
+}
+
+void RenderSurface::configureViewport( PipelineCreateInfos &createInfo ) {
+    createInfo.viewScissor.offset = vk::Offset2D { 0, 0 };
+    createInfo.viewScissor.extent = context->surfaceExtent;
+
+    createInfo.viewportStateCreateInfo.viewportCount = 1;
+    createInfo.viewportStateCreateInfo.pViewports = &context->viewport;
+    createInfo.viewportStateCreateInfo.scissorCount = 1;
+    createInfo.viewportStateCreateInfo.pScissors = &createInfo.viewScissor;
+
+    createInfo.pipelineCreateInfo.pViewportState = &createInfo.viewportStateCreateInfo;
+}
+
+void RenderSurface::configureRasterization( PipelineCreateInfos &createInfo ) {
+    createInfo.rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+    createInfo.rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+    createInfo.rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
+    createInfo.rasterizationStateCreateInfo.lineWidth = 1.0f;
+    createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+    createInfo.rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
+    createInfo.rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+    createInfo.rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
+    createInfo.rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
+    createInfo.rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+
+    createInfo.pipelineCreateInfo.pRasterizationState = &createInfo.rasterizationStateCreateInfo;
+}
+
+void RenderSurface::configureColorBlend( PipelineCreateInfos &createInfo ) {
+    createInfo.colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                                                     vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    createInfo.colorBlendAttachment.blendEnable = false;
+    createInfo.colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;
+    createInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;
+    createInfo.colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+    createInfo.colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+    createInfo.colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+    createInfo.colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
 
     // This overwrites the above
-    colorBlending.logicOpEnable = false;
-    colorBlending.logicOp = vk::LogicOp::eCopy;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
-    colorBlending.blendConstants[ 0 ] = 0.0f;
-    colorBlending.blendConstants[ 1 ] = 0.0f;
-    colorBlending.blendConstants[ 2 ] = 0.0f;
-    colorBlending.blendConstants[ 3 ] = 0.0f;
+    createInfo.colorBlending.logicOpEnable = false;
+    createInfo.colorBlending.logicOp = vk::LogicOp::eCopy;
+    createInfo.colorBlending.attachmentCount = 1;
+    createInfo.colorBlending.pAttachments = &createInfo.colorBlendAttachment;
+    createInfo.colorBlending.blendConstants[ 0 ] = 0.0f;
+    createInfo.colorBlending.blendConstants[ 1 ] = 0.0f;
+    createInfo.colorBlending.blendConstants[ 2 ] = 0.0f;
+    createInfo.colorBlending.blendConstants[ 3 ] = 0.0f;
 
-    pipelineCreateInfo.pColorBlendState = &colorBlending;
+    createInfo.pipelineCreateInfo.pColorBlendState = &createInfo.colorBlending;
 }
 
-void
-RenderSurface::configureDynamicState( ) {/*
-    dynamicStateCreateInfo.dynamicStateCount = 2;
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates;
+void RenderSurface::configureDynamicState( PipelineCreateInfos &createInfo ) {
+    createInfo.dynamicStateCreateInfo.dynamicStateCount = 2;
+    createInfo.dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
-    pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;*/
+    createInfo.pipelineCreateInfo.pDynamicState = &createInfo.dynamicStateCreateInfo;
 }
 
-void
-RenderSurface::createPipelineLayout( ) {
-    pipelineLayoutCreateInfo.setLayoutCount = 1;
-    pipelineLayoutCreateInfo.pSetLayouts = &context->descriptorSetLayout;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+void RenderSurface::createPipelineLayout( PipelineCreateInfos &createInfo, PipelineInstance &instance ) {
+    const std::vector< vk::DescriptorSetLayout > &layouts = instance.descriptorManager->getLayouts( );
+    createInfo.pipelineLayoutCreateInfo.setLayoutCount = layouts.size( );
+    createInfo.pipelineLayoutCreateInfo.pSetLayouts = layouts.data( );
 
-    context->pipelineLayout = context->logicalDevice.createPipelineLayout( pipelineLayoutCreateInfo );
-    pipelineCreateInfo.layout = context->pipelineLayout;
+    createInfo.pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    createInfo.pushConstantRange.offset = 0;
+    createInfo.pushConstantRange.size = 4 * 4 * sizeof( float );
+
+    createInfo.pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+    createInfo.pipelineLayoutCreateInfo.pPushConstantRanges = &createInfo.pushConstantRange;
+
+    instance.layout = context->logicalDevice.createPipelineLayout( createInfo.pipelineLayoutCreateInfo );
+    createInfo.pipelineCreateInfo.layout = instance.layout;
 }
 
-void RenderSurface::createRenderPass( ) {
-    pipelineCreateInfo.renderPass = context->renderPass;
-    pipelineCreateInfo.subpass = 0;
-    pipelineCreateInfo.basePipelineHandle = nullptr;
-    pipelineCreateInfo.basePipelineIndex = -1;
+void RenderSurface::createRenderPass( PipelineCreateInfos &createInfo ) {
+    createInfo.pipelineCreateInfo.renderPass = context->renderPass;
+    createInfo.pipelineCreateInfo.subpass = 0;
+    createInfo.pipelineCreateInfo.basePipelineHandle = nullptr;
+    createInfo.pipelineCreateInfo.basePipelineIndex = -1;
 }
 
 std::vector< char > RenderSurface::readFile( const std::string &filename ) {
@@ -381,7 +421,21 @@ void RenderSurface::createSamplingResources( ) {
     createImageView( samplingImageView, samplingImage, context->imageFormat, vk::ImageAspectFlagBits::eColor );
 }
 
-void RenderSurface::createDepthAttachmentImages( ) {
+void RenderSurface::createDepthAttachmentImages( PipelineCreateInfos &createInfo ) {
+    createInfo.depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+    createInfo.depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    createInfo.depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    createInfo.depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    createInfo.depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+    createInfo.depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+    createInfo.depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+    createInfo.depthStencilStateCreateInfo.front = vk::StencilOpState { };
+    createInfo.depthStencilStateCreateInfo.back = vk::StencilOpState { };
+
+    createInfo.pipelineCreateInfo.pDepthStencilState = &createInfo.depthStencilStateCreateInfo;
+}
+
+void RenderSurface::createDepthImages( ) {
     const vk::Format &format = RenderUtilities::findSupportedDepthFormat( context->physicalDevice );
 
     vk::ImageCreateInfo imageCreateInfo { };
@@ -411,29 +465,21 @@ void RenderSurface::createDepthAttachmentImages( ) {
 
 
     createImageView( context->depthView, context->depthImage, format, vk::ImageAspectFlagBits::eDepth );
-
-    depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-    depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
-    depthStencilStateCreateInfo.minDepthBounds = 0.0f;
-    depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-    depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
-    depthStencilStateCreateInfo.front = vk::StencilOpState { };
-    depthStencilStateCreateInfo.back = vk::StencilOpState { };
-
-    pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
 }
 
 RenderSurface::~RenderSurface( ) {
-    for ( auto& module: shaderModules ) {
+    for ( auto &module: shaderModules ) {
         context->logicalDevice.destroyShaderModule( module );
     }
 
     dispose( );
-    context->logicalDevice.destroyDescriptorPool( context->descriptorPool );
-    context->logicalDevice.destroyDescriptorSetLayout( context->descriptorSetLayout );
-    context->logicalDevice.destroyPipelineLayout( context->pipelineLayout );
+
+    for ( PipelineInstance &instance: pipelineInstances ) {
+        context->logicalDevice.destroyPipeline( instance.pipeline );
+        context->logicalDevice.destroyPipelineLayout( instance.layout );
+    }
+
+    context->logicalDevice.destroySwapchainKHR( context->swapChain );
     context->logicalDevice.destroyRenderPass( context->renderPass );
 }
 
@@ -454,33 +500,13 @@ void RenderSurface::dispose( ) {
     context->logicalDevice.destroyImage( context->depthImage );
     context->logicalDevice.freeMemory( context->depthMemory );
 
-    for ( auto& buffer: context->frameBuffers ) {
+    for ( auto &buffer: context->frameBuffers ) {
         context->logicalDevice.destroyFramebuffer( buffer );
     }
 
-    context->logicalDevice.destroyPipeline( context->pipeline );
-
-    for ( auto& imageView: context->imageViews ) {
+    for ( auto &imageView: context->imageViews ) {
         context->logicalDevice.destroyImageView( imageView );
     }
-
-    context->logicalDevice.destroySwapchainKHR( context->swapChain );
-}
-
-void RenderSurface::createDescriptorPool( ) {
-    vk::DescriptorPoolSize poolSize { };
-
-    auto swapChainImageCount = static_cast< uint32_t >( context->swapChainImages.size( ) );
-
-    poolSize.type = vk::DescriptorType::eUniformBuffer;
-    poolSize.descriptorCount = swapChainImageCount;
-
-    vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo { };
-    descriptorPoolCreateInfo.poolSizeCount = 1;
-    descriptorPoolCreateInfo.pPoolSizes = &poolSize;
-    descriptorPoolCreateInfo.maxSets = swapChainImageCount;
-
-    context->descriptorPool = context->logicalDevice.createDescriptorPool( descriptorPoolCreateInfo );
 }
 
 END_NAMESPACES

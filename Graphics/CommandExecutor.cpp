@@ -103,10 +103,8 @@ CommandList *CommandList::endRenderPass( ) {
     return this;
 }
 
-CommandList *CommandList::bindRenderPass( vk::PipelineBindPoint bindPoint ) {
+CommandList *CommandList::bindRenderPass( const vk::Pipeline &pipeline, const vk::PipelineBindPoint &bindPoint ) {
     ENSURE_FILTER
-
-    vk::Pipeline &pipeline = executor->context->pipeline;
 
     for ( vk::CommandBuffer buffer: buffers ) {
         buffer.bindPipeline( bindPoint, pipeline );
@@ -125,7 +123,7 @@ CommandList *CommandList::drawIndexed( const uint32_t &indexCount ) {
     return this;
 }
 
-CommandList *CommandList::draw( const uint64_t& vertexCount ) {
+CommandList *CommandList::draw( const uint64_t &vertexCount ) {
     ENSURE_FILTER
 
     for ( vk::CommandBuffer buffer: buffers ) {
@@ -149,7 +147,7 @@ CommandList *CommandList::bindVertexMemories( const std::vector< vk::Buffer > &v
     ENSURE_FILTER
 
     for ( vk::CommandBuffer &buffer: buffers ) {
-        buffer.bindVertexBuffers( 0, vertexBuffers.size(), vertexBuffers.data(), offsets.data() );
+        buffer.bindVertexBuffers( 0, vertexBuffers.size( ), vertexBuffers.data( ), offsets.data( ) );
     }
 
     return this;
@@ -160,6 +158,36 @@ CommandList *CommandList::bindIndexMemory( vk::Buffer indexBuffer, const vk::Dev
 
     for ( vk::CommandBuffer &buffer: buffers ) {
         buffer.bindIndexBuffer( indexBuffer, offset, vk::IndexType::eUint32 );
+    }
+
+    return this;
+}
+
+CommandList *CommandList::setViewport( const vk::Viewport &viewport ) {
+    ENSURE_FILTER
+
+    for ( vk::CommandBuffer &buffer: buffers ) {
+        buffer.setViewport( 0, viewport );
+    }
+
+    return this;
+}
+
+CommandList *CommandList::setViewScissor( const vk::Rect2D &scissor ) {
+    ENSURE_FILTER
+
+    for ( vk::CommandBuffer &buffer: buffers ) {
+        buffer.setScissor( 0, scissor );
+    }
+
+    return this;
+}
+
+CommandList *CommandList::pushConstant( const vk::PipelineLayout &layout, const vk::ShaderStageFlags &shaderStages, const uint32_t &size, const void *data ) {
+    ENSURE_FILTER
+
+    for ( vk::CommandBuffer &buffer: buffers ) {
+        buffer.pushConstants( layout, shaderStages, 0, size, data );
     }
 
     return this;
@@ -180,13 +208,13 @@ CommandList *CommandList::blitImage( const ImageBlitArgs &args ) {
 
     for ( vk::CommandBuffer &buffer: buffers ) {
         buffer.blitImage(
-                        args.sourceImage,
-                        args.sourceImageLayout,
-                        args.destinationImage,
-                        args.destinationImageLayout,
-                        1,
-                        &imageBlit,
-                        vk::Filter::eLinear );
+                args.sourceImage,
+                args.sourceImageLayout,
+                args.destinationImage,
+                args.destinationImageLayout,
+                1,
+                &imageBlit,
+                vk::Filter::eLinear );
     }
 
     return this;
@@ -250,11 +278,11 @@ CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args )
 }
 
 CommandList *
-CommandList::bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const vk::DescriptorSet &descriptorSet ) {
+CommandList::bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const std::vector< vk::DescriptorSet > descriptorSet ) {
     ENSURE_FILTER
 
     for ( vk::CommandBuffer &buffer: buffers ) {
-        buffer.bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr );
+        buffer.bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet.size( ), descriptorSet.data( ), 0, nullptr );
     }
 
     return this;
@@ -309,6 +337,6 @@ CommandList::~CommandList( ) {
 
 void CommandList::freeBuffers( ) {
     executor->context->logicalDevice.freeCommandBuffers( executor->commandPool,
-                          buffers.size( ),
-                          buffers.data( ) );
+                                                         buffers.size( ),
+                                                         buffers.data( ) );
 }

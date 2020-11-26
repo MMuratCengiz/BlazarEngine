@@ -10,6 +10,7 @@
 #include "CameraLoader.h"
 #include "TransformLoader.h"
 #include "DescriptorManager.h"
+#include "PipelineSelector.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -28,7 +29,6 @@ private:
     uint32_t frameIndex = 0;
 
     std::shared_ptr< InstanceContext > context;
-    std::shared_ptr< DescriptorManager > descriptorManager;
 
     std::vector< FrameContext > frameContexts;
     std::vector< vk::CommandBuffer > buffers;
@@ -44,11 +44,12 @@ private:
     vk::DeviceSize currentIndexBufferSize = 0;
     std::shared_ptr< GLSLShaderSet > shaderSet;
     std::shared_ptr< Scene::Camera > camera;
+    std::shared_ptr< PipelineSelector > pipelineSelector;
 
     std::shared_ptr< MeshLoader > meshLoader;
     std::shared_ptr< TextureLoader > textureLoader;
 public:
-    explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera >  camera, const std::shared_ptr< GLSLShaderSet > &shaderSet );
+    explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, std::shared_ptr< PipelineSelector > pipelineSelector );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );
     void render( );
     void freeBuffers( );

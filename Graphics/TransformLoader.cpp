@@ -27,6 +27,12 @@ TransformLoader::TransformLoader( std::shared_ptr< InstanceContext > context ) :
 }
 
 void TransformLoader::load( const std::shared_ptr< ECS::CTransform > &transform ) {
+    glm::mat4 modelMatrix = getModelMatrix( transform );
+
+    memcpy( mappedMemory, &modelMatrix, 4 * 4 * sizeof( float ) );
+}
+
+glm::mat4 TransformLoader::getModelMatrix( const std::shared_ptr< ECS::CTransform > &transform ) {
     glm::mat4 modelMatrix { 1 };
 
     modelMatrix = glm::translate( modelMatrix, transform->position );
@@ -44,8 +50,7 @@ void TransformLoader::load( const std::shared_ptr< ECS::CTransform > &transform 
 
     glm::qua qRotation { radiansRotation };
     modelMatrix *= glm::mat4_cast( qRotation );
-
-    memcpy( mappedMemory, &modelMatrix, 4 * 4 * sizeof( float ) );
+    return modelMatrix;
 }
 
 TransformLoader::~TransformLoader( ) {

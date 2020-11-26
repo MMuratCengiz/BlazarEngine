@@ -18,10 +18,11 @@ public:
 
         auto texture = createComponent< ECS::CMaterial >( );
         auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/asphalt.png";
+        texInfo.path = "/assets/textures/floor2.png";
 
         auto transform = createComponent< ECS::CTransform >( );
-        transform->position = glm::vec3( 0.0f, 0.4f, -2.8f );
+        transform->position = glm::vec3( 0.0f, 0.0f, -2.8f );
+        transform->scale = glm::vec3( 10.0f, 0.1f, 10.0f );
     }
 };
 

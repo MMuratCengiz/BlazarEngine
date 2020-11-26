@@ -28,12 +28,6 @@ enum class QueueType {
 struct InstanceContext;
 class DescriptorManager;
 
-/*
- * TODO
- * Split this into DeviceContext and Pipeline context, because we may have different pipelines for every device,
- * ie. different shaders
- */
-
 struct InstanceContext {
 public:
     vk::Instance instance;
@@ -44,9 +38,6 @@ public:
     vk::ColorSpaceKHR colorSpace;
     vk::PresentModeKHR presentMode;
     vk::RenderPass renderPass;
-
-    vk::Pipeline pipeline;
-    vk::PipelineLayout pipelineLayout{};
     vk::SwapchainKHR swapChain;
     vk::SurfaceKHR renderSurface;
     std::vector< vk::Framebuffer > frameBuffers;
@@ -57,11 +48,13 @@ public:
     vk::DeviceMemory depthMemory;
     vk::ImageView depthView;
     vk::Extent2D surfaceExtent { };
-    vk::DescriptorPool descriptorPool;
-    vk::DescriptorSetLayout descriptorSetLayout{ };
     vk::Viewport viewport { };
+    vk::Rect2D viewScissor { };
 
-    std::vector< vk::DescriptorSet > descriptorSets{ };// todo maybe move everything related to descriptors?
+/*    vk::Pipeline pipeline;
+    vk::PipelineLayout pipelineLayout{};
+    vk::DescriptorSetLayout descriptorSetLayout{ };
+    std::vector< vk::DescriptorSet > descriptorSets{ };*/
 
     GLFWwindow *window;
     std::unordered_map< QueueType, QueueFamily > queueFamilies;

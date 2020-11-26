@@ -24,7 +24,7 @@ void FpsCamera::updateAspectRatio( const uint32_t &windowWidth, const uint32_t &
 }
 
 void FpsCamera::processKeyboardEvents( GLFWwindow *window ) {
-    float sensitivity = ( Core::Time::getDeltaTime( ) * 0.01 );
+    float sensitivity = ( Core::Time::getDeltaTime( ) * 0.1f );
 
     if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS ) {
         position -= front * glm::vec3( sensitivity, sensitivity, sensitivity );
