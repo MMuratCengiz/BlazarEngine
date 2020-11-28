@@ -14,7 +14,7 @@ class SampleFloor : public ECS::IGameEntity {
 public:
     SampleFloor( ) {
         auto mesh = createComponent< ECS::CMesh >( );
-        mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::Cube );
+        mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LightedCube );
 
         auto texture = createComponent< ECS::CMaterial >( );
         auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );

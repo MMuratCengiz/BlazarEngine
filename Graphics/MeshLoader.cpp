@@ -3,14 +3,22 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-MeshLoader::MeshLoader( std::shared_ptr< InstanceContext > context, pCommandExecutor &commandExecutor )
-        : context( std::move( context ) ), commandExecutor( commandExecutor ) {
-    loadedModels[ "BuiltinPrimitives/Cube" ] = { };
-    ObjectBufferList& cubeBufferList = loadedModels[ BuiltinPrimitives::getPrimitivePath( PrimitiveType::Cube ) ];
-    ObjectBuffer& cubeBuffer = cubeBufferList.buffers.emplace_back( );
+MeshLoader::MeshLoader( std::shared_ptr< InstanceContext > context, pCommandExecutor &commandExecutor ) : context( std::move( context ) ), commandExecutor( commandExecutor ) {
+    const std::string &lightedCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube );
+    loadedModels[ lightedCubePath ] = { };
+    ObjectBufferList& lightedCubeBufferList = loadedModels[ lightedCubePath ];
+    ObjectBuffer& lightedCubeBuffer = lightedCubeBufferList.buffers.emplace_back( );
 
-    copyVertexBuffer( cubeBuffer, cubePrimitive.getVertexBuffer() );
-    cubeBuffer.vertexCount = cubePrimitive.getVertexCount();
+    copyVertexBuffer( lightedCubeBuffer, lightedCubePrimitive.getVertexBuffer() );
+    lightedCubeBuffer.vertexCount = lightedCubePrimitive.getVertexCount();
+
+    const std::string &plainCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
+    loadedModels[ plainCubePath ] = { };
+    ObjectBufferList& plainCubeBufferList = loadedModels[ plainCubePath ];
+    ObjectBuffer& plainCubeBuffer = plainCubeBufferList.buffers.emplace_back( );
+
+    copyVertexBuffer( plainCubeBuffer, plainCubePrimitive.getVertexBuffer() );
+    plainCubeBuffer.vertexCount = plainCubePrimitive.getVertexCount();
 }
 
 void MeshLoader::cache( const ECS::CMesh &mesh ) {

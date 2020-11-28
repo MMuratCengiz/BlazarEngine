@@ -23,6 +23,7 @@ Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shar
 
     meshLoader = std::make_shared< MeshLoader >( context, frameContexts[ 0 ].commandExecutor );
     textureLoader = std::make_shared< TextureLoader >( context, frameContexts[ 0 ].commandExecutor );
+    cubeMapLoader = std::make_shared< CubeMapLoader >( context, frameContexts[ 0 ].commandExecutor );
 
     createSynchronizationStructures( context->logicalDevice );
 
@@ -82,6 +83,7 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
     const auto &meshComponent = entity->getComponent< CMesh >( );
     const auto &materialComponent = entity->getComponent< CMaterial >( );
     const auto &transformComponent = entity->getComponent< CTransform >( );
+    const auto &cubeMapComponent = entity->getComponent< CCubeMap >( );
 
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
     std::vector< vk::Framebuffer > &frameBuffers = context->frameBuffers;
@@ -124,6 +126,19 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
 
             setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, path, i ) );
         }
+    }
+
+    if ( !IS_NULL( cubeMapComponent ) ) {
+        TextureBuffer textureBuffer { };
+        cubeMapLoader->load( textureBuffer, *cubeMapComponent );
+
+        const std::string key = cubeMapLoader->getKey( *cubeMapComponent );
+
+        if ( ! manager->existsSetForTexture( frameIndex, key ) ) {
+            manager->updateTexture( frameIndex, key, textureBuffer );
+        }
+
+        setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, key, 0 ) );
     }
 
     FUNCTION_BREAK( IS_NULL( meshComponent ) )

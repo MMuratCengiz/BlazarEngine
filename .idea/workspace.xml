@@ -5,10 +5,10 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="SomeVulkan" targetName="uninstall" />
       <config projectName="SomeVulkan" targetName="SomeVulkan" />
-      <config projectName="SomeVulkan" targetName="glfw" />
+      <config projectName="SomeVulkan" targetName="uninstall" />
       <config projectName="SomeVulkan" targetName="assimp" />
+      <config projectName="SomeVulkan" targetName="glfw" />
       <config projectName="SomeVulkan" targetName="zlibstatic" />
     </generated>
   </component>
@@ -19,7 +19,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15e90ff6-bc0a-448a-b28f-ecc49ba24583" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/ECS/CCubeMap.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Graphics/CubeMapLoader.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Graphics/CubeMapLoader.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Samples/SampleCubeMap.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ECS/CMaterial.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/CMaterial.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/BuiltinPrimitives.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/BuiltinPrimitives.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/CommanExecutorArguments.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommanExecutorArguments.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/CommandExecutor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommandExecutor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/MeshLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/MeshLoader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/MeshLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/MeshLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/RenderSurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/Renderer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Renderer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/Renderer.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/Renderer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphics/TextureLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/TextureLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Samples/SampleFloor.h" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleFloor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Samples/SampleGame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleGame.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Samples/SampleGame.h" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleGame.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/GLSL/Fragment/skybox_default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Fragment/skybox_default.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Shaders/GLSL/Vertex/skybox_default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Vertex/skybox_default.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/SPIRV/Vertex/default.spv" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/SPIRV/Vertex/default.spv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" afterDir="false" />
     </list>
@@ -70,6 +92,11 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.SomeVulkan">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="SomeVulkan" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="SomeVulkan" TARGET_NAME="SomeVulkan" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="SomeVulkan" RUN_TARGET_NAME="SomeVulkan">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -121,7 +148,7 @@
       <workItem from="1605808170270" duration="109018000" />
       <workItem from="1606362029194" duration="32567000" />
       <workItem from="1606533311595" duration="2094000" />
-      <workItem from="1606570155659" duration="1222000" />
+      <workItem from="1606570155659" duration="20816000" />
     </task>
     <servers />
   </component>
@@ -133,10 +160,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="734" y="355" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.2560.1400@0.0.2560.1400" timestamp="1605743405649" />
-    <state x="1010" y="490" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1605743594745">
+    <state x="1010" y="490" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1606592628516">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="1010" y="490" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1605743594745" />
+    <state x="1010" y="490" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1606592628516" />
     <state x="1085" y="389" key="#com.intellij.ide.util.MemberChooser" timestamp="1606189565817">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -149,10 +176,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1035" y="403" key="#xdebugger.evaluate/0.0.2560.1400@0.0.2560.1400" timestamp="1606407326158" />
-    <state width="719" height="466" key="DebuggerActiveHint" timestamp="1606535994650">
+    <state width="719" height="466" key="DebuggerActiveHint" timestamp="1606588941094">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="719" height="466" key="DebuggerActiveHint/0.0.2560.1400@0.0.2560.1400" timestamp="1606535994650" />
+    <state width="719" height="466" key="DebuggerActiveHint/0.0.2560.1400@0.0.2560.1400" timestamp="1606588941094" />
     <state x="92" y="92" width="2376" height="1216" key="DiffContextDialog" timestamp="1606271942619">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -161,38 +188,38 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1086" y="280" key="FileChooserDialogImpl/0.0.2560.1400@0.0.2560.1400" timestamp="1605808093219" />
-    <state width="2517" height="491" key="GridCell.Tab.0.bottom" timestamp="1606570169847">
+    <state width="2517" height="491" key="GridCell.Tab.0.bottom" timestamp="1606592680601">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1606570169847" />
-    <state width="2517" height="491" key="GridCell.Tab.0.center" timestamp="1606570169847">
+    <state width="2517" height="491" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680601" />
+    <state width="2517" height="491" key="GridCell.Tab.0.center" timestamp="1606592680601">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1606570169847" />
-    <state width="2517" height="491" key="GridCell.Tab.0.left" timestamp="1606570169846">
+    <state width="2517" height="491" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680601" />
+    <state width="2517" height="491" key="GridCell.Tab.0.left" timestamp="1606592680601">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1606570169846" />
-    <state width="2517" height="491" key="GridCell.Tab.0.right" timestamp="1606570169847">
+    <state width="2517" height="491" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680601" />
+    <state width="2517" height="491" key="GridCell.Tab.0.right" timestamp="1606592680601">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1606570169847" />
-    <state width="2517" height="491" key="GridCell.Tab.1.bottom" timestamp="1606536048606">
+    <state width="2517" height="491" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680601" />
+    <state width="2517" height="491" key="GridCell.Tab.1.bottom" timestamp="1606592680510">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1606536048606" />
-    <state width="2517" height="491" key="GridCell.Tab.1.center" timestamp="1606536048606">
+    <state width="2517" height="491" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680510" />
+    <state width="2517" height="491" key="GridCell.Tab.1.center" timestamp="1606592680510">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1606536048606" />
-    <state width="2517" height="491" key="GridCell.Tab.1.left" timestamp="1606536048606">
+    <state width="2517" height="491" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680510" />
+    <state width="2517" height="491" key="GridCell.Tab.1.left" timestamp="1606592680510">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1606536048606" />
-    <state width="2517" height="491" key="GridCell.Tab.1.right" timestamp="1606536048606">
+    <state width="2517" height="491" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680510" />
+    <state width="2517" height="491" key="GridCell.Tab.1.right" timestamp="1606592680510">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state width="2517" height="491" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1606536048606" />
+    <state width="2517" height="491" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1606592680510" />
     <state x="683" y="331" width="1674" height="984" key="IDE.errors.dialog" timestamp="1605795192040">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -209,10 +236,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state width="1288" height="708" key="XDebugger.FullValuePopup/0.0.2560.1400@0.0.2560.1400" timestamp="1605830224634" />
-    <state x="987" y="433" width="585" height="564" key="find.popup" timestamp="1606504910427">
+    <state x="987" y="433" width="608" height="564" key="find.popup" timestamp="1606578020836">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="987" y="433" width="585" height="564" key="find.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1606504910427" />
+    <state x="987" y="433" width="608" height="564" key="find.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1606578020836" />
     <state x="1118" y="517" width="448" height="417" key="refactoring.ChangeSignatureDialog" timestamp="1606359367399">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -221,10 +248,10 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="936" y="330" key="run.anything.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1606102889336" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1606498119241">
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1606591360625">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1606498119241" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1606591360625" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

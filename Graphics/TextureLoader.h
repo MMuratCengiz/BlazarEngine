@@ -22,7 +22,7 @@ struct TextureBufferList {
 };
 
 class TextureLoader {
-private:
+protected:
     std::unordered_map< std::string, TextureBuffer > loadedTextures;
     std::shared_ptr< InstanceContext > context;
     std::shared_ptr< CommandExecutor > commandExecutor;
@@ -32,13 +32,15 @@ public:
 
     void cache( const ECS::CMaterial & material );
     void load( TextureBufferList &input, const ECS::CMaterial & material );
+
+    static vk::SamplerCreateInfo texToSamplerCreateInfo( const uint32_t& mipLevels, const ECS::Material::TextureInfo &info );
+    static vk::Filter toVkFilter( const ECS::Material::Filter& filter );
+    static vk::SamplerAddressMode toVkAddressMode( const ECS::Material::AddressMode& filter );
+    static vk::SamplerMipmapMode toVkMipmapMode( const ECS::Material::MipmapMode& filter );
+
     ~TextureLoader();
 private:
     void loadInner( const ECS::Material::TextureInfo & texture );
-    vk::SamplerCreateInfo texToSamplerCreateInfo( const uint32_t& mipLevels, const ECS::Material::TextureInfo &info );
-    vk::Filter toVkFilter( const ECS::Material::Filter& filter );
-    vk::SamplerAddressMode toVkAddressMode( const ECS::Material::AddressMode& filter );
-    vk::SamplerMipmapMode toVkMipmapMode( const ECS::Material::MipmapMode& filter );
     void generateMipMaps( TextureBuffer &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const;
 };
 

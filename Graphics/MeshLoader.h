@@ -33,7 +33,8 @@ struct ObjectBufferList {
 class MeshLoader {
     Assimp::Importer importer;
 
-    CubePrimitive cubePrimitive;
+    LightedCubePrimitive lightedCubePrimitive;
+    PlainCubePrimitive plainCubePrimitive;
     std::shared_ptr< InstanceContext > context;
     pCommandExecutor commandExecutor;
 

@@ -6,11 +6,13 @@
 #include "PipelineSelector.h"
 #include "../Scene/FpsCamera.h"
 #include "../Input/GlobalEventHandler.h"
+#include "../ECS/CCubeMap.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
 #define ENGINE_CORE_PIPELINE_BACK_CULL "EngineCorePipelineBackCull"
 #define ENGINE_CORE_PIPELINE_NONE_CULL "EngineCorePipelineNoneCull"
+#define PIPELINE_SKY_BOX "PipelineSkyBox"
 
 enum class ShaderType {
     Vertex,
@@ -24,12 +26,15 @@ struct Shader {
 
 struct PipelineOptions {
     ECS::CullMode cullMode;
+
+    std::vector< vk::PushConstantRange > pushConstantRanges;
+    bool depthTestEnable = true;
+    vk::CompareOp depthCompareOp = vk::CompareOp::eLessOrEqual;
 };
 
 struct PipelineCreateInfos {
     // Pipeline createInfo required structures in class scope
     std::vector< vk::PipelineShaderStageCreateInfo > pipelineStageCreateInfos;
-    vk::PushConstantRange pushConstantRange{};
     vk::PipelineColorBlendAttachmentState colorBlendAttachment { };
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo { };
     vk::PipelineColorBlendStateCreateInfo colorBlending { };

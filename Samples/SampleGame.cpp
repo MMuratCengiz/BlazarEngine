@@ -10,6 +10,8 @@ void SampleGame::init( ) {
     car1 = std::make_shared< SampleCar1 >( );
     car2 = std::make_shared< SampleCar2 >( );
     cone = std::make_shared< SampleTrafficCone >( );
+    sky = std::make_shared< SampleCubeMap >( );
+
     oldHouse = std::make_shared< SampleOldHouse >( );
 
     floor = std::make_shared< SampleFloor >( );
@@ -18,6 +20,7 @@ void SampleGame::init( ) {
     initialScene.addEntity( cone );
     initialScene.addEntity( floor );
     initialScene.addEntity( oldHouse );
+    initialScene.addEntity( sky );
     world->setScene( initialScene );
 
     Input::ActionBinding binding { };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "IComponent.h"
 
 NAMESPACES( SomeVulkan, ECS )

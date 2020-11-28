@@ -14,6 +14,8 @@ endfunction()
 
 add_shader(vertex default)
 add_shader(fragment default)
+add_shader(vertex   skybox_default)
+add_shader(fragment skybox_default)
 
 set(CMAKE_CXX_STANDARD 17)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -30,11 +32,11 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h)
 
 set(Core Core/Common.h Core/Time.h Scene/World.h)
-set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h Core/Time.cpp Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/MeshLoader.h" "Graphics/MeshLoader.cpp" Graphics/TextureLoader.cpp Graphics/TextureLoader.h Graphics/RenderUtilities.cpp Graphics/TransformLoader.cpp Graphics/TransformLoader.h Graphics/CameraLoader.cpp Graphics/CameraLoader.h Graphics/BuiltinPrimitives.h Graphics/PipelineSelector.h)
+set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h Core/Time.cpp Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/MeshLoader.h" "Graphics/MeshLoader.cpp" Graphics/TextureLoader.cpp Graphics/TextureLoader.h Graphics/RenderUtilities.cpp Graphics/TransformLoader.cpp Graphics/TransformLoader.h Graphics/CameraLoader.cpp Graphics/CameraLoader.h Graphics/BuiltinPrimitives.h Graphics/PipelineSelector.h Graphics/CubeMapLoader.cpp Graphics/CubeMapLoader.h)
 set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h Core/DynamicMemory.h Input/ActionMap.cpp Input/ActionMap.h Input/EventHandler.cpp Input/EventHandler.h)
-set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h)
+set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h ECS/CCubeMap.h)
 set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp Scene/Scene.h Scene/FPSCounter.h Scene/IPlayable.h Scene/Window.h)
-set(Samples Samples/SampleGame.h Samples/SampleGame.cpp Samples/SampleHouse.h Samples/SampleFloor.h Samples/SampleTrafficCone.h Samples/SampleCar1.h Samples/SampleCar2.h Samples/SampleOldHouse.h)
+set(Samples Samples/SampleGame.h Samples/SampleGame.cpp Samples/SampleHouse.h Samples/SampleFloor.h Samples/SampleTrafficCone.h Samples/SampleCar1.h Samples/SampleCar2.h Samples/SampleOldHouse.h Samples/SampleCubeMap.h)
 
 set(SampleGame Samples/SampleHouse.h)
 

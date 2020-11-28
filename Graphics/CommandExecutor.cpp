@@ -243,8 +243,8 @@ CommandList *CommandList::pipelineBarrier( const PipelineBarrierArgs &args ) {
     memoryBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
     memoryBarrier.subresourceRange.baseMipLevel = args.baseMipLevel;
     memoryBarrier.subresourceRange.levelCount = args.mipLevel;
-    memoryBarrier.subresourceRange.baseArrayLayer = 0;
-    memoryBarrier.subresourceRange.layerCount = 1;
+    memoryBarrier.subresourceRange.baseArrayLayer = args.baseArrayLayer;
+    memoryBarrier.subresourceRange.layerCount = args.layerCount;
     memoryBarrier.srcAccessMask = args.sourceAccess;
     memoryBarrier.dstAccessMask = args.destinationAccess;
 
@@ -269,8 +269,8 @@ CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args )
     bufferImageCopy.bufferRowLength = 0;
     bufferImageCopy.bufferImageHeight = 0;
     bufferImageCopy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-    bufferImageCopy.imageSubresource.mipLevel = 0;
-    bufferImageCopy.imageSubresource.baseArrayLayer = 0;
+    bufferImageCopy.imageSubresource.mipLevel = args.mipLevel;
+    bufferImageCopy.imageSubresource.baseArrayLayer = args.arrayLayer;
     bufferImageCopy.imageSubresource.layerCount = 1;
     bufferImageCopy.imageOffset = vk::Offset3D { 0, 0, 0 };
     bufferImageCopy.imageExtent = vk::Extent3D {

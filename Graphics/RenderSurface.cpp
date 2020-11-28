@@ -22,6 +22,10 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
     createFrameBuffers( );
 
     enginePipelineSelector = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) {
+        if ( entity->getComponent< ECS::CCubeMap >() != nullptr) {
+            return PIPELINE_SKY_BOX;
+        }
+
         if ( entity->hasComponent< CMesh >()) {
             if ( entity->getComponent< CMesh >()->cullMode == CullMode::None ) {
                 return ENGINE_CORE_PIPELINE_NONE_CULL;
@@ -57,7 +61,7 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
 
 void RenderSurface::createPipelines( ) {
     // create default pipelines
-    pipelineInstances.resize( 2 );
+    pipelineInstances.resize( 3 );
     std::vector< Graphics::ShaderInfo > shaders( 2 );
 
     shaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
@@ -71,10 +75,14 @@ void RenderSurface::createPipelines( ) {
     PipelineInstance &instance = pipelineInstances.emplace_back( );
     instance.name = ENGINE_CORE_PIPELINE_BACK_CULL;
 
-    PipelineOptions options { };
-    options.cullMode = CullMode::BackFace;
+    PipelineOptions backCullOptions { };
+    backCullOptions.cullMode = CullMode::BackFace;
+    auto & pushConstantRange = backCullOptions.pushConstantRanges.emplace_back( );
+    pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = 4 * 4 * sizeof( float );
 
-    createPipeline( options, instance, shaders );
+    createPipeline( backCullOptions, instance, shaders );
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
 
@@ -84,15 +92,40 @@ void RenderSurface::createPipelines( ) {
     PipelineInstance &instance2 = pipelineInstances.emplace_back( );
     instance2.name = ENGINE_CORE_PIPELINE_NONE_CULL;
 
-    options = { };
-    options.cullMode = CullMode::None;
+    PipelineOptions noCullOptions = { };
+    noCullOptions.cullMode = CullMode::None;
+    noCullOptions.pushConstantRanges = backCullOptions.pushConstantRanges;
 
-    createPipeline( options, instance2, shaders );
+    createPipeline( noCullOptions, instance2, shaders );
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+
+
+    ///////////////////////////////////////////////////////////////////
+    // Engine Sky Box Pipeline ////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    std::vector< Graphics::ShaderInfo > skyBoxShaders( 2 );
+
+    skyBoxShaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
+    skyBoxShaders[ 0 ].path = PATH( "/Shaders/SPIRV/Vertex/skybox_default.spv" );
+    skyBoxShaders[ 1 ].type = vk::ShaderStageFlagBits::eFragment;
+    skyBoxShaders[ 1 ].path = PATH( "/Shaders/SPIRV/Fragment/skybox_default.spv" );
+
+    PipelineInstance &instance3 = pipelineInstances.emplace_back( );
+    instance3.name = PIPELINE_SKY_BOX;
+
+    PipelineOptions skyBoxPipelineOptions = { };
+    skyBoxPipelineOptions.cullMode = CullMode::FrontFace;
+    skyBoxPipelineOptions.depthTestEnable = false;
+    skyBoxPipelineOptions.depthCompareOp = vk::CompareOp::eLessOrEqual;
+
+    createPipeline( skyBoxPipelineOptions, instance3, skyBoxShaders );
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
 
     pipelineSelector->createPipelineInstance( instance );
     pipelineSelector->createPipelineInstance( instance2 );
+    pipelineSelector->createPipelineInstance( instance3 );
 }
 
 void RenderSurface::createPipeline( const PipelineOptions &options, PipelineInstance &instance, const std::vector< ShaderInfo > &shaderInfos ) {
@@ -341,12 +374,10 @@ void RenderSurface::createPipelineLayout( PipelineCreateInfos &createInfo, Pipel
     createInfo.pipelineLayoutCreateInfo.setLayoutCount = layouts.size( );
     createInfo.pipelineLayoutCreateInfo.pSetLayouts = layouts.data( );
 
-    createInfo.pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
-    createInfo.pushConstantRange.offset = 0;
-    createInfo.pushConstantRange.size = 4 * 4 * sizeof( float );
-
-    createInfo.pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-    createInfo.pipelineLayoutCreateInfo.pPushConstantRanges = &createInfo.pushConstantRange;
+    if ( !createInfo.options.pushConstantRanges.empty() ) {
+        createInfo.pipelineLayoutCreateInfo.pushConstantRangeCount = createInfo.options.pushConstantRanges.size( );
+        createInfo.pipelineLayoutCreateInfo.pPushConstantRanges = createInfo.options.pushConstantRanges.data( );
+    }
 
     instance.layout = context->logicalDevice.createPipelineLayout( createInfo.pipelineLayoutCreateInfo );
     createInfo.pipelineCreateInfo.layout = instance.layout;
@@ -466,9 +497,9 @@ void RenderSurface::createSamplingResources( ) {
 }
 
 void RenderSurface::createDepthAttachmentImages( PipelineCreateInfos &createInfo ) {
-    createInfo.depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    createInfo.depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
-    createInfo.depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+    createInfo.depthStencilStateCreateInfo.depthTestEnable =  VK_TRUE;//createInfo.options.depthTestEnable;
+    createInfo.depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE; //createInfo.options.depthTestEnable;
+    createInfo.depthStencilStateCreateInfo.depthCompareOp = createInfo.options.depthCompareOp;
     createInfo.depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
     createInfo.depthStencilStateCreateInfo.minDepthBounds = 0.0f;
     createInfo.depthStencilStateCreateInfo.maxDepthBounds = 1.0f;

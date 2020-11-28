@@ -11,6 +11,7 @@
 #include "TransformLoader.h"
 #include "DescriptorManager.h"
 #include "PipelineSelector.h"
+#include "CubeMapLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -48,6 +49,7 @@ private:
 
     std::shared_ptr< MeshLoader > meshLoader;
     std::shared_ptr< TextureLoader > textureLoader;
+    std::shared_ptr< CubeMapLoader > cubeMapLoader;
 public:
     explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, std::shared_ptr< PipelineSelector > pipelineSelector );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );

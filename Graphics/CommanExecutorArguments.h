@@ -9,6 +9,8 @@ typedef struct CopyBufferToImageArgs {
     uint32_t height;
     vk::Buffer sourceBuffer;
     vk::Image image;
+    uint32_t mipLevel = 0;
+    uint32_t arrayLayer = 0;
 } CopyBufferToImageArgs;
 
 typedef struct PipelineBarrierArgs {
@@ -17,6 +19,8 @@ typedef struct PipelineBarrierArgs {
     vk::ImageLayout newLayout;
     uint32_t baseMipLevel = 0;
     uint32_t mipLevel = 1;
+    uint32_t baseArrayLayer = 0;
+    uint32_t layerCount = 1;
     vk::AccessFlags sourceAccess { };
     vk::AccessFlags destinationAccess { };
     vk::PipelineStageFlags sourceStage = vk::PipelineStageFlagBits::eHost;
