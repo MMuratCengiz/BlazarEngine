@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/common.h"
+#include "../Core/common.h"
 
 #include <fstream>
 #include <spirv_cross/spirv_cross.hpp>
@@ -68,7 +68,7 @@ private:
 	};
 
 	struct DescriptorBindingCreateInfo {
-		uint32_t binding;
+		uint32_t binding{};
 		spirv_cross::Resource resource;
 		vk::DescriptorType type;
 		vk::ShaderStageFlagBits stage;

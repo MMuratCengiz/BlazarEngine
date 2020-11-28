@@ -7,6 +7,7 @@
 #include "SampleFloor.h"
 #include "SampleCar1.h"
 #include "SampleCar2.h"
+#include "SampleOldHouse.h"
 #include "SampleTrafficCone.h"
 
 using namespace SomeVulkan;
@@ -20,6 +21,7 @@ class SampleGame : public Scene::IPlayable {
     std::shared_ptr< SampleCar2 > car2;
     std::shared_ptr< SampleTrafficCone > cone;
     std::shared_ptr< SampleFloor > floor;
+    std::shared_ptr< SampleOldHouse > oldHouse;
     Input::ActionCallback inputCallback;
 public:
     inline explicit SampleGame( Scene::World * world ) : world( world ) { }

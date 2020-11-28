@@ -9,7 +9,8 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-#define ENGINE_CORE_PIPELINE "EngineCorePipeline"
+#define ENGINE_CORE_PIPELINE_BACK_CULL "EngineCorePipelineBackCull"
+#define ENGINE_CORE_PIPELINE_NONE_CULL "EngineCorePipelineNoneCull"
 
 enum class ShaderType {
     Vertex,
@@ -19,6 +20,10 @@ enum class ShaderType {
 struct Shader {
     ShaderType type;
     std::string filename;
+};
+
+struct PipelineOptions {
+    ECS::CullMode cullMode;
 };
 
 struct PipelineCreateInfos {
@@ -40,11 +45,12 @@ struct PipelineCreateInfos {
     std::vector< ShaderInfo > shaders;
     std::shared_ptr< GLSLShaderSet > shaderSet;
     // --
+    PipelineOptions options;
 };
 
 class RenderSurface {
 private:
-    const vk::DynamicState dynamicStates[2] = {
+    const std::array< vk::DynamicState, 2 > dynamicStates = {
             vk::DynamicState::eViewport,
             vk::DynamicState::eLineWidth,
     };
@@ -74,7 +80,7 @@ public:
     ~RenderSurface( );
 private:
     void createPipelines( );
-    void createPipeline(  PipelineInstance &instance, const std::vector< ShaderInfo >& shaderInfo, const std::shared_ptr< GLSLShaderSet >& glslShaderSet );
+    void createPipeline( const PipelineOptions& options, PipelineInstance &instance, const std::vector< ShaderInfo >& shaderInfo );
     void createSurface( );
     void updateViewport( const uint32_t& width, const uint32_t& height );
     vk::ShaderModule createShaderModule( const std::string &filename );

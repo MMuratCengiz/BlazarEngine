@@ -4,7 +4,6 @@
 
 #include "RenderDevice.h"
 
-
 NAMESPACES( SomeVulkan, Graphics )
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -34,7 +33,15 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
     return VK_FALSE;
 }
 
+void RenderDevice::loadExtensionFunctions( ) {
+    vk::DynamicLoader dl;
+    auto vkGetInstanceProcAddr = dl.getProcAddress< PFN_vkGetInstanceProcAddr >( "vkGetInstanceProcAddr" );
+    VULKAN_HPP_DEFAULT_DISPATCHER.init( vkGetInstanceProcAddr );
+}
+
 RenderDevice::RenderDevice( GLFWwindow *window ) {
+    loadExtensionFunctions();
+
     context = std::make_shared< InstanceContext >( );
     context->window = window;
 
@@ -81,6 +88,7 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
 #endif
 
     context->instance = vk::createInstance( createInfo );
+    VULKAN_HPP_DEFAULT_DISPATCHER.init( context->instance );
 
     initSupportedExtensions( );
     initDebugMessages( debugUtilsCreateInfo );
@@ -151,7 +159,7 @@ RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
     for ( auto it = devices.begin( ); it != devices.end( ); ) {
         vk::PhysicalDevice physicalDevice = *it;
 
-        DeviceInfo deviceInfo{ physicalDevice };
+        DeviceInfo deviceInfo { physicalDevice };
 
         createDeviceInfo( physicalDevice, deviceInfo );
 
@@ -255,12 +263,13 @@ void RenderDevice::createLogicalDevice( ) {
     };
 
     context->logicalDevice = context->physicalDevice.createDevice( createInfo );
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(context->logicalDevice);
 
     glfwSetWindowUserPointer( context->window, this );
 
-    context->queues[ QueueType::Graphics ] = vk::Queue{ };
-    context->queues[ QueueType::Presentation ] = vk::Queue{ };
-    context->queues[ QueueType::Transfer ] = vk::Queue{ };
+    context->queues[ QueueType::Graphics ] = vk::Queue { };
+    context->queues[ QueueType::Presentation ] = vk::Queue { };
+    context->queues[ QueueType::Transfer ] = vk::Queue { };
 
     context->logicalDevice.getQueue( context->queueFamilies[ QueueType::Graphics ].index, 0,
                                      &context->queues[ QueueType::Graphics ] );
@@ -273,11 +282,11 @@ void RenderDevice::createLogicalDevice( ) {
 }
 
 void RenderDevice::initializeVMA( ) {
-    vma::AllocatorCreateInfo allocatorInfo = {};
+    vma::AllocatorCreateInfo allocatorInfo = { };
     allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_1;
     allocatorInfo.physicalDevice = context->physicalDevice;
     allocatorInfo.device = context->logicalDevice;
-    allocatorInfo.instance = context->instance ;
+    allocatorInfo.instance = context->instance;
 
     context->vma = vma::createAllocator( allocatorInfo );
 }
@@ -344,7 +353,7 @@ void RenderDevice::beforeDelete( ) {
 }
 
 std::unique_ptr< RenderSurface >
-RenderDevice::createRenderSurface( const std::shared_ptr< Scene::Camera >& camera ) {
+RenderDevice::createRenderSurface( const std::shared_ptr< Scene::Camera > &camera ) {
     context->logicalDevice.waitIdle( );
 
     auto *renderSurface = new RenderSurface { context, camera };
@@ -355,7 +364,7 @@ RenderDevice::~RenderDevice( ) {
     destroyDebugUtils( );
 
     context->instance.destroySurfaceKHR( context->surface );
-    context->vma.destroy();
+    context->vma.destroy( );
     context->logicalDevice.destroy( );
     context->instance.destroy( );
 }
@@ -389,7 +398,7 @@ void RenderDevice::createRenderPass( ) {
         }
     }
 
-    auto surfaceFormat = vk::SurfaceFormatKHR{ vk::Format::eB8G8R8A8Srgb, vk::ColorSpaceKHR::eSrgbNonlinear };
+    auto surfaceFormat = vk::SurfaceFormatKHR { vk::Format::eB8G8R8A8Srgb, vk::ColorSpaceKHR::eSrgbNonlinear };
     for ( auto format: surfaceFormats ) {
         if ( format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear ) {
             surfaceFormat = format;
@@ -457,7 +466,7 @@ void RenderDevice::createRenderPass( ) {
     subPass.pResolveAttachments = &colorAttachmentResolveReference;
 
     std::array< vk::AttachmentDescription, 3 > attachments {
-        colorAttachmentDescription, depthAttachmentDescription, colorAttachmentResolve };
+            colorAttachmentDescription, depthAttachmentDescription, colorAttachmentResolve };
 
     vk::SubpassDependency dependency { };
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;

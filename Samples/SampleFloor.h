@@ -22,7 +22,7 @@ public:
 
         auto transform = createComponent< ECS::CTransform >( );
         transform->position = glm::vec3( 0.0f, 0.0f, -2.8f );
-        transform->scale = glm::vec3( 10.0f, 0.1f, 10.0f );
+        transform->scale = glm::vec3( 30.0f, 0.1f, 30.0f );
     }
 };
 

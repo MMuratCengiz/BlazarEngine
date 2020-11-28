@@ -2,23 +2,10 @@
 
 #include "../Core/Common.h"
 #include <unordered_map>
-#include <vulkan/vulkan.hpp>
 #include "RenderSurface.h"
 #include "RenderDeviceBuilder.h"
 #include "InstanceContext.h"
 #include "../Scene/FpsCamera.h"
-
-/*
- *
- * Desired usage:
- *
- * auto vulkanAPI { window };
- * vulkanAPI.selectDevice( GPU );
- * auto pipeline = vulkanAPI.createPipeline( shaders );
- * pipeline.setGlobal<T>( Type t, T value );
- * pipeline.addRenderObject( renderObject );
- * pipeline.render();
- */
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -69,6 +56,7 @@ private:
     void initSupportedLayers( std::vector< const char * > &layers );
 
     vk::DebugUtilsMessengerCreateInfoEXT getDebugUtilsCreateInfo( ) const;
+    static void loadExtensionFunctions( );
     void setupQueueFamilies( );
     void createLogicalDevice( );
     void createSurface( );

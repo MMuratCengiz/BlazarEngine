@@ -39,7 +39,7 @@ public:
                 } ).create( );
 
         Input::GlobalEventHandler::Instance().initWindowEvents( window->getWindow() );
-        camera = std::make_shared< FpsCamera >( glm::vec3( -0.6f, 3.2f, 5.4f ) );
+        camera = std::make_shared< FpsCamera >( glm::vec3( -0.6f, 0.5f, 5.4f ) );
 
         renderSurface = vk->createRenderSurface( camera );
         renderer = renderSurface->getSurfaceRenderer( );

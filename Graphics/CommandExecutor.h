@@ -64,6 +64,7 @@ public:
     CommandList *endRenderPass( );
     CommandList *pushConstant( const vk::PipelineLayout& layout, const vk::ShaderStageFlags& shaderStages, const uint32_t& size, const void * data );
     CommandList *setViewport( const vk::Viewport& viewport );
+    CommandList *setCullMode( const vk::CullModeFlags & cullMode );
     CommandList *setViewScissor( const vk::Rect2D& scissor  );
     CommandList *bindRenderPass( const vk::Pipeline& pipeline, const vk::PipelineBindPoint& bindPoint );
     CommandList *bindVertexMemory( const vk::Buffer &vertexBuffer, const vk::DeviceSize &offset );

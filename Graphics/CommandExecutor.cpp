@@ -173,6 +173,16 @@ CommandList *CommandList::setViewport( const vk::Viewport &viewport ) {
     return this;
 }
 
+CommandList *CommandList::setCullMode( const vk::CullModeFlags &cullMode ) {
+    ENSURE_FILTER
+
+    for ( vk::CommandBuffer &buffer: buffers ) {
+        buffer.setCullModeEXT( cullMode );
+    }
+
+    return this;
+}
+
 CommandList *CommandList::setViewScissor( const vk::Rect2D &scissor ) {
     ENSURE_FILTER
 

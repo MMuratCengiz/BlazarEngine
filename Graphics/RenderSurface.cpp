@@ -21,11 +21,17 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
     createSamplingResources( );
     createFrameBuffers( );
 
-    enginePipelineSelector = []( const std::shared_ptr< ECS::IGameEntity >& entity ) {
-        return ENGINE_CORE_PIPELINE;
+    enginePipelineSelector = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) {
+        if ( entity->hasComponent< CMesh >()) {
+            if ( entity->getComponent< CMesh >()->cullMode == CullMode::None ) {
+                return ENGINE_CORE_PIPELINE_NONE_CULL;
+            }
+        }
+
+        return ENGINE_CORE_PIPELINE_BACK_CULL;
     };
 
-    pipelineSelector->addSelector( PipelineSelectorPair{ 1, enginePipelineSelector } );
+    pipelineSelector->addSelector( PipelineSelectorPair { 1, enginePipelineSelector } );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams ) {
         auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
@@ -37,7 +43,7 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams ) {
         context->logicalDevice.waitIdle( );
 
-        dispose();
+        dispose( );
         createSurface( );
         createDepthImages( );
         createSamplingResources( );
@@ -51,6 +57,7 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
 
 void RenderSurface::createPipelines( ) {
     // create default pipelines
+    pipelineInstances.resize( 2 );
     std::vector< Graphics::ShaderInfo > shaders( 2 );
 
     shaders[ 0 ].type = vk::ShaderStageFlagBits::eVertex;
@@ -58,19 +65,41 @@ void RenderSurface::createPipelines( ) {
     shaders[ 1 ].type = vk::ShaderStageFlagBits::eFragment;
     shaders[ 1 ].path = PATH( "/Shaders/SPIRV/Fragment/default.spv" );
 
-    auto glslShaderSet = std::make_shared< GLSLShaderSet >( shaders );
-
+    ///////////////////////////////////////////////////////////////////
+    // Engine Core Pipeline with back face culling ////////////////////
+    ///////////////////////////////////////////////////////////////////
     PipelineInstance &instance = pipelineInstances.emplace_back( );
-    instance.name = ENGINE_CORE_PIPELINE;
+    instance.name = ENGINE_CORE_PIPELINE_BACK_CULL;
 
-    createPipeline( instance, shaders, glslShaderSet );
+    PipelineOptions options { };
+    options.cullMode = CullMode::BackFace;
+
+    createPipeline( options, instance, shaders );
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////
+    // Engine Core Pipeline with back face culling ////////////////////
+    ///////////////////////////////////////////////////////////////////
+    PipelineInstance &instance2 = pipelineInstances.emplace_back( );
+    instance2.name = ENGINE_CORE_PIPELINE_NONE_CULL;
+
+    options = { };
+    options.cullMode = CullMode::None;
+
+    createPipeline( options, instance2, shaders );
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
 
     pipelineSelector->createPipelineInstance( instance );
+    pipelineSelector->createPipelineInstance( instance2 );
 }
 
-void RenderSurface::createPipeline(  PipelineInstance &instance, const std::vector< ShaderInfo > &shaderInfos, const std::shared_ptr< GLSLShaderSet >& glslShaderSet ) {
+void RenderSurface::createPipeline( const PipelineOptions &options, PipelineInstance &instance, const std::vector< ShaderInfo > &shaderInfos ) {
     PipelineCreateInfos createInfo { };
+    createInfo.options = options;
 
+    auto glslShaderSet = std::make_shared< GLSLShaderSet >( shaderInfos );
 
     instance.descriptorManager = std::make_shared< DescriptorManager >( context, glslShaderSet );
 
@@ -251,7 +280,22 @@ void RenderSurface::configureRasterization( PipelineCreateInfos &createInfo ) {
     createInfo.rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
     createInfo.rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
     createInfo.rasterizationStateCreateInfo.lineWidth = 1.0f;
-    createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+
+    switch ( createInfo.options.cullMode ) {
+        case CullMode::FrontAndBackFace:
+            createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eFrontAndBack;
+            break;
+        case CullMode::BackFace:
+            createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+            break;
+        case CullMode::FrontFace:
+            createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eFront;
+            break;
+        case CullMode::None:
+            createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eNone;
+            break;
+    }
+
     createInfo.rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
     createInfo.rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
     createInfo.rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
@@ -286,8 +330,8 @@ void RenderSurface::configureColorBlend( PipelineCreateInfos &createInfo ) {
 }
 
 void RenderSurface::configureDynamicState( PipelineCreateInfos &createInfo ) {
-    createInfo.dynamicStateCreateInfo.dynamicStateCount = 2;
-    createInfo.dynamicStateCreateInfo.pDynamicStates = dynamicStates;
+    createInfo.dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size( );
+    createInfo.dynamicStateCreateInfo.pDynamicStates = dynamicStates.data( );
 
     createInfo.pipelineCreateInfo.pDynamicState = &createInfo.dynamicStateCreateInfo;
 }

@@ -5,7 +5,6 @@
 #include "GLSLShaderSet.h"
 
 #include <spirv_cross/spirv_cross.hpp>
-#include <vulkan/vulkan.hpp>
 
 NAMESPACES( SomeVulkan, Graphics )
 

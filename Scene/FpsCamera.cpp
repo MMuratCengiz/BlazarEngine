@@ -27,11 +27,11 @@ void FpsCamera::processKeyboardEvents( GLFWwindow *window ) {
     float sensitivity = ( Core::Time::getDeltaTime( ) * 0.1f );
 
     if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS ) {
-        position -= front * glm::vec3( sensitivity, sensitivity, sensitivity );
+        position -= front * glm::vec3( sensitivity, 0.0f, sensitivity );
     }
 
     if ( glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS ) {
-        position += front * glm::vec3( sensitivity, sensitivity, sensitivity );
+        position += front * glm::vec3( sensitivity, 0.0f, sensitivity );
     }
 
     if ( glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS ) {

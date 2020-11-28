@@ -4,6 +4,8 @@
 #define END_NAMESPACES } }
 
 #define GLFW_INCLUDE_VULKAN
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#include <vulkan/vulkan.hpp>
 
 #include <stdlib.h>
 #include <malloc.h>

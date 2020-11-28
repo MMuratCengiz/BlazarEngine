@@ -34,7 +34,7 @@ set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSu
 set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h Core/DynamicMemory.h Input/ActionMap.cpp Input/ActionMap.h Input/EventHandler.cpp Input/EventHandler.h)
 set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h)
 set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp Scene/Scene.h Scene/FPSCounter.h Scene/IPlayable.h Scene/Window.h)
-set(Samples Samples/SampleGame.h Samples/SampleGame.cpp Samples/SampleHouse.h Samples/SampleFloor.h Samples/SampleTrafficCone.h Samples/SampleCar1.h Samples/SampleCar2.h)
+set(Samples Samples/SampleGame.h Samples/SampleGame.cpp Samples/SampleHouse.h Samples/SampleFloor.h Samples/SampleTrafficCone.h Samples/SampleCar1.h Samples/SampleCar2.h Samples/SampleOldHouse.h)
 
 set(SampleGame Samples/SampleHouse.h)
 
