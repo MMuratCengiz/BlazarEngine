@@ -19,27 +19,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15e90ff6-bc0a-448a-b28f-ecc49ba24583" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Samples/SampleOldHouse.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Shaders/GLSL/Fragment/skybox_default.glsl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Shaders/GLSL/Vertex/skybox_default.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Common.h" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Common.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ECS/CMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/ECS/CMesh.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/CommandExecutor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommandExecutor.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/CommandExecutor.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/CommandExecutor.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/GLSLShaderSet.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/GLSLShaderSet.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/GLSLShaderSet.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/GLSLShaderSet.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/RenderDevice.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDevice.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/RenderDevice.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderDevice.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/RenderSurface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/RenderSurface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphics/VmaImplementation.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Graphics/VmaImplementation.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Samples/SampleFloor.h" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleFloor.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Samples/SampleGame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleGame.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Samples/SampleGame.h" beforeDir="false" afterPath="$PROJECT_DIR$/Samples/SampleGame.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scene/FpsCamera.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Scene/FpsCamera.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scene/World.h" beforeDir="false" afterPath="$PROJECT_DIR$/Scene/World.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/GLSL/Vertex/skybox_default.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/GLSL/Vertex/skybox_default.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/FBX/FBXConverter.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" beforeDir="false" afterPath="$PROJECT_DIR$/external/assimp/code/AssetLib/glTF2/glTF2Asset.inl" afterDir="false" />
     </list>
@@ -52,6 +32,13 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="GLSL Shader" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -134,7 +121,7 @@
       <workItem from="1605808170270" duration="109018000" />
       <workItem from="1606362029194" duration="32567000" />
       <workItem from="1606533311595" duration="2094000" />
-      <workItem from="1606570155659" duration="630000" />
+      <workItem from="1606570155659" duration="1222000" />
     </task>
     <servers />
   </component>
