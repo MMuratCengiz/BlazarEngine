@@ -1,11 +1,24 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 
 NAMESPACES( SomeVulkan, ECS )
 
 struct IComponent {
-	IComponent( ) = default;
+private:
+    struct T_UID_COUNTER {
+        uint64_t COUNT = 0;
+    };
+
+public:
+    uint64_t uid;
+
+	IComponent( ) {
+        static T_UID_COUNTER UID_COUNTER{ };
+        uid = UID_COUNTER.COUNT;
+        UID_COUNTER.COUNT++;
+	};
+
 	virtual ~IComponent( ) { }
 };
 

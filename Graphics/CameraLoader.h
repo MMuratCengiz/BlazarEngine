@@ -20,8 +20,9 @@ private:
     std::pair< vk::Buffer, vma::Allocation > cameraBuffer;
     std::shared_ptr< Scene::Camera > camera;
 public:
-    explicit CameraLoader( std::shared_ptr< InstanceContext > context, std::shared_ptr< Scene::Camera > camera );
+    explicit CameraLoader( std::shared_ptr< InstanceContext > context );
     std::pair< vk::Buffer, vma::Allocation >& getBuffer();
+    void reload( std::shared_ptr< Scene::Camera > pCamera );
     void reload( );
     ~CameraLoader();
 };

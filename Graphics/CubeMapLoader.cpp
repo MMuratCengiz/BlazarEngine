@@ -101,7 +101,7 @@ void CubeMapLoader::loadInner( ECS::CCubeMap &material ) {
     cubeMapTextureInfo.maxLod = 1.0f;
     cubeMapTextureInfo.mipLodBias = 0.0f;
 
-    output.sampler = context->logicalDevice.createSampler( TextureLoader::texToSamplerCreateInfo( 1, cubeMapTextureInfo ) );
+    output.sampler = context->logicalDevice.createSampler( MaterialLoader::texToSamplerCreateInfo( 1, cubeMapTextureInfo ) );
 
 
     int arrayLayer = 0;

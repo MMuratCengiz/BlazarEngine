@@ -22,11 +22,10 @@ private:
     std::shared_ptr< Graphics::RenderDevice > vk;
 
     std::unique_ptr< Window > window;
-    std::shared_ptr< Graphics::RenderSurface > renderSurface;
-    std::shared_ptr< Graphics::Renderer > renderer;
-    std::shared_ptr< FpsCamera > camera;
+//    std::shared_ptr< Graphics::Renderer > renderer;
     std::shared_ptr< Input::ActionMap > actionMap;
     std::shared_ptr< Input::EventHandler > eventHandler;
+    std::shared_ptr< Scene > currentScene;
 public:
     World() = default;
 
@@ -39,19 +38,16 @@ public:
                 } ).create( );
 
         Input::GlobalEventHandler::Instance().initWindowEvents( window->getWindow() );
-        camera = std::make_shared< FpsCamera >( glm::vec3( -0.6f, 0.5f, 5.4f ) );
 
-        renderSurface = vk->createRenderSurface( camera );
-        renderer = renderSurface->getSurfaceRenderer( );
+//        renderer = vk->getRenderer( );
 
         eventHandler = std::make_shared< Input::EventHandler >( window->getWindow() );
         actionMap = std::make_shared< Input::ActionMap >( eventHandler );
     }
 
-    void setScene( const Scene &scene ) {
-        for ( const auto& entity: scene.getEntities() ) {
-            renderer->addRenderObject( entity );
-        }
+    void setScene( const std::shared_ptr< Scene > &scene ) {
+        vk->getRenderer()->setScene( scene );
+        currentScene = scene;
     }
 
     void run( const std::shared_ptr< IPlayable >& game ) {
@@ -59,11 +55,6 @@ public:
 
         GLFWwindow * glfwWindow = window->getWindow();
         FPSCounter fpsCounter = FPSCounter::Instance( );
-
-        Input::GlobalEventHandler::Instance().subscribeToEvent( Input::EventType::WindowResized, [&]( const Input::EventType& type, const Input::pEventParameters& parameters ) {
-           auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
-           camera->updateAspectRatio( windowParams->width, windowParams->height );
-        });
 
         while ( !glfwWindowShouldClose( glfwWindow ) ) {
             Core::Time::tick();
@@ -77,7 +68,7 @@ public:
             glfwGetFramebufferSize( glfwWindow, &width, &height );
 
             if ( width > 0 && height > 0 ) {
-                renderer->render( );
+                vk->getRenderer()->render( );
             }
 
             glfwSwapBuffers( glfwWindow );
@@ -85,8 +76,8 @@ public:
 
             eventHandler->pollEvents( );
 
-            camera->processKeyboardEvents( glfwWindow );
-            camera->processMouseEvents( glfwWindow );
+            currentScene->getCamera()->processKeyboardEvents( glfwWindow );
+            currentScene->getCamera()->processMouseEvents( glfwWindow );
         }
 
         vk->beforeDelete();

@@ -3,15 +3,18 @@
 #include "../Core/Common.h"
 #include "CommandExecutor.h"
 #include "../ECS.h"
+#include "../Scene/Scene.h"
 #include "RenderUtilities.h"
 #include "MeshLoader.h"
 #include "GLSLShaderSet.h"
-#include "TextureLoader.h"
+#include "MaterialLoader.h"
 #include "CameraLoader.h"
 #include "TransformLoader.h"
 #include "DescriptorManager.h"
 #include "PipelineSelector.h"
 #include "CubeMapLoader.h"
+#include "LightLoader.h"
+#include "WorldContextLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
@@ -22,6 +25,8 @@ struct FrameContext {
     std::shared_ptr< CommandList > cachedBuffers;
     std::shared_ptr< TransformLoader > transformLoader;
     std::shared_ptr< CameraLoader > cameraLoader;
+    std::shared_ptr< LightLoader > lightLoader;
+    std::shared_ptr< WorldContextLoader > worldContextLoader;
 };
 
 class Renderer {
@@ -48,10 +53,11 @@ private:
     std::shared_ptr< PipelineSelector > pipelineSelector;
 
     std::shared_ptr< MeshLoader > meshLoader;
-    std::shared_ptr< TextureLoader > textureLoader;
+    std::shared_ptr< MaterialLoader > materialLoader;
     std::shared_ptr< CubeMapLoader > cubeMapLoader;
 public:
-    explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, std::shared_ptr< PipelineSelector > pipelineSelector );
+    explicit Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< PipelineSelector > pipelineSelector );
+    void setScene( const std::shared_ptr< Scene::Scene > &scene );
     void addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity );
     void render( );
     void freeBuffers( );
@@ -68,6 +74,13 @@ private:
     void refreshCommands( const pGameEntity &entity );
     void createSynchronizationStructures( const vk::Device &device );
     void createFrameContexts( );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///  Loads Custom Components //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    void updateCubeComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind );
+    void updateMaterialComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind );
+    void updateTransformComponent( const pGameEntity &entity, const FrameContext &currentFrameContext, const PipelineInstance &pipeline ) const;
 };
 
 END_NAMESPACES

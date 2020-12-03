@@ -5,6 +5,10 @@ layout(set = 0, binding = 0) uniform ViewProjection {
     mat4 proj;
 } vp;
 
+layout(set = 1, binding = 0) uniform WorldContext {
+    vec4 worldPosition;
+} wContext;
+
 layout( location = 0 ) in vec3 position;
 
 layout (location = 0) out vec3 transitTextureLocation;

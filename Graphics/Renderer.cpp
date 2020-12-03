@@ -15,20 +15,19 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera, std::shared_ptr< PipelineSelector > pipelineSelector )
-        : context( context ), camera( std::move( camera ) ), pipelineSelector( std::move( pipelineSelector ) ) {
+Renderer:: Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< PipelineSelector > pipelineSelector ) : context( context ), pipelineSelector( std::move( pipelineSelector ) ) {
     poolSize = context->swapChainImages.size( );
 
     createFrameContexts( );
 
     meshLoader = std::make_shared< MeshLoader >( context, frameContexts[ 0 ].commandExecutor );
-    textureLoader = std::make_shared< TextureLoader >( context, frameContexts[ 0 ].commandExecutor );
+    materialLoader = std::make_shared< MaterialLoader >( context, frameContexts[ 0 ].commandExecutor );
     cubeMapLoader = std::make_shared< CubeMapLoader >( context, frameContexts[ 0 ].commandExecutor );
 
     createSynchronizationStructures( context->logicalDevice );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [&]( const Input::EventType& event,
-            const Input::pEventParameters& parameters ) {
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &event,
+                                                                                                     const Input::pEventParameters &parameters ) {
         frameBufferResized = true;
     } );
 }
@@ -42,10 +41,13 @@ void Renderer::createFrameContexts( ) {
         fContext.commandExecutor = std::make_shared< CommandExecutor >( context );
 
         fContext.transformLoader = std::make_shared< TransformLoader >( context );
-        fContext.cameraLoader = std::make_shared< CameraLoader >( context, camera );
+        fContext.cameraLoader = std::make_shared< CameraLoader >( context );
+        fContext.lightLoader = std::make_shared< LightLoader >( context, fContext.commandExecutor );
+        fContext.worldContextLoader = std::make_shared< WorldContextLoader >( context );
 
-        for ( const PipelineInstance& instance: pipelineSelector->selectAll() ) {
-            instance.descriptorManager->updateViewProjection( i, fContext.cameraLoader->getBuffer() );
+        for ( const PipelineInstance &instance: pipelineSelector->selectAll( ) ) {
+            instance.descriptorManager->updateUniform( i, Core::Constants::getConstant( Core::ConstantName::ShaderInputViewProjection ), fContext.cameraLoader->getBuffer( ) );
+            instance.descriptorManager->updateUniform( i, Core::Constants::getConstant( Core::ConstantName::ShaderInputWorldContext ), fContext.worldContextLoader->getBuffer( ) );
         }
     }
 }
@@ -58,89 +60,52 @@ void Renderer::drawRenderObjects( ) {
     if ( currentFrameContext.cachedBuffers == nullptr ) {
         std::shared_ptr< CommandExecutor > &currentExecutor = currentFrameContext.commandExecutor;
 
-        currentFrameContext.cachedBuffers = currentExecutor
-                ->startCommandExecution( )
+        currentFrameContext.cachedBuffers = currentExecutor->startCommandExecution( )
                 ->generateBuffers( { }, context->frameBuffers.size( ) ); // TODO this could be problematic
     }
 
+    currentFrameContext.worldContextLoader->getWorldContext().worldPosition = glm::vec4( camera->getPosition(), 1.0f );
+    currentFrameContext.worldContextLoader->update();
+
     vk::ClearColorValue colorClear = { std::array< float, 4 > { 0.0f, 0.0f, 0.0f, 1.0f } };
 
-    currentFrameContext.cachedBuffers
-            ->beginCommand( )
-            ->beginRenderPass( context->frameBuffers.data( ), colorClear );
+    currentFrameContext.cachedBuffers->beginCommand( )->beginRenderPass( context->frameBuffers.data( ), colorClear );
 
     for ( const auto &renderObject: gameEntities ) {
         refreshCommands( renderObject );
     }
 
-    currentFrameContext.cachedBuffers
-            ->endRenderPass( )
-            ->execute( );
+    currentFrameContext.cachedBuffers->endRenderPass( )->execute( );
 }
 
 
 void Renderer::refreshCommands( const pGameEntity &entity ) {
     const auto &meshComponent = entity->getComponent< CMesh >( );
-    const auto &materialComponent = entity->getComponent< CMaterial >( );
-    const auto &transformComponent = entity->getComponent< CTransform >( );
-    const auto &cubeMapComponent = entity->getComponent< CCubeMap >( );
 
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
     std::vector< vk::Framebuffer > &frameBuffers = context->frameBuffers;
 
-    PipelineInstance& pipeline = pipelineSelector->selectPipeline( entity );
-    auto& manager = pipeline.descriptorManager;
+    PipelineInstance &pipeline = pipelineSelector->selectPipeline( entity );
+    auto &manager = pipeline.descriptorManager;
 
     std::vector< vk::DescriptorSet > setsToBind;
 
     currentFrameContext.cachedBuffers->bindRenderPass( pipeline.pipeline, vk::PipelineBindPoint::eGraphics );
     currentFrameContext.cachedBuffers->setViewport( context->viewport )->setViewScissor( context->viewScissor );
 
-    setsToBind.emplace_back( manager->getViewProjectionDescriptorSet( frameIndex ) );
+    setsToBind.emplace_back( manager->getUniformDescriptorSet( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputViewProjection ) ) );
+    setsToBind.emplace_back( manager->getUniformDescriptorSet( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputWorldContext ) ) );
 
+    updateTransformComponent( entity, currentFrameContext, pipeline );
+    updateMaterialComponent( entity, manager, setsToBind );
+    updateCubeComponent( entity, manager, setsToBind );
 
-    if ( !IS_NULL( transformComponent ) ) {
-        // currentFrameContext.transformLoader->load( transformComponent );
-
-        const glm::mat4 &model = TransformLoader::getModelMatrix( transformComponent );
-
-        currentFrameContext.cachedBuffers->pushConstant(
-                pipeline.layout,
-                vk::ShaderStageFlagBits::eVertex,
-                4 * 4 * sizeof( float ),
-                &model
-        );
+    // TODO automatically order the sets to bind
+    if ( pipeline.properties.supportsLighting ) {
+        setsToBind.emplace_back( manager->getUniformDescriptorSet( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputEnvironmentLights ) ) );
     }
 
-    if ( !IS_NULL( materialComponent ) ) {
-        TextureBufferList textureObject { };
-        textureLoader->load( textureObject, *materialComponent );
-
-        uint32_t i = 0;
-        for ( auto &part: textureObject.texturesObjects ) {
-            std::string &path = materialComponent->textures[ i ].path;
-
-            if ( ! manager->existsSetForTexture( frameIndex, path ) ) {
-                manager->updateTexture( frameIndex, path, part );
-            }
-
-            setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, path, i ) );
-        }
-    }
-
-    if ( !IS_NULL( cubeMapComponent ) ) {
-        TextureBuffer textureBuffer { };
-        cubeMapLoader->load( textureBuffer, *cubeMapComponent );
-
-        const std::string key = cubeMapLoader->getKey( *cubeMapComponent );
-
-        if ( ! manager->existsSetForTexture( frameIndex, key ) ) {
-            manager->updateTexture( frameIndex, key, textureBuffer );
-        }
-
-        setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, key, 0 ) );
-    }
-
+    // TODO this is might not be correct once we add particle systems
     FUNCTION_BREAK( IS_NULL( meshComponent ) )
 
     ObjectBufferList objectBuffer { };
@@ -148,16 +113,72 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
 
     uint32_t offset = 0;
     for ( auto &part: objectBuffer.buffers ) {
-        currentFrameContext.cachedBuffers->bindDescriptorSet( pipeline.layout, setsToBind );
-        currentFrameContext.cachedBuffers->bindVertexMemory( part.vertexBuffer.first , offset );
-
-        if ( part.indexCount > 0 ) {
-            currentFrameContext.cachedBuffers->bindIndexMemory( part.indexBuffer.first, offset );
-            currentFrameContext.cachedBuffers->drawIndexed( part.indexCount );
-        } else {
-            currentFrameContext.cachedBuffers->draw( part.vertexCount );
-        }
+        currentFrameContext.cachedBuffers
+                ->bindDescriptorSet( pipeline.layout, setsToBind )
+                ->bindVertexMemory( part.vertexBuffer.first, offset )
+                ->filter( part.indexCount > 0 )
+                        /**/->bindIndexMemory( part.indexBuffer.first, offset )
+                        /**/->drawIndexed( part.indexCount )
+                ->otherwise( )
+                        /**/->draw( part.vertexCount )
+                ->endFilter( );
     }
+}
+
+void Renderer::updateTransformComponent( const pGameEntity &entity, const FrameContext &currentFrameContext, const PipelineInstance &pipeline ) const {
+    const auto &transformComponent = entity->getComponent< CTransform >( );
+
+    FUNCTION_BREAK( IS_NULL( transformComponent ) );
+
+    const glm::mat4 &model = TransformLoader::getModelMatrix( transformComponent );
+
+    currentFrameContext.cachedBuffers->pushConstant(
+            pipeline.layout,
+            vk::ShaderStageFlagBits::eVertex,
+            4 * 4 * sizeof( float ),
+            &model
+    );
+}
+
+void Renderer::updateMaterialComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind ) {
+    const auto &materialComponent = entity->getComponent< CMaterial >( );
+
+    FUNCTION_BREAK( IS_NULL( materialComponent ) );
+
+    MaterialBuffer materialBuffer { };
+    materialLoader->load( materialBuffer, *materialComponent );
+
+    manager->updateUniform( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputMaterial ), materialBuffer.buffer );
+
+    uint32_t i = 0;
+    for ( auto &part: materialBuffer.texturesObjects ) {
+        std::string &path = materialComponent->textures[ i ].path;
+
+        if ( !manager->existsSetForTexture( frameIndex, path ) ) {
+            manager->updateTexture( frameIndex, path, part );
+        }
+
+        setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, path, i ) );
+    }
+
+    setsToBind.emplace_back( manager->getUniformDescriptorSet( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputMaterial ) ) );
+}
+
+void Renderer::updateCubeComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind ) {
+    const auto &cubeMapComponent = entity->getComponent< CCubeMap >( );
+
+    FUNCTION_BREAK( IS_NULL( cubeMapComponent ) );
+
+    TextureBuffer textureBuffer { };
+    cubeMapLoader->load( textureBuffer, *cubeMapComponent );
+
+    const std::string key = cubeMapLoader->getKey( *cubeMapComponent );
+
+    if ( !manager->existsSetForTexture( frameIndex, key ) ) {
+        manager->updateTexture( frameIndex, key, textureBuffer );
+    }
+
+    setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, key, 0 ) );
 }
 
 void Renderer::createSynchronizationStructures( const vk::Device &device ) {
@@ -190,7 +211,7 @@ void Renderer::render( ) {
     auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX, imageAvailableSemaphores[ frameIndex ], nullptr );
 
     if ( result.result == vk::Result::eErrorOutOfDateKHR ) {
-        Input::GlobalEventHandler::Instance().triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
+        Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
         return;
     } else if ( result.result != vk::Result::eSuccess && result.result == vk::Result::eSuboptimalKHR ) {
         throw std::runtime_error( "failed to acquire swap chain image!" );
@@ -238,7 +259,7 @@ void Renderer::render( ) {
 
     if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || frameBufferResized ) {
         frameBufferResized = false;
-        Input::GlobalEventHandler::Instance().triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
+        Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
         return;
     } else if ( presentResult != vk::Result::eSuccess ) {
         throw std::runtime_error( "failed to acquire swap chain image!" );
@@ -262,16 +283,55 @@ Renderer::~Renderer( ) {
     }
 }
 
+void Renderer::setScene( const std::shared_ptr< Scene::Scene > &scene ) {
+    NOT_NULL( scene->getCamera( ) );
+    this->camera = scene->getCamera();
+
+    for ( uint32_t i = 0; i < poolSize; ++i ) {
+        FrameContext &fContext = frameContexts[ i ];
+
+        fContext.cameraLoader->reload( scene->getCamera( ) );
+
+        for ( const auto &ambientLight: scene->getAmbientLights( ) ) {
+            fContext.lightLoader->addAmbientLight( ambientLight );
+        }
+
+        for ( const auto &directionLight: scene->getDirectionalLights( ) ) {
+            fContext.lightLoader->addDirectionalLight( directionLight );
+        }
+
+        for ( const auto &pointLight: scene->getPointLights( ) ) {
+            fContext.lightLoader->addPointLight( pointLight );
+        }
+
+        for ( const auto &spotLight: scene->getSpotLights( ) ) {
+            fContext.lightLoader->addSpotLight( spotLight );
+        }
+
+        fContext.lightLoader->load();
+
+        for ( const PipelineInstance &instance: pipelineSelector->selectAll( ) ) {
+            instance.descriptorManager->updateUniform( i, Core::Constants::getConstant( Core::ConstantName::ShaderInputEnvironmentLights ), fContext.lightLoader->getBuffer( ) );
+        }
+    }
+
+    gameEntities.clear( );
+
+    for ( const auto &entity: scene->getEntities( ) ) {
+        addRenderObject( entity );
+    }
+}
+
 void Renderer::addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity ) {
     const std::shared_ptr< CMesh > &cmesh = gameEntity->getComponent< CMesh >( );
-    if ( !IS_NULL( cmesh )) {
+    if ( !IS_NULL( cmesh ) ) {
         meshLoader->cache( *cmesh );
     }
 
     const std::shared_ptr< CMaterial > &cmat = gameEntity->getComponent< CMaterial >( );
 
-    if ( !IS_NULL( cmat )) {
-        textureLoader->cache( *cmat );
+    if ( !IS_NULL( cmat ) ) {
+        materialLoader->cache( *cmat );
     }
 
     gameEntities.emplace_back( gameEntity );

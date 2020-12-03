@@ -38,6 +38,7 @@ private:
     std::unordered_map< std::string, bool > supportedLayers;
 
     std::shared_ptr< InstanceContext > context;
+    std::unique_ptr< RenderSurface > renderSurface;
 public:
     explicit RenderDevice( GLFWwindow *window );
 
@@ -47,10 +48,11 @@ public:
     void beforeDelete();
 
     std::shared_ptr< InstanceContext > getContext() const;
-    std::unique_ptr< RenderSurface > createRenderSurface( const std::shared_ptr< Scene::Camera >& camera );
-
+    const std::shared_ptr< Renderer >& getRenderer();
     ~RenderDevice( );
 private:
+    void createRenderSurface( );
+
     void initSupportedExtensions( );
     void initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT &createInfo );
     void initSupportedLayers( std::vector< const char * > &layers );

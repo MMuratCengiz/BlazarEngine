@@ -2,11 +2,15 @@
 // Created by Murat on 11/19/2020.
 //
 
-#include "TextureLoader.h"
+#include "MaterialLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 
-void TextureLoader::cache( const ECS::CMaterial &material ) {
+void MaterialLoader::cache( const ECS::CMaterial &material ) {
+    if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) ) {
+        loadMaterial( material );
+    }
+
     for ( const auto &texture: material.textures ) {
         if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) ) {
             loadInner( texture );
@@ -14,7 +18,13 @@ void TextureLoader::cache( const ECS::CMaterial &material ) {
     }
 }
 
-void SomeVulkan::Graphics::TextureLoader::load( TextureBufferList &input, const ECS::CMaterial &material ) {
+void SomeVulkan::Graphics::MaterialLoader::load( MaterialBuffer &input, const ECS::CMaterial &material ) {
+    if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) ) {
+        loadMaterial( material );
+    }
+
+    input.buffer = loadedMaterials[ material.uid ];
+
     for ( const auto &texture: material.textures ) {
         if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) ) {
             loadInner( texture );
@@ -29,8 +39,39 @@ void SomeVulkan::Graphics::TextureLoader::load( TextureBufferList &input, const 
     }
 }
 
-void SomeVulkan::Graphics::TextureLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
+void MaterialLoader::loadMaterial( const ECS::CMaterial &material ) {
+    ShaderInputMaterial mat{ };
+    mat.diffuseColor = material.diffuse;
+    mat.specularColor = material.specular;
+    mat.shininess = material.shininess;
+
+    std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
+
+    RenderUtilities::initStagingBuffer( context, stagingBuffer, &mat, sizeof( ShaderInputMaterial ) );
+
+    vk::BufferCreateInfo bufferCreateInfo;
+    bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
+    bufferCreateInfo.size = sizeof( ShaderInputMaterial );
+    bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+
+    vma::AllocationCreateInfo allocationInfo;
+    allocationInfo.usage = vma::MemoryUsage::eGpuOnly;
+    allocationInfo.requiredFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+
+    loadedMaterials[ material.uid ] = this->context->vma.createBuffer( bufferCreateInfo, allocationInfo );
+
+    commandExecutor->startCommandExecution()
+            ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit )
+            ->beginCommand()
+            ->copyBuffer( sizeof( ShaderInputMaterial ), stagingBuffer.first, loadedMaterials[ material.uid ].first )
+            ->execute();
+
+    context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
+}
+
+void SomeVulkan::Graphics::MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
     loadedTextures[ texture.path ] = TextureBuffer { };
+
     TextureBuffer &part = loadedTextures[ texture.path ];
 
     int width, height, channels;
@@ -122,7 +163,7 @@ void SomeVulkan::Graphics::TextureLoader::loadInner( const ECS::Material::Textur
     stbi_image_free( contents );
 }
 
-void TextureLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const {
+void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const {
     int32_t mipWidth = width, mipHeight = height;
 
     auto cmdBuffer = commandExecutor->startCommandExecution( )->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 );
@@ -205,7 +246,7 @@ void TextureLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::T
     cmdBuffer->execute( );
 }
 
-vk::SamplerCreateInfo SomeVulkan::Graphics::TextureLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const SomeVulkan::ECS::Material::TextureInfo &info ) {
+vk::SamplerCreateInfo SomeVulkan::Graphics::MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const SomeVulkan::ECS::Material::TextureInfo &info ) {
     vk::SamplerCreateInfo samplerCreateInfo { };
 
     samplerCreateInfo.magFilter = toVkFilter( info.magFilter );
@@ -227,7 +268,7 @@ vk::SamplerCreateInfo SomeVulkan::Graphics::TextureLoader::texToSamplerCreateInf
     return samplerCreateInfo;
 }
 
-vk::Filter SomeVulkan::Graphics::TextureLoader::toVkFilter( const SomeVulkan::ECS::Material::Filter &filter ) {
+vk::Filter SomeVulkan::Graphics::MaterialLoader::toVkFilter( const SomeVulkan::ECS::Material::Filter &filter ) {
     switch ( filter ) {
         case ECS::Material::Filter::Nearest:
             return vk::Filter::eNearest;
@@ -242,7 +283,7 @@ vk::Filter SomeVulkan::Graphics::TextureLoader::toVkFilter( const SomeVulkan::EC
     return vk::Filter::eLinear;
 }
 
-vk::SamplerAddressMode SomeVulkan::Graphics::TextureLoader::toVkAddressMode( const SomeVulkan::ECS::Material::AddressMode &addressMode ) {
+vk::SamplerAddressMode SomeVulkan::Graphics::MaterialLoader::toVkAddressMode( const SomeVulkan::ECS::Material::AddressMode &addressMode ) {
     switch ( addressMode ) {
         case ECS::Material::AddressMode::Repeat:
             return vk::SamplerAddressMode::eRepeat;
@@ -260,7 +301,7 @@ vk::SamplerAddressMode SomeVulkan::Graphics::TextureLoader::toVkAddressMode( con
     return vk::SamplerAddressMode::eClampToBorder;
 }
 
-vk::SamplerMipmapMode SomeVulkan::Graphics::TextureLoader::toVkMipmapMode( const SomeVulkan::ECS::Material::MipmapMode &mipmapMode ) {
+vk::SamplerMipmapMode SomeVulkan::Graphics::MaterialLoader::toVkMipmapMode( const SomeVulkan::ECS::Material::MipmapMode &mipmapMode ) {
     switch( mipmapMode ) {
         case ECS::Material::MipmapMode::eNearest:
             return vk::SamplerMipmapMode::eNearest;
@@ -271,11 +312,15 @@ vk::SamplerMipmapMode SomeVulkan::Graphics::TextureLoader::toVkMipmapMode( const
     return vk::SamplerMipmapMode::eLinear;
 }
 
-TextureLoader::~TextureLoader( ) {
+MaterialLoader::~MaterialLoader( ) {
     for ( auto& pair: loadedTextures ) {
         context->logicalDevice.destroySampler( pair.second.sampler );
         context->logicalDevice.destroyImageView( pair.second.imageView );
         context->vma.destroyImage( pair.second.image, pair.second.allocation );
+    }
+
+    for ( auto& pair: loadedMaterials ) {
+        context->vma.destroyBuffer( pair.second.first, pair.second.second );
     }
 }
 

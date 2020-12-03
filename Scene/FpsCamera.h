@@ -29,8 +29,8 @@ private:
 public:
     explicit FpsCamera( glm::vec3 position, glm::vec3 front = glm::vec3( 0.0f, 0.0f, -1.0f ) );
     void updateAspectRatio( const uint32_t& windowWidth,  const uint32_t& windowHeight );
-    void processKeyboardEvents( GLFWwindow* window );
-    void processMouseEvents( GLFWwindow* window );
+    void processKeyboardEvents( GLFWwindow* window ) override;
+    void processMouseEvents( GLFWwindow* window ) override;
     glm::mat4 getView() override;
     glm::mat4 getProjection() override;
     glm::vec3 getPosition() override;

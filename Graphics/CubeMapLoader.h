@@ -7,7 +7,7 @@
 #include "InstanceContext.h"
 #include "CommandExecutor.h"
 #include "RenderUtilities.h"
-#include "TextureLoader.h"
+#include "MaterialLoader.h"
 
 NAMESPACES( SomeVulkan, Graphics )
 

@@ -11,24 +11,20 @@ NAMESPACES( SomeVulkan, Graphics )
 
 const uint32_t DescriptorManager::texturePreallocateCount = 12;
 
-DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context, std::shared_ptr< GLSLShaderSet > shaderSet ) :
-        context( std::move( context ) ), shaderSet( std::move( shaderSet ) ) {
-    createDescriptorPool();
-    uint32_t setIndex = 0;
+DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context, std::shared_ptr< GLSLShaderSet > shaderSet ) : context( std::move( context ) ), shaderSet( std::move( shaderSet ) ) {
+    createDescriptorPool( );
 
-    layouts.resize( this->shaderSet->getDescriptorSets( ).size( ) );
+    uniformLayouts.resize( this->shaderSet->getDescriptorSets( ).size( ) );
+    textureLayouts.resize( uniformLayouts.size( ) );
+    layouts.resize( uniformLayouts.size( ) );
 
     for ( const auto &sets: this->shaderSet->getDescriptorSets( ) ) {
-        for ( const auto &bindings: sets.descriptorSetBindings ) {
-            if ( bindings.name == ViewProjectionSetName ) {
-                viewProjectionLocation.set = setIndex;
-                viewProjectionLocation.binding = bindings.index;
-            }
+        uint32_t setIndex = sets.id;
 
-            if ( bindings.name == ( TextureSetNamePrefix + "1" ) ) {
-                firstTextureLocation.set = setIndex;
-                firstTextureLocation.binding = bindings.index;
-            }
+        for ( const auto &bindings: sets.descriptorSetBindings ) {
+            uniformLocations[ bindings.name ] = UniformLocation {
+                    true, setIndex, bindings.index
+            };
         }
 
         const DescriptorSet &set = this->shaderSet->getDescriptorSetBySetId( setIndex );
@@ -40,32 +36,66 @@ DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context
         createInfo.bindingCount = vkDescriptorSetBindings.size( );
         createInfo.pBindings = vkDescriptorSetBindings.data( );
 
-        layouts[ setIndex ] = this->context->logicalDevice.createDescriptorSetLayout( createInfo );
-
-        ++setIndex;
+        if ( vkDescriptorSetBindings[ 0 ].descriptorType == vk::DescriptorType::eCombinedImageSampler ) {
+            textureLayouts[ setIndex ] = this->context->logicalDevice.createDescriptorSetLayout( createInfo );
+            uniformLayouts[ setIndex ] = nullptr;
+            layouts[ setIndex ] = textureLayouts[ setIndex ];
+        } else {
+            textureLayouts[ setIndex ] = nullptr;
+            uniformLayouts[ setIndex ] = this->context->logicalDevice.createDescriptorSetLayout( createInfo );
+            layouts[ setIndex ] = uniformLayouts[ setIndex ];
+        }
     }
 
-    createViewProjectionDescriptorSets( );
+//    expandUniformDescriptorSets( );
     expandTextureDescriptorSets( );
 }
-
-void DescriptorManager::createViewProjectionDescriptorSets( ) {
+/*
+void DescriptorManager::expandUniformDescriptorSets( ) {
     uint32_t swapChainImageCount = context->swapChainImages.size( );
-    viewProjectionSets.resize( swapChainImageCount );
+
+    if ( uniformSets.empty( ) ) {
+        nextFreeUniform.resize( swapChainImageCount, 0 );
+        uniformSets.resize( swapChainImageCount );
+        uniformSetMaps.resize( swapChainImageCount );
+    }
+
+    for ( auto &layout: uniformLayouts ) {
+        if ( layout == nullptr ) {
+            continue;
+        }
+
+        std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
+
+        for ( auto &uniformSet : uniformSets ) {
+
+            vk::DescriptorSetAllocateInfo allocateInfo { };
+            allocateInfo.descriptorPool = uniformDescriptorPool;
+            allocateInfo.descriptorSetCount = layoutsPtr.size( );
+            allocateInfo.pSetLayouts = layoutsPtr.data( );
 
 
-    std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layouts[ viewProjectionLocation.set ] };
+            const auto &newSets = context->logicalDevice.allocateDescriptorSets( allocateInfo );
+            uniformSet.insert( uniformSet.end( ), newSets.begin( ), newSets.end( ) );
+        }
+    }
+}*/
+
+void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout ) {
+    uint32_t swapChainImageCount = context->swapChainImages.size( );
+
+    std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
+
     vk::DescriptorSetAllocateInfo allocateInfo { };
-    allocateInfo.descriptorPool = uniformDescriptorPool;
+    allocateInfo.descriptorPool = samplerDescriptorPool;
     allocateInfo.descriptorSetCount = layoutsPtr.size( );
     allocateInfo.pSetLayouts = layoutsPtr.data( );
 
-    viewProjectionSets = context->logicalDevice.allocateDescriptorSets( allocateInfo );
+    uniformSetMaps[ uniformName ] = context->logicalDevice.allocateDescriptorSets( allocateInfo );
 }
 
 void DescriptorManager::expandTextureDescriptorSets( ) {
     uint32_t swapChainImageCount = context->swapChainImages.size( );
-
 
     if ( textureSets.empty( ) ) {
         nextFreeTexture.resize( swapChainImageCount, 0 );
@@ -73,23 +103,27 @@ void DescriptorManager::expandTextureDescriptorSets( ) {
         textureSetMaps.resize( swapChainImageCount );
     }
 
-    std::vector< vk::DescriptorSetLayout > layoutsPtr { texturePreallocateCount, layouts[ firstTextureLocation.set ] };
-    vk::DescriptorSetAllocateInfo allocateInfo { };
+    for ( auto &layout: textureLayouts ) {
+        if ( layout == nullptr ) {
+            continue;
+        }
 
-    for ( auto &textureSet : textureSets ) {
-        layoutsPtr = { texturePreallocateCount, layouts[ firstTextureLocation.set ] };
-        allocateInfo.descriptorPool = samplerDescriptorPool;
-        allocateInfo.descriptorSetCount = layoutsPtr.size( );
-        allocateInfo.pSetLayouts = layoutsPtr.data( );
+        std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
 
-        const auto &newSets = context->logicalDevice.allocateDescriptorSets( allocateInfo );
-        textureSet.insert( textureSet.end( ), newSets.begin( ), newSets.end( ) );
+        for ( auto &textureSet : textureSets ) {
+            vk::DescriptorSetAllocateInfo allocateInfo { };
+            allocateInfo.descriptorPool = samplerDescriptorPool;
+            allocateInfo.descriptorSetCount = layoutsPtr.size( );
+            allocateInfo.pSetLayouts = layoutsPtr.data( );
+
+            const auto &newSets = context->logicalDevice.allocateDescriptorSets( allocateInfo );
+            textureSet.insert( textureSet.end( ), newSets.begin( ), newSets.end( ) );
+        }
     }
 }
 
 // Todo create more pools as necessary
 void DescriptorManager::createDescriptorPool( ) {
-
     auto swapChainImageCount = static_cast< uint32_t >( context->swapChainImages.size( ) );
 
     vk::DescriptorPoolSize uniformPoolSize { };
@@ -99,7 +133,7 @@ void DescriptorManager::createDescriptorPool( ) {
     vk::DescriptorPoolCreateInfo uniformDescriptorPoolCreateInfo { };
     uniformDescriptorPoolCreateInfo.poolSizeCount = 1;
     uniformDescriptorPoolCreateInfo.pPoolSizes = &uniformPoolSize;
-    uniformDescriptorPoolCreateInfo.maxSets = swapChainImageCount + swapChainImageCount * 12;
+    uniformDescriptorPoolCreateInfo.maxSets = swapChainImageCount * 120;
 
     uniformDescriptorPool = context->logicalDevice.createDescriptorPool( uniformDescriptorPoolCreateInfo );
 
@@ -123,26 +157,39 @@ vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const Uni
 
     writeDescriptorSet.dstSet = updateInfo.parent;
     writeDescriptorSet.dstBinding = uniformLocation.binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = updateInfo.arrayElement;
     writeDescriptorSet.descriptorType = ref.type;
     writeDescriptorSet.descriptorCount = 1;
 
     return writeDescriptorSet;
 }
 
-vk::DescriptorSet &DescriptorManager::getViewProjectionDescriptorSet( const uint32_t &frameIndex ) {
-    return viewProjectionSets[ frameIndex ];
-}
-
 void DescriptorManager::ensureTextureHasDescriptor( const uint32_t &frameIndex, const std::string &texturePath ) {
-    if ( textureSetMaps[ frameIndex ].find( texturePath ) == textureSetMaps[ frameIndex ].end() ) {
-        if ( nextFreeTexture[ frameIndex ] >= textureSets[ frameIndex ].size() ) {
-            expandTextureDescriptorSets();
+    if ( textureSetMaps[ frameIndex ].find( texturePath ) == textureSetMaps[ frameIndex ].end( ) ) {
+        if ( nextFreeTexture[ frameIndex ] >= textureSets[ frameIndex ].size( ) ) {
+            expandTextureDescriptorSets( );
         }
 
-        textureSetMaps[ frameIndex ][ texturePath ] = textureSets[ frameIndex][ nextFreeTexture[ frameIndex ] ];
+        textureSetMaps[ frameIndex ][ texturePath ] = textureSets[ frameIndex ][ nextFreeTexture[ frameIndex ] ];
         nextFreeTexture[ frameIndex ]++;
     }
+}
+
+void DescriptorManager::ensureUniformHasDescriptor( const uint32_t &frameIndex, const std::string &uniformName, const int &arrayIndex ) {
+    const std::string &key = getUniformKey( uniformName, arrayIndex );
+
+    if ( uniformSetMaps.find( key ) == uniformSetMaps.end( ) ) {
+        auto& uniformSet = uniformLocations[ uniformName ];
+        auto& layout = uniformLayouts[ uniformSet.set ];
+
+        addUniformDescriptorSet( uniformName, uniformSet, layout );
+    }
+}
+
+vk::DescriptorSet &DescriptorManager::getUniformDescriptorSet( const uint32_t &frameIndex, const std::string &uniformName, const uint32_t &arrayIndex ) {
+    ensureUniformHasDescriptor( frameIndex, uniformName, arrayIndex );
+
+    return uniformSetMaps[ getUniformKey( uniformName, arrayIndex ) ][ frameIndex ];
 }
 
 vk::DescriptorSet &DescriptorManager::getTextureDescriptorSet( const uint32_t &frameIndex, const std::string &texturePath, const uint32_t &textureIndex ) {
@@ -151,15 +198,22 @@ vk::DescriptorSet &DescriptorManager::getTextureDescriptorSet( const uint32_t &f
     return textureSetMaps[ frameIndex ][ texturePath ];
 }
 
-void DescriptorManager::updateViewProjection( const uint32_t &frameIndex, const std::pair< vk::Buffer, vma::Allocation > &buffer ) {
+void DescriptorManager::updateUniform( const uint32_t &frameIndex, const std::string &uniformName, const std::pair< vk::Buffer, vma::Allocation > &buffer, const int &arrayIndex ) {
+    ensureUniformHasDescriptor( frameIndex, uniformName, arrayIndex );
+
+    const std::string &key = getUniformKey( uniformName, arrayIndex );
+
+    UniformLocation &uniformLocation = uniformLocations[ key ];
+
     BindingUpdateInfo updateInfo {
-            viewProjectionLocation.binding,
-            viewProjectionSets[ frameIndex ]
+            uniformLocation.binding,
+            uniformSetMaps[ key ][ frameIndex ],
+            arrayIndex < 0 ? 0 : uint32_t( arrayIndex )
     };
 
-    const DescriptorSet &set = shaderSet->getDescriptorSetBySetId( viewProjectionLocation.set );
-    const DescriptorSetBinding &ref = set.descriptorSetBindings[ viewProjectionLocation.binding ];
-    vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( viewProjectionLocation, updateInfo );
+    const DescriptorSet &set = shaderSet->getDescriptorSetBySetId( uniformLocation.set );
+    const DescriptorSetBinding &ref = set.descriptorSetBindings[ uniformLocation.binding ];
+    vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( uniformLocation, updateInfo );
 
     vk::DescriptorBufferInfo descriptorBufferInfo { };
     descriptorBufferInfo.buffer = buffer.first;
@@ -174,20 +228,24 @@ void DescriptorManager::updateViewProjection( const uint32_t &frameIndex, const 
 }
 
 bool DescriptorManager::existsSetForTexture( const uint32_t &frameIndex, const std::string &path ) {
-    return textureSetMaps[ frameIndex ].find( path ) != textureSetMaps[ frameIndex ].end() ;
+    return textureSetMaps[ frameIndex ].find( path ) != textureSetMaps[ frameIndex ].end( );
 }
 
 void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::string &path, const TextureBuffer &buffer ) {
     ensureTextureHasDescriptor( frameIndex, path );
 
+    // Todo + texture index when texture arrays are implemented
+    const std::string &key = getUniformKey( Core::Constants::getConstant( Core::ConstantName::ShaderInputSampler ), 1 );
+
+    UniformLocation &uniformLocation = uniformLocations[ key ];
     BindingUpdateInfo updateInfo {
-            firstTextureLocation.binding, // Todo + texture index when texture arrays are implemented
+            uniformLocation.binding,
             textureSetMaps[ frameIndex ][ path ]
     };
 
-    const DescriptorSet &set = shaderSet->getDescriptorSetBySetId( firstTextureLocation.set );
-    const DescriptorSetBinding &ref = set.descriptorSetBindings[ firstTextureLocation.binding ];
-    vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( firstTextureLocation, updateInfo );
+    const DescriptorSet &set = shaderSet->getDescriptorSetBySetId( uniformLocation.set );
+    const DescriptorSetBinding &ref = set.descriptorSetBindings[ uniformLocation.binding ];
+    vk::WriteDescriptorSet writeDescriptorSet = getCommonWriteDescriptorSet( uniformLocation, updateInfo );
 
     vk::DescriptorImageInfo descriptorImageInfo { };
     descriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
@@ -203,6 +261,16 @@ void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::st
 
 const std::vector< vk::DescriptorSetLayout > &DescriptorManager::getLayouts( ) {
     return layouts;
+}
+
+std::string DescriptorManager::getUniformKey( const std::string &uniformName, const int &arrayIndex ) {
+    if ( arrayIndex == - 1 ) {
+        return uniformName;
+    }
+
+    std::stringstream key;
+    key << uniformName  << arrayIndex;
+    return key.str( );
 }
 
 DescriptorManager::~DescriptorManager( ) {

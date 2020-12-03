@@ -24,10 +24,6 @@ enum class QueueType {
     Transfer,
 };
 
-
-struct InstanceContext;
-class DescriptorManager;
-
 struct InstanceContext {
 public:
     vk::Instance instance;
@@ -50,11 +46,6 @@ public:
     vk::Extent2D surfaceExtent { };
     vk::Viewport viewport { };
     vk::Rect2D viewScissor { };
-
-/*    vk::Pipeline pipeline;
-    vk::PipelineLayout pipelineLayout{};
-    vk::DescriptorSetLayout descriptorSetLayout{ };
-    std::vector< vk::DescriptorSet > descriptorSets{ };*/
 
     GLFWwindow *window;
     std::unordered_map< QueueType, QueueFamily > queueFamilies;

@@ -77,9 +77,8 @@ private:
 
     std::vector< vk::ShaderModule > shaderModules;
     std::shared_ptr< Renderer > renderer;
-    std::shared_ptr< Scene::Camera > camera;
 public:
-    RenderSurface( const std::shared_ptr< InstanceContext >&, std::shared_ptr< Scene::Camera >  camera );
+    explicit RenderSurface( const std::shared_ptr< InstanceContext >& );
 
     std::shared_ptr< Renderer >& getSurfaceRenderer();
     ~RenderSurface( );

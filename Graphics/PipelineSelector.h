@@ -6,11 +6,16 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
+struct PipelineProperties {
+    bool supportsLighting = false;
+};
+
 struct PipelineInstance {
     std::string name;
     std::shared_ptr< DescriptorManager > descriptorManager;
     vk::Pipeline pipeline;
     vk::PipelineLayout layout;
+    PipelineProperties properties{ };
 };
 
 typedef std::function< std::string( const std::shared_ptr< ECS::IGameEntity > & ) > PipelineSelectorFunc;

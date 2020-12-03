@@ -43,9 +43,7 @@ public:
     }
 
     void play( ) const {
-
         auto camera = std::make_shared< FpsCamera >( glm::vec3( 1.4f, 2.0f, -1.0f ), glm::vec3( 0.0f ) );
-
 
         while ( !glfwWindowShouldClose( window ) ) {
             Core::Time::tick();

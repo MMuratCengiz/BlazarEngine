@@ -1,6 +1,6 @@
 #version 450
 
-layout( set = 1, binding = 0 ) uniform samplerCube Texture1;
+layout( set = 2, binding = 0 ) uniform samplerCube Texture1;
 
 layout (location = 0) in vec3 transitTextureCoordinates;
 

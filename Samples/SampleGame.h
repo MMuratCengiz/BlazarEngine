@@ -3,6 +3,7 @@
 #include "../Scene/World.h"
 #include "../Scene/Scene.h"
 #include "../Core/Time.h"
+#include "../Scene/Camera.h"
 #include "SampleHouse.h"
 #include "SampleFloor.h"
 #include "SampleCar1.h"
@@ -10,6 +11,11 @@
 #include "SampleOldHouse.h"
 #include "SampleTrafficCone.h"
 #include "SampleCubeMap.h"
+#include "Spaceship.h"
+#include "../ECS/CAmbientLight.h"
+#include "../ECS/CDirectionalLight.h"
+#include "../ECS/CPointLight.h"
+#include "../ECS/CSpotLight.h"
 
 using namespace SomeVulkan;
 
@@ -17,7 +23,11 @@ namespace Sample {
 
 class SampleGame : public Scene::IPlayable {
     Scene::World * world;
-    Scene::Scene initialScene{ nullptr };
+
+    ECS::CAmbientLight ambientLight{ };
+
+    std::shared_ptr< Scene::Scene > initialScene;
+    std::shared_ptr< Scene::FpsCamera > camera;
     std::shared_ptr< SampleCar1 > car1;
     std::shared_ptr< SampleCar2 > car2;
     std::shared_ptr< SampleTrafficCone > cone;

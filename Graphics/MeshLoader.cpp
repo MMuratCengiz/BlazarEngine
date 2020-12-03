@@ -62,12 +62,14 @@ void MeshLoader::onEachMesh( ObjectBufferList& buffer, const aiMesh* mesh ) {
 
     bufferPart.vertexCount = mesh->mNumVertices * 3;
 
-    Core::DynamicMemory memory{ mesh->mNumVertices * 5 * sizeof( float ) };
+    Core::DynamicMemory memory{ mesh->mNumVertices * 8 * sizeof( float ) };
 
     for ( unsigned int i = 0; i < mesh->mNumVertices; ++i ) {
         const auto& vec = mesh->mVertices[ i ];
+        const auto& norm = mesh->mNormals[ i ];
 
         memory.attachElements< float >( { vec.x, vec.y, vec.z } );
+        memory.attachElements< float >( { norm.x, norm.y, norm.z } );
 
         if ( mesh->mTextureCoords[ 0 ] ) {
             const aiVector3D& textureCoordinates = mesh->mTextureCoords[ 0 ][ i ];

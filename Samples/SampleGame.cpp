@@ -7,20 +7,25 @@
 namespace Sample {
 
 void SampleGame::init( ) {
+    ambientLight.diffuse = glm::vec4( 0.5f, 0.0f, 0.0f, 1.0f);
+    ambientLight.power = 1.0f;
+
+    oldHouse = std::make_shared< SampleOldHouse >( );
+    camera = std::make_shared< Scene::FpsCamera >( glm::vec3( -0.6f, 0.5f, 5.4f ) );
+    floor = std::make_shared< SampleFloor >( );
     car1 = std::make_shared< SampleCar1 >( );
     car2 = std::make_shared< SampleCar2 >( );
     cone = std::make_shared< SampleTrafficCone >( );
     sky = std::make_shared< SampleCubeMap >( );
 
-    oldHouse = std::make_shared< SampleOldHouse >( );
-
-    floor = std::make_shared< SampleFloor >( );
-    initialScene.addEntity( car1 );
-    initialScene.addEntity( car2 );
-    initialScene.addEntity( cone );
-    initialScene.addEntity( floor );
-    initialScene.addEntity( oldHouse );
-    initialScene.addEntity( sky );
+    initialScene = std::make_shared< Scene::Scene >( camera );
+    initialScene->addAmbientLight( ambientLight );
+    initialScene->addEntity( car1 );
+    initialScene->addEntity( car2 );
+    initialScene->addEntity( cone );
+    initialScene->addEntity( floor );
+    initialScene->addEntity( oldHouse );
+    initialScene->addEntity( sky );
     world->setScene( initialScene );
 
     Input::ActionBinding binding { };
@@ -28,12 +33,10 @@ void SampleGame::init( ) {
     binding.pressForm = Input::KeyPressForm::Pressed;
     binding.controller = Input::Controller::Keyboard;
 
-/*    inputCallback = [&]( const std::string& actionName ) {
-        auto transform = house->getComponent< ECS::CTransform >( );
-        transform->position += glm::vec3( 0.0f, 0.0f, -Core::Time::getDeltaTime() * 0.001f );
-    };
-
-    world->getActionMap()->registerAction( "MoveHouse", binding, inputCallback );*/
+    Input::GlobalEventHandler::Instance().subscribeToEvent( Input::EventType::WindowResized, [&]( const Input::EventType& type, const Input::pEventParameters& parameters ) {
+        auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
+        camera->updateAspectRatio( windowParams->width, windowParams->height );
+    });
 }
 
 void SampleGame::update( ) {

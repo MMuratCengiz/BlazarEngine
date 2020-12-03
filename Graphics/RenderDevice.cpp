@@ -200,6 +200,7 @@ void RenderDevice::selectDevice( const DeviceInfo &deviceInfo ) {
     createLogicalDevice( );
     initializeVMA( );
     createRenderPass( );
+    createRenderSurface();
 }
 
 void RenderDevice::setupQueueFamilies( ) {
@@ -352,15 +353,17 @@ void RenderDevice::beforeDelete( ) {
     context->logicalDevice.waitIdle( );
 }
 
-std::unique_ptr< RenderSurface >
-RenderDevice::createRenderSurface( const std::shared_ptr< Scene::Camera > &camera ) {
+void RenderDevice::createRenderSurface(  ) {
     context->logicalDevice.waitIdle( );
 
-    auto *renderSurface = new RenderSurface { context, camera };
-    return std::unique_ptr< RenderSurface >( renderSurface );
+    auto *renderSurfacePtr = new RenderSurface { context };
+    this->renderSurface = std::unique_ptr< RenderSurface >( renderSurfacePtr );
 }
 
 RenderDevice::~RenderDevice( ) {
+    renderSurface->getSurfaceRenderer().reset();
+    renderSurface.reset();
+
     destroyDebugUtils( );
 
     context->instance.destroySurfaceKHR( context->surface );
@@ -381,6 +384,10 @@ void RenderDevice::destroyDebugUtils( ) const {
     if ( deleteDebugUtils ) {
         deleteDebugUtils( static_cast< VkInstance >( instance ), debugMessenger, nullptr );
     }
+}
+
+const std::shared_ptr< Renderer > &RenderDevice::getRenderer( ) {
+    return renderSurface->getSurfaceRenderer();
 }
 
 std::shared_ptr< InstanceContext > RenderDevice::getContext( ) const {

@@ -86,3 +86,6 @@ public:
 #define VkCheckResult( R ) ASSERT( R == vk::Result::eSuccess )
 #define IS_NULL( val ) ( val == nullptr )
 #define FUNCTION_BREAK( condition ) if ( condition ) return;
+
+#include "Constants.h"
+

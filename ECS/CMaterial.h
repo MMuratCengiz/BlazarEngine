@@ -43,6 +43,9 @@ namespace Material {
 
 struct CMaterial : public IComponent {
 	std::vector< Material::TextureInfo > textures;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+    float shininess;
 };
 
 END_NAMESPACES

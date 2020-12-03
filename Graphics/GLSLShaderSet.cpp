@@ -28,8 +28,14 @@ void GLSLShaderSet::onEachShader( const ShaderInfo& shaderInfo ) {
 	uint32_t offsetIter = 0;
 
 	// TODO is this fine? if so maybe throw an error if no vertex shader i
-	if ( shaderInfo.type == vk::ShaderStageFlagBits::eVertex ) {
-		for ( const spirv_cross::Resource& resource : stageInputs ) {
+    if ( shaderInfo.type == vk::ShaderStageFlagBits::eVertex ) {
+        std::sort( stageInputs.begin(), stageInputs.end(), [&]( const spirv_cross::Resource& r1, const spirv_cross::Resource& r2 ) {
+            SpvDecoration decoration1 = getDecoration( compiler, r1 );
+            SpvDecoration decoration2 = getDecoration( compiler, r2 );
+            return decoration1.location < decoration2.location;
+        } );
+
+        for ( const spirv_cross::Resource& resource : stageInputs ) {
 			SpvDecoration decoration = getDecoration( compiler, resource );
 			GLSLShaderSet::GLSLType gType = spvToGLSLType( decoration.type );
 			createVertexInput( offsetIter, gType, decoration.location );

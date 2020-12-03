@@ -10,8 +10,7 @@ NAMESPACES( SomeVulkan, Graphics )
 
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
-RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< Scene::Camera > camera )
-        : context( context ), camera( std::move( camera ) ) {
+RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context ) : context( context ){
     pipelineSelector = std::make_shared< PipelineSelector >( );
     msaaSampleCount = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
 
@@ -55,7 +54,7 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context,
     } );
 
     if ( renderer == nullptr ) {
-        renderer = std::make_shared< Renderer >( context, this->camera, pipelineSelector );
+        renderer = std::make_shared< Renderer >( context, pipelineSelector );
     }
 }
 
@@ -74,6 +73,7 @@ void RenderSurface::createPipelines( ) {
     ///////////////////////////////////////////////////////////////////
     PipelineInstance &instance = pipelineInstances.emplace_back( );
     instance.name = ENGINE_CORE_PIPELINE_BACK_CULL;
+    instance.properties.supportsLighting = true;
 
     PipelineOptions backCullOptions { };
     backCullOptions.cullMode = CullMode::BackFace;
@@ -91,6 +91,7 @@ void RenderSurface::createPipelines( ) {
     ///////////////////////////////////////////////////////////////////
     PipelineInstance &instance2 = pipelineInstances.emplace_back( );
     instance2.name = ENGINE_CORE_PIPELINE_NONE_CULL;
+    instance2.properties.supportsLighting = true;
 
     PipelineOptions noCullOptions = { };
     noCullOptions.cullMode = CullMode::None;
@@ -113,6 +114,7 @@ void RenderSurface::createPipelines( ) {
 
     PipelineInstance &instance3 = pipelineInstances.emplace_back( );
     instance3.name = PIPELINE_SKY_BOX;
+    instance3.properties.supportsLighting = false;
 
     PipelineOptions skyBoxPipelineOptions = { };
     skyBoxPipelineOptions.cullMode = CullMode::FrontFace;
@@ -546,6 +548,9 @@ RenderSurface::~RenderSurface( ) {
     for ( auto &module: shaderModules ) {
         context->logicalDevice.destroyShaderModule( module );
     }
+
+    renderer.reset();
+    renderer = nullptr;
 
     dispose( );
 

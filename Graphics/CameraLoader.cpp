@@ -6,8 +6,7 @@
 
 NAMESPACES( SomeVulkan, Graphics )
 
-CameraLoader::CameraLoader( std::shared_ptr< InstanceContext > context, std::shared_ptr< Scene::Camera > camera )
-        : context( std::move( context ) ), camera( std::move( camera ) ) {
+CameraLoader::CameraLoader( std::shared_ptr< InstanceContext > context ) : context( std::move( context ) ) {
     glm::mat4x4 modelMatrix { 1 };
 
     vk::BufferCreateInfo bufferCreateInfo;
@@ -23,6 +22,11 @@ CameraLoader::CameraLoader( std::shared_ptr< InstanceContext > context, std::sha
     cameraBuffer = this->context->vma.createBuffer( bufferCreateInfo, allocationInfo );
 
     mappedMemory = this->context->vma.mapMemory( cameraBuffer.second );
+}
+
+void CameraLoader::reload( std::shared_ptr< Scene::Camera > pCamera  ) {
+    this->camera = std::move( pCamera );
+    reload( );
 }
 
 void CameraLoader::reload(  ) {
