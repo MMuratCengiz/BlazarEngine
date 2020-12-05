@@ -64,6 +64,8 @@ void Renderer::drawRenderObjects( ) {
                 ->generateBuffers( { }, context->frameBuffers.size( ) ); // TODO this could be problematic
     }
 
+    currentFrameContext.lightLoader->load();
+
     currentFrameContext.worldContextLoader->getWorldContext().worldPosition = glm::vec4( camera->getPosition(), 1.0f );
     currentFrameContext.worldContextLoader->update();
 

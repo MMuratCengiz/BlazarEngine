@@ -6,9 +6,9 @@
 NAMESPACES( SomeVulkan, ECS )
 
 struct CAmbientLight : public IComponent {
-    alignas( 16 ) glm::vec4 diffuse;
-    alignas( 16 ) glm::vec4 specular;
-    alignas( 4 ) float power;
+    float power;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
 };
 
 

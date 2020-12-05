@@ -3,9 +3,9 @@
 #define ALLOWED_LIGHTS 16
 
 struct AmbientLight {
+    float power;
     vec4 diffuse;
     vec4 specular;
-    float power;
 };
 
 struct DirectionalLight {
@@ -24,7 +24,6 @@ struct PointLight {
     vec4 diffuse;
     vec4 specular;
 };
-
 
 struct SpotLight {
     float power;
@@ -74,22 +73,22 @@ vec4 calculateSpotLight(SpotLight light);
 void main() {
     texturedSpecular = vec4( 0.0f );
     texturedDiffuse = texture(Texture1, transitTexture1Coor);
-//    outputColor = texturedDiffuse;
-    outputColor = vec4( environment.ambientLights[ 0 ].power );
+    outputColor = vec4( 0 );
+
     for ( int i = 0; i < environment.ambientLightCount; ++i ) {
-//        outputColor += environment.ambientLights[ i ].diffuse * vec4( environment.ambientLights[ i ].power );
+        outputColor += normalize( texturedDiffuse + environment.ambientLights[ i ].diffuse ) *  environment.ambientLights[ i ].power;
     }
 
     for ( int i = 0; i < environment.directionalLightCount; ++i ) {
-//        outputColor += calculateDirectional( environment.directionalLights[ i ] );
+        outputColor += calculateDirectional( environment.directionalLights[ i ] );
     }
 
     for ( int i = 0; i < environment.pointLightCount; ++i ) {
-//        outputColor += calculatePointLight( environment.pointLights[ i ] );
+        outputColor += calculatePointLight( environment.pointLights[ i ] );
     }
 
     for ( int i = 0; i < environment.spotLightCount; ++i ) {
-//        outputColor += calculateSpotLight( environment.spotLights[ i ] );
+        outputColor += calculateSpotLight( environment.spotLights[ i ] );
     }
 }
 
@@ -128,7 +127,12 @@ vec4 calculateSpotLight(SpotLight light) {
     float theta = dot(normalize(light.position.xyz - worldPos), normalize(-light.direction.xyz));
 
     if (theta > light.radius) {
-        return calculatePointLight(pointLightFromPower(light.power));
+        PointLight pointLight = pointLightFromPower(light.power);
+        pointLight.diffuse = light.diffuse;
+        pointLight.specular = light.specular;
+        pointLight.position = light.position;
+
+        return calculatePointLight(pointLight);
     }
 
     return vec4(0);

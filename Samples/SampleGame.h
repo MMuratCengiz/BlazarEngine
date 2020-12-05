@@ -24,7 +24,10 @@ namespace Sample {
 class SampleGame : public Scene::IPlayable {
     Scene::World * world;
 
-    ECS::CAmbientLight ambientLight{ };
+    std::shared_ptr< ECS::CAmbientLight > ambientLight{ };
+    std::shared_ptr< ECS::CDirectionalLight > directionalLight{ };
+    std::shared_ptr< ECS::CPointLight > pointLight{ };
+    std::shared_ptr< ECS::CSpotLight > spotLight{ };
 
     std::shared_ptr< Scene::Scene > initialScene;
     std::shared_ptr< Scene::FpsCamera > camera;

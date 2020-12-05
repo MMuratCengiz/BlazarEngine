@@ -22,9 +22,10 @@ layout (location = 1) out vec3 transitNormal;
 layout (location = 2) out vec3 transitWorldPos;
 
 void main() {
-    gl_Position = vp.proj * vp.view * m.element * vec4(inPosition, 1.0f);
+    vec4 worldPos4 = m.element * vec4( inPosition, 1.0f );
+    gl_Position = vp.proj * vp.view * worldPos4;
+    transitWorldPos = worldPos4.xyz;
 
     transitTexture1Coor = texture1Coor;
-    transitNormal = normalize(inNormal);
-    transitWorldPos = wContext.worldPosition.xyz;
+    transitNormal = normalize(vec3( inNormal.x, inNormal.y, inNormal.z ) );
 }

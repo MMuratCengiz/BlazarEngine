@@ -76,8 +76,8 @@ public:
 
             eventHandler->pollEvents( );
 
-            currentScene->getCamera()->processKeyboardEvents( glfwWindow );
-            currentScene->getCamera()->processMouseEvents( glfwWindow );
+            auto tickParams = Input::GlobalEventHandler::createTickParameters( glfwWindow );
+            Input::GlobalEventHandler::Instance().triggerEvent( Input::EventType::Tick, tickParams );
         }
 
         vk->beforeDelete();

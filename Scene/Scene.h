@@ -18,10 +18,10 @@ private:
     std::vector< std::shared_ptr< ECS::IGameEntity > > entities;
     std::shared_ptr< Camera > activeCamera;
 
-    std::vector< ECS::CAmbientLight > ambientLights;
-    std::vector< ECS::CDirectionalLight > directionalLights;
-    std::vector< ECS::CPointLight > pointLights;
-    std::vector< ECS::CSpotLight > spotLights;
+    std::vector< std::shared_ptr< ECS::CAmbientLight > > ambientLights;
+    std::vector< std::shared_ptr< ECS::CDirectionalLight > > directionalLights;
+    std::vector< std::shared_ptr< ECS::CPointLight > > pointLights;
+    std::vector< std::shared_ptr< ECS::CSpotLight > > spotLights;
 public:
     explicit Scene( std::shared_ptr< Camera > initialCamera ) : activeCamera( std::move( initialCamera ) ) { }
 
@@ -34,35 +34,35 @@ public:
         entities.emplace_back( std::move( entity ) );
     }
 
-    inline void addAmbientLight( ECS::CAmbientLight ambientLight ) {
+    inline void addAmbientLight( const std::shared_ptr< ECS::CAmbientLight >& ambientLight ) {
         ambientLights.push_back( ambientLight );
     }
 
-    const std::vector< ECS::CAmbientLight >& getAmbientLights( ) const {
+    [[nodiscard]] const std::vector< std::shared_ptr< ECS::CAmbientLight > >& getAmbientLights( ) const {
         return ambientLights;
     }
 
-    inline void addDirectionalLight( ECS::CDirectionalLight directionalLight ) {
+    inline void addDirectionalLight( const std::shared_ptr< ECS::CDirectionalLight >& directionalLight ) {
         directionalLights.push_back( directionalLight );
     }
 
-    const std::vector< ECS::CDirectionalLight >& getDirectionalLights( ) const  {
+    [[nodiscard]] const std::vector< std::shared_ptr< ECS::CDirectionalLight > >& getDirectionalLights( ) const  {
         return directionalLights;
     }
 
-    inline void addPointLight( ECS::CPointLight pointLight ) {
+    inline void addPointLight( const std::shared_ptr< ECS::CPointLight >& pointLight ) {
         pointLights.push_back( pointLight );
     }
 
-    const std::vector< ECS::CPointLight >& getPointLights( ) const {
+    [[nodiscard]] const std::vector< std::shared_ptr< ECS::CPointLight > >& getPointLights( ) const {
         return pointLights;
     }
 
-    inline void addSpotLight( ECS::CSpotLight spotLight ) {
+    inline void addSpotLight( const std::shared_ptr< ECS::CSpotLight >& spotLight ) {
         spotLights.push_back( spotLight );
     }
 
-    const std::vector< ECS::CSpotLight >& getSpotLights( ) const {
+    [[nodiscard]] const std::vector< std::shared_ptr< ECS::CSpotLight > >& getSpotLights( ) const {
         return spotLights;
     }
 

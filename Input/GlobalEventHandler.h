@@ -14,9 +14,14 @@ struct WindowResizedParameters : IEventParameters {
     uint32_t height;
 };
 
+struct TickParameters : IEventParameters {
+    GLFWwindow * window;
+};
+
 enum class EventType {
     WindowResized,
     SwapChainInvalidated,
+    Tick
 };
 
 namespace FunctionDefinitions {
@@ -38,10 +43,15 @@ public:
         return inst;
     }
 
+    static std::shared_ptr< TickParameters > createTickParameters( GLFWwindow *pWwindow );
+
     inline static std::shared_ptr< WindowResizedParameters > ToWindowResizedParameters( const std::shared_ptr< IEventParameters >& parameters ) {
         return std::dynamic_pointer_cast< WindowResizedParameters >( parameters );
     }
 
+    inline static std::shared_ptr< TickParameters > ToTickParameters( const std::shared_ptr< IEventParameters >& parameters ) {
+        return std::dynamic_pointer_cast< TickParameters >( parameters );
+    }
     GlobalEventHandler( GlobalEventHandler const & ) = delete;
     void operator=( GlobalEventHandler const & ) = delete;
 private:

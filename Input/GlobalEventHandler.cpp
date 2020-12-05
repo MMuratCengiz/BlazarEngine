@@ -41,4 +41,10 @@ void GlobalEventHandler::initWindowEvents( GLFWwindow *window ) {
 
 }
 
+std::shared_ptr< TickParameters > GlobalEventHandler::createTickParameters( GLFWwindow *window ) {
+    auto params = std::make_shared< TickParameters >( );
+    params->window = window;
+    return params;
+}
+
 END_NAMESPACES
