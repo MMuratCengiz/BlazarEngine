@@ -1,9 +1,4 @@
-.idea/.gitignore
-.idea/misc.xml
-.idea/modules.xml
-.idea/SomeVulkan.iml
-.idea/codeStyles/codeStyleConfig.xml
-.idea/inspectionProfiles/Project_Default.xml
+.idea/
 cmake-build-debug/
 out/
 .vs/
