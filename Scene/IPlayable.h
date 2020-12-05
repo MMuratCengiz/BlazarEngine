@@ -2,7 +2,7 @@
 
 #include "../Core/Common.h"
 
-NAMESPACES( SomeVulkan, Scene )
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
 class IPlayable {
 public:

@@ -3,7 +3,7 @@
 #include "../Core/Common.h"
 #include "IComponent.h"
 
-NAMESPACES( SomeVulkan, ECS )
+NAMESPACES( ENGINE_NAMESPACE, ECS )
 
 struct CDirectionalLight : public IComponent {
     float power;

@@ -17,7 +17,7 @@
 #include "../ECS/CPointLight.h"
 #include "../ECS/CSpotLight.h"
 
-using namespace SomeVulkan;
+using namespace BlazarEngine;
 
 namespace Sample {
 

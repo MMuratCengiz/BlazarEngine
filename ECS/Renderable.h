@@ -5,7 +5,7 @@
 #include "ECSUtilities.h"
 #include "../graphics/DrawDescription.h"
 
-NAMESPACES( SomeVulkan, ECS )
+NAMESPACES( ENGINE_NAMESPACE, ECS )
 
 struct Renderable : public IComponent {
 private:

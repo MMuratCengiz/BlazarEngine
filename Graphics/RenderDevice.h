@@ -7,7 +7,7 @@
 #include "InstanceContext.h"
 #include "../Scene/FpsCamera.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class RenderSurface;
 struct Shader;

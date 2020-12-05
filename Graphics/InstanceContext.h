@@ -2,7 +2,7 @@
 
 #include "../Core/Common.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 struct DeviceInfo {
     vk::PhysicalDevice device;

@@ -11,7 +11,7 @@
 #include "../ECS/ISystem.h"
 #include "Camera.h"
 
-NAMESPACES( SomeVulkan, Scene )
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
 class Scene {
 private:

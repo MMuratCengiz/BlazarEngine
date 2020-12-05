@@ -4,7 +4,7 @@
 #include "../ECS/IGameEntity.h"
 #include "DescriptorManager.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 struct PipelineProperties {
     bool supportsLighting = false;

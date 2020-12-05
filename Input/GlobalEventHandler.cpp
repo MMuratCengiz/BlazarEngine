@@ -4,7 +4,7 @@
 
 #include "GlobalEventHandler.h"
 
-NAMESPACES( SomeVulkan, Input )
+NAMESPACES( ENGINE_NAMESPACE, Input )
 
 void GlobalEventHandler::subscribeToEvent( const EventType& event, const FunctionDefinitions::EventCallback& cb ) {
     ensureMapContainsEvent( event );

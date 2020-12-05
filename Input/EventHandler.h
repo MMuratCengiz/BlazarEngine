@@ -2,7 +2,7 @@
 
 #include "../Core/Common.h"
 
-NAMESPACES( SomeVulkan, Input )
+NAMESPACES( ENGINE_NAMESPACE, Input )
 
 enum class KeyPressForm {
     Pressed,

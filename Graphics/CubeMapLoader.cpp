@@ -4,7 +4,7 @@
 
 #include "CubeMapLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 void CubeMapLoader::cache( ECS::CCubeMap &material ) {
     if ( loadedCubeMaps.find( getKey( material ) ) == loadedCubeMaps.end( ) ) {

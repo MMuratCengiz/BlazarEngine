@@ -11,7 +11,7 @@
 #include "CommandExecutor.h"
 #include "RenderUtilities.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 #define MAX_ALLOWED_LIGHTS 16
 

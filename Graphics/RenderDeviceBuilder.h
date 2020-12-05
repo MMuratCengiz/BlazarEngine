@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 struct DeviceInfo;
 class RenderDevice;

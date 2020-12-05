@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "InstanceContext.h"
 #include "GraphicsException.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class InstanceContext;
 

@@ -1,7 +1,7 @@
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "RenderUtilities.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 void RenderUtilities::copyToDeviceMemory( const vk::Device &device, const vk::DeviceMemory &deviceMemory, const void *data, uint64_t size, uint64_t targetOffset ) {
     void *boundMem = device.mapMemory( deviceMemory, targetOffset, size );
@@ -94,7 +94,7 @@ uint32_t RenderUtilities::getMatchingMemoryType( const std::shared_ptr< Instance
     }
 
     if ( !memTypeFound ) {
-        throw SomeVulkan::Graphics::GraphicsException( SomeVulkan::Graphics::GraphicsException::Source::Renderer,
+        throw ENGINE_NAMESPACE::Graphics::GraphicsException( SomeVulkan::Graphics::GraphicsException::Source::Renderer,
                                                        "Couldn't find matching memory type!" );
     }
 

@@ -2,7 +2,7 @@
 
 #include "../Core/Common.h"
 
-NAMESPACES( SomeVulkan, ECS )
+NAMESPACES( ENGINE_NAMESPACE, ECS )
 
 struct IComponent {
 private:

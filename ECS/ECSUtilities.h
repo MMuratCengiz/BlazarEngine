@@ -3,7 +3,7 @@
 #include "../core/Common.h"
 #include <bitset> 
 
-NAMESPACES( SomeVulkan, ECS )
+NAMESPACES( ENGINE_NAMESPACE, ECS )
 
 class ECSUtilities {
 private:

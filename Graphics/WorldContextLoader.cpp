@@ -4,7 +4,7 @@
 
 #include "WorldContextLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 WorldContextLoader::WorldContextLoader( std::shared_ptr< InstanceContext > context ) : context( std::move( context ) ) {
     vk::BufferCreateInfo bufferCreateInfo;

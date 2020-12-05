@@ -1,7 +1,7 @@
 #include "MeshLoader.h"
 #include "../Core/DynamicMemory.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 MeshLoader::MeshLoader( std::shared_ptr< InstanceContext > context, pCommandExecutor &commandExecutor ) : context( std::move( context ) ), commandExecutor( commandExecutor ) {
     const std::string &lightedCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube );

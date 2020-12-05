@@ -4,7 +4,7 @@
 
 #include "RenderDeviceBuilder.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 RenderDevice *RenderDeviceBuilder::createRenderDevice( GLFWwindow *window ) {
     return new RenderDevice { window };

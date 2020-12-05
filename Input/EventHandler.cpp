@@ -4,7 +4,7 @@
 
 #include "EventHandler.h"
 
-NAMESPACES( SomeVulkan, Input )
+NAMESPACES( ENGINE_NAMESPACE, Input )
 
 void EventHandler::registerKeyboardPress( const KeyboardKeyCode& code, const KeyboardPressEventCallback& callback ) {
     if ( keyboardPressCallbacks.find( code ) == keyboardPressCallbacks.end() ) {

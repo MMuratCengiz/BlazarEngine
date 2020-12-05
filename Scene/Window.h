@@ -10,7 +10,7 @@
 #include "../Scene/FpsCamera.h"
 #include <chrono>
 
-NAMESPACES( SomeVulkan, Scene )
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
 class Window {
 private:

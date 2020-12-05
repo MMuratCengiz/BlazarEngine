@@ -2,7 +2,7 @@
 
 #include "../core/Common.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 typedef struct CopyBufferToImageArgs {
     uint32_t width;

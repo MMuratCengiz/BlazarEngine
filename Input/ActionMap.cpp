@@ -4,7 +4,7 @@
 
 #include "ActionMap.h"
 
-NAMESPACES( SomeVulkan, Input )
+NAMESPACES( ENGINE_NAMESPACE, Input )
 
 ActionMap::ActionMap( std::shared_ptr< EventHandler > eventHandler ) : eventHandler( std::move( eventHandler ) ) { }
 

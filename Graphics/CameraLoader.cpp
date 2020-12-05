@@ -4,7 +4,7 @@
 
 #include "CameraLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 CameraLoader::CameraLoader( std::shared_ptr< InstanceContext > context ) : context( std::move( context ) ) {
     glm::mat4x4 modelMatrix { 1 };

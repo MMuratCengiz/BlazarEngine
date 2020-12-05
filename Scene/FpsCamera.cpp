@@ -1,6 +1,6 @@
 #include "FpsCamera.h"
 
-NAMESPACES( SomeVulkan, Scene )
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
 FpsCamera::FpsCamera( glm::vec3 position, glm::vec3 front ) {
     this->position = position;

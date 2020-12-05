@@ -3,7 +3,7 @@
 #include "../Core/Common.h"
 #include "EventHandler.h"
 
-NAMESPACES( SomeVulkan, Input )
+NAMESPACES( ENGINE_NAMESPACE, Input )
 
 typedef std::function< void( std::string ) > ActionCallback;
 

@@ -15,7 +15,7 @@
 #include <functional>
 #include <iostream>
 
-NAMESPACES( SomeVulkan, Scene )
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
 class World {
 private:

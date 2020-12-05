@@ -8,7 +8,7 @@
 #include "CommandExecutor.h"
 #include "RenderUtilities.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 struct ShaderInputMaterial {
     glm::vec4 diffuseColor;

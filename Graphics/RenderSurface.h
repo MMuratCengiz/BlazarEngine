@@ -8,7 +8,7 @@
 #include "../Input/GlobalEventHandler.h"
 #include "../ECS/CCubeMap.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 #define ENGINE_CORE_PIPELINE_BACK_CULL "EngineCorePipelineBackCull"
 #define ENGINE_CORE_PIPELINE_NONE_CULL "EngineCorePipelineNoneCull"

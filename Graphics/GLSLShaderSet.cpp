@@ -6,7 +6,7 @@
 
 #include <spirv_cross/spirv_cross.hpp>
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 GLSLShaderSet::GLSLShaderSet( const std::vector< ShaderInfo >& shaderInfos, const bool& interleavedMode ) : interleavedMode( interleavedMode ) {
 	for ( const ShaderInfo& shaderInfo : shaderInfos ) {

@@ -2,7 +2,7 @@
 
 #include "../Core/Common.h"
 
-NAMESPACES( SomeVulkan, Core )
+NAMESPACES( ENGINE_NAMESPACE, Core )
 
 enum class ConstantName {
     ShaderInputViewProjection,

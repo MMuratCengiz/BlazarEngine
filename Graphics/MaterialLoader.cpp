@@ -4,7 +4,7 @@
 
 #include "MaterialLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 void MaterialLoader::cache( const ECS::CMaterial &material ) {
     if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) ) {
@@ -18,7 +18,7 @@ void MaterialLoader::cache( const ECS::CMaterial &material ) {
     }
 }
 
-void SomeVulkan::Graphics::MaterialLoader::load( MaterialBuffer &input, const ECS::CMaterial &material ) {
+void MaterialLoader::load( MaterialBuffer &input, const ECS::CMaterial &material ) {
     if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) ) {
         loadMaterial( material );
     }
@@ -69,7 +69,7 @@ void MaterialLoader::loadMaterial( const ECS::CMaterial &material ) {
     context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-void SomeVulkan::Graphics::MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
+void MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
     loadedTextures[ texture.path ] = TextureBuffer { };
 
     TextureBuffer &part = loadedTextures[ texture.path ];
@@ -246,7 +246,7 @@ void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::
     cmdBuffer->execute( );
 }
 
-vk::SamplerCreateInfo SomeVulkan::Graphics::MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const SomeVulkan::ECS::Material::TextureInfo &info ) {
+vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const SomeVulkan::ECS::Material::TextureInfo &info ) {
     vk::SamplerCreateInfo samplerCreateInfo { };
 
     samplerCreateInfo.magFilter = toVkFilter( info.magFilter );
@@ -268,7 +268,7 @@ vk::SamplerCreateInfo SomeVulkan::Graphics::MaterialLoader::texToSamplerCreateIn
     return samplerCreateInfo;
 }
 
-vk::Filter SomeVulkan::Graphics::MaterialLoader::toVkFilter( const SomeVulkan::ECS::Material::Filter &filter ) {
+vk::Filter MaterialLoader::toVkFilter( const SomeVulkan::ECS::Material::Filter &filter ) {
     switch ( filter ) {
         case ECS::Material::Filter::Nearest:
             return vk::Filter::eNearest;
@@ -283,7 +283,7 @@ vk::Filter SomeVulkan::Graphics::MaterialLoader::toVkFilter( const SomeVulkan::E
     return vk::Filter::eLinear;
 }
 
-vk::SamplerAddressMode SomeVulkan::Graphics::MaterialLoader::toVkAddressMode( const SomeVulkan::ECS::Material::AddressMode &addressMode ) {
+vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const SomeVulkan::ECS::Material::AddressMode &addressMode ) {
     switch ( addressMode ) {
         case ECS::Material::AddressMode::Repeat:
             return vk::SamplerAddressMode::eRepeat;
@@ -301,7 +301,7 @@ vk::SamplerAddressMode SomeVulkan::Graphics::MaterialLoader::toVkAddressMode( co
     return vk::SamplerAddressMode::eClampToBorder;
 }
 
-vk::SamplerMipmapMode SomeVulkan::Graphics::MaterialLoader::toVkMipmapMode( const SomeVulkan::ECS::Material::MipmapMode &mipmapMode ) {
+vk::SamplerMipmapMode MaterialLoader::toVkMipmapMode( const SomeVulkan::ECS::Material::MipmapMode &mipmapMode ) {
     switch( mipmapMode ) {
         case ECS::Material::MipmapMode::eNearest:
             return vk::SamplerMipmapMode::eNearest;

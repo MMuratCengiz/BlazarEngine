@@ -4,7 +4,7 @@
 
 #include "CommandExecutor.h"
 
-using namespace SomeVulkan::Graphics;
+using namespace ENGINE_NAMESPACE::Graphics;
 
 CommandExecutor::CommandExecutor( const std::shared_ptr< InstanceContext > &context ) : context( context ) {
     vk::CommandPoolCreateInfo commandPoolCreateInfo { };

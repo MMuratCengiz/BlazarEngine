@@ -7,7 +7,7 @@
 #include <utility>
 
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 const uint32_t DescriptorManager::texturePreallocateCount = 12;
 

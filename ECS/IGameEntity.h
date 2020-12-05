@@ -2,10 +2,10 @@
 
 #include <typeindex>
 #include <typeinfo>
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "IComponent.h"
 
-NAMESPACES(SomeVulkan, ECS)
+NAMESPACES(ENGINE_NAMESPACE, ECS)
 
 class IGameEntity {
 private:

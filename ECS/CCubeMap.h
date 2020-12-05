@@ -3,7 +3,7 @@
 #include "../Core/Common.h"
 #include "IComponent.h"
 
-NAMESPACES( SomeVulkan, ECS )
+NAMESPACES( ENGINE_NAMESPACE, ECS )
 
 /*
  * Single vector value means the texture contains all six images, otherwise there must! be exactly 6 images for each face of the cube.

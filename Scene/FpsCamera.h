@@ -3,7 +3,7 @@
 #include "Camera.h"
 #include "../Core/Time.h"
 
-NAMESPACES( SomeVulkan, Scene )
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
 class FpsCamera : public Camera {
 private:

@@ -3,7 +3,7 @@
 //
 #include "Time.h"
 
-NAMESPACES( SomeVulkan, Core )
+NAMESPACES( ENGINE_NAMESPACE, Core )
 
 long long int Time::prev = 0;
 float Time::deltaTime = 0.0f;

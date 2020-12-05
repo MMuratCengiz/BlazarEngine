@@ -46,7 +46,7 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
     context->window = window;
 
     vk::ApplicationInfo appInfo {
-            "SomeVulkan",
+            ENGINE_NAMESPACE,
             VK_MAKE_VERSION( 1, 0, 0 ),
             "No Engine",
             VK_MAKE_VERSION( 1, 0, 0 ),

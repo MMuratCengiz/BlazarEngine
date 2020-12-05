@@ -3,7 +3,7 @@
 #include "../Core/Common.h"
 #include "../ECS/IGameEntity.h"
 
-NAMESPACES( SomeVulkan, ECS )
+NAMESPACES( ENGINE_NAMESPACE, ECS )
 
 class ISystem {
 protected:

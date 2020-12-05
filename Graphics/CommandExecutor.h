@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "InstanceContext.h"
 #include "CommanExecutorArguments.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class BeginCommandExecution;
 class CommandList;

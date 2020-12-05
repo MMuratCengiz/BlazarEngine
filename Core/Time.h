@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include <chrono>
 
-NAMESPACES( SomeVulkan, Core )
+NAMESPACES( ENGINE_NAMESPACE, Core )
 
 class Time {
 private:

@@ -4,7 +4,7 @@
 
 #include "LightLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 void LightLoader::addAmbientLight( const std::shared_ptr< ECS::CAmbientLight >& ambientLight ) {
     ambientLights.push_back( ambientLight );

@@ -5,7 +5,7 @@
 
 #include "Common.h"
 
-NAMESPACES( SomeVulkan, Core )
+NAMESPACES( ENGINE_NAMESPACE, Core )
 
 class DynamicMemory {
 private:

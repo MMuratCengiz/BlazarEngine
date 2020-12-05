@@ -7,7 +7,7 @@
 #include "../ECS/CCubeMap.h"
 #include "../Graphics/BuiltinPrimitives.h"
 
-using namespace SomeVulkan;
+using namespace BlazarEngine;
 
 namespace Sample {
 

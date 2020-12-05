@@ -13,7 +13,7 @@
 
 #include <stb_image.h>
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 Renderer:: Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< PipelineSelector > pipelineSelector ) : context( context ), pipelineSelector( std::move( pipelineSelector ) ) {
     poolSize = context->swapChainImages.size( );
