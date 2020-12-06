@@ -6,7 +6,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 TransformLoader::TransformLoader( std::shared_ptr< InstanceContext > context ) : context( std::move( context ) ) {
     glm::mat4x4 modelMatrix { 1 };

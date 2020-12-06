@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class GraphicsException : public std::exception {
 public:

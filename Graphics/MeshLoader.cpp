@@ -33,7 +33,7 @@ void MeshLoader::load( ObjectBufferList& objectBuffer, const ECS::CMesh& mesh ) 
     objectBuffer = loadedModels[ mesh.path ];
 }
 
-void MeshLoader::loadModel( const SomeVulkan::ECS::CMesh& mesh ) {
+void MeshLoader::loadModel( const ECS::CMesh& mesh ) {
     const aiScene* scene = importer.ReadFile( mesh.path, aiProcess_Triangulate | aiProcess_FlipUVs );
 
     if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode ) {

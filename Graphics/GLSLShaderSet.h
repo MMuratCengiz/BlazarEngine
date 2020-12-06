@@ -10,7 +10,7 @@
 TODO List:
 - Support matrix as vertex input.
 */
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 typedef struct MVP {
 	glm::mat4x4 model;

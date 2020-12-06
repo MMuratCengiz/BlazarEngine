@@ -12,10 +12,10 @@ public:
     SampleOldHouse( ) {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
         mesh->path = PATH( "/assets/models/old_house.obj" );
-        mesh->cullMode = SomeVulkan::ECS::CullMode::None;
+        mesh->cullMode = BlazarEngine::ECS::CullMode::None;
 
         auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );
+        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = "/assets/textures/old_house_body.jpg";
 
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );

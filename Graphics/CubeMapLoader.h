@@ -9,7 +9,7 @@
 #include "RenderUtilities.h"
 #include "MaterialLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class CubeMapLoader{
 private:

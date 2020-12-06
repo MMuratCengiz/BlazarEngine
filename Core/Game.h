@@ -10,11 +10,11 @@
 #include "../Scene/FpsCamera.h"
 #include <chrono>
 
-using namespace SomeVulkan::Core;
-using namespace SomeVulkan::Input;
-using namespace SomeVulkan::Graphics;
-using namespace SomeVulkan::Scene;
-using namespace SomeVulkan::ECS;
+using namespace BlazarEngine::Core;
+using namespace BlazarEngine::Input;
+using namespace BlazarEngine::Graphics;
+using namespace BlazarEngine::Scene;
+using namespace BlazarEngine::ECS;
 
 
 template< class Playable >

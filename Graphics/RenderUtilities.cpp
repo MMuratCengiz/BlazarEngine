@@ -94,8 +94,7 @@ uint32_t RenderUtilities::getMatchingMemoryType( const std::shared_ptr< Instance
     }
 
     if ( !memTypeFound ) {
-        throw ENGINE_NAMESPACE::Graphics::GraphicsException( SomeVulkan::Graphics::GraphicsException::Source::Renderer,
-                                                       "Couldn't find matching memory type!" );
+        throw GraphicsException( GraphicsException::Source::Renderer, "Couldn't find matching memory type!" );
     }
 
     return index;

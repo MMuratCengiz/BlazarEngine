@@ -16,7 +16,7 @@
 #include "LightLoader.h"
 #include "WorldContextLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 using namespace ECS;
 

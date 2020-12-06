@@ -21,46 +21,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
-
-set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(Libs external/loaders/stb_image.h external/vma/vk_mem_alloc.h)
-
-set(Core Core/Common.h Core/Time.h Scene/World.h Core/Constants.h)
-set(Graphics Graphics/RenderDevice.cpp Graphics/RenderDevice.h Graphics/RenderSurface.cpp Graphics/RenderSurface.h Graphics/Renderer.cpp Graphics/Renderer.h Graphics/RenderDeviceBuilder.h Graphics/RenderDeviceBuilder.cpp Graphics/DrawDescription.h Graphics/RenderUtilities.h Graphics/InstanceContext.h Graphics/GraphicsException.h Core/Time.cpp Graphics/CommonTextures.h Graphics/DescriptorManager.cpp Graphics/DescriptorManager.h Graphics/CommanExecutorArguments.h Graphics/ClientSideLock.h Graphics/VmaImplementation.cpp Graphics/GLSLShaderSet.cpp Graphics/GLSLShaderSet.h "Graphics/MeshLoader.h" "Graphics/MeshLoader.cpp" Graphics/MaterialLoader.cpp Graphics/MaterialLoader.h Graphics/RenderUtilities.cpp Graphics/TransformLoader.cpp Graphics/TransformLoader.h Graphics/CameraLoader.cpp Graphics/CameraLoader.h Graphics/BuiltinPrimitives.h Graphics/PipelineSelector.h Graphics/CubeMapLoader.cpp Graphics/CubeMapLoader.h Samples/Spaceship.h Graphics/LightLoader.cpp Graphics/LightLoader.h Graphics/WorldContextLoader.cpp Graphics/WorldContextLoader.h)
-set(Input Input/GlobalEventHandler.cpp Input/GlobalEventHandler.h Core/DynamicMemory.h Input/ActionMap.cpp Input/ActionMap.h Input/EventHandler.cpp Input/EventHandler.h)
-set(ECS ECS/IGameEntity.h ECS/IGameEntity.h ECS/Renderable.h ECS/IComponent.h ECS.h ECS/CMesh "ECS/ECSUtilities.h" "ECS/CMaterial.h" "ECS/ISystem.h" ECS/CTransform.h ECS/CCubeMap.h ECS/CPointLight.h ECS/CAmbientLight.h ECS/CDirectionalLight.h ECS/CSpotLight.h)
-set(Scene Scene/Camera.h Scene/FpsCamera.h Scene/FpsCamera.cpp Scene/Scene.h Scene/FPSCounter.h Scene/IPlayable.h Scene/Window.h)
-set(Samples Samples/SampleGame.h Samples/SampleGame.cpp Samples/SampleHouse.h Samples/SampleFloor.h Samples/SampleTrafficCone.h Samples/SampleCar1.h Samples/SampleCar2.h Samples/SampleOldHouse.h Samples/SampleCubeMap.h Samples/Spaceship.h Samples/BasicExample.h Samples/BasicExample.cpp)
-
-set(SampleGame Samples/SampleHouse.h)
-
-set(Shaders Shaders/GLSL/Fragment/default.glsl Shaders/GLSL/Vertex/default.glsl Graphics/CommandExecutor.cpp Graphics/CommandExecutor.h)
-set(SPVDir "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross")
-set(SPV ${SPVDir}/spirv.hpp ${SPVDir}/spirv_cfg.hpp ${SPVDir}/spirv_cfg.cpp ${SPVDir}/spirv_cpp.hpp ${SPVDir}/spirv_cpp.cpp ${SPVDir}/spirv_parser.hpp ${SPVDir}/spirv_parser.cpp ${SPVDir}/spirv_reflect.hpp ${SPVDir}/spirv_reflect.cpp ${SPVDir}/spirv_cross.hpp ${SPVDir}/spirv_cross.cpp ${SPVDir}/spirv_cross_util.hpp ${SPVDir}/spirv_cross_util.cpp ${SPVDir}/spirv_glsl.hpp ${SPVDir}/spirv_glsl.cpp ${SPVDir}/spirv_cross_parsed_ir.hpp ${SPVDir}/spirv_cross_parsed_ir.cpp)
 
 include_directories("${CMAKE_SOURCE_DIR}/external/glm")
 include_directories("${CMAKE_SOURCE_DIR}/external/stb")
 include_directories("${CMAKE_SOURCE_DIR}/external/vma")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/external/glfw")
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/assimp")
 
-set(INSTALL_LIBS on)
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/bullet3")
-
-include_directories(
-        "${CMAKE_SOURCE_DIR}/external/assimp/include"
-        "${CMAKE_SOURCE_DIR}/external/assimp/code"
-)
-
-include( "${CMAKE_BINARY_DIR}/external/bullet3/BulletConfig.cmake" )
-include( "${CMAKE_SOURCE_DIR}/external/bullet3/UseBullet.cmake" )
+include(${CMAKE_SOURCE_DIR}/cmake/include_assimp.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/include_blazar.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/include_bullet.cmake)
 
 add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 add_definitions(-DENGINE_NAMESPACE=BlazarEngine)
@@ -75,9 +46,18 @@ add_executable(BlazarEngine main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${E
 
 target_compile_definitions(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 
-link_directories(BlazarEngine
-        ${ASSIMP_BINARY_DIR}
-        ${ASSIMP_BINARY_DIR}/lib)
-
-target_link_libraries(BlazarEngine glfw assimp Vulkan::Vulkan)
+target_link_libraries(BlazarEngine
+        glfw
+        assimp
+        Vulkan::Vulkan
+        Bullet3Common
+        Bullet3Geometry
+        BulletSoftBody
+        BulletDynamics
+        Bullet3Dynamics
+        Bullet3Collision
+        BulletCollision
+        LinearMath
+        BulletInverseDynamics
+        )
 target_include_directories(BlazarEngine PUBLIC ${SPVDir})

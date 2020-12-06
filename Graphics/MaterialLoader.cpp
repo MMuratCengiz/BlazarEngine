@@ -246,7 +246,7 @@ void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::
     cmdBuffer->execute( );
 }
 
-vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const SomeVulkan::ECS::Material::TextureInfo &info ) {
+vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const ECS::Material::TextureInfo &info ) {
     vk::SamplerCreateInfo samplerCreateInfo { };
 
     samplerCreateInfo.magFilter = toVkFilter( info.magFilter );
@@ -268,7 +268,7 @@ vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mi
     return samplerCreateInfo;
 }
 
-vk::Filter MaterialLoader::toVkFilter( const SomeVulkan::ECS::Material::Filter &filter ) {
+vk::Filter MaterialLoader::toVkFilter( const ECS::Material::Filter &filter ) {
     switch ( filter ) {
         case ECS::Material::Filter::Nearest:
             return vk::Filter::eNearest;
@@ -283,7 +283,7 @@ vk::Filter MaterialLoader::toVkFilter( const SomeVulkan::ECS::Material::Filter &
     return vk::Filter::eLinear;
 }
 
-vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const SomeVulkan::ECS::Material::AddressMode &addressMode ) {
+vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const ECS::Material::AddressMode &addressMode ) {
     switch ( addressMode ) {
         case ECS::Material::AddressMode::Repeat:
             return vk::SamplerAddressMode::eRepeat;
@@ -301,7 +301,7 @@ vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const SomeVulkan::ECS::M
     return vk::SamplerAddressMode::eClampToBorder;
 }
 
-vk::SamplerMipmapMode MaterialLoader::toVkMipmapMode( const SomeVulkan::ECS::Material::MipmapMode &mipmapMode ) {
+vk::SamplerMipmapMode MaterialLoader::toVkMipmapMode( const ECS::Material::MipmapMode &mipmapMode ) {
     switch( mipmapMode ) {
         case ECS::Material::MipmapMode::eNearest:
             return vk::SamplerMipmapMode::eNearest;

@@ -47,39 +47,8 @@ DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context
         }
     }
 
-//    expandUniformDescriptorSets( );
     expandTextureDescriptorSets( );
 }
-/*
-void DescriptorManager::expandUniformDescriptorSets( ) {
-    uint32_t swapChainImageCount = context->swapChainImages.size( );
-
-    if ( uniformSets.empty( ) ) {
-        nextFreeUniform.resize( swapChainImageCount, 0 );
-        uniformSets.resize( swapChainImageCount );
-        uniformSetMaps.resize( swapChainImageCount );
-    }
-
-    for ( auto &layout: uniformLayouts ) {
-        if ( layout == nullptr ) {
-            continue;
-        }
-
-        std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
-
-        for ( auto &uniformSet : uniformSets ) {
-
-            vk::DescriptorSetAllocateInfo allocateInfo { };
-            allocateInfo.descriptorPool = uniformDescriptorPool;
-            allocateInfo.descriptorSetCount = layoutsPtr.size( );
-            allocateInfo.pSetLayouts = layoutsPtr.data( );
-
-
-            const auto &newSets = context->logicalDevice.allocateDescriptorSets( allocateInfo );
-            uniformSet.insert( uniformSet.end( ), newSets.begin( ), newSets.end( ) );
-        }
-    }
-}*/
 
 void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout ) {
     uint32_t swapChainImageCount = context->swapChainImages.size( );

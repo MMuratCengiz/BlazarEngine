@@ -4,7 +4,7 @@
 
 #include "RenderDevice.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                      VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -46,7 +46,7 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
     context->window = window;
 
     vk::ApplicationInfo appInfo {
-            ENGINE_NAMESPACE,
+            "BlazarEngine",
             VK_MAKE_VERSION( 1, 0, 0 ),
             "No Engine",
             VK_MAKE_VERSION( 1, 0, 0 ),

@@ -7,8 +7,7 @@
 
 namespace Sample {
 
-
-class SampleHouse : public SomeVulkan::ECS::IGameEntity {
+class SampleHouse : public BlazarEngine::ECS::IGameEntity {
 public:
 	SampleHouse( ) {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );

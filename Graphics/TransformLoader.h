@@ -5,7 +5,7 @@
 #include "../ECS/CTransform.h"
 #include "InstanceContext.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class TransformLoader {
 private:

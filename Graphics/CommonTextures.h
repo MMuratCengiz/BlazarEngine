@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../core/Common.h"
-#include "../graphics/DrawDescription.h"
+#include "../Core/Common.h"
+#include "../Graphics/DrawDescription.h"
 #include "Texture.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 typedef enum class TextureID {
     TutTexture

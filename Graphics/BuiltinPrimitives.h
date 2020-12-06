@@ -3,7 +3,7 @@
 #include "../Core/Common.h"
 #include "../Core/DynamicMemory.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 enum class PrimitiveType {
     LightedCube,

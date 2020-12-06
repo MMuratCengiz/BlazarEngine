@@ -14,7 +14,7 @@ public:
         mesh->path = PATH( "/assets/models/car_2.fbx" );
 
         auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );
+        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = "/assets/textures/Car Texture 2.png";
 
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );

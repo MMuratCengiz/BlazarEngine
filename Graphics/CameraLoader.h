@@ -6,7 +6,7 @@
 #include "InstanceContext.h"
 #include "../Scene/Camera.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class CameraLoader {
 private:

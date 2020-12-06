@@ -3,7 +3,7 @@
 #include "../core/Common.h"
 #include "../core/DynamicMemory.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class MaterialLoader;
 

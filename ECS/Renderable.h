@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../core/Common.h"
+#include "../Core/Common.h"
 #include "IComponent.h"
 #include "ECSUtilities.h"
-#include "../graphics/DrawDescription.h"
+#include "../Graphics/DrawDescription.h"
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 

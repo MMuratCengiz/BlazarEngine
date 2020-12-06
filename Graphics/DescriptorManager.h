@@ -6,7 +6,7 @@
 #include "GraphicsException.h"
 #include "MaterialLoader.h"
 
-NAMESPACES( SomeVulkan, Graphics )
+NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 struct TextureDescription {
     vk::ImageView imageView;

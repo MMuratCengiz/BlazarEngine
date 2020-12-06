@@ -14,7 +14,7 @@ public:
         mesh->path = PATH( "/assets/models/Traffic Cone.FBX" );
 
         auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );
+        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = "/assets/textures/Traffic Cone UV Fixed.png";
 
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );

@@ -17,7 +17,7 @@ public:
         mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LightedCube );
 
         auto texture = createComponent< ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( SomeVulkan::ECS::Material::TextureInfo { } );
+        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = "/assets/textures/floor2.png";
 
         auto transform = createComponent< ECS::CTransform >( );
