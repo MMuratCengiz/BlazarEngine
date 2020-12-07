@@ -1,5 +1,15 @@
 #pragma once
 
-#include "core/Common.h"
-#include "ecs/IGameEntity.h"
-#include "ecs/Renderable.h"
+#include "Core/Common.h"
+#include "ECS/IGameEntity.h"
+#include "ECS/Renderable.h"
+#include "ECS/CTransform.h"
+#include "ECS/CAmbientLight.h"
+#include "ECS/CDirectionalLight.h"
+#include "ECS/CPointLight.h"
+#include "ECS/CSpotLight.h"
+#include "ECS/IComponent.h"
+#include "ECS/ISystem.h"
+#include "ECS/CMaterial.h"
+#include "ECS/CCollisionObject.h"
+#include "ECS/CRigidBody.h"

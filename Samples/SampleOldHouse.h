@@ -5,11 +5,14 @@
 #include "../ECS/CMaterial.h"
 #include "../ECS/CTransform.h"
 
-namespace Sample {
+namespace Sample
+{
 
-class SampleOldHouse : public BlazarEngine::ECS::IGameEntity {
+class SampleOldHouse : public BlazarEngine::ECS::IGameEntity
+{
 public:
-    SampleOldHouse( ) {
+    SampleOldHouse( )
+    {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
         mesh->path = PATH( "/assets/models/old_house.obj" );
         mesh->cullMode = BlazarEngine::ECS::CullMode::None;
@@ -22,7 +25,7 @@ public:
         transform->position = glm::vec3( -5.5f, 0.15f, 5.0f );
         transform->scale = glm::vec3( 0.02f, 0.02f, 0.02f );
         transform->rotation.euler = glm::vec3( 0.0f, 0.0f, 0.0f );
-	}
+    }
 };
 
 }

@@ -9,13 +9,12 @@ using namespace ECS;
 
 int runBullet( )
 {
-    ///-----includes_end-----
 
     int i;
-    ///-----initialization_start-----
 
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -170,12 +169,11 @@ int runBullet( )
 
 int main( ) {
     runBullet();
-    /*
     std::unique_ptr< Scene::World > world = std::make_unique< Scene::World >( );
     world->init( 2560, 1440, "Some Vulkan" );
 
     auto game = std::make_shared< Sample::SampleGame >( world.get() );
-    world->run( std::static_pointer_cast< Scene::IPlayable >( game ) );*/
+    world->run( std::static_pointer_cast< Scene::IPlayable >( game ) );
 
     return 0;
 }

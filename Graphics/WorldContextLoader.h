@@ -7,22 +7,24 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-struct WorldContext {
-    alignas(16) glm::vec4 worldPosition;
+struct WorldContext
+{
+    alignas( 16 ) glm::vec4 worldPosition;
 };
 
-class WorldContextLoader {
+class WorldContextLoader
+{
 private:
-    void * mappedMemory;
+    void *mappedMemory;
     std::shared_ptr< InstanceContext > context;
     std::pair< vk::Buffer, vma::Allocation > buffer;
-    WorldContext worldContext{ };
+    WorldContext worldContext { };
 public:
     explicit WorldContextLoader( std::shared_ptr< InstanceContext > context );
-    WorldContext& getWorldContext();
+    WorldContext &getWorldContext( );
     void update( );
-    std::pair< vk::Buffer, vma::Allocation >& getBuffer();
-    ~WorldContextLoader();
+    std::pair< vk::Buffer, vma::Allocation > &getBuffer( );
+    ~WorldContextLoader( );
 };
 
 END_NAMESPACES

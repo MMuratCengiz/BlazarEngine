@@ -5,12 +5,15 @@
 #include "../ECS/CMaterial.h"
 #include "../ECS/CTransform.h"
 
-namespace Sample {
+namespace Sample
+{
 
 
-class Spaceship : public BlazarEngine::ECS::IGameEntity {
+class Spaceship : public BlazarEngine::ECS::IGameEntity
+{
 public:
-    Spaceship( ) {
+    Spaceship( )
+    {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
         mesh->path = PATH( "/assets/models/spaceship.obj" );
 

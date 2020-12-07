@@ -3,108 +3,124 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-MeshLoader::MeshLoader( std::shared_ptr< InstanceContext > context, pCommandExecutor &commandExecutor ) : context( std::move( context ) ), commandExecutor( commandExecutor ) {
+MeshLoader::MeshLoader( std::shared_ptr< InstanceContext > context, pCommandExecutor &commandExecutor ) : context( std::move( context ) ), commandExecutor( commandExecutor )
+{
     const std::string &lightedCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube );
     loadedModels[ lightedCubePath ] = { };
-    ObjectBufferList& lightedCubeBufferList = loadedModels[ lightedCubePath ];
-    ObjectBuffer& lightedCubeBuffer = lightedCubeBufferList.buffers.emplace_back( );
+    ObjectBufferList &lightedCubeBufferList = loadedModels[ lightedCubePath ];
+    ObjectBuffer &lightedCubeBuffer = lightedCubeBufferList.buffers.emplace_back( );
 
-    copyVertexBuffer( lightedCubeBuffer, lightedCubePrimitive.getVertexBuffer() );
-    lightedCubeBuffer.vertexCount = lightedCubePrimitive.getVertexCount();
+    copyVertexBuffer( lightedCubeBuffer, lightedCubePrimitive.getVertexBuffer( ) );
+    lightedCubeBuffer.vertexCount = lightedCubePrimitive.getVertexCount( );
 
     const std::string &plainCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
     loadedModels[ plainCubePath ] = { };
-    ObjectBufferList& plainCubeBufferList = loadedModels[ plainCubePath ];
-    ObjectBuffer& plainCubeBuffer = plainCubeBufferList.buffers.emplace_back( );
+    ObjectBufferList &plainCubeBufferList = loadedModels[ plainCubePath ];
+    ObjectBuffer &plainCubeBuffer = plainCubeBufferList.buffers.emplace_back( );
 
-    copyVertexBuffer( plainCubeBuffer, plainCubePrimitive.getVertexBuffer() );
-    plainCubeBuffer.vertexCount = plainCubePrimitive.getVertexCount();
+    copyVertexBuffer( plainCubeBuffer, plainCubePrimitive.getVertexBuffer( ) );
+    plainCubeBuffer.vertexCount = plainCubePrimitive.getVertexCount( );
 }
 
-void MeshLoader::cache( const ECS::CMesh &mesh ) {
-    if ( loadedModels.find( mesh.path ) == loadedModels.end() ) {
+void MeshLoader::cache( const ECS::CMesh &mesh )
+{
+    if ( loadedModels.find( mesh.path ) == loadedModels.end( ) )
+    {
         loadModel( mesh );
     }
 }
 
 
-void MeshLoader::load( ObjectBufferList& objectBuffer, const ECS::CMesh& mesh ) {
+void MeshLoader::load( ObjectBufferList &objectBuffer, const ECS::CMesh &mesh )
+{
     cache( mesh );
     objectBuffer = loadedModels[ mesh.path ];
 }
 
-void MeshLoader::loadModel( const ECS::CMesh& mesh ) {
-    const aiScene* scene = importer.ReadFile( mesh.path, aiProcess_Triangulate | aiProcess_FlipUVs );
+void MeshLoader::loadModel( const ECS::CMesh &mesh )
+{
+    const aiScene *scene = importer.ReadFile( mesh.path, aiProcess_Triangulate | aiProcess_FlipUVs );
 
-    if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode ) {
+    if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode )
+    {
         std::stringstream ss;
         ss << "ERROR::ASSIMP::" << importer.GetErrorString( );
         throw std::runtime_error( ss.str( ) );
     }
 
-    loadedModels[ mesh.path ] = ObjectBufferList{ };
+    loadedModels[ mesh.path ] = ObjectBufferList { };
     onEachNode( loadedModels[ mesh.path ], scene, scene->mRootNode );
 }
 
-void MeshLoader::onEachNode( ObjectBufferList& buffer, const aiScene* scene, const aiNode* pNode ) {
-    for ( unsigned int i = 0; i < pNode->mNumChildren; ++i ) {
+void MeshLoader::onEachNode( ObjectBufferList &buffer, const aiScene *scene, const aiNode *pNode )
+{
+    for ( unsigned int i = 0; i < pNode->mNumChildren; ++i )
+    {
         onEachNode( buffer, scene, pNode->mChildren[ i ] );
     }
 
-    for ( unsigned int m = 0; m < pNode->mNumMeshes; m++ ) {
-        const aiMesh* mesh = scene->mMeshes[ pNode->mMeshes[ m ] ];
+    for ( unsigned int m = 0; m < pNode->mNumMeshes; m++ )
+    {
+        const aiMesh *mesh = scene->mMeshes[ pNode->mMeshes[ m ] ];
         onEachMesh( buffer, mesh );
     }
 }
 
-void MeshLoader::onEachMesh( ObjectBufferList& buffer, const aiMesh* mesh ) {
-    ObjectBuffer& bufferPart = buffer.buffers.emplace_back( ObjectBuffer{ } );
+void MeshLoader::onEachMesh( ObjectBufferList &buffer, const aiMesh *mesh )
+{
+    ObjectBuffer &bufferPart = buffer.buffers.emplace_back( ObjectBuffer { } );
 
     bufferPart.vertexCount = mesh->mNumVertices * 3;
 
-    Core::DynamicMemory memory{ mesh->mNumVertices * 8 * sizeof( float ) };
+    Core::DynamicMemory memory { mesh->mNumVertices * 8 * sizeof( float ) };
 
-    for ( unsigned int i = 0; i < mesh->mNumVertices; ++i ) {
-        const auto& vec = mesh->mVertices[ i ];
-        const auto& norm = mesh->mNormals[ i ];
+    for ( unsigned int i = 0; i < mesh->mNumVertices; ++i )
+    {
+        const auto &vec = mesh->mVertices[ i ];
+        const auto &norm = mesh->mNormals[ i ];
 
         memory.attachElements< float >( { vec.x, vec.y, vec.z } );
         memory.attachElements< float >( { norm.x, norm.y, norm.z } );
 
-        if ( mesh->mTextureCoords[ 0 ] ) {
-            const aiVector3D& textureCoordinates = mesh->mTextureCoords[ 0 ][ i ];
+        if ( mesh->mTextureCoords[ 0 ] )
+        {
+            const aiVector3D &textureCoordinates = mesh->mTextureCoords[ 0 ][ i ];
 
-            memory.attachElements< float >( { textureCoordinates.x , textureCoordinates.y } );
+            memory.attachElements< float >( { textureCoordinates.x, textureCoordinates.y } );
         }
     }
 
-    for ( unsigned int f = 0; f < mesh->mNumFaces; f++ ) {
-        const aiFace& face = mesh->mFaces[ f ];
+    for ( unsigned int f = 0; f < mesh->mNumFaces; f++ )
+    {
+        const aiFace &face = mesh->mFaces[ f ];
 
-        for ( unsigned int j = 0; j < face.mNumIndices; j++ ) {
+        for ( unsigned int j = 0; j < face.mNumIndices; j++ )
+        {
             bufferPart.indices.emplace_back( face.mIndices[ j ] );
         }
     }
 
-    bufferPart.indexCount = bufferPart.indices.size();
+    bufferPart.indexCount = bufferPart.indices.size( );
 
     copyVertexBuffer( bufferPart, memory );
-    if ( !bufferPart.indices.empty() ) {
+    if ( !bufferPart.indices.empty( ) )
+    {
         copyIndexBuffer( bufferPart, bufferPart.indices );
     }
 }
 
-void MeshLoader::copyVertexBuffer( ObjectBuffer &bufferPart, const Core::DynamicMemory &memory ) {
+void MeshLoader::copyVertexBuffer( ObjectBuffer &bufferPart, const Core::DynamicMemory &memory )
+{
     std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
-    RenderUtilities::initStagingBuffer( context, stagingBuffer, memory.data(), memory.size() );
+    RenderUtilities::initStagingBuffer( context, stagingBuffer, memory.data( ), memory.size( ) );
 
-    vk::BufferCreateInfo bufferCreateInfo{ };
+    vk::BufferCreateInfo bufferCreateInfo { };
     bufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer;
     bufferCreateInfo.size = memory.size( );
     bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-    vma::AllocationCreateInfo allocationInfo{ };
+    vma::AllocationCreateInfo allocationInfo { };
     allocationInfo.usage = vma::MemoryUsage::eGpuOnly;
     allocationInfo.requiredFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
@@ -113,23 +129,24 @@ void MeshLoader::copyVertexBuffer( ObjectBuffer &bufferPart, const Core::Dynamic
     commandExecutor->startCommandExecution( )
             ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 )
             ->beginCommand( )
-            ->copyBuffer( memory.size(), stagingBuffer.first, bufferPart.vertexBuffer.first )
+            ->copyBuffer( memory.size( ), stagingBuffer.first, bufferPart.vertexBuffer.first )
             ->execute( );
 
     context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-void MeshLoader::copyIndexBuffer( ObjectBuffer &bufferPart, const std::vector< uint32_t > &indices ) {
+void MeshLoader::copyIndexBuffer( ObjectBuffer &bufferPart, const std::vector< uint32_t > &indices )
+{
     std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
-    RenderUtilities::initStagingBuffer( context, stagingBuffer, indices.data(), indices.size() * sizeof( uint32_t ) );
+    RenderUtilities::initStagingBuffer( context, stagingBuffer, indices.data( ), indices.size( ) * sizeof( uint32_t ) );
 
-    vk::BufferCreateInfo bufferCreateInfo{ };
+    vk::BufferCreateInfo bufferCreateInfo { };
     bufferCreateInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer;
     bufferCreateInfo.size = indices.size( ) * sizeof( uint32_t );
     bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
-    vma::AllocationCreateInfo allocationInfo{ };
+    vma::AllocationCreateInfo allocationInfo { };
     allocationInfo.usage = vma::MemoryUsage::eGpuOnly;
     allocationInfo.requiredFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
@@ -138,17 +155,21 @@ void MeshLoader::copyIndexBuffer( ObjectBuffer &bufferPart, const std::vector< u
     commandExecutor->startCommandExecution( )
             ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 )
             ->beginCommand( )
-            ->copyBuffer( indices.size() * sizeof( uint32_t ), stagingBuffer.first, bufferPart.indexBuffer.first )
+            ->copyBuffer( indices.size( ) * sizeof( uint32_t ), stagingBuffer.first, bufferPart.indexBuffer.first )
             ->execute( );
 
     context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-MeshLoader::~MeshLoader( ) {
-    for ( auto& pair: loadedModels ) {
-        for ( auto& buffer: pair.second.buffers ) {
+MeshLoader::~MeshLoader( )
+{
+    for ( auto &pair: loadedModels )
+    {
+        for ( auto &buffer: pair.second.buffers )
+        {
             context->vma.destroyBuffer( buffer.vertexBuffer.first, buffer.vertexBuffer.second );
-            if ( buffer.indexCount > 0 ) {
+            if ( buffer.indexCount > 0 )
+            {
                 context->vma.destroyBuffer( buffer.indexBuffer.first, buffer.indexBuffer.second );
             }
         }

@@ -9,10 +9,12 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                      VkDebugUtilsMessageTypeFlagsEXT messageType,
                                                      const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                                     void *pUserData ) {
+                                                     void *pUserData )
+{
     int verbosity;
 
-    switch ( messageSeverity ) {
+    switch ( messageSeverity )
+    {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
             verbosity = VERBOSITY_LOW;
@@ -28,24 +30,27 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
             break;
     }
 
-    TRACE( COMPONENT_VKAPI, verbosity, pCallbackData->pMessage )
+    TRACE( "RenderDeviceVulkan", verbosity, pCallbackData->pMessage )
 
     return VK_FALSE;
 }
 
-void RenderDevice::loadExtensionFunctions( ) {
+void RenderDevice::loadExtensionFunctions( )
+{
     vk::DynamicLoader dl;
     auto vkGetInstanceProcAddr = dl.getProcAddress< PFN_vkGetInstanceProcAddr >( "vkGetInstanceProcAddr" );
     VULKAN_HPP_DEFAULT_DISPATCHER.init( vkGetInstanceProcAddr );
 }
 
-RenderDevice::RenderDevice( GLFWwindow *window ) {
-    loadExtensionFunctions();
+RenderDevice::RenderDevice( GLFWwindow *window )
+{
+    loadExtensionFunctions( );
 
     context = std::make_shared< InstanceContext >( );
     context->window = window;
 
-    vk::ApplicationInfo appInfo {
+    vk::ApplicationInfo appInfo
+    {
             "BlazarEngine",
             VK_MAKE_VERSION( 1, 0, 0 ),
             "No Engine",
@@ -53,7 +58,8 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
             VK_API_VERSION_1_2,
     };
 
-    vk::InstanceCreateInfo createInfo {
+    vk::InstanceCreateInfo createInfo
+    {
             { },
             &appInfo
     };
@@ -76,10 +82,13 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
 #if DEBUG
     createInfo.pNext = ( vk::DebugUtilsMessengerCreateInfoEXT * ) &debugUtilsCreateInfo;
 
-    if ( supportedLayers.find( "VK_LAYER_KHRONOS_validation" ) == supportedLayers.end( ) ) {
+    if ( supportedLayers.find( "VK_LAYER_KHRONOS_validation" ) == supportedLayers.end( ) )
+    {
         createInfo.enabledLayerCount = 0;
         TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "Layer: VK_LAYER_KHRONOS_validation not found." )
-    } else {
+    }
+    else
+    {
         createInfo.enabledLayerCount = static_cast<uint32_t>( layers.size( ));
         createInfo.ppEnabledLayerNames = layers.data( );
     }
@@ -98,28 +107,34 @@ RenderDevice::RenderDevice( GLFWwindow *window ) {
     createSurface( );
 }
 
-void RenderDevice::initSupportedExtensions( ) {
+void RenderDevice::initSupportedExtensions( )
+{
     auto extensionProperties = vk::enumerateInstanceExtensionProperties( nullptr );
 
-    for ( vk::ExtensionProperties prp: extensionProperties ) {
+    for ( vk::ExtensionProperties prp: extensionProperties )
+    {
         this->supportedExtensions[ prp.extensionName ] = true;
     }
 }
 
-void RenderDevice::initSupportedLayers( std::vector< const char * > &layers ) {
+void RenderDevice::initSupportedLayers( std::vector< const char * > &layers )
+{
     auto layerProperties = vk::enumerateInstanceLayerProperties( );
 
-    for ( vk::LayerProperties prp: layerProperties ) {
+    for ( vk::LayerProperties prp: layerProperties )
+    {
         auto layerPair = ENABLED_LAYERS.find( prp.layerName );
 
-        if ( layerPair != ENABLED_LAYERS.end( ) ) {
+        if ( layerPair != ENABLED_LAYERS.end( ) )
+        {
             supportedLayers[ prp.layerName ] = true;
             layers.emplace_back( layerPair->first.c_str( ) );
         }
     }
 }
 
-vk::DebugUtilsMessengerCreateInfoEXT RenderDevice::getDebugUtilsCreateInfo( ) const {
+vk::DebugUtilsMessengerCreateInfoEXT RenderDevice::getDebugUtilsCreateInfo( ) const
+{
     vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo { };
 
     debugUtilsCreateInfo.setMessageSeverity(
@@ -136,7 +151,8 @@ vk::DebugUtilsMessengerCreateInfoEXT RenderDevice::getDebugUtilsCreateInfo( ) co
     return debugUtilsCreateInfo;
 }
 
-void RenderDevice::initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT &createInfo ) {
+void RenderDevice::initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT &createInfo )
+{
     auto instance = static_cast< VkInstance >( context->instance );
 
     auto createDebugUtils = ( PFN_vkCreateDebugUtilsMessengerEXT ) vkGetInstanceProcAddr(
@@ -145,27 +161,33 @@ void RenderDevice::initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT
     auto createInfoCast = static_cast< VkDebugUtilsMessengerCreateInfoEXT >( createInfo );
 
     if ( createDebugUtils == nullptr ||
-         createDebugUtils( instance, &createInfoCast, nullptr, &debugMessenger ) != VK_SUCCESS ) {
+         createDebugUtils( instance, &createInfoCast, nullptr, &debugMessenger ) != VK_SUCCESS )
+    {
         TRACE( COMPONENT_VKAPI, VERBOSITY_HIGH, "Failed to create Vk debugger." )
         throw GraphicsException( GraphicsException::Source::RenderDevice, "Failed to initialize debugger!" );
     }
 }
 
 std::vector< DeviceInfo >
-RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
+RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck )
+{
     auto devices = context->instance.enumeratePhysicalDevices( );
     std::vector< DeviceInfo > result;
 
-    for ( auto it = devices.begin( ); it != devices.end( ); ) {
+    for ( auto it = devices.begin( ); it != devices.end( ); )
+    {
         vk::PhysicalDevice physicalDevice = *it;
 
         DeviceInfo deviceInfo { physicalDevice };
 
         createDeviceInfo( physicalDevice, deviceInfo );
 
-        if ( !deviceCapabilityCheck( deviceInfo ) ) {
+        if ( !deviceCapabilityCheck( deviceInfo ) )
+        {
             devices.erase( it );
-        } else {
+        }
+        else
+        {
             result.emplace_back( deviceInfo );
             ++it;
         }
@@ -174,8 +196,8 @@ RenderDevice::listGPUs( T_FUNC::deviceCapabilityCheck deviceCapabilityCheck ) {
     return result;
 }
 
-void
-RenderDevice::createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo &deviceInfo ) {
+void RenderDevice::createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo &deviceInfo )
+{
     vk::PhysicalDeviceFeatures deviceFeatures;
     vk::PhysicalDeviceProperties deviceProperties;
 
@@ -195,47 +217,57 @@ RenderDevice::createDeviceInfo( const vk::PhysicalDevice &physicalDevice, Device
     deviceInfo.extensionProperties = extensions;
 }
 
-void RenderDevice::selectDevice( const DeviceInfo &deviceInfo ) {
+void RenderDevice::selectDevice( const DeviceInfo &deviceInfo )
+{
     context->physicalDevice = deviceInfo.device;
     createLogicalDevice( );
     initializeVMA( );
     createRenderPass( );
-    createRenderSurface();
+    createRenderSurface( );
 }
 
-void RenderDevice::setupQueueFamilies( ) {
-    auto exists = [ & ](  QueueType bit ) -> bool {
+void RenderDevice::setupQueueFamilies( )
+{
+    auto exists = [ & ]( QueueType bit ) -> bool
+    {
         return context->queueFamilies.find( bit ) != context->queueFamilies.end( );
     };
 
     auto localQueueFamilies = context->physicalDevice.getQueueFamilyProperties( );
 
     uint32_t index = 0;
-    for ( const vk::QueueFamilyProperties& property: localQueueFamilies ) {
+    for ( const vk::QueueFamilyProperties &property: localQueueFamilies )
+    {
         bool hasGraphics = ( property.queueFlags & vk::QueueFlagBits::eGraphics ) == vk::QueueFlagBits::eGraphics;
         bool hasTransfer = ( property.queueFlags & vk::QueueFlagBits::eTransfer ) == vk::QueueFlagBits::eTransfer;
 
-        if ( hasGraphics && !exists( QueueType::Graphics ) ) {
+        if ( hasGraphics && !exists( QueueType::Graphics ) )
+        {
             context->queueFamilies[ QueueType::Graphics ] = QueueFamily { index, property };
-        } else if ( hasTransfer && !exists( QueueType::Transfer ) ) { // Try to fetch a unique transfer queue
+        }
+        else if ( hasTransfer && !exists( QueueType::Transfer ) )
+        { // Try to fetch a unique transfer queue
             context->queueFamilies[ QueueType::Transfer ] = QueueFamily { index, property };
         }
 
         vk::Bool32 presentationSupport = context->physicalDevice.getSurfaceSupportKHR( index, context->surface );
 
-        if ( presentationSupport && !exists( QueueType::Presentation ) ) {
+        if ( presentationSupport && !exists( QueueType::Presentation ) )
+        {
             context->queueFamilies[ QueueType::Presentation ] = QueueFamily { index, property };
         }
 
         ++index;
     }
 
-    if ( !exists( QueueType::Transfer ) ) {
+    if ( !exists( QueueType::Transfer ) )
+    {
         context->queueFamilies[ QueueType::Transfer ] = context->queueFamilies[ QueueType::Graphics ];
     }
 }
 
-void RenderDevice::createLogicalDevice( ) {
+void RenderDevice::createLogicalDevice( )
+{
     setupQueueFamilies( );
 
     std::vector< vk::DeviceQueueCreateInfo > deviceQueueCreateInfos = createUniqueDeviceCreateInfos( );
@@ -264,7 +296,7 @@ void RenderDevice::createLogicalDevice( ) {
     };
 
     context->logicalDevice = context->physicalDevice.createDevice( createInfo );
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(context->logicalDevice);
+    VULKAN_HPP_DEFAULT_DISPATCHER.init( context->logicalDevice );
 
     glfwSetWindowUserPointer( context->window, this );
 
@@ -282,7 +314,8 @@ void RenderDevice::createLogicalDevice( ) {
                                      &context->queues[ QueueType::Transfer ] );
 }
 
-void RenderDevice::initializeVMA( ) {
+void RenderDevice::initializeVMA( )
+{
     vma::AllocatorCreateInfo allocatorInfo = { };
     allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_1;
     allocatorInfo.physicalDevice = context->physicalDevice;
@@ -292,26 +325,32 @@ void RenderDevice::initializeVMA( ) {
     context->vma = vma::createAllocator( allocatorInfo );
 }
 
-void RenderDevice::createSurface( ) {
+void RenderDevice::createSurface( )
+{
     auto instance = static_cast< VkInstance >( context->instance );
     auto surface = static_cast< VkSurfaceKHR >( context->surface ); // TODO Check this might be problematic
 
-    if ( context->window == nullptr ) {
+    if ( context->window == nullptr )
+    {
         throw GraphicsException( GraphicsException::Source::RenderDevice,
                                  "No window context to create renderer surface with." );
-    } else if ( glfwCreateWindowSurface( instance, context->window, nullptr, &surface ) != VK_SUCCESS ) {
+    }
+    else if ( glfwCreateWindowSurface( instance, context->window, nullptr, &surface ) != VK_SUCCESS )
+    {
         throw GraphicsException( GraphicsException::Source::RenderDevice, "Window surface creation failed." );
     }
 
     context->surface = vk::SurfaceKHR( surface );
 }
 
-bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) {
+bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo )
+{
     int foundRequiredExtensionCount = 0;
 
     const std::unordered_map< std::string, bool > &reqExtensions = defaultRequiredExtensions( );
 
-    for ( const auto &extension: deviceInfo.extensionProperties ) {
+    for ( const auto &extension: deviceInfo.extensionProperties )
+    {
         bool extFound = reqExtensions.find( extension.extensionName ) != reqExtensions.end( );
         foundRequiredExtensionCount += extFound;
     }
@@ -319,18 +358,22 @@ bool RenderDevice::defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo ) 
     return foundRequiredExtensionCount == reqExtensions.size( );
 }
 
-std::unordered_map< std::string, bool > RenderDevice::defaultRequiredExtensions( ) {
+std::unordered_map< std::string, bool > RenderDevice::defaultRequiredExtensions( )
+{
     std::unordered_map< std::string, bool > result;
     result[ VK_KHR_SWAPCHAIN_EXTENSION_NAME ] = true;
     return result;
 }
 
-std::vector< vk::DeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateInfos( ) {
+std::vector< vk::DeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateInfos( )
+{
     std::unordered_map< uint32_t, bool > uniqueIndexes;
     std::vector< vk::DeviceQueueCreateInfo > result;
 
-    for ( std::pair< QueueType, QueueFamily > key: context->queueFamilies ) {
-        if ( uniqueIndexes.find( key.second.index ) == uniqueIndexes.end( ) ) {
+    for ( std::pair< QueueType, QueueFamily > key: context->queueFamilies )
+    {
+        if ( uniqueIndexes.find( key.second.index ) == uniqueIndexes.end( ) )
+        {
             float priority = key.first == QueueType::Graphics || key.first == QueueType::Presentation ? 1.0f : 0.9f;
 
             result.emplace_back(
@@ -349,20 +392,23 @@ std::vector< vk::DeviceQueueCreateInfo > RenderDevice::createUniqueDeviceCreateI
     return result;
 }
 
-void RenderDevice::beforeDelete( ) {
+void RenderDevice::beforeDelete( )
+{
     context->logicalDevice.waitIdle( );
 }
 
-void RenderDevice::createRenderSurface(  ) {
+void RenderDevice::createRenderSurface( )
+{
     context->logicalDevice.waitIdle( );
 
     auto *renderSurfacePtr = new RenderSurface { context };
     this->renderSurface = std::unique_ptr< RenderSurface >( renderSurfacePtr );
 }
 
-RenderDevice::~RenderDevice( ) {
-    renderSurface->getSurfaceRenderer().reset();
-    renderSurface.reset();
+RenderDevice::~RenderDevice( )
+{
+    renderSurface->getSurfaceRenderer( ).reset( );
+    renderSurface.reset( );
 
     destroyDebugUtils( );
 
@@ -372,8 +418,10 @@ RenderDevice::~RenderDevice( ) {
     context->instance.destroy( );
 }
 
-void RenderDevice::destroyDebugUtils( ) const {
-    if ( debugMessenger == VK_NULL_HANDLE ) {
+void RenderDevice::destroyDebugUtils( ) const
+{
+    if ( debugMessenger == VK_NULL_HANDLE )
+    {
         return;
     }
 
@@ -381,33 +429,41 @@ void RenderDevice::destroyDebugUtils( ) const {
     auto deleteDebugUtils = ( PFN_vkDestroyDebugUtilsMessengerEXT )
             vkGetInstanceProcAddr( instance, "vkDestroyDebugUtilsMessengerEXT" );
 
-    if ( deleteDebugUtils ) {
+    if ( deleteDebugUtils )
+    {
         deleteDebugUtils( static_cast< VkInstance >( instance ), debugMessenger, nullptr );
     }
 }
 
-const std::shared_ptr< Renderer > &RenderDevice::getRenderer( ) {
-    return renderSurface->getSurfaceRenderer();
+const std::shared_ptr< Renderer > &RenderDevice::getRenderer( )
+{
+    return renderSurface->getSurfaceRenderer( );
 }
 
-std::shared_ptr< InstanceContext > RenderDevice::getContext( ) const {
+std::shared_ptr< InstanceContext > RenderDevice::getContext( ) const
+{
     return context;
 }
 
-void RenderDevice::createRenderPass( ) {
+void RenderDevice::createRenderPass( )
+{
     auto surfaceFormats = context->physicalDevice.getSurfaceFormatsKHR( context->surface );
     auto presentModes = context->physicalDevice.getSurfacePresentModesKHR( context->surface );
 
     auto presentMode = vk::PresentModeKHR::eFifo;
-    for ( auto mode: presentModes ) {
-        if ( mode == vk::PresentModeKHR::eMailbox ) {
+    for ( auto mode: presentModes )
+    {
+        if ( mode == vk::PresentModeKHR::eMailbox )
+        {
             presentMode = mode;
         }
     }
 
     auto surfaceFormat = vk::SurfaceFormatKHR { vk::Format::eB8G8R8A8Srgb, vk::ColorSpaceKHR::eSrgbNonlinear };
-    for ( auto format: surfaceFormats ) {
-        if ( format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear ) {
+    for ( auto format: surfaceFormats )
+    {
+        if ( format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear )
+        {
             surfaceFormat = format;
         }
     }

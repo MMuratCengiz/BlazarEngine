@@ -6,23 +6,41 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
-ActionMap::ActionMap( std::shared_ptr< EventHandler > eventHandler ) : eventHandler( std::move( eventHandler ) ) { }
+ActionMap::ActionMap( std::shared_ptr< EventHandler > eventHandler ) : eventHandler( std::move( eventHandler ) )
+{
+    proxyActionCallback = [ & ]( const std::string &actionName )
+    {
+        FUNCTION_BREAK( callbacks.find( actionName ) == callbacks.end( ) );
 
-void ActionMap::registerAction( const std::string &actionName, const ActionBinding &binding, const ActionCallback &callback ) {
-    if ( callbacks.find( actionName ) == callbacks.end( ) ) {
+        for ( auto& callback: callbacks[ actionName ] )
+        {
+            callback( actionName );
+        }
+    };
+}
+
+void ActionMap::registerAction( const std::string &actionName, ActionBinding binding)
+{
+    if ( binding.controller == Controller::Keyboard )
+    {
+        if ( binding.pressForm == KeyPressForm::Pressed )
+        {
+            eventHandler->registerKeyboardPress( binding.keyCode, [ = ]( const KeyboardKeyCode &code )
+            {
+                proxyActionCallback( actionName );
+            } );
+        }
+    }
+}
+
+void ActionMap::subscribeToAction( const std::string &actionName, ActionCallback callback )
+{
+    if ( callbacks.find( actionName ) == callbacks.end( ) )
+    {
         callbacks[ actionName ] = { };
     }
 
     callbacks[ actionName ].emplace_back( callback );
-
-    if ( binding.controller == Controller::Keyboard ) {
-        if ( binding.pressForm == KeyPressForm::Pressed ) {
-            eventHandler->registerKeyboardPress( binding.keyCode, [ = ]( const KeyboardKeyCode &code ) {
-                callback( actionName );
-            } );
-        }
-    }
-
 }
 
 END_NAMESPACES

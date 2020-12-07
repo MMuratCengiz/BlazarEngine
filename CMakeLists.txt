@@ -42,7 +42,7 @@ add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(Vulkan REQUIRED)
 
-add_executable(BlazarEngine main.cpp ${Core} ${Graphics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
+add_executable(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
 
 target_compile_definitions(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 
@@ -60,4 +60,5 @@ target_link_libraries(BlazarEngine
         LinearMath
         BulletInverseDynamics
         )
+
 target_include_directories(BlazarEngine PUBLIC ${SPVDir})

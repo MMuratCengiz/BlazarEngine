@@ -9,7 +9,8 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 struct DeviceInfo;
 class RenderDevice;
 
-class RenderDeviceBuilder {
+class RenderDeviceBuilder
+{
 private:
     class RenderDeviceSelectDevice;
 
@@ -20,21 +21,24 @@ private:
 public:
     friend class RenderDevice;
 
-    static RenderDeviceSetWindow create( ) {
+    static RenderDeviceSetWindow create( )
+    {
         return RenderDeviceSetWindow { };
     }
 
 private:
-    static RenderDevice * createRenderDevice( GLFWwindow *window );
+    static RenderDevice *createRenderDevice( GLFWwindow *window );
 
-    class RenderDeviceSetWindow {
+    class RenderDeviceSetWindow
+    {
     public:
         std::shared_ptr< RenderDevice > renderDevice;
 
         RenderDeviceSelectDevice selectWindow( GLFWwindow *window );
     };
 
-    class RenderDeviceSelectDevice {
+    class RenderDeviceSelectDevice
+    {
     public:
         std::shared_ptr< RenderDevice > renderDevice;
 
@@ -44,7 +48,8 @@ private:
         selectDevice( const std::function< DeviceInfo( std::vector< DeviceInfo > ) > &deviceSelector );
     };
 
-    class RenderDeviceComplete {
+    class RenderDeviceComplete
+    {
     public:
         std::shared_ptr< RenderDevice > renderDevice;
 

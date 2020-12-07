@@ -6,27 +6,35 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-void MaterialLoader::cache( const ECS::CMaterial &material ) {
-    if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) ) {
+void MaterialLoader::cache( const ECS::CMaterial &material )
+{
+    if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) )
+    {
         loadMaterial( material );
     }
 
-    for ( const auto &texture: material.textures ) {
-        if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) ) {
+    for ( const auto &texture: material.textures )
+    {
+        if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) )
+        {
             loadInner( texture );
         }
     }
 }
 
-void MaterialLoader::load( MaterialBuffer &input, const ECS::CMaterial &material ) {
-    if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) ) {
+void MaterialLoader::load( MaterialBuffer &input, const ECS::CMaterial &material )
+{
+    if ( loadedMaterials.find( material.uid ) == loadedMaterials.end( ) )
+    {
         loadMaterial( material );
     }
 
     input.buffer = loadedMaterials[ material.uid ];
 
-    for ( const auto &texture: material.textures ) {
-        if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) ) {
+    for ( const auto &texture: material.textures )
+    {
+        if ( loadedTextures.find( texture.path ) == loadedTextures.end( ) )
+        {
             loadInner( texture );
         }
 
@@ -39,8 +47,9 @@ void MaterialLoader::load( MaterialBuffer &input, const ECS::CMaterial &material
     }
 }
 
-void MaterialLoader::loadMaterial( const ECS::CMaterial &material ) {
-    ShaderInputMaterial mat{ };
+void MaterialLoader::loadMaterial( const ECS::CMaterial &material )
+{
+    ShaderInputMaterial mat { };
     mat.diffuseColor = material.diffuse;
     mat.specularColor = material.specular;
     mat.shininess = material.shininess;
@@ -60,16 +69,17 @@ void MaterialLoader::loadMaterial( const ECS::CMaterial &material ) {
 
     loadedMaterials[ material.uid ] = this->context->vma.createBuffer( bufferCreateInfo, allocationInfo );
 
-    commandExecutor->startCommandExecution()
+    commandExecutor->startCommandExecution( )
             ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit )
-            ->beginCommand()
+            ->beginCommand( )
             ->copyBuffer( sizeof( ShaderInputMaterial ), stagingBuffer.first, loadedMaterials[ material.uid ].first )
-            ->execute();
+            ->execute( );
 
     context->vma.destroyBuffer( stagingBuffer.first, stagingBuffer.second );
 }
 
-void MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
+void MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture )
+{
     loadedTextures[ texture.path ] = TextureBuffer { };
 
     TextureBuffer &part = loadedTextures[ texture.path ];
@@ -78,8 +88,9 @@ void MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
 
     stbi_uc *contents = stbi_load( ( PATH( texture.path ) ).c_str( ), &width, &height, &channels, STBI_rgb_alpha );
 
-    if ( contents == nullptr ) {
-        TRACE( COMPONENT_TLOAD, VERBOSITY_CRITICAL, stbi_failure_reason( ) )
+    if ( contents == nullptr )
+    {
+        TRACE( "TextureLoader", VERBOSITY_CRITICAL, stbi_failure_reason( ) )
 
         throw std::runtime_error( "Couldn't find texture." );
     }
@@ -155,7 +166,8 @@ void MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
 
     vk::FormatProperties properties = context->physicalDevice.getFormatProperties( vk::Format::eR8G8B8A8Srgb );
 
-    if ( ( properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear ) != vk::FormatFeatureFlagBits::eSampledImageFilterLinear ) {
+    if ( ( properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear ) != vk::FormatFeatureFlagBits::eSampledImageFilterLinear )
+    {
         throw std::runtime_error( "Unsupported device, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT must be  supported" );
     }
 
@@ -163,7 +175,8 @@ void MaterialLoader::loadInner( const ECS::Material::TextureInfo &texture ) {
     stbi_image_free( contents );
 }
 
-void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const {
+void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::TextureInfo &texture, int mipLevels, int width, int height ) const
+{
     int32_t mipWidth = width, mipHeight = height;
 
     auto cmdBuffer = commandExecutor->startCommandExecution( )->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 );
@@ -180,7 +193,8 @@ void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::
      *
      * In such form every mip level of the image is filled with an image with half the size of the previous image
      */
-    for ( uint32_t index = 1; index < mipLevels; ++index ) {
+    for ( uint32_t index = 1; index < mipLevels; ++index )
+    {
         /* transition every index - 1 image as the source image */
         pipelineBarrierArgs.baseMipLevel = index - 1;
         pipelineBarrierArgs.mipLevel = 1;
@@ -228,8 +242,10 @@ void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::
 
         cmdBuffer->pipelineBarrier( pipelineBarrierArgs );
 
-        if ( mipWidth > 1 ) { mipWidth /= 2; }
-        if ( mipHeight > 1 ) { mipHeight /= 2; }
+        if ( mipWidth > 1 )
+        { mipWidth /= 2; }
+        if ( mipHeight > 1 )
+        { mipHeight /= 2; }
     }
 
     pipelineBarrierArgs.baseMipLevel = mipLevels - 1;
@@ -246,7 +262,8 @@ void MaterialLoader::generateMipMaps( TextureBuffer &part, const ECS::Material::
     cmdBuffer->execute( );
 }
 
-vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const ECS::Material::TextureInfo &info ) {
+vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mipLevels, const ECS::Material::TextureInfo &info )
+{
     vk::SamplerCreateInfo samplerCreateInfo { };
 
     samplerCreateInfo.magFilter = toVkFilter( info.magFilter );
@@ -268,8 +285,10 @@ vk::SamplerCreateInfo MaterialLoader::texToSamplerCreateInfo( const uint32_t &mi
     return samplerCreateInfo;
 }
 
-vk::Filter MaterialLoader::toVkFilter( const ECS::Material::Filter &filter ) {
-    switch ( filter ) {
+vk::Filter MaterialLoader::toVkFilter( const ECS::Material::Filter &filter )
+{
+    switch ( filter )
+    {
         case ECS::Material::Filter::Nearest:
             return vk::Filter::eNearest;
         case ECS::Material::Filter::Linear:
@@ -283,8 +302,10 @@ vk::Filter MaterialLoader::toVkFilter( const ECS::Material::Filter &filter ) {
     return vk::Filter::eLinear;
 }
 
-vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const ECS::Material::AddressMode &addressMode ) {
-    switch ( addressMode ) {
+vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const ECS::Material::AddressMode &addressMode )
+{
+    switch ( addressMode )
+    {
         case ECS::Material::AddressMode::Repeat:
             return vk::SamplerAddressMode::eRepeat;
         case ECS::Material::AddressMode::MirroredRepeat:
@@ -301,8 +322,10 @@ vk::SamplerAddressMode MaterialLoader::toVkAddressMode( const ECS::Material::Add
     return vk::SamplerAddressMode::eClampToBorder;
 }
 
-vk::SamplerMipmapMode MaterialLoader::toVkMipmapMode( const ECS::Material::MipmapMode &mipmapMode ) {
-    switch( mipmapMode ) {
+vk::SamplerMipmapMode MaterialLoader::toVkMipmapMode( const ECS::Material::MipmapMode &mipmapMode )
+{
+    switch ( mipmapMode )
+    {
         case ECS::Material::MipmapMode::eNearest:
             return vk::SamplerMipmapMode::eNearest;
         case ECS::Material::MipmapMode::eLinear:
@@ -312,14 +335,17 @@ vk::SamplerMipmapMode MaterialLoader::toVkMipmapMode( const ECS::Material::Mipma
     return vk::SamplerMipmapMode::eLinear;
 }
 
-MaterialLoader::~MaterialLoader( ) {
-    for ( auto& pair: loadedTextures ) {
+MaterialLoader::~MaterialLoader( )
+{
+    for ( auto &pair: loadedTextures )
+    {
         context->logicalDevice.destroySampler( pair.second.sampler );
         context->logicalDevice.destroyImageView( pair.second.imageView );
         context->vma.destroyImage( pair.second.image, pair.second.allocation );
     }
 
-    for ( auto& pair: loadedMaterials ) {
+    for ( auto &pair: loadedMaterials )
+    {
         context->vma.destroyBuffer( pair.second.first, pair.second.second );
     }
 }

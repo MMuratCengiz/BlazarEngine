@@ -5,15 +5,18 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-enum class PrimitiveType {
+enum class PrimitiveType
+{
     LightedCube,
     PlainCube
 };
 
-class LightedCubePrimitive {
+class LightedCubePrimitive
+{
     Core::DynamicMemory vertexBuffer;
 public:
-    LightedCubePrimitive( ) {
+    LightedCubePrimitive( )
+    {
         vertexBuffer.setInitialSize( 288 * sizeof( float ) );
         // Left Cube, Triangle 1
         vertexBuffer.attachElements< float >( { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
@@ -26,12 +29,12 @@ public:
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Back Cube, Triangle 1
         vertexBuffer.attachElements< float >( { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
-        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, } );
-        vertexBuffer.attachElements< float >( { 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
+        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
+        vertexBuffer.attachElements< float >( { 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, } );
         // Back Cube, Triangle 2
-        vertexBuffer.attachElements< float >( { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
+        vertexBuffer.attachElements< float >( { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
         vertexBuffer.attachElements< float >( { -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, } );
-        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
+        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Bottom Cube, Triangle 1
         vertexBuffer.attachElements< float >( { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, } );
@@ -62,28 +65,32 @@ public:
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Front Cube, Triangle 1
         vertexBuffer.attachElements< float >( { -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, } );
-        vertexBuffer.attachElements< float >( { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, } );
-        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
+        vertexBuffer.attachElements< float >( { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
+        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, } );
         // Front Cube, Triangle 2
-        vertexBuffer.attachElements< float >( { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
-        vertexBuffer.attachElements< float >( { 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
-        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f } );
+        vertexBuffer.attachElements< float >( { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
+        vertexBuffer.attachElements< float >( { 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
+        vertexBuffer.attachElements< float >( { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f } );
 
     }
 
-    uint32_t getVertexCount( ) {
+    uint32_t getVertexCount( )
+    {
         return 36;
     }
 
-    [[nodiscard]] const Core::DynamicMemory &getVertexBuffer( ) const {
+    [[nodiscard]] const Core::DynamicMemory &getVertexBuffer( ) const
+    {
         return vertexBuffer;
     }
 };
 
-class PlainCubePrimitive {
+class PlainCubePrimitive
+{
     Core::DynamicMemory vertexBuffer;
 public:
-    PlainCubePrimitive( ) {
+    PlainCubePrimitive( )
+    {
         vertexBuffer.setInitialSize( 108 * sizeof( float ) );
 
         vertexBuffer.attachElements< float >( { -1.0f, -1.0f, -1.0f } );
@@ -125,19 +132,24 @@ public:
 
     }
 
-    uint32_t getVertexCount( ) {
+    uint32_t getVertexCount( )
+    {
         return 36;
     }
 
-    [[nodiscard]] const Core::DynamicMemory &getVertexBuffer( ) const {
+    [[nodiscard]] const Core::DynamicMemory &getVertexBuffer( ) const
+    {
         return vertexBuffer;
     }
 };
 
-class BuiltinPrimitives {
+class BuiltinPrimitives
+{
 public:
-    static std::string getPrimitivePath( PrimitiveType type ) {
-        switch ( type ) {
+    static std::string getPrimitivePath( PrimitiveType type )
+    {
+        switch ( type )
+        {
             case PrimitiveType::LightedCube:
                 return "BuiltinPrimitives/LightedCube";
                 break;

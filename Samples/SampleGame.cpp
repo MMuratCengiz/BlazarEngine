@@ -4,11 +4,13 @@
 
 #include "SampleGame.h"
 
-namespace Sample {
+namespace Sample
+{
 
-void SampleGame::init( ) {
+void SampleGame::init( )
+{
     ambientLight = std::make_shared< ECS::CAmbientLight >( );
-    ambientLight->diffuse = glm::vec4( 0.0f, 0.25f, 0.1f, 1.0f);
+    ambientLight->diffuse = glm::vec4( 0.0f, 0.25f, 0.1f, 1.0f );
     ambientLight->power = 0.01f;
 
     directionalLight = std::make_shared< ECS::CDirectionalLight >( );
@@ -37,6 +39,8 @@ void SampleGame::init( ) {
     car2 = std::make_shared< SampleCar2 >( );
     cone = std::make_shared< SampleTrafficCone >( );
     sky = std::make_shared< SampleCubeMap >( );
+    crate = std::make_shared< SampleCrate >( );
+    smallCrate = std::make_shared< SampleSmallCrate >( );
 
     initialScene = std::make_shared< Scene::Scene >( camera );
     initialScene->addAmbientLight( ambientLight );
@@ -47,37 +51,68 @@ void SampleGame::init( ) {
     initialScene->addEntity( car2 );
     initialScene->addEntity( cone );
     initialScene->addEntity( floor );
+    initialScene->addEntity( crate );
+    initialScene->addEntity( smallCrate );
 //    initialScene->addEntity( oldHouse );
     initialScene->addEntity( sky );
     world->setScene( initialScene );
 
-    Input::ActionBinding binding { };
-    binding.keyCode = Input::KeyboardKeyCode::T;
-    binding.pressForm = Input::KeyPressForm::Pressed;
-    binding.controller = Input::Controller::Keyboard;
-
-    Input::GlobalEventHandler::Instance().subscribeToEvent( Input::EventType::WindowResized, [&]( const Input::EventType& type, const Input::pEventParameters& parameters ) {
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )
+    {
         auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
         camera->updateAspectRatio( windowParams->width, windowParams->height );
-    });
+    } );
 
-    Input::GlobalEventHandler::Instance().subscribeToEvent( Input::EventType::Tick, [&]( const Input::EventType& type, const Input::pEventParameters& parameters ) {
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::Tick, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )
+    {
         auto tickParams = Input::GlobalEventHandler::ToTickParameters( parameters );
 
         camera->processKeyboardEvents( tickParams->window );
         camera->processMouseEvents( tickParams->window );
 
-        spotLight->position = camera->getPosition();
-        spotLight->direction = camera->getFront();
-    });
+        spotLight->position = camera->getPosition( );
+        spotLight->direction = camera->getFront( );
+    } );
+
+    SampleSetupInputBindings::setup( world );
+
+    auto movement = [ = ]( const std::string &actionName )
+    {
+        glm::vec3 translation{ };
+
+        if ( actionName == "MoveSmallCrate_Forward" )
+        {
+            translation.z += Core::Time::getDeltaTime() * 4.0f;
+        }
+        if ( actionName == "MoveSmallCrate_Backwards" )
+        {
+            translation.z -= Core::Time::getDeltaTime() * 4.0f;
+        }
+        if ( actionName == "MoveSmallCrate_Left" )
+        {
+            translation.x -= Core::Time::getDeltaTime() * 4.0f;
+        }
+        if ( actionName == "MoveSmallCrate_Right" )
+        {
+            translation.x += Core::Time::getDeltaTime() * 4.0f;
+        }
+
+        world->getTransformSystem( )->translate( smallCrate, translation );
+    };
+
+    world->getActionMap( )->subscribeToAction( "MoveSmallCrate_Forward", movement );
+    world->getActionMap( )->subscribeToAction( "MoveSmallCrate_Backwards", movement );
+    world->getActionMap( )->subscribeToAction( "MoveSmallCrate_Left", movement );
+    world->getActionMap( )->subscribeToAction( "MoveSmallCrate_Right", movement );
+}
+
+void SampleGame::update( )
+{
 
 }
 
-void SampleGame::update( ) {
-
-}
-
-void SampleGame::dispose( ) {
+void SampleGame::dispose( )
+{
 
 }
 

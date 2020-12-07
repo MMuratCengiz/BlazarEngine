@@ -5,11 +5,14 @@
 #include "../ECS/CMaterial.h"
 #include "../ECS/CTransform.h"
 
-namespace Sample {
+namespace Sample
+{
 
-class SampleCar2 : public BlazarEngine::ECS::IGameEntity {
+class SampleCar2 : public BlazarEngine::ECS::IGameEntity
+{
 public:
-    SampleCar2( ) {
+    SampleCar2( )
+    {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
         mesh->path = PATH( "/assets/models/car_2.fbx" );
 

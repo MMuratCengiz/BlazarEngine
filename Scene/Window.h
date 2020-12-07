@@ -12,16 +12,19 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Scene )
 
-class Window {
+class Window
+{
 private:
     GLFWwindow *window;
 
 public:
-    Window( const uint32_t& width, const uint32_t& height, const std::string &title ) {
-        if ( glfwInit( ) == GL_FALSE ) {
+    Window( const uint32_t &width, const uint32_t &height, const std::string &title )
+    {
+        if ( glfwInit( ) == GL_FALSE )
+        {
             const char *errorBuffer = new char[1024];
             glfwGetError( &errorBuffer );
-            TRACE( COMPONENT_GRAPHICS, VERBOSITY_CRITICAL, errorBuffer );
+            TRACE( "Graphics", VERBOSITY_CRITICAL, errorBuffer );
         }
 
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
@@ -32,7 +35,8 @@ public:
 
         window = glfwCreateWindow( width, height, title.c_str( ), nullptr, nullptr );
 
-        if ( window == nullptr ) {
+        if ( window == nullptr )
+        {
             const char *errorBuffer = new char[1024];
             glfwGetError( &errorBuffer );
             TRACE( COMPONENT_GRAPHICS, VERBOSITY_CRITICAL, errorBuffer );
@@ -42,14 +46,17 @@ public:
         glfwSwapInterval( 0 );
     }
 
-    void play( ) const {
-        while ( !glfwWindowShouldClose( window ) ) {
-            Core::Time::tick();
+    void play( ) const
+    {
+        while ( !glfwWindowShouldClose( window ) )
+        {
+            Core::Time::tick( );
 
             int width, height;
             glfwGetFramebufferSize( window, &width, &height );
 
-            if ( width > 0 && height > 0 ) {
+            if ( width > 0 && height > 0 )
+            {
 
             }
 
@@ -58,11 +65,13 @@ public:
         }
     }
 
-    GLFWwindow * getWindow() {
+    GLFWwindow *getWindow( )
+    {
         return window;
     }
 
-    ~Window( ) {
+    ~Window( )
+    {
         glfwDestroyWindow( window );
         glfwTerminate( );
     }

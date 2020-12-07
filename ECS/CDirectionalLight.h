@@ -5,7 +5,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
-struct CDirectionalLight : public IComponent {
+struct CDirectionalLight : public IComponent
+{
     float power;
     glm::vec3 diffuse;
     glm::vec3 specular;

@@ -6,7 +6,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-WorldContextLoader::WorldContextLoader( std::shared_ptr< InstanceContext > context ) : context( std::move( context ) ) {
+WorldContextLoader::WorldContextLoader( std::shared_ptr< InstanceContext > context ) : context( std::move( context ) )
+{
     vk::BufferCreateInfo bufferCreateInfo;
     bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer;
     bufferCreateInfo.size = sizeof( WorldContext );
@@ -19,23 +20,27 @@ WorldContextLoader::WorldContextLoader( std::shared_ptr< InstanceContext > conte
 
     buffer = this->context->vma.createBuffer( bufferCreateInfo, allocationInfo );
 
-    mappedMemory =  this->context->vma.mapMemory( buffer.second );
+    mappedMemory = this->context->vma.mapMemory( buffer.second );
 }
 
-WorldContext &WorldContextLoader::getWorldContext( ) {
+WorldContext &WorldContextLoader::getWorldContext( )
+{
     return worldContext;
 }
 
-void WorldContextLoader::update( ) {
+void WorldContextLoader::update( )
+{
     memcpy( mappedMemory, &worldContext, sizeof( WorldContext ) );
 }
 
-WorldContextLoader::~WorldContextLoader( ) {
+WorldContextLoader::~WorldContextLoader( )
+{
     context->vma.unmapMemory( buffer.second );
     context->vma.destroyBuffer( buffer.first, buffer.second );
 }
 
-std::pair< vk::Buffer, vma::Allocation > &WorldContextLoader::getBuffer( ) {
+std::pair< vk::Buffer, vma::Allocation > &WorldContextLoader::getBuffer( )
+{
     return buffer;
 }
 

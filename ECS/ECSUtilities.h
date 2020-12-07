@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../core/Common.h"
-#include <bitset> 
+#include <bitset>
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
-class ECSUtilities {
+class ECSUtilities
+{
 private:
-	ECSUtilities( ) = default;
+    ECSUtilities( ) = default;
 public:
 };
 

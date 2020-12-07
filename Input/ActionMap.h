@@ -7,12 +7,14 @@ NAMESPACES( ENGINE_NAMESPACE, Input )
 
 typedef std::function< void( std::string ) > ActionCallback;
 
-enum class Controller {
+enum class Controller
+{
     Keyboard,
     Mouse,
 };
 
-struct ActionBinding {
+struct ActionBinding
+{
     Controller controller;
     KeyPressForm pressForm;
 
@@ -20,13 +22,17 @@ struct ActionBinding {
     KeyboardKeyCode keyCode;
 };
 
-class ActionMap {
+class ActionMap
+{
 private:
     std::shared_ptr< EventHandler > eventHandler;
     std::unordered_map< std::string, std::vector< ActionCallback > > callbacks;
+    ActionCallback proxyActionCallback;
 public:
     explicit ActionMap( std::shared_ptr< EventHandler > eventHandler );
-    void registerAction( const std::string& actionName, const ActionBinding& binding, const ActionCallback& callback );
+
+    void registerAction( const std::string &actionName, ActionBinding binding );
+    void subscribeToAction( const std::string &actionName, ActionCallback callback );
 };
 
 END_NAMESPACES

@@ -4,7 +4,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Scene )
 
-class IPlayable {
+class IPlayable
+{
 public:
     virtual void init( ) = 0;
     virtual void update( ) = 0;

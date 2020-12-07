@@ -4,7 +4,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
 
-enum class ConstantName {
+enum class ConstantName
+{
     ShaderInputViewProjection,
     ShaderInputWorldContext,
     ShaderInputEnvironmentLights,
@@ -12,10 +13,13 @@ enum class ConstantName {
     ShaderInputSampler
 };
 
-class Constants {
+class Constants
+{
 public:
-    static inline std::string getConstant( ConstantName constantName ) {
-        switch ( constantName ) {
+    static inline std::string getConstant( ConstantName constantName )
+    {
+        switch ( constantName )
+        {
             case ConstantName::ShaderInputViewProjection:
                 return "ViewProjection";
             case ConstantName::ShaderInputWorldContext:

@@ -1,19 +1,17 @@
 #pragma once
 
 #define NAMESPACES( N1, N2 ) namespace N1 { namespace N2 {
+#define NAMESPACE( N1 ) namespace N1 {
 #define END_NAMESPACES } }
+#define END_NAMESPACE }
 
 #define GLFW_INCLUDE_VULKAN
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+
 #include <vulkan/vulkan.hpp>
 
 #include <stdlib.h>
 #include <malloc.h>
-
-#if defined(_WIN32)
-//#include <atlstr.h>
-//#include <windows.h>
-#endif
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
@@ -33,8 +31,9 @@
 #include "Time.h"
 #include <stb_image.h>
 #include <vk_mem_alloc.hpp>
+#include "btBulletDynamicsCommon.h"
 
-#define PATH(P) std::string(ROOT_DIR) + P
+#define PATH( P ) std::string(ROOT_DIR) + P
 
 #ifdef DEBUG
 #define TRACE( COMPONENT, VERBOSITY, MSG )                              \
@@ -63,20 +62,6 @@
     OUT = sstreamCOUNT.str()
 
 #define ENTITY_CAST( instance ) std::dynamic_pointer_cast< IGameEntity >( instance )
-
-class Utilities {
-public:
-    template < class Type >
-    static Type matchAndGetOrDefault( Type def, std::vector< Type > list, std::function< bool( Type t ) > condition) {
-        for ( Type t : list ) {
-            if ( condition( t ) ) {
-                return t;
-            }
-        }
-
-        return def;
-    }
-};
 
 #define while_false( statement ) do { statement } while ( false )
 #define ASSERT_M( val, message ) while_false( if ( !( val ) ) { throw std::runtime_error( message ); } )

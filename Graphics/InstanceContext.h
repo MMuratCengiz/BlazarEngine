@@ -4,7 +4,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-struct DeviceInfo {
+struct DeviceInfo
+{
     vk::PhysicalDevice device;
     vk::PhysicalDeviceProperties properties;
     vk::PhysicalDeviceFeatures features;
@@ -13,18 +14,21 @@ struct DeviceInfo {
     std::vector< vk::QueueFamilyProperties > queueFamilies;
 };
 
-struct QueueFamily {
+struct QueueFamily
+{
     uint32_t index;
     VkQueueFamilyProperties properties;
 };
 
-enum class QueueType {
+enum class QueueType
+{
     Graphics,
     Presentation,
     Transfer,
 };
 
-struct InstanceContext {
+struct InstanceContext
+{
 public:
     vk::Instance instance;
     vk::PhysicalDevice physicalDevice;

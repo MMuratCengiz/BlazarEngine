@@ -4,13 +4,15 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
-enum class KeyPressForm {
+enum class KeyPressForm
+{
     Pressed,
     Released,
     Holding
 };
 
-enum class KeyboardKeyCode : uint32_t {
+enum class KeyboardKeyCode : uint32_t
+{
     A = 0,
     B = 1,
     C = 2,
@@ -39,21 +41,25 @@ enum class KeyboardKeyCode : uint32_t {
     Z = 25
 };
 
-enum class MouseKeyCode {
+enum class MouseKeyCode
+{
     LeftMouseClick,
     RightMouseClick
 };
 
 typedef std::function< void( KeyboardKeyCode ) > KeyboardPressEventCallback;
 
-class EventHandler {
+class EventHandler
+{
 private:
-    GLFWwindow * window;
-    std::unordered_map< KeyboardKeyCode, std::vector < KeyboardPressEventCallback > > keyboardPressCallbacks;
+    GLFWwindow *window;
+    std::unordered_map< KeyboardKeyCode, std::vector< KeyboardPressEventCallback > > keyboardPressCallbacks;
 public:
-    inline explicit EventHandler( GLFWwindow * window ) : window( window ) { }
-    void registerKeyboardPress( const KeyboardKeyCode& code, const KeyboardPressEventCallback& callback );
-    void pollEvents();
+    inline explicit EventHandler( GLFWwindow *window ) : window( window )
+    { }
+
+    void registerKeyboardPress( const KeyboardKeyCode &code, const KeyboardPressEventCallback &callback );
+    void pollEvents( );
 };
 
 END_NAMESPACES

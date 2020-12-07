@@ -15,7 +15,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-Renderer:: Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< PipelineSelector > pipelineSelector ) : context( context ), pipelineSelector( std::move( pipelineSelector ) ) {
+Renderer::Renderer( const std::shared_ptr< InstanceContext > &context, std::shared_ptr< PipelineSelector > pipelineSelector ) : context( context ), pipelineSelector( std::move( pipelineSelector ) )
+{
     poolSize = context->swapChainImages.size( );
 
     createFrameContexts( );
@@ -27,15 +28,18 @@ Renderer:: Renderer( const std::shared_ptr< InstanceContext > &context, std::sha
     createSynchronizationStructures( context->logicalDevice );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &event,
-                                                                                                     const Input::pEventParameters &parameters ) {
+                                                                                                     const Input::pEventParameters &parameters )
+    {
         frameBufferResized = true;
     } );
 }
 
-void Renderer::createFrameContexts( ) {
+void Renderer::createFrameContexts( )
+{
     frameContexts.resize( poolSize, FrameContext { } );
 
-    for ( uint32_t i = 0; i < poolSize; ++i ) {
+    for ( uint32_t i = 0; i < poolSize; ++i )
+    {
         FrameContext &fContext = frameContexts[ i ];
 
         fContext.commandExecutor = std::make_shared< CommandExecutor >( context );
@@ -45,35 +49,39 @@ void Renderer::createFrameContexts( ) {
         fContext.lightLoader = std::make_shared< LightLoader >( context, fContext.commandExecutor );
         fContext.worldContextLoader = std::make_shared< WorldContextLoader >( context );
 
-        for ( const PipelineInstance &instance: pipelineSelector->selectAll( ) ) {
+        for ( const PipelineInstance &instance: pipelineSelector->selectAll( ) )
+        {
             instance.descriptorManager->updateUniform( i, Core::Constants::getConstant( Core::ConstantName::ShaderInputViewProjection ), fContext.cameraLoader->getBuffer( ) );
             instance.descriptorManager->updateUniform( i, Core::Constants::getConstant( Core::ConstantName::ShaderInputWorldContext ), fContext.worldContextLoader->getBuffer( ) );
         }
     }
 }
 
-void Renderer::drawRenderObjects( ) {
+void Renderer::drawRenderObjects( )
+{
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
 
     currentFrameContext.cameraLoader->reload( );
 
-    if ( currentFrameContext.cachedBuffers == nullptr ) {
+    if ( currentFrameContext.cachedBuffers == nullptr )
+    {
         std::shared_ptr< CommandExecutor > &currentExecutor = currentFrameContext.commandExecutor;
 
         currentFrameContext.cachedBuffers = currentExecutor->startCommandExecution( )
                 ->generateBuffers( { }, context->frameBuffers.size( ) ); // TODO this could be problematic
     }
 
-    currentFrameContext.lightLoader->load();
+    currentFrameContext.lightLoader->load( );
 
-    currentFrameContext.worldContextLoader->getWorldContext().worldPosition = glm::vec4( camera->getPosition(), 1.0f );
-    currentFrameContext.worldContextLoader->update();
+    currentFrameContext.worldContextLoader->getWorldContext( ).worldPosition = glm::vec4( camera->getPosition( ), 1.0f );
+    currentFrameContext.worldContextLoader->update( );
 
     vk::ClearColorValue colorClear = { std::array< float, 4 > { 0.0f, 0.0f, 0.0f, 1.0f } };
 
     currentFrameContext.cachedBuffers->beginCommand( )->beginRenderPass( context->frameBuffers.data( ), colorClear );
 
-    for ( const auto &renderObject: gameEntities ) {
+    for ( const auto &renderObject: gameEntities )
+    {
         refreshCommands( renderObject );
     }
 
@@ -81,7 +89,8 @@ void Renderer::drawRenderObjects( ) {
 }
 
 
-void Renderer::refreshCommands( const pGameEntity &entity ) {
+void Renderer::refreshCommands( const pGameEntity &entity )
+{
     const auto &meshComponent = entity->getComponent< CMesh >( );
 
     FrameContext &currentFrameContext = frameContexts[ frameIndex ];
@@ -103,7 +112,8 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
     updateCubeComponent( entity, manager, setsToBind );
 
     // TODO automatically order the sets to bind
-    if ( pipeline.properties.supportsLighting ) {
+    if ( pipeline.properties.supportsLighting )
+    {
         setsToBind.emplace_back( manager->getUniformDescriptorSet( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputEnvironmentLights ) ) );
     }
 
@@ -114,7 +124,8 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
     meshLoader->load( objectBuffer, *meshComponent );
 
     uint32_t offset = 0;
-    for ( auto &part: objectBuffer.buffers ) {
+    for ( auto &part: objectBuffer.buffers )
+    {
         currentFrameContext.cachedBuffers
                 ->bindDescriptorSet( pipeline.layout, setsToBind )
                 ->bindVertexMemory( part.vertexBuffer.first, offset )
@@ -127,7 +138,8 @@ void Renderer::refreshCommands( const pGameEntity &entity ) {
     }
 }
 
-void Renderer::updateTransformComponent( const pGameEntity &entity, const FrameContext &currentFrameContext, const PipelineInstance &pipeline ) const {
+void Renderer::updateTransformComponent( const pGameEntity &entity, const FrameContext &currentFrameContext, const PipelineInstance &pipeline ) const
+{
     const auto &transformComponent = entity->getComponent< CTransform >( );
 
     FUNCTION_BREAK( IS_NULL( transformComponent ) );
@@ -142,7 +154,8 @@ void Renderer::updateTransformComponent( const pGameEntity &entity, const FrameC
     );
 }
 
-void Renderer::updateMaterialComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind ) {
+void Renderer::updateMaterialComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind )
+{
     const auto &materialComponent = entity->getComponent< CMaterial >( );
 
     FUNCTION_BREAK( IS_NULL( materialComponent ) );
@@ -153,10 +166,12 @@ void Renderer::updateMaterialComponent( const std::shared_ptr< IGameEntity > &en
     manager->updateUniform( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputMaterial ), materialBuffer.buffer );
 
     uint32_t i = 0;
-    for ( auto &part: materialBuffer.texturesObjects ) {
+    for ( auto &part: materialBuffer.texturesObjects )
+    {
         std::string &path = materialComponent->textures[ i ].path;
 
-        if ( !manager->existsSetForTexture( frameIndex, path ) ) {
+        if ( !manager->existsSetForTexture( frameIndex, path ) )
+        {
             manager->updateTexture( frameIndex, path, part );
         }
 
@@ -166,7 +181,8 @@ void Renderer::updateMaterialComponent( const std::shared_ptr< IGameEntity > &en
     setsToBind.emplace_back( manager->getUniformDescriptorSet( frameIndex, Core::Constants::getConstant( Core::ConstantName::ShaderInputMaterial ) ) );
 }
 
-void Renderer::updateCubeComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind ) {
+void Renderer::updateCubeComponent( const std::shared_ptr< IGameEntity > &entity, std::shared_ptr< DescriptorManager > &manager, std::vector< vk::DescriptorSet > &setsToBind )
+{
     const auto &cubeMapComponent = entity->getComponent< CCubeMap >( );
 
     FUNCTION_BREAK( IS_NULL( cubeMapComponent ) );
@@ -176,14 +192,16 @@ void Renderer::updateCubeComponent( const std::shared_ptr< IGameEntity > &entity
 
     const std::string key = cubeMapLoader->getKey( *cubeMapComponent );
 
-    if ( !manager->existsSetForTexture( frameIndex, key ) ) {
+    if ( !manager->existsSetForTexture( frameIndex, key ) )
+    {
         manager->updateTexture( frameIndex, key, textureBuffer );
     }
 
     setsToBind.emplace_back( manager->getTextureDescriptorSet( frameIndex, key, 0 ) );
 }
 
-void Renderer::createSynchronizationStructures( const vk::Device &device ) {
+void Renderer::createSynchronizationStructures( const vk::Device &device )
+{
     vk::SemaphoreCreateInfo semaphoreCreateInfo { };
 
     vk::FenceCreateInfo fenceCreateInfo { };
@@ -195,14 +213,16 @@ void Renderer::createSynchronizationStructures( const vk::Device &device ) {
     this->inFlightFences.resize( this->poolSize );
     this->imagesInFlight.resize( this->context->swapChainImages.size( ), nullptr );
 
-    for ( uint32_t i = 0; i < this->imageAvailableSemaphores.size( ); ++i ) {
+    for ( uint32_t i = 0; i < this->imageAvailableSemaphores.size( ); ++i )
+    {
         this->imageAvailableSemaphores[ i ] = device.createSemaphore( semaphoreCreateInfo );
         this->renderFinishedSemaphores[ i ] = device.createSemaphore( semaphoreCreateInfo );
         this->inFlightFences[ i ] = device.createFence( fenceCreateInfo );
     }
 }
 
-void Renderer::render( ) {
+void Renderer::render( )
+{
     FrameContext &fContext = frameContexts[ frameIndex ];
 
     auto waitResult = context->logicalDevice.waitForFences( 1, &inFlightFences[ frameIndex ], VK_TRUE, UINT64_MAX );
@@ -212,10 +232,12 @@ void Renderer::render( ) {
     uint32_t nextImage;
     auto result = context->logicalDevice.acquireNextImageKHR( context->swapChain, UINT64_MAX, imageAvailableSemaphores[ frameIndex ], nullptr );
 
-    if ( result.result == vk::Result::eErrorOutOfDateKHR ) {
+    if ( result.result == vk::Result::eErrorOutOfDateKHR )
+    {
         Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
         return;
-    } else if ( result.result != vk::Result::eSuccess && result.result == vk::Result::eSuboptimalKHR ) {
+    } else if ( result.result != vk::Result::eSuccess && result.result == vk::Result::eSuboptimalKHR )
+    {
         throw std::runtime_error( "failed to acquire swap chain image!" );
     }
 
@@ -259,80 +281,97 @@ void Renderer::render( ) {
 
     auto presentResult = context->queues[ QueueType::Presentation ].presentKHR( presentInfo );
 
-    if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || frameBufferResized ) {
+    if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || frameBufferResized )
+    {
         frameBufferResized = false;
         Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
         return;
-    } else if ( presentResult != vk::Result::eSuccess ) {
+    } else if ( presentResult != vk::Result::eSuccess )
+    {
         throw std::runtime_error( "failed to acquire swap chain image!" );
     }
 
     frameIndex = ( frameIndex + 2 ) & poolSize;
 }
 
-void Renderer::freeBuffers( ) {
-    for ( FrameContext &fc: frameContexts ) {
+void Renderer::freeBuffers( )
+{
+    for ( FrameContext &fc: frameContexts )
+    {
         fc.cachedBuffers.reset( );
         fc.cachedBuffers = nullptr;
     }
 }
 
-Renderer::~Renderer( ) {
-    for ( uint32_t index = 0; index < imageAvailableSemaphores.size( ); ++index ) {
+Renderer::~Renderer( )
+{
+    for ( uint32_t index = 0; index < imageAvailableSemaphores.size( ); ++index )
+    {
         context->logicalDevice.destroySemaphore( renderFinishedSemaphores[ index ], nullptr );
         context->logicalDevice.destroySemaphore( imageAvailableSemaphores[ index ], nullptr );
         context->logicalDevice.destroyFence( inFlightFences[ index ], nullptr );
     }
 }
 
-void Renderer::setScene( const std::shared_ptr< Scene::Scene > &scene ) {
+void Renderer::setScene( const std::shared_ptr< Scene::Scene > &scene )
+{
     NOT_NULL( scene->getCamera( ) );
-    this->camera = scene->getCamera();
+    this->camera = scene->getCamera( );
 
-    for ( uint32_t i = 0; i < poolSize; ++i ) {
+    for ( uint32_t i = 0; i < poolSize; ++i )
+    {
         FrameContext &fContext = frameContexts[ i ];
 
         fContext.cameraLoader->reload( scene->getCamera( ) );
 
-        for ( const auto &ambientLight: scene->getAmbientLights( ) ) {
+        for ( const auto &ambientLight: scene->getAmbientLights( ) )
+        {
             fContext.lightLoader->addAmbientLight( ambientLight );
         }
 
-        for ( const auto &directionLight: scene->getDirectionalLights( ) ) {
+        for ( const auto &directionLight: scene->getDirectionalLights( ) )
+        {
             fContext.lightLoader->addDirectionalLight( directionLight );
         }
 
-        for ( const auto &pointLight: scene->getPointLights( ) ) {
+        for ( const auto &pointLight: scene->getPointLights( ) )
+        {
             fContext.lightLoader->addPointLight( pointLight );
         }
 
-        for ( const auto &spotLight: scene->getSpotLights( ) ) {
+        for ( const auto &spotLight: scene->getSpotLights( ) )
+        {
             fContext.lightLoader->addSpotLight( spotLight );
         }
 
-        fContext.lightLoader->load();
+        fContext.lightLoader->load( );
 
-        for ( const PipelineInstance &instance: pipelineSelector->selectAll( ) ) {
+        for ( const PipelineInstance &instance: pipelineSelector->selectAll( ) )
+        {
             instance.descriptorManager->updateUniform( i, Core::Constants::getConstant( Core::ConstantName::ShaderInputEnvironmentLights ), fContext.lightLoader->getBuffer( ) );
         }
     }
 
     gameEntities.clear( );
 
-    for ( const auto &entity: scene->getEntities( ) ) {
+    for ( const auto &entity: scene->getEntities( ) )
+    {
         addRenderObject( entity );
     }
 }
 
-void Renderer::addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity ) {
+void Renderer::addRenderObject( const std::shared_ptr< IGameEntity > &gameEntity )
+{
     const std::shared_ptr< CMesh > &cmesh = gameEntity->getComponent< CMesh >( );
-    if ( !IS_NULL( cmesh ) ) {
+    if ( !IS_NULL( cmesh ) )
+    {
         meshLoader->cache( *cmesh );
     }
 
     const std::shared_ptr< CMaterial > &cmat = gameEntity->getComponent< CMaterial >( );
 
-    if ( !IS_NULL( cmat ) ) {
+    if ( !IS_NULL( cmat ) )
+    {
         materialLoader->cache( *cmat );
     }
 

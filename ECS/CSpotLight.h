@@ -5,7 +5,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
-struct CSpotLight : public IComponent {
+struct CSpotLight : public IComponent
+{
     float power;
     float radius;
     glm::vec3 position;

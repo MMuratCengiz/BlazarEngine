@@ -7,8 +7,10 @@ set(Libs
 set(Core
         Core/Common.h
         Core/Time.h
-        Scene/World.h
-        Core/Constants.h)
+        Core/Constants.h
+        Core/Utilities.h
+        Core/Utilities.cpp
+        )
 
 
 set(Graphics
@@ -72,7 +74,9 @@ set(ECS
         ECS/Renderable.h
         ECS/IComponent.h
         ECS.h
-        ECS/CMesh
+        ECS/CCollisionObject.h
+        ECS/CMesh.h
+        ECS/CRigidBody.h
         ECS/ECSUtilities.h
         ECS/CMaterial.h
         ECS/ISystem.h
@@ -85,7 +89,18 @@ set(ECS
         )
 
 
+set(Physics
+        Physics/PhysicsWorld.h
+        Physics/PhysicsWorld.cpp
+        Physics/PhysicsTransformSystem.h
+        Physics/PhysicsTransformSystem.cpp
+        Physics/CollisionShapeInitializer.h
+        Physics/CollisionShapeInitializer.cpp
+        )
+
+
 set(Scene
+        Scene/World.h
         Scene/Camera.h
         Scene/FpsCamera.h
         Scene/FpsCamera.cpp
@@ -97,6 +112,9 @@ set(Scene
 
 
 set(Samples
+        Samples/SampleCrate.h
+        Samples/SampleSetupInputBindings.h
+        Samples/SampleSmallCrate.h
         Samples/SampleGame.h
         Samples/SampleGame.cpp
         Samples/SampleHouse.h

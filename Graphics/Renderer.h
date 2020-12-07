@@ -20,7 +20,8 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 using namespace ECS;
 
-struct FrameContext {
+struct FrameContext
+{
     std::shared_ptr< CommandExecutor > commandExecutor;
     std::shared_ptr< CommandList > cachedBuffers;
     std::shared_ptr< TransformLoader > transformLoader;
@@ -29,7 +30,8 @@ struct FrameContext {
     std::shared_ptr< WorldContextLoader > worldContextLoader;
 };
 
-class Renderer {
+class Renderer
+{
 private:
     uint32_t poolSize = 3;
     uint32_t frameIndex = 0;
@@ -66,9 +68,11 @@ public:
     Renderer( const Renderer & ) = delete;
     Renderer &operator=( const Renderer & ) = delete;
 
-    inline FrameContext &getFrameContext( uint32_t image ) {
+    inline FrameContext &getFrameContext( uint32_t image )
+    {
         return frameContexts[ image ];
     }
+
 private:
     void drawRenderObjects( );
     void refreshCommands( const pGameEntity &entity );

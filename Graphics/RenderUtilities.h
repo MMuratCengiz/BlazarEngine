@@ -8,7 +8,8 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class InstanceContext;
 
-class RenderUtilities {
+class RenderUtilities
+{
 private:
     RenderUtilities( ) = default;
 public:
@@ -20,13 +21,13 @@ public:
             vk::DeviceSize targetOffset = 0 );
 
     static void createSampler( const std::shared_ptr< InstanceContext > &context, vk::Sampler &sampler,
-                                      const vk::SamplerCreateInfo &samplerCreateInfo );
+                               const vk::SamplerCreateInfo &samplerCreateInfo );
 
     static void allocateImageMemory( const std::shared_ptr< InstanceContext > &context, const vk::Image &image,
-                                            vk::DeviceMemory &memory, vk::MemoryRequirements &memoryRequirements,
-                                            const vk::MemoryPropertyFlags& properties =
-                                            vk::MemoryPropertyFlagBits::eHostVisible |
-                                            vk::MemoryPropertyFlagBits::eHostCoherent );
+                                     vk::DeviceMemory &memory, vk::MemoryRequirements &memoryRequirements,
+                                     const vk::MemoryPropertyFlags &properties =
+                                     vk::MemoryPropertyFlagBits::eHostVisible |
+                                     vk::MemoryPropertyFlagBits::eHostCoherent );
 
     static void initStagingBuffer( const std::shared_ptr< InstanceContext > &context, std::pair< vk::Buffer, vma::Allocation > &stagingBuffer, const void *data, const uint64_t &size );
 

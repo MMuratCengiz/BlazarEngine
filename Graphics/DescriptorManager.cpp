@@ -11,17 +11,20 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 const uint32_t DescriptorManager::texturePreallocateCount = 12;
 
-DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context, std::shared_ptr< GLSLShaderSet > shaderSet ) : context( std::move( context ) ), shaderSet( std::move( shaderSet ) ) {
+DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context, std::shared_ptr< GLSLShaderSet > shaderSet ) : context( std::move( context ) ), shaderSet( std::move( shaderSet ) )
+{
     createDescriptorPool( );
 
     uniformLayouts.resize( this->shaderSet->getDescriptorSets( ).size( ) );
     textureLayouts.resize( uniformLayouts.size( ) );
     layouts.resize( uniformLayouts.size( ) );
 
-    for ( const auto &sets: this->shaderSet->getDescriptorSets( ) ) {
+    for ( const auto &sets: this->shaderSet->getDescriptorSets( ) )
+    {
         uint32_t setIndex = sets.id;
 
-        for ( const auto &bindings: sets.descriptorSetBindings ) {
+        for ( const auto &bindings: sets.descriptorSetBindings )
+        {
             uniformLocations[ bindings.name ] = UniformLocation {
                     true, setIndex, bindings.index
             };
@@ -36,11 +39,13 @@ DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context
         createInfo.bindingCount = vkDescriptorSetBindings.size( );
         createInfo.pBindings = vkDescriptorSetBindings.data( );
 
-        if ( vkDescriptorSetBindings[ 0 ].descriptorType == vk::DescriptorType::eCombinedImageSampler ) {
+        if ( vkDescriptorSetBindings[ 0 ].descriptorType == vk::DescriptorType::eCombinedImageSampler )
+        {
             textureLayouts[ setIndex ] = this->context->logicalDevice.createDescriptorSetLayout( createInfo );
             uniformLayouts[ setIndex ] = nullptr;
             layouts[ setIndex ] = textureLayouts[ setIndex ];
-        } else {
+        } else
+        {
             textureLayouts[ setIndex ] = nullptr;
             uniformLayouts[ setIndex ] = this->context->logicalDevice.createDescriptorSetLayout( createInfo );
             layouts[ setIndex ] = uniformLayouts[ setIndex ];
@@ -50,7 +55,8 @@ DescriptorManager::DescriptorManager( std::shared_ptr< InstanceContext > context
     expandTextureDescriptorSets( );
 }
 
-void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout ) {
+void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout )
+{
     uint32_t swapChainImageCount = context->swapChainImages.size( );
 
     std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
@@ -63,23 +69,28 @@ void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName,
     uniformSetMaps[ uniformName ] = context->logicalDevice.allocateDescriptorSets( allocateInfo );
 }
 
-void DescriptorManager::expandTextureDescriptorSets( ) {
+void DescriptorManager::expandTextureDescriptorSets( )
+{
     uint32_t swapChainImageCount = context->swapChainImages.size( );
 
-    if ( textureSets.empty( ) ) {
+    if ( textureSets.empty( ) )
+    {
         nextFreeTexture.resize( swapChainImageCount, 0 );
         textureSets.resize( swapChainImageCount );
         textureSetMaps.resize( swapChainImageCount );
     }
 
-    for ( auto &layout: textureLayouts ) {
-        if ( layout == nullptr ) {
+    for ( auto &layout: textureLayouts )
+    {
+        if ( layout == nullptr )
+        {
             continue;
         }
 
         std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
 
-        for ( auto &textureSet : textureSets ) {
+        for ( auto &textureSet : textureSets )
+        {
             vk::DescriptorSetAllocateInfo allocateInfo { };
             allocateInfo.descriptorPool = samplerDescriptorPool;
             allocateInfo.descriptorSetCount = layoutsPtr.size( );
@@ -92,7 +103,8 @@ void DescriptorManager::expandTextureDescriptorSets( ) {
 }
 
 // Todo create more pools as necessary
-void DescriptorManager::createDescriptorPool( ) {
+void DescriptorManager::createDescriptorPool( )
+{
     auto swapChainImageCount = static_cast< uint32_t >( context->swapChainImages.size( ) );
 
     vk::DescriptorPoolSize uniformPoolSize { };
@@ -118,7 +130,8 @@ void DescriptorManager::createDescriptorPool( ) {
     samplerDescriptorPool = context->logicalDevice.createDescriptorPool( samplerDescriptorPoolCreateInfo );
 }
 
-vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const UniformLocation &uniformLocation, const BindingUpdateInfo &updateInfo ) {
+vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const UniformLocation &uniformLocation, const BindingUpdateInfo &updateInfo )
+{
     const DescriptorSet &set = shaderSet->getDescriptorSetBySetId( uniformLocation.set );
 
     const DescriptorSetBinding &ref = set.descriptorSetBindings[ updateInfo.index ];
@@ -133,9 +146,12 @@ vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const Uni
     return writeDescriptorSet;
 }
 
-void DescriptorManager::ensureTextureHasDescriptor( const uint32_t &frameIndex, const std::string &texturePath ) {
-    if ( textureSetMaps[ frameIndex ].find( texturePath ) == textureSetMaps[ frameIndex ].end( ) ) {
-        if ( nextFreeTexture[ frameIndex ] >= textureSets[ frameIndex ].size( ) ) {
+void DescriptorManager::ensureTextureHasDescriptor( const uint32_t &frameIndex, const std::string &texturePath )
+{
+    if ( textureSetMaps[ frameIndex ].find( texturePath ) == textureSetMaps[ frameIndex ].end( ) )
+    {
+        if ( nextFreeTexture[ frameIndex ] >= textureSets[ frameIndex ].size( ) )
+        {
             expandTextureDescriptorSets( );
         }
 
@@ -144,30 +160,35 @@ void DescriptorManager::ensureTextureHasDescriptor( const uint32_t &frameIndex, 
     }
 }
 
-void DescriptorManager::ensureUniformHasDescriptor( const uint32_t &frameIndex, const std::string &uniformName, const int &arrayIndex ) {
+void DescriptorManager::ensureUniformHasDescriptor( const uint32_t &frameIndex, const std::string &uniformName, const int &arrayIndex )
+{
     const std::string &key = getUniformKey( uniformName, arrayIndex );
 
-    if ( uniformSetMaps.find( key ) == uniformSetMaps.end( ) ) {
-        auto& uniformSet = uniformLocations[ uniformName ];
-        auto& layout = uniformLayouts[ uniformSet.set ];
+    if ( uniformSetMaps.find( key ) == uniformSetMaps.end( ) )
+    {
+        auto &uniformSet = uniformLocations[ uniformName ];
+        auto &layout = uniformLayouts[ uniformSet.set ];
 
         addUniformDescriptorSet( uniformName, uniformSet, layout );
     }
 }
 
-vk::DescriptorSet &DescriptorManager::getUniformDescriptorSet( const uint32_t &frameIndex, const std::string &uniformName, const uint32_t &arrayIndex ) {
+vk::DescriptorSet &DescriptorManager::getUniformDescriptorSet( const uint32_t &frameIndex, const std::string &uniformName, const uint32_t &arrayIndex )
+{
     ensureUniformHasDescriptor( frameIndex, uniformName, arrayIndex );
 
     return uniformSetMaps[ getUniformKey( uniformName, arrayIndex ) ][ frameIndex ];
 }
 
-vk::DescriptorSet &DescriptorManager::getTextureDescriptorSet( const uint32_t &frameIndex, const std::string &texturePath, const uint32_t &textureIndex ) {
+vk::DescriptorSet &DescriptorManager::getTextureDescriptorSet( const uint32_t &frameIndex, const std::string &texturePath, const uint32_t &textureIndex )
+{
     ensureTextureHasDescriptor( frameIndex, texturePath );
 
     return textureSetMaps[ frameIndex ][ texturePath ];
 }
 
-void DescriptorManager::updateUniform( const uint32_t &frameIndex, const std::string &uniformName, const std::pair< vk::Buffer, vma::Allocation > &buffer, const int &arrayIndex ) {
+void DescriptorManager::updateUniform( const uint32_t &frameIndex, const std::string &uniformName, const std::pair< vk::Buffer, vma::Allocation > &buffer, const int &arrayIndex )
+{
     ensureUniformHasDescriptor( frameIndex, uniformName, arrayIndex );
 
     const std::string &key = getUniformKey( uniformName, arrayIndex );
@@ -196,11 +217,13 @@ void DescriptorManager::updateUniform( const uint32_t &frameIndex, const std::st
     context->logicalDevice.updateDescriptorSets( 1, &writeDescriptorSet, 0, nullptr );
 }
 
-bool DescriptorManager::existsSetForTexture( const uint32_t &frameIndex, const std::string &path ) {
+bool DescriptorManager::existsSetForTexture( const uint32_t &frameIndex, const std::string &path )
+{
     return textureSetMaps[ frameIndex ].find( path ) != textureSetMaps[ frameIndex ].end( );
 }
 
-void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::string &path, const TextureBuffer &buffer ) {
+void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::string &path, const TextureBuffer &buffer )
+{
     ensureTextureHasDescriptor( frameIndex, path );
 
     // Todo + texture index when texture arrays are implemented
@@ -228,24 +251,29 @@ void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::st
     context->logicalDevice.updateDescriptorSets( 1, &writeDescriptorSet, 0, nullptr );
 }
 
-const std::vector< vk::DescriptorSetLayout > &DescriptorManager::getLayouts( ) {
+const std::vector< vk::DescriptorSetLayout > &DescriptorManager::getLayouts( )
+{
     return layouts;
 }
 
-std::string DescriptorManager::getUniformKey( const std::string &uniformName, const int &arrayIndex ) {
-    if ( arrayIndex == - 1 ) {
+std::string DescriptorManager::getUniformKey( const std::string &uniformName, const int &arrayIndex )
+{
+    if ( arrayIndex == -1 )
+    {
         return uniformName;
     }
 
     std::stringstream key;
-    key << uniformName  << arrayIndex;
+    key << uniformName << arrayIndex;
     return key.str( );
 }
 
-DescriptorManager::~DescriptorManager( ) {
+DescriptorManager::~DescriptorManager( )
+{
     context->logicalDevice.destroySampler( sampler );
     context->logicalDevice.destroyImageView( imageView );
-    for ( auto &layout: layouts ) {
+    for ( auto &layout: layouts )
+    {
         context->logicalDevice.destroyDescriptorSetLayout( layout );
     }
     context->logicalDevice.destroyDescriptorPool( uniformDescriptorPool );

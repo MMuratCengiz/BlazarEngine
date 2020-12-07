@@ -12,12 +12,14 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 class RenderSurface;
 struct Shader;
 
-namespace T_FUNC {
+namespace T_FUNC
+{
 typedef const std::function< bool( const DeviceInfo &pDevice ) > &deviceCapabilityCheck;
 typedef const std::function< bool( QueueType index ) > &findQueueType;
 }
 
-class RenderDevice {
+class RenderDevice
+{
 private:
     const std::unordered_map< std::string, bool > ENABLED_LAYERS {
             { "VK_LAYER_KHRONOS_validation", true },
@@ -43,12 +45,12 @@ public:
     explicit RenderDevice( GLFWwindow *window );
 
     std::vector< DeviceInfo > listGPUs( T_FUNC::deviceCapabilityCheck onlyValidDevices = defaultDeviceCapabilityCheck );
-    void selectDevice( const DeviceInfo& deviceInfo );
+    void selectDevice( const DeviceInfo &deviceInfo );
 
-    void beforeDelete();
+    void beforeDelete( );
 
-    std::shared_ptr< InstanceContext > getContext() const;
-    const std::shared_ptr< Renderer >& getRenderer();
+    std::shared_ptr< InstanceContext > getContext( ) const;
+    const std::shared_ptr< Renderer > &getRenderer( );
     ~RenderDevice( );
 private:
     void createRenderSurface( );
@@ -65,9 +67,9 @@ private:
     void createRenderPass( );
     void initializeVMA( );
 
-    static std::unordered_map< std::string, bool > defaultRequiredExtensions();
-    static bool defaultDeviceCapabilityCheck( const DeviceInfo& deviceInfo );
-    static void createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo& deviceInfo );
+    static std::unordered_map< std::string, bool > defaultRequiredExtensions( );
+    static bool defaultDeviceCapabilityCheck( const DeviceInfo &deviceInfo );
+    static void createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo &deviceInfo );
     std::vector< vk::DeviceQueueCreateInfo > createUniqueDeviceCreateInfos( );
 
     friend class RenderDeviceBuilder;

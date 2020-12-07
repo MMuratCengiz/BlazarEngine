@@ -5,11 +5,14 @@
 #include "../ECS/CMaterial.h"
 #include "../ECS/CTransform.h"
 
-namespace Sample {
+namespace Sample
+{
 
-class SampleHouse : public BlazarEngine::ECS::IGameEntity {
+class SampleHouse : public BlazarEngine::ECS::IGameEntity
+{
 public:
-	SampleHouse( ) {
+    SampleHouse( )
+    {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
         mesh->path = PATH( "/assets/models/viking_room.obj" );
 
@@ -20,7 +23,7 @@ public:
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );
         transform->position = glm::vec3( 0.0f, 0.4f, -0.8f );
         transform->rotation.euler = glm::vec3( -90.0f, 90.0f, 0.0f );
-	}
+    }
 };
 
 }

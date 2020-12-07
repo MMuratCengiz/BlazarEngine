@@ -6,7 +6,8 @@
 
 using namespace ENGINE_NAMESPACE::Graphics;
 
-CommandExecutor::CommandExecutor( const std::shared_ptr< InstanceContext > &context ) : context( context ) {
+CommandExecutor::CommandExecutor( const std::shared_ptr< InstanceContext > &context ) : context( context )
+{
     vk::CommandPoolCreateInfo commandPoolCreateInfo { };
 
     commandPoolCreateInfo.queueFamilyIndex = context->queueFamilies[ QueueType::Graphics ].index;
@@ -15,19 +16,23 @@ CommandExecutor::CommandExecutor( const std::shared_ptr< InstanceContext > &cont
     commandPool = context->logicalDevice.createCommandPool( commandPoolCreateInfo );
 }
 
-std::shared_ptr< BeginCommandExecution > CommandExecutor::startCommandExecution( ) {
+std::shared_ptr< BeginCommandExecution > CommandExecutor::startCommandExecution( )
+{
     auto *pExecution = new BeginCommandExecution { this };
     return std::shared_ptr< BeginCommandExecution >( pExecution );
 }
 
-CommandExecutor::~CommandExecutor( ) {
+CommandExecutor::~CommandExecutor( )
+{
     context->logicalDevice.destroyCommandPool( commandPool );
 }
 
-BeginCommandExecution::BeginCommandExecution( CommandExecutor *executor ) : executor( executor ) { }
+BeginCommandExecution::BeginCommandExecution( CommandExecutor *executor ) : executor( executor )
+{ }
 
 std::shared_ptr< CommandList >
-BeginCommandExecution::generateBuffers( vk::CommandBufferUsageFlags usage, uint16_t bufferCount ) {
+BeginCommandExecution::generateBuffers( vk::CommandBufferUsageFlags usage, uint16_t bufferCount )
+{
     buffers.resize( bufferCount );
 
     vk::CommandBufferAllocateInfo bufferAllocateInfo { };
@@ -44,21 +49,26 @@ BeginCommandExecution::generateBuffers( vk::CommandBufferUsageFlags usage, uint1
 CommandList::CommandList(
         CommandExecutor *executor,
         std::vector< vk::CommandBuffer > buffers,
-        vk::CommandBufferUsageFlags usage ) : executor( executor ), buffers( std::move( buffers ) ), usage( usage ) {
+        vk::CommandBufferUsageFlags usage ) : executor( executor ), buffers( std::move( buffers ) ), usage( usage )
+{
 }
 
-CommandList *CommandList::beginCommand( ) {
-    for ( vk::CommandBuffer buffer: buffers ) {
+CommandList *CommandList::beginCommand( )
+{
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         buffer.begin( usage );
     }
 
     return this;
 }
 
-CommandList *CommandList::copyBuffer( const vk::DeviceSize &size, vk::Buffer &src, vk::Buffer &dst ) {
+CommandList *CommandList::copyBuffer( const vk::DeviceSize &size, vk::Buffer &src, vk::Buffer &dst )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer buffer: buffers ) {
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         vk::BufferCopy bufferCopy { };
         bufferCopy.size = size;
 
@@ -68,7 +78,8 @@ CommandList *CommandList::copyBuffer( const vk::DeviceSize &size, vk::Buffer &sr
     return this;
 }
 
-CommandList *CommandList::beginRenderPass( const vk::Framebuffer frameBuffers[], const vk::ClearColorValue &clearValue ) {
+CommandList *CommandList::beginRenderPass( const vk::Framebuffer frameBuffers[], const vk::ClearColorValue &clearValue )
+{
     ENSURE_FILTER
 
     uint16_t index = 0;
@@ -77,7 +88,8 @@ CommandList *CommandList::beginRenderPass( const vk::Framebuffer frameBuffers[],
 
     vk::ClearValue clearValues[] = { clearValue, depthStencilClearColor };
 
-    for ( vk::CommandBuffer buffer: buffers ) {
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         vk::RenderPassBeginInfo renderPassBeginInfo { };
 
         renderPassBeginInfo.renderPass = executor->context->renderPass;
@@ -93,117 +105,140 @@ CommandList *CommandList::beginRenderPass( const vk::Framebuffer frameBuffers[],
     return this;
 }
 
-CommandList *CommandList::endRenderPass( ) {
+CommandList *CommandList::endRenderPass( )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer buffer: buffers ) {
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         buffer.endRenderPass( );
     }
 
     return this;
 }
 
-CommandList *CommandList::bindRenderPass( const vk::Pipeline &pipeline, const vk::PipelineBindPoint &bindPoint ) {
+CommandList *CommandList::bindRenderPass( const vk::Pipeline &pipeline, const vk::PipelineBindPoint &bindPoint )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer buffer: buffers ) {
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         buffer.bindPipeline( bindPoint, pipeline );
     }
 
     return this;
 }
 
-CommandList *CommandList::drawIndexed( const uint32_t &indexCount ) {
+CommandList *CommandList::drawIndexed( const uint32_t &indexCount )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer buffer: buffers ) {
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         buffer.drawIndexed( indexCount, 1, 0, 0, 0 );
     }
 
     return this;
 }
 
-CommandList *CommandList::draw( const uint64_t &vertexCount ) {
+CommandList *CommandList::draw( const uint64_t &vertexCount )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer buffer: buffers ) {
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         buffer.draw( vertexCount, 1, 0, 0 );
     }
 
     return this;
 }
 
-CommandList *CommandList::bindVertexMemory( const vk::Buffer &vertexBuffer, const vk::DeviceSize &offset ) {
+CommandList *CommandList::bindVertexMemory( const vk::Buffer &vertexBuffer, const vk::DeviceSize &offset )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.bindVertexBuffers( 0, 1, &vertexBuffer, &offset );
     }
 
     return this;
 }
 
-CommandList *CommandList::bindVertexMemories( const std::vector< vk::Buffer > &vertexBuffers, const std::vector< vk::DeviceSize > &offsets ) {
+CommandList *CommandList::bindVertexMemories( const std::vector< vk::Buffer > &vertexBuffers, const std::vector< vk::DeviceSize > &offsets )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.bindVertexBuffers( 0, vertexBuffers.size( ), vertexBuffers.data( ), offsets.data( ) );
     }
 
     return this;
 }
 
-CommandList *CommandList::bindIndexMemory( vk::Buffer indexBuffer, const vk::DeviceSize &offset ) {
+CommandList *CommandList::bindIndexMemory( vk::Buffer indexBuffer, const vk::DeviceSize &offset )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.bindIndexBuffer( indexBuffer, offset, vk::IndexType::eUint32 );
     }
 
     return this;
 }
 
-CommandList *CommandList::setViewport( const vk::Viewport &viewport ) {
+CommandList *CommandList::setViewport( const vk::Viewport &viewport )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.setViewport( 0, viewport );
     }
 
     return this;
 }
 
-CommandList *CommandList::setCullMode( const vk::CullModeFlags &cullMode ) {
+CommandList *CommandList::setCullMode( const vk::CullModeFlags &cullMode )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.setCullModeEXT( cullMode );
     }
 
     return this;
 }
 
-CommandList *CommandList::setViewScissor( const vk::Rect2D &scissor ) {
+CommandList *CommandList::setViewScissor( const vk::Rect2D &scissor )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.setScissor( 0, scissor );
     }
 
     return this;
 }
 
-CommandList *CommandList::pushConstant( const vk::PipelineLayout &layout, const vk::ShaderStageFlags &shaderStages, const uint32_t &size, const void *data ) {
+CommandList *CommandList::pushConstant( const vk::PipelineLayout &layout, const vk::ShaderStageFlags &shaderStages, const uint32_t &size, const void *data )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.pushConstants( layout, shaderStages, 0, size, data );
     }
 
     return this;
 }
 
-CommandList *CommandList::blitImage( const ImageBlitArgs &args ) {
+CommandList *CommandList::blitImage( const ImageBlitArgs &args )
+{
     ENSURE_FILTER
 
     vk::ImageBlit imageBlit { };
@@ -216,7 +251,8 @@ CommandList *CommandList::blitImage( const ImageBlitArgs &args ) {
     imageBlit.srcSubresource = args.srcSubresource;
     imageBlit.dstSubresource = args.dstSubresource;
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.blitImage(
                 args.sourceImage,
                 args.sourceImageLayout,
@@ -230,7 +266,8 @@ CommandList *CommandList::blitImage( const ImageBlitArgs &args ) {
     return this;
 }
 
-CommandList *CommandList::pipelineBarrier( const PipelineBarrierArgs &args ) {
+CommandList *CommandList::pipelineBarrier( const PipelineBarrierArgs &args )
+{
     ENSURE_FILTER
 
     vk::ImageMemoryBarrier memoryBarrier { };
@@ -248,7 +285,8 @@ CommandList *CommandList::pipelineBarrier( const PipelineBarrierArgs &args ) {
     memoryBarrier.srcAccessMask = args.sourceAccess;
     memoryBarrier.dstAccessMask = args.destinationAccess;
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.pipelineBarrier(
                 args.sourceStage, args.destinationStage,
                 { }, 0,
@@ -260,7 +298,8 @@ CommandList *CommandList::pipelineBarrier( const PipelineBarrierArgs &args ) {
     return this;
 }
 
-CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args ) {
+CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args )
+{
     ENSURE_FILTER
 
     vk::BufferImageCopy bufferImageCopy { };
@@ -279,7 +318,8 @@ CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args )
             1
     };
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.copyBufferToImage( args.sourceBuffer, args.image, vk::ImageLayout::eTransferDstOptimal, 1,
                                   &bufferImageCopy );
     }
@@ -288,18 +328,22 @@ CommandList *CommandList::copyBufferToImage( const CopyBufferToImageArgs &args )
 }
 
 CommandList *
-CommandList::bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const std::vector< vk::DescriptorSet > descriptorSet ) {
+CommandList::bindDescriptorSet( const vk::PipelineLayout &pipelineLayout, const std::vector< vk::DescriptorSet > descriptorSet )
+{
     ENSURE_FILTER
 
-    for ( vk::CommandBuffer &buffer: buffers ) {
+    for ( vk::CommandBuffer &buffer: buffers )
+    {
         buffer.bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet.size( ), descriptorSet.data( ), 0, nullptr );
     }
 
     return this;
 }
 
-vk::Result CommandList::execute( ) {
-    for ( vk::CommandBuffer buffer: buffers ) {
+vk::Result CommandList::execute( )
+{
+    for ( vk::CommandBuffer buffer: buffers )
+    {
         buffer.end( );
     }
 
@@ -314,38 +358,45 @@ vk::Result CommandList::execute( ) {
     return result;
 }
 
-const std::vector< vk::CommandBuffer > &CommandList::getBuffers( ) {
+const std::vector< vk::CommandBuffer > &CommandList::getBuffers( )
+{
     return buffers;
 }
 
-CommandList *CommandList::filter( bool condition ) {
+CommandList *CommandList::filter( bool condition )
+{
     conditionActive = true;
     conditionValue = condition;
     return this;
 }
 
-bool CommandList::passesFilter( ) const {
+bool CommandList::passesFilter( ) const
+{
     return !conditionActive || conditionValue;
 }
 
-CommandList *CommandList::otherwise( ) {
+CommandList *CommandList::otherwise( )
+{
     conditionValue = !conditionValue;
     isElse = true;
     conditionActive = true;
     return this;
 }
 
-CommandList *CommandList::endFilter( ) {
+CommandList *CommandList::endFilter( )
+{
     conditionActive = false;
     isElse = false;
     return this;
 }
 
-CommandList::~CommandList( ) {
+CommandList::~CommandList( )
+{
     freeBuffers( );
 }
 
-void CommandList::freeBuffers( ) {
+void CommandList::freeBuffers( )
+{
     executor->context->logicalDevice.freeCommandBuffers( executor->commandPool,
                                                          buffers.size( ),
                                                          buffers.data( ) );

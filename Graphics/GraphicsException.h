@@ -4,9 +4,11 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-class GraphicsException : public std::exception {
+class GraphicsException : public std::exception
+{
 public:
-    enum class Source: uint32_t {
+    enum class Source : uint32_t
+    {
         RenderDevice = 0,
         RenderSurface = 1,
         Renderer = 2,
@@ -16,7 +18,8 @@ private:
 
     std::string formattedError;
 
-    static std::string sourceToStr( Source source ) {
+    static std::string sourceToStr( Source source )
+    {
         std::string sourceList[] {
                 "RenderDevice",
                 "RenderSurface",
@@ -29,11 +32,15 @@ private:
     }
 
 public:
-    GraphicsException( Source source, const std::string &message ) {
-        SFORMAT( 1, sourceToStr( source ) << ": " << message, formattedError );
+    GraphicsException( Source source, const std::string &message )
+    {
+        std::stringstream formatter;
+        formatter << sourceToStr( source ) << ": " << message;
+        formattedError = formatter.str();
     }
 
-    [[nodiscard]] const char *what( ) const noexcept override {
+    [[nodiscard]] const char *what( ) const noexcept override
+    {
         return formattedError.data( );
     }
 };

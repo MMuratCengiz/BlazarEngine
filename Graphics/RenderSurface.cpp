@@ -10,7 +10,8 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 std::unordered_map< std::string, std::vector< char > > RenderSurface::cachedShaders { };
 
-RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context ) : context( context ){
+RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context ) : context( context )
+{
     pipelineSelector = std::make_shared< PipelineSelector >( );
     msaaSampleCount = RenderUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
 
@@ -20,13 +21,17 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context 
     createSamplingResources( );
     createFrameBuffers( );
 
-    enginePipelineSelector = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) {
-        if ( entity->getComponent< ECS::CCubeMap >() != nullptr) {
+    enginePipelineSelector = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    {
+        if ( entity->getComponent< ECS::CCubeMap >( ) != nullptr )
+        {
             return PIPELINE_SKY_BOX;
         }
 
-        if ( entity->hasComponent< CMesh >()) {
-            if ( entity->getComponent< CMesh >()->cullMode == CullMode::None ) {
+        if ( entity->hasComponent< CMesh >( ) )
+        {
+            if ( entity->getComponent< CMesh >( )->cullMode == CullMode::None )
+            {
                 return ENGINE_CORE_PIPELINE_NONE_CULL;
             }
         }
@@ -36,14 +41,16 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context 
 
     pipelineSelector->addSelector( PipelineSelectorPair { 1, enginePipelineSelector } );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams ) {
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+    {
         auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
         context->logicalDevice.waitIdle( );
 
         updateViewport( parameters->width, parameters->height );
     } );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams ) {
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+    {
         context->logicalDevice.waitIdle( );
 
         dispose( );
@@ -53,12 +60,14 @@ RenderSurface::RenderSurface( const std::shared_ptr< InstanceContext > &context 
         createFrameBuffers( );
     } );
 
-    if ( renderer == nullptr ) {
+    if ( renderer == nullptr )
+    {
         renderer = std::make_shared< Renderer >( context, pipelineSelector );
     }
 }
 
-void RenderSurface::createPipelines( ) {
+void RenderSurface::createPipelines( )
+{
     // create default pipelines
     pipelineInstances.resize( 3 );
     std::vector< Graphics::ShaderInfo > shaders( 2 );
@@ -77,7 +86,7 @@ void RenderSurface::createPipelines( ) {
 
     PipelineOptions backCullOptions { };
     backCullOptions.cullMode = CullMode::BackFace;
-    auto & pushConstantRange = backCullOptions.pushConstantRanges.emplace_back( );
+    auto &pushConstantRange = backCullOptions.pushConstantRanges.emplace_back( );
     pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
     pushConstantRange.offset = 0;
     pushConstantRange.size = 4 * 4 * sizeof( float );
@@ -130,7 +139,8 @@ void RenderSurface::createPipelines( ) {
     pipelineSelector->createPipelineInstance( instance3 );
 }
 
-void RenderSurface::createPipeline( const PipelineOptions &options, PipelineInstance &instance, const std::vector< ShaderInfo > &shaderInfos ) {
+void RenderSurface::createPipeline( const PipelineOptions &options, PipelineInstance &instance, const std::vector< ShaderInfo > &shaderInfos )
+{
     PipelineCreateInfos createInfo { };
     createInfo.options = options;
 
@@ -164,7 +174,8 @@ void RenderSurface::createPipeline( const PipelineOptions &options, PipelineInst
     instance.pipeline = context->logicalDevice.createGraphicsPipeline( nullptr, createInfo.pipelineCreateInfo ).value;
 }
 
-void RenderSurface::createSurface( ) {
+void RenderSurface::createSurface( )
+{
     vk::SurfaceCapabilitiesKHR capabilities;
 
     capabilities = context->physicalDevice.getSurfaceCapabilitiesKHR( context->surface );
@@ -172,7 +183,8 @@ void RenderSurface::createSurface( ) {
     createSwapChain( capabilities );
 }
 
-void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCapabilities ) {
+void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCapabilities )
+{
     chooseExtent2D( surfaceCapabilities );
     updateViewport( surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height );
 
@@ -191,11 +203,13 @@ void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCa
     const uint32_t qfIndexes[2] = { context->queueFamilies[ QueueType::Graphics ].index,
                                     context->queueFamilies[ QueueType::Presentation ].index };
 
-    if ( qfIndexes[ 0 ] != qfIndexes[ 1 ] ) {
+    if ( qfIndexes[ 0 ] != qfIndexes[ 1 ] )
+    {
         createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = qfIndexes;
-    } else {
+    } else
+    {
         createInfo.imageSharingMode = vk::SharingMode::eExclusive;
         createInfo.queueFamilyIndexCount = 0;
         createInfo.pQueueFamilyIndices = nullptr;
@@ -212,19 +226,23 @@ void RenderSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCa
     createSwapChainImages( context->imageFormat );
 }
 
-void RenderSurface::createSwapChainImages( vk::Format format ) {
+void RenderSurface::createSwapChainImages( vk::Format format )
+{
     context->swapChainImages = context->logicalDevice.getSwapchainImagesKHR( context->swapChain );
 
     context->imageViews.resize( context->swapChainImages.size( ) );
 
     int index = 0;
-    for ( auto image: context->swapChainImages ) {
+    for ( auto image: context->swapChainImages )
+    {
         createImageView( context->imageViews[ index++ ], image, format, vk::ImageAspectFlagBits::eColor );
     }
 }
 
-void RenderSurface::chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabilities ) {
-    if ( capabilities.currentExtent.width != UINT32_MAX ) {
+void RenderSurface::chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabilities )
+{
+    if ( capabilities.currentExtent.width != UINT32_MAX )
+    {
         context->surfaceExtent.width = capabilities.currentExtent.width;
         context->surfaceExtent.height = capabilities.currentExtent.height;
         return;
@@ -242,7 +260,8 @@ void RenderSurface::chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabiliti
     context->surfaceExtent.height = std::clamp( h, capabilities.minImageExtent.height, capabilities.maxImageExtent.height );
 }
 
-void RenderSurface::updateViewport( const uint32_t &width, const uint32_t &height ) {
+void RenderSurface::updateViewport( const uint32_t &width, const uint32_t &height )
+{
     context->viewport.x = 0.0f;
     context->viewport.y = 0.0f;
     context->viewport.width = width;
@@ -254,8 +273,10 @@ void RenderSurface::updateViewport( const uint32_t &width, const uint32_t &heigh
     context->viewScissor.extent = vk::Extent2D( width, height );
 }
 
-void RenderSurface::configureVertexInput( PipelineCreateInfos &createInfo ) {
-    for ( const ShaderInfo &shader: createInfo.shaders ) {
+void RenderSurface::configureVertexInput( PipelineCreateInfos &createInfo )
+{
+    for ( const ShaderInfo &shader: createInfo.shaders )
+    {
         vk::PipelineShaderStageCreateInfo shaderStageCreateInfo { };
 
         vk::ShaderModule shaderModule = this->createShaderModule( shader.path );
@@ -285,7 +306,8 @@ void RenderSurface::configureVertexInput( PipelineCreateInfos &createInfo ) {
     createInfo.pipelineCreateInfo.pInputAssemblyState = &createInfo.inputAssemblyCreateInfo;
 }
 
-void RenderSurface::configureMultisampling( PipelineCreateInfos &createInfo ) {
+void RenderSurface::configureMultisampling( PipelineCreateInfos &createInfo )
+{
     createInfo.multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
     createInfo.multisampleStateCreateInfo.rasterizationSamples = msaaSampleCount;
     createInfo.multisampleStateCreateInfo.minSampleShading = 1.0f;
@@ -298,7 +320,8 @@ void RenderSurface::configureMultisampling( PipelineCreateInfos &createInfo ) {
     createInfo.pipelineCreateInfo.pMultisampleState = &createInfo.multisampleStateCreateInfo;
 }
 
-void RenderSurface::configureViewport( PipelineCreateInfos &createInfo ) {
+void RenderSurface::configureViewport( PipelineCreateInfos &createInfo )
+{
     createInfo.viewScissor.offset = vk::Offset2D { 0, 0 };
     createInfo.viewScissor.extent = context->surfaceExtent;
 
@@ -310,13 +333,15 @@ void RenderSurface::configureViewport( PipelineCreateInfos &createInfo ) {
     createInfo.pipelineCreateInfo.pViewportState = &createInfo.viewportStateCreateInfo;
 }
 
-void RenderSurface::configureRasterization( PipelineCreateInfos &createInfo ) {
+void RenderSurface::configureRasterization( PipelineCreateInfos &createInfo )
+{
     createInfo.rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
     createInfo.rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
     createInfo.rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
     createInfo.rasterizationStateCreateInfo.lineWidth = 1.0f;
 
-    switch ( createInfo.options.cullMode ) {
+    switch ( createInfo.options.cullMode )
+    {
         case CullMode::FrontAndBackFace:
             createInfo.rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eFrontAndBack;
             break;
@@ -340,7 +365,8 @@ void RenderSurface::configureRasterization( PipelineCreateInfos &createInfo ) {
     createInfo.pipelineCreateInfo.pRasterizationState = &createInfo.rasterizationStateCreateInfo;
 }
 
-void RenderSurface::configureColorBlend( PipelineCreateInfos &createInfo ) {
+void RenderSurface::configureColorBlend( PipelineCreateInfos &createInfo )
+{
     createInfo.colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                                                      vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
     createInfo.colorBlendAttachment.blendEnable = false;
@@ -364,19 +390,22 @@ void RenderSurface::configureColorBlend( PipelineCreateInfos &createInfo ) {
     createInfo.pipelineCreateInfo.pColorBlendState = &createInfo.colorBlending;
 }
 
-void RenderSurface::configureDynamicState( PipelineCreateInfos &createInfo ) {
+void RenderSurface::configureDynamicState( PipelineCreateInfos &createInfo )
+{
     createInfo.dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size( );
     createInfo.dynamicStateCreateInfo.pDynamicStates = dynamicStates.data( );
 
     createInfo.pipelineCreateInfo.pDynamicState = &createInfo.dynamicStateCreateInfo;
 }
 
-void RenderSurface::createPipelineLayout( PipelineCreateInfos &createInfo, PipelineInstance &instance ) {
+void RenderSurface::createPipelineLayout( PipelineCreateInfos &createInfo, PipelineInstance &instance )
+{
     const std::vector< vk::DescriptorSetLayout > &layouts = instance.descriptorManager->getLayouts( );
     createInfo.pipelineLayoutCreateInfo.setLayoutCount = layouts.size( );
     createInfo.pipelineLayoutCreateInfo.pSetLayouts = layouts.data( );
 
-    if ( !createInfo.options.pushConstantRanges.empty() ) {
+    if ( !createInfo.options.pushConstantRanges.empty( ) )
+    {
         createInfo.pipelineLayoutCreateInfo.pushConstantRangeCount = createInfo.options.pushConstantRanges.size( );
         createInfo.pipelineLayoutCreateInfo.pPushConstantRanges = createInfo.options.pushConstantRanges.data( );
     }
@@ -385,21 +414,25 @@ void RenderSurface::createPipelineLayout( PipelineCreateInfos &createInfo, Pipel
     createInfo.pipelineCreateInfo.layout = instance.layout;
 }
 
-void RenderSurface::createRenderPass( PipelineCreateInfos &createInfo ) {
+void RenderSurface::createRenderPass( PipelineCreateInfos &createInfo )
+{
     createInfo.pipelineCreateInfo.renderPass = context->renderPass;
     createInfo.pipelineCreateInfo.subpass = 0;
     createInfo.pipelineCreateInfo.basePipelineHandle = nullptr;
     createInfo.pipelineCreateInfo.basePipelineIndex = -1;
 }
 
-std::vector< char > RenderSurface::readFile( const std::string &filename ) {
-    if ( cachedShaders.find( filename ) != cachedShaders.end( ) ) {
+std::vector< char > RenderSurface::readFile( const std::string &filename )
+{
+    if ( cachedShaders.find( filename ) != cachedShaders.end( ) )
+    {
         return cachedShaders[ filename ];
     }
 
     std::ifstream file( filename, std::ios::ate | std::ios::binary );
 
-    if ( !file.is_open( ) ) {
+    if ( !file.is_open( ) )
+    {
         throw std::runtime_error( "failed to open file!" );
     }
 
@@ -416,7 +449,8 @@ std::vector< char > RenderSurface::readFile( const std::string &filename ) {
     return cachedShaders[ filename ];
 }
 
-vk::ShaderModule RenderSurface::createShaderModule( const std::string &filename ) {
+vk::ShaderModule RenderSurface::createShaderModule( const std::string &filename )
+{
     std::vector< char > data = readFile( filename );
 
     vk::ShaderModuleCreateInfo shaderModuleCreateInfo { };
@@ -426,12 +460,14 @@ vk::ShaderModule RenderSurface::createShaderModule( const std::string &filename 
     return context->logicalDevice.createShaderModule( shaderModuleCreateInfo );
 }
 
-void RenderSurface::createFrameBuffers( ) {
+void RenderSurface::createFrameBuffers( )
+{
     auto imageViews = context->imageViews;
     context->frameBuffers.resize( imageViews.size( ) );
 
     int index = 0;
-    for ( vk::ImageView &imageView: imageViews ) {
+    for ( vk::ImageView &imageView: imageViews )
+    {
         std::array< vk::ImageView, 3 > attachments = {
                 samplingImageView,
                 context->depthView,
@@ -453,7 +489,8 @@ void RenderSurface::createFrameBuffers( ) {
 
 void RenderSurface::createImageView( vk::ImageView &imageView, const vk::Image &image,
                                      const vk::Format &format, const vk::ImageAspectFlags &aspectFlags
-) {
+)
+{
     vk::ImageViewCreateInfo imageViewCreateInfo { };
     imageViewCreateInfo.image = image;
     imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
@@ -471,7 +508,8 @@ void RenderSurface::createImageView( vk::ImageView &imageView, const vk::Image &
     imageView = context->logicalDevice.createImageView( imageViewCreateInfo );
 }
 
-void RenderSurface::createSamplingResources( ) {
+void RenderSurface::createSamplingResources( )
+{
     vk::ImageCreateInfo imageCreateInfo { };
     imageCreateInfo.imageType = vk::ImageType::e2D;
     imageCreateInfo.extent.width = context->surfaceExtent.width;
@@ -498,8 +536,9 @@ void RenderSurface::createSamplingResources( ) {
     createImageView( samplingImageView, samplingImage, context->imageFormat, vk::ImageAspectFlagBits::eColor );
 }
 
-void RenderSurface::createDepthAttachmentImages( PipelineCreateInfos &createInfo ) {
-    createInfo.depthStencilStateCreateInfo.depthTestEnable =  VK_TRUE;//createInfo.options.depthTestEnable;
+void RenderSurface::createDepthAttachmentImages( PipelineCreateInfos &createInfo )
+{
+    createInfo.depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;//createInfo.options.depthTestEnable;
     createInfo.depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE; //createInfo.options.depthTestEnable;
     createInfo.depthStencilStateCreateInfo.depthCompareOp = createInfo.options.depthCompareOp;
     createInfo.depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
@@ -512,7 +551,8 @@ void RenderSurface::createDepthAttachmentImages( PipelineCreateInfos &createInfo
     createInfo.pipelineCreateInfo.pDepthStencilState = &createInfo.depthStencilStateCreateInfo;
 }
 
-void RenderSurface::createDepthImages( ) {
+void RenderSurface::createDepthImages( )
+{
     const vk::Format &format = RenderUtilities::findSupportedDepthFormat( context->physicalDevice );
 
     vk::ImageCreateInfo imageCreateInfo { };
@@ -544,17 +584,20 @@ void RenderSurface::createDepthImages( ) {
     createImageView( context->depthView, context->depthImage, format, vk::ImageAspectFlagBits::eDepth );
 }
 
-RenderSurface::~RenderSurface( ) {
-    for ( auto &module: shaderModules ) {
+RenderSurface::~RenderSurface( )
+{
+    for ( auto &module: shaderModules )
+    {
         context->logicalDevice.destroyShaderModule( module );
     }
 
-    renderer.reset();
+    renderer.reset( );
     renderer = nullptr;
 
     dispose( );
 
-    for ( PipelineInstance &instance: pipelineInstances ) {
+    for ( PipelineInstance &instance: pipelineInstances )
+    {
         context->logicalDevice.destroyPipeline( instance.pipeline );
         context->logicalDevice.destroyPipelineLayout( instance.layout );
     }
@@ -563,12 +606,15 @@ RenderSurface::~RenderSurface( ) {
     context->logicalDevice.destroyRenderPass( context->renderPass );
 }
 
-std::shared_ptr< Renderer > &RenderSurface::getSurfaceRenderer( ) {
+std::shared_ptr< Renderer > &RenderSurface::getSurfaceRenderer( )
+{
     return renderer;
 }
 
-void RenderSurface::dispose( ) {
-    if ( renderer != nullptr ) {
+void RenderSurface::dispose( )
+{
+    if ( renderer != nullptr )
+    {
         renderer->freeBuffers( );
     }
 
@@ -580,11 +626,13 @@ void RenderSurface::dispose( ) {
     context->logicalDevice.destroyImage( context->depthImage );
     context->logicalDevice.freeMemory( context->depthMemory );
 
-    for ( auto &buffer: context->frameBuffers ) {
+    for ( auto &buffer: context->frameBuffers )
+    {
         context->logicalDevice.destroyFramebuffer( buffer );
     }
 
-    for ( auto &imageView: context->imageViews ) {
+    for ( auto &imageView: context->imageViews )
+    {
         context->logicalDevice.destroyImageView( imageView );
     }
 }

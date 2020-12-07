@@ -4,7 +4,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-typedef struct CopyBufferToImageArgs {
+typedef struct CopyBufferToImageArgs
+{
     uint32_t width;
     uint32_t height;
     vk::Buffer sourceBuffer;
@@ -13,7 +14,8 @@ typedef struct CopyBufferToImageArgs {
     uint32_t arrayLayer = 0;
 } CopyBufferToImageArgs;
 
-typedef struct PipelineBarrierArgs {
+typedef struct PipelineBarrierArgs
+{
     vk::Image image { };
     vk::ImageLayout oldLayout;
     vk::ImageLayout newLayout;
@@ -27,7 +29,8 @@ typedef struct PipelineBarrierArgs {
     vk::PipelineStageFlags destinationStage = vk::PipelineStageFlagBits::eVertexShader;
 } PipelineBarrierArgs;
 
-typedef struct ImageBlitArgs {
+typedef struct ImageBlitArgs
+{
     vk::Image sourceImage;
     vk::ImageLayout sourceImageLayout;
     vk::Image destinationImage;

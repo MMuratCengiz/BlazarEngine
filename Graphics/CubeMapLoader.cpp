@@ -6,14 +6,18 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-void CubeMapLoader::cache( ECS::CCubeMap &material ) {
-    if ( loadedCubeMaps.find( getKey( material ) ) == loadedCubeMaps.end( ) ) {
+void CubeMapLoader::cache( ECS::CCubeMap &material )
+{
+    if ( loadedCubeMaps.find( getKey( material ) ) == loadedCubeMaps.end( ) )
+    {
         loadInner( material );
     }
 }
 
-void CubeMapLoader::load( TextureBuffer &output, ECS::CCubeMap &material ) {
-    const auto &comparator = [ ]( const ECS::CubeMapSidePath &p1, const ECS::CubeMapSidePath &p2 ) -> bool {
+void CubeMapLoader::load( TextureBuffer &output, ECS::CCubeMap &material )
+{
+    const auto &comparator = [ ]( const ECS::CubeMapSidePath &p1, const ECS::CubeMapSidePath &p2 ) -> bool
+    {
         return static_cast< uint32_t >( p1.side ) > static_cast< uint32_t >( p2.side );
     };
 
@@ -28,7 +32,8 @@ void CubeMapLoader::load( TextureBuffer &output, ECS::CCubeMap &material ) {
     output.image = buffer.image;
 }
 
-void CubeMapLoader::loadInner( ECS::CCubeMap &material ) {
+void CubeMapLoader::loadInner( ECS::CCubeMap &material )
+{
     TextureBuffer &output = loadedCubeMaps[ getKey( material ) ];
 
     int width, height, channels;
@@ -36,11 +41,13 @@ void CubeMapLoader::loadInner( ECS::CCubeMap &material ) {
 
     int mipStagingBufferIndex = 0;
 
-    for ( const auto &cm: material.texturePaths ) {
+    for ( const auto &cm: material.texturePaths )
+    {
         stbi_uc *contents = stbi_load( ( PATH( cm.path ) ).c_str( ), &width, &height, &channels, STBI_rgb_alpha );
 
-        if ( contents == nullptr ) {
-            TRACE( COMPONENT_TLOAD, VERBOSITY_CRITICAL, stbi_failure_reason( ) )
+        if ( contents == nullptr )
+        {
+            TRACE( "CubeMapLoader", VERBOSITY_CRITICAL, stbi_failure_reason( ) )
 
             throw std::runtime_error( "Couldn't find texture." );
         }
@@ -53,8 +60,6 @@ void CubeMapLoader::loadInner( ECS::CCubeMap &material ) {
     }
 
     vk::ImageCreateInfo imageCreateInfo { };
-
-//    uint32_t mipLevels = material.texturePaths.size();
 
     imageCreateInfo.imageType = vk::ImageType::e2D;
     imageCreateInfo.extent.width = width;
@@ -105,7 +110,8 @@ void CubeMapLoader::loadInner( ECS::CCubeMap &material ) {
 
 
     int arrayLayer = 0;
-    for ( auto &stagingBuffer: stagingBuffers ) {
+    for ( auto &stagingBuffer: stagingBuffers )
+    {
         PipelineBarrierArgs toTransferOptimal { };
 
         toTransferOptimal.mipLevel = 1;
@@ -154,20 +160,24 @@ void CubeMapLoader::loadInner( ECS::CCubeMap &material ) {
 
 }
 
-std::string CubeMapLoader::getKey( const ECS::CCubeMap &material ) {
+std::string CubeMapLoader::getKey( const ECS::CCubeMap &material )
+{
 
 
     std::stringstream keyGroup;
 
-    for ( const auto &cm: material.texturePaths ) {
+    for ( const auto &cm: material.texturePaths )
+    {
         keyGroup << cm.path;
     }
 
     return keyGroup.str( );
 }
 
-CubeMapLoader::~CubeMapLoader( ) {
-    for ( auto &pair: loadedCubeMaps ) {
+CubeMapLoader::~CubeMapLoader( )
+{
+    for ( auto &pair: loadedCubeMaps )
+    {
         context->logicalDevice.destroySampler( pair.second.sampler );
         context->logicalDevice.destroyImageView( pair.second.imageView );
         context->vma.destroyImage( pair.second.image, pair.second.allocation );

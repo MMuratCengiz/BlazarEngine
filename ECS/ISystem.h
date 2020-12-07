@@ -5,10 +5,11 @@
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
-class ISystem {
+class ISystem
+{
 protected:
 public:
-	virtual std::vector< std::type_index > getManagedComponents( ) = 0;
+    virtual std::vector< std::type_index > getManagedComponents( ) = 0;
     virtual void update( std::shared_ptr< IComponent > component ) = 0;
 };
 

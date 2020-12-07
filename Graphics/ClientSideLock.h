@@ -4,13 +4,16 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-class ClientSideLock {
+class ClientSideLock
+{
 public:
-    inline void acquire() {
+    inline void acquire( )
+    {
 
     }
 
-    inline void release() {
+    inline void release( )
+    {
 
     }
 };

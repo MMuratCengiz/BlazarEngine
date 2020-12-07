@@ -1,25 +1,27 @@
 #pragma once
 
 #include "../Core/Common.h"
+#include <mutex>
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
-struct IComponent {
-private:
-    struct T_UID_COUNTER {
-        uint64_t COUNT = 0;
-    };
-
+struct IComponent
+{
 public:
     uint64_t uid;
 
-	IComponent( ) {
-        static T_UID_COUNTER UID_COUNTER{ };
-        uid = UID_COUNTER.COUNT;
-        UID_COUNTER.COUNT++;
-	};
+    IComponent( )
+    {
+        static std::mutex uidGenLock;
+        static uint64_t entityUidCounter = 0;
 
-	virtual ~IComponent( ) { }
+        uidGenLock.lock( );
+        uid = entityUidCounter++;
+        uidGenLock.unlock( );
+    };
+
+    virtual ~IComponent( )
+    { }
 };
 
 typedef std::shared_ptr< IComponent > pComponent;

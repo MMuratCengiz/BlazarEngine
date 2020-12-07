@@ -7,7 +7,8 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class MaterialLoader;
 
-typedef enum AttributeCode {
+typedef enum AttributeCode
+{
     Vertices,
     TextureCoordinates,
     Normals,
@@ -15,22 +16,25 @@ typedef enum AttributeCode {
     Textures // TODO should become material
 } AttributeCode;
 
-typedef struct AttributeDescription {
+typedef struct AttributeDescription
+{
     uint32_t size;
 } AttributeDescription;
 
-struct DrawDescription {
+struct DrawDescription
+{
     bool indexedMode = false;
     bool bufferedToGPU = false;
 
     float vertexCount;
-    Core::DynamicMemory vertexMemory{ };
+    Core::DynamicMemory vertexMemory { };
 
     std::vector< uint32_t > indices;
     std::vector< std::shared_ptr< MaterialLoader > > textures;
 };
 
-class DrawDescriptionUtilities {
+class DrawDescriptionUtilities
+{
 private:
     static inline std::unordered_map< AttributeCode, AttributeDescription > attributeDescriptions = {
             { AttributeCode::Vertices,           { 3 * sizeof( float ) } },
@@ -40,7 +44,8 @@ private:
             { AttributeCode::Textures,           { 3 * sizeof( float ) } },
     };
 public:
-    static inline const AttributeDescription& getAttributeDescription( const AttributeCode& code ) {
+    static inline const AttributeDescription &getAttributeDescription( const AttributeCode &code )
+    {
         return attributeDescriptions[ code ];
     }
 };

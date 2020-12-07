@@ -16,7 +16,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-struct ObjectBuffer {
+struct ObjectBuffer
+{
     uint64_t vertexCount;
     uint64_t indexCount;
 
@@ -25,12 +26,14 @@ struct ObjectBuffer {
     std::vector< uint32_t > indices;
 };
 
-struct ObjectBufferList {
+struct ObjectBufferList
+{
     std::vector< ObjectBuffer > buffers;
 };
 
 
-class MeshLoader {
+class MeshLoader
+{
     Assimp::Importer importer;
 
     LightedCubePrimitive lightedCubePrimitive;
@@ -46,12 +49,12 @@ public:
     void cache( const ECS::CMesh &mesh );
     void load( ObjectBufferList &objectBuffer, const ECS::CMesh &mesh );
 
-    ~MeshLoader();
+    ~MeshLoader( );
 private:
     void loadModel( const ECS::CMesh &mesh );
     void onEachNode( ObjectBufferList &buffer, const aiScene *scene, const aiNode *pNode );
     void onEachMesh( ObjectBufferList &buffer, const aiMesh *mesh );
-    void copyVertexBuffer( ObjectBuffer &bufferPart, const Core::DynamicMemory& memory );
+    void copyVertexBuffer( ObjectBuffer &bufferPart, const Core::DynamicMemory &memory );
     void copyIndexBuffer( ObjectBuffer &bufferPart, const std::vector< uint32_t > &indices );
 };
 
