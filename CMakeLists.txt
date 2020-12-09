@@ -1,55 +1,112 @@
-cmake_minimum_required(VERSION 3.16)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
 
-project(BlazarEngine)
+PROJECT(BlazarEngine)
 
-set(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/Shaders/)
+SET(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/Shaders/)
 
-function(add_shader SHADER_TYPE SHADER_NAME)
-    set(INPUT_FILE "${SHADER_ROOT_DIR}GLSL/${SHADER_TYPE}/${SHADER_NAME}.glsl")
-    set(OUTPUT_FILE "${SHADER_ROOT_DIR}SPIRV/${SHADER_TYPE}/${SHADER_NAME}.spv")
+FUNCTION(add_shader SHADER_TYPE SHADER_NAME)
+    SET(INPUT_FILE "${SHADER_ROOT_DIR}GLSL/${SHADER_TYPE}/${SHADER_NAME}.glsl")
+    SET(OUTPUT_FILE "${SHADER_ROOT_DIR}SPIRV/${SHADER_TYPE}/${SHADER_NAME}.spv")
 
     #remember to add glslc to environment path
-    execute_process(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE})
-endfunction()
+    EXECUTE_PROCESS(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE})
+ENDFUNCTION()
 
-add_shader(vertex default)
-add_shader(fragment default)
-add_shader(vertex skybox_default)
-add_shader(fragment skybox_default)
+ADD_SHADER(vertex default)
+ADD_SHADER(fragment default)
+ADD_SHADER(vertex skybox_default)
+ADD_SHADER(fragment skybox_default)
 
-set(CMAKE_CXX_STANDARD 17)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include_directories("${CMAKE_SOURCE_DIR}/external/glm")
-include_directories("${CMAKE_SOURCE_DIR}/external/stb")
-include_directories("${CMAKE_SOURCE_DIR}/external/vma")
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_external.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_assimp.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_blazar.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_bullet.cmake)
 
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/glfw")
+ADD_DEFINITIONS(-DENGINE_NAMESPACE=BlazarEngine)
 
-include(${CMAKE_SOURCE_DIR}/cmake/include_assimp.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/include_blazar.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/include_bullet.cmake)
+ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
+ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+ADD_DEFINITIONS(-DDEBUG)
+ADD_DEFINITIONS(-DG_VERBOSITY=3)
+ADD_DEFINITIONS(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
 
-add_definitions(-D_SCL_SECURE_NO_WARNINGS)
-add_definitions(-DENGINE_NAMESPACE=BlazarEngine)
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-add_definitions(-DDEBUG)
-add_definitions(-DG_VERBOSITY=3)
-add_definitions(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
+FIND_PACKAGE(Vulkan REQUIRED)
 
-find_package(Vulkan REQUIRED)
+# BLAZAR CORE LIBRARY #####################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Core/")
 
-add_executable(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/Core"
+)
+###########################################################################################################################################
 
-target_compile_definitions(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+# BLAZAR ECS LIBRARY ######################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/ECS/")
 
-target_link_libraries(BlazarEngine
-        glfw
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/ECS"
+)
+############################################################################################################################################
+
+# BLAZAR INPUT LIBRARY #####################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Input/")
+
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/Input"
+)
+############################################################################################################################################
+
+# BLAZAR GRAPHICS LIBRARY ##################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Graphics/")
+
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/Graphics"
+)
+############################################################################################################################################
+
+# BLAZAR PHYSICS LIBRARY ###################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Physics/")
+
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/Physics"
+)
+############################################################################################################################################
+
+# BLAZAR SCENE LIBRARY #####################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Scene/")
+
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/Scene"
+)
+############################################################################################################################################
+
+# BLAZAR SAMPLES LIBRARY ###################################################################################################################
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Samples/")
+
+INCLUDE_DIRECTORIES(
+        "${CMAKE_SOURCE_DIR}/Samples"
+)
+############################################################################################################################################
+
+ADD_EXECUTABLE(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
+
+TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+TARGET_LINK_LIBRARIES(BlazarEngine
         assimp
         Vulkan::Vulkan
+# Blazar Libraries
+        BlazarCore
+        BlazarECS
+        BlazarGraphics
+        BlazarInput
+        BlazarPhysics
+        BlazarSamples
+        BlazarScene
+# -- Blazar Libraries
+# Bullet Libraries
         Bullet3Common
         Bullet3Geometry
         BulletSoftBody
@@ -59,6 +116,7 @@ target_link_libraries(BlazarEngine
         BulletCollision
         LinearMath
         BulletInverseDynamics
+# -- Bullet Libraries
         )
 
-target_include_directories(BlazarEngine PUBLIC ${SPVDir})
+TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${SPVDir})

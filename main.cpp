@@ -1,11 +1,12 @@
 #include <iostream>
-#include "Scene/World.h"
-#include "Samples/SampleGame.h"
+#include <BlazarScene/World.h>
+#include <BlazarSamples/SampleGame.h>
 
 using namespace BlazarEngine;
 using namespace ECS;
 
 #include "btBulletDynamicsCommon.h"
+#include "Tokenizer.h"
 
 int runBullet( )
 {
