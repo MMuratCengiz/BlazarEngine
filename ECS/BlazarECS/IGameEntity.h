@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include <BlazarCore/Common.h>
 #include "IComponent.h"
+#include "CTransform.h"
 #include <mutex>
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
@@ -23,11 +24,13 @@ public:
         uidGenLock.lock( );
         uid = entityUidCounter++;
         uidGenLock.unlock( );
+
+        createComponent< CTransform >( );
     };
 
-    void addChild( const std::shared_ptr< IGameEntity >& child )
+    void addChild( std::shared_ptr< IGameEntity > child )
     {
-        children.push_back( child );
+        children.push_back( std::move( child ) );
     }
 
     const uint64_t &getUID( ) const

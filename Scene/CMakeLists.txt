@@ -1,3 +1,5 @@
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
+
 SET(BlazarSceneSources
         BlazarScene/World.h
         BlazarScene/Scene.h

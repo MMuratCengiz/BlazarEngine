@@ -6,7 +6,7 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
-ActionMap::ActionMap( std::shared_ptr< EventHandler > eventHandler ) : eventHandler( std::move( eventHandler ) )
+ActionMap::ActionMap( EventHandler* eventHandler ) : eventHandler( eventHandler )
 {
     proxyActionCallback = [ & ]( const std::string &actionName )
     {

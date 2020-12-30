@@ -1,13 +1,18 @@
 #pragma once
 
+#define GLFW_INCLUDE_VULKAN
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
 #include <BlazarCore/Common.h>
-#include <BlazarGraphics/RenderDevice.h>
 #include <BlazarInput/GlobalEventHandler.h>
 #include <string>
 #include <utility>
 #include <functional>
 #include <iostream>
-#include "../../Samples/BlazarSamples/FpsCamera.h"
 #include <chrono>
 
 NAMESPACES( ENGINE_NAMESPACE, Scene )
@@ -16,7 +21,7 @@ class Window
 {
 private:
     GLFWwindow *window;
-
+    std::unique_ptr< Graphics::RenderWindow > renderWindow;
 public:
     Window( const uint32_t &width, const uint32_t &height, const std::string &title )
     {
@@ -44,25 +49,31 @@ public:
 
         glfwMakeContextCurrent( window );
         glfwSwapInterval( 0 );
+
+        uint32_t count;
+        auto extensions = glfwGetRequiredInstanceExtensions( &count );
+
+        std::vector< std::string > extensionsVec( count );
+
+        for ( uint32_t index = 0; index < count; ++index )
+        {
+            extensionsVec[ index ] = std::string( extensions[ index ] );
+        }
+
+        int framebufferWidth, framebufferHeight;
+
+        glfwGetFramebufferSize( window, &framebufferWidth, &framebufferHeight );
+
+        renderWindow = std::make_unique< Graphics::RenderWindow >( framebufferWidth, framebufferHeight, extensionsVec );
+
+#ifdef WIN32
+        renderWindow->setPlatformSpecific( GetModuleHandle( nullptr ), glfwGetWin32Window( window ) );
+#endif
     }
 
-    void play( ) const
+    Graphics::RenderWindow *getRenderWindow( )
     {
-        while ( !glfwWindowShouldClose( window ) )
-        {
-            Core::Time::tick( );
-
-            int width, height;
-            glfwGetFramebufferSize( window, &width, &height );
-
-            if ( width > 0 && height > 0 )
-            {
-
-            }
-
-            glfwSwapBuffers( window );
-            glfwPollEvents( );
-        }
+        return renderWindow.get( );
     }
 
     GLFWwindow *getWindow( )

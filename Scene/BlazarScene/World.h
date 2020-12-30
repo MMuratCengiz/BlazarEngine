@@ -2,7 +2,8 @@
 
 #include <BlazarECS/ECS.h>
 #include <BlazarCore/Common.h>
-#include <BlazarGraphics/RenderDevice.h>
+#include <BlazarGraphics/VulkanBackend/VulkanDevice.h>
+#include <BlazarGraphics/RenderGraph/GraphSystem.h>
 #include <BlazarInput/GlobalEventHandler.h>
 #include <BlazarPhysics/PhysicsWorld.h>
 #include <BlazarPhysics/PhysicsTransformSystem.h>
@@ -23,41 +24,65 @@ NAMESPACES( ENGINE_NAMESPACE, Scene )
 class World
 {
 private:
-    std::shared_ptr< Graphics::RenderDevice > vk { };
+    std::unique_ptr< Graphics::VulkanDevice > renderDevice { };
 
     std::unique_ptr< Window > window;
-    std::shared_ptr< Input::ActionMap > actionMap;
-    std::shared_ptr< Input::EventHandler > eventHandler;
+    std::unique_ptr< Input::ActionMap > actionMap;
+    std::unique_ptr< Physics::PhysicsWorld > physicsWorld { };
+    std::unique_ptr< Physics::PhysicsTransformSystem > transformSystem { };
+    std::unique_ptr< Graphics::AssetManager > assetManager;
+    std::unique_ptr< Input::EventHandler > eventHandler;
+
     std::shared_ptr< Scene > currentScene;
-    std::shared_ptr< Physics::PhysicsWorld > physicsWorld { };
-    std::shared_ptr< Physics::PhysicsTransformSystem > transformSystem { };
+
+    std::vector< std::unique_ptr< ECS::ISystem > > systems;
 public:
     World( ) = default;
 
     void init( const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title )
     {
         window = std::make_unique< Window >( windowWidth, windowHeight, title );
-        physicsWorld = std::make_shared< Physics::PhysicsWorld >( Physics::PhysicsWorldConfiguration { } );
-        transformSystem = std::make_shared< Physics::PhysicsTransformSystem >( physicsWorld );
+        physicsWorld = std::make_unique< Physics::PhysicsWorld >( Physics::PhysicsWorldConfiguration { } );
+        transformSystem = std::make_unique< Physics::PhysicsTransformSystem >( physicsWorld.get( ) );
 
-        vk = Graphics::RenderDeviceBuilder::create( ).selectWindow( window->getWindow( ) ).selectDevice(
-                [ ]( std::vector< Graphics::DeviceInfo > devices ) -> Graphics::DeviceInfo
-                {
-                    return devices[ 0 ];
-                } ).create( );
+        renderDevice = std::make_unique< Graphics::VulkanDevice >( );
+        renderDevice->createDevice( window->getRenderWindow( ) );
+        renderDevice->listDevices()[ 0 ].select( );
 
         Input::GlobalEventHandler::Instance( ).initWindowEvents( window->getWindow( ) );
 
-        eventHandler = std::make_shared< Input::EventHandler >( window->getWindow( ) );
-        actionMap = std::make_shared< Input::ActionMap >( eventHandler );
+        eventHandler = std::make_unique< Input::EventHandler >( window->getWindow( ) );
+        actionMap = std::make_unique< Input::ActionMap >( eventHandler.get( ) );
+        assetManager = std::make_unique< Graphics::AssetManager >( );
+
+        auto graphSystem = std::make_unique< Graphics::GraphSystem >( renderDevice.get( ), assetManager.get( ) );
+        registerSystem( std::move( graphSystem ) );
     }
-
-    void setScene( const std::shared_ptr< Scene > &scene )
+    
+    void registerSystem( std::unique_ptr< ECS::ISystem > system )
     {
-        currentScene = scene;
-
+        systems.push_back( std::move( system ) );
+    }
+    
+    void setScene( std::shared_ptr< Scene > scene )
+    {
         for ( const auto &entity: scene->getEntities( ) )
         {
+            for ( auto &system: systems )
+            {
+                system->removeEntity( entity );
+            }
+        }
+        
+        currentScene = std::move( scene );
+
+        for ( const auto &entity: currentScene->getEntities( ) )
+        {
+            for ( auto &system: systems )
+            {
+                system->addEntity( entity );    
+            }
+            
             physicsWorld->addOrUpdateEntity( entity );
         }
     }
@@ -75,7 +100,10 @@ public:
             fpsCounter.tick( );
             physicsWorld->tick( );
 
-            vk->getRenderer( )->frameStart( currentScene->getComponentTable( ) );
+            for ( auto &system: systems )
+            {
+                system->frameStart( currentScene->getComponentTable( ) );
+            }
 
             if ( glfwGetKey( glfwWindow, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
             {
@@ -89,7 +117,10 @@ public:
             {
                 for ( auto & entity: currentScene->getEntities( ) )
                 {
-                    vk->getRenderer( )->entityTick( entity );
+                    for ( auto &system: systems )
+                    {
+                        system->entityTick( entity );
+                    }
                 }
             }
 
@@ -101,18 +132,26 @@ public:
             auto tickParams = Input::GlobalEventHandler::createTickParameters( glfwWindow );
             Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::Tick, tickParams );
 
-            vk->getRenderer( )->frameEnd( currentScene->getComponentTable( ) );
+            for ( auto &system: systems )
+            {
+                system->frameEnd( currentScene->getComponentTable( ) );
+            }
         }
 
-        vk->beforeDelete( );
+        renderDevice->beforeDelete( );
+    }
+    
+    const std::unique_ptr< Graphics::AssetManager >& getAssetManager( )
+    {
+        return assetManager;
     }
 
-    std::shared_ptr< Input::ActionMap > getActionMap( )
+    const std::unique_ptr< Input::ActionMap >& getActionMap( )
     {
         return actionMap;
     }
 
-    std::shared_ptr< Physics::PhysicsTransformSystem > getTransformSystem( )
+    const std::unique_ptr< Physics::PhysicsTransformSystem >& getTransformSystem( )
     {
         return transformSystem;
     }
@@ -123,9 +162,20 @@ public:
         return window->getWindow( );
     }
 
-    void end( )
+    ~World( )
     {
-        vk->beforeDelete( );
+        renderDevice->beforeDelete( );
+
+        transformSystem.reset( );
+        physicsWorld.reset( );
+
+        for ( auto& system: systems )
+        {
+            system->cleanup( );
+        }
+
+        systems.clear( );
+        renderDevice.reset( );
     }
 };
 

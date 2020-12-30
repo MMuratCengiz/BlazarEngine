@@ -9,14 +9,17 @@ namespace Sample
 class SampleCar2 : public BlazarEngine::ECS::IGameEntity
 {
 public:
-    SampleCar2( )
+    explicit SampleCar2( Scene::World * world )
     {
-        auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
-        mesh->path = PATH( "/assets/models/car_2.fbx" );
+        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_2.fbx" ) );
 
-        auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/Car Texture 2.png";
+        for ( auto& child: meshEntities->getChildren( ) )
+        {
+            auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+            texInfo.path = "/assets/textures/Car Texture 2.png";
+        }
+
+        addChild( meshEntities );
 
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );
         transform->position = glm::vec3( -5.5f, 0.15f, -2.8f );

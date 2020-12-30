@@ -9,14 +9,17 @@ namespace Sample
 class SampleTrafficCone : public BlazarEngine::ECS::IGameEntity
 {
 public:
-    SampleTrafficCone( )
+    explicit SampleTrafficCone( Scene::World * world )
     {
-        auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
-        mesh->path = PATH( "/assets/models/Traffic Cone.FBX" );
+        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/Traffic Cone.FBX" ) );
 
-        auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/Traffic Cone UV Fixed.png";
+        for ( auto& child: meshEntities->getChildren( ) )
+        {
+            auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+            texInfo.path = "/assets/textures/Traffic Cone UV Fixed.png";
+        }
+
+         addChild( meshEntities );
 
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );
         transform->position = glm::vec3( 1.0f, 0.1f, -0.8f );

@@ -6,7 +6,7 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Physics )
 
-PhysicsTransformSystem::PhysicsTransformSystem( std::shared_ptr< PhysicsWorld > physicsWorld ) : physicsWorld( std::move( physicsWorld ) )
+PhysicsTransformSystem::PhysicsTransformSystem( PhysicsWorld* physicsWorld ) : physicsWorld( physicsWorld )
 {
 
 }
@@ -18,7 +18,7 @@ void PhysicsTransformSystem::translate( const std::shared_ptr< ECS::IGameEntity 
 
     FUNCTION_BREAK( transform == nullptr && rigidBody == nullptr )
 
-    rigidBody->instance->applyTorque( Core::Utilities::toBt( translation ) * 70 );
+    rigidBody->instance->setLinearVelocity( rigidBody->instance->getLinearVelocity( ) + Core::Utilities::toBt( translation ) );
     rigidBody->instance->activate( );
 }
 

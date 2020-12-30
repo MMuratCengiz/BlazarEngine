@@ -20,6 +20,7 @@
 #include "SampleBall.h"
 #include "FpsCamera.h"
 #include "SampleAnimatedWolf.h"
+#include "SampleMovingCrate.h"
 
 using namespace BlazarEngine;
 
@@ -44,6 +45,7 @@ class SampleGame : public Scene::IPlayable
     std::shared_ptr< SampleSmallCrate > smallCrate;
     std::shared_ptr< SampleBall > sampleBall;
     std::shared_ptr< SampleAnimatedWolf > sampleWolf;
+    std::shared_ptr< SampleMovingCrate > sampleMovingCrate;
     Input::ActionCallback inputCallback;
 public:
     inline explicit SampleGame( Scene::World *world ) : world( world )

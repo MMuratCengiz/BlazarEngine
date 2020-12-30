@@ -6,12 +6,12 @@ const float PhysicsWorld::GRAVITY_EARTH = -9.80665;
 
 PhysicsWorld::PhysicsWorld( const PhysicsWorldConfiguration &physicsWorldConfiguration )
 {
-    collisionConfiguration = std::make_shared< btDefaultCollisionConfiguration >( );
-    collisionDispatcher = std::make_shared< btCollisionDispatcher >( collisionConfiguration.get( ) );
-    overlappingPairCache = std::make_shared< btDbvtBroadphase >( );
-    sicSolver = std::make_shared< btSequentialImpulseConstraintSolver >( );
+    collisionConfiguration = new btDefaultCollisionConfiguration{ };
+    collisionDispatcher = new btCollisionDispatcher{ collisionConfiguration };
+    overlappingPairCache = new btDbvtBroadphase{ };
+    sicSolver = new btSequentialImpulseConstraintSolver{ };
 
-    dynamicsWorld = std::make_shared< btDiscreteDynamicsWorld >( collisionDispatcher.get( ), overlappingPairCache.get( ), sicSolver.get( ), collisionConfiguration.get( ) );
+    dynamicsWorld = std::make_unique< btDiscreteDynamicsWorld >( collisionDispatcher, overlappingPairCache, sicSolver, collisionConfiguration );
     dynamicsWorld->setGravity( btVector3( 0.0f, GRAVITY_EARTH, 0.0f ) );
 }
 
@@ -33,7 +33,6 @@ void PhysicsWorld::addOrUpdateEntity( const std::shared_ptr< ECS::IGameEntity > 
         collisionObject->instance->setUserPointer( transformObject.get( ) );
         dynamicsWorld->addCollisionObject( collisionObject->instance.get( ) );
     }
-
 }
 
 void PhysicsWorld::update( const std::shared_ptr< ECS::IGameEntity > &entity )
@@ -85,11 +84,12 @@ PhysicsWorld::~PhysicsWorld( )
 {
     btCollisionObjectArray &collisionObjects = dynamicsWorld->getCollisionObjectArray( );
 
-    for ( uint32_t i = 0; i < dynamicsWorld->getNumCollisionObjects( ); ++i )
+    for ( int i = dynamicsWorld->getNumCollisionObjects( ) - 1; i >= 0 ; i-- )
     {
-        collisionObjects[ i ]->getUserPointer( );
         dynamicsWorld->removeCollisionObject( collisionObjects[ i ] );
     }
+
+    delete sicSolver;
 }
 
 END_NAMESPACES

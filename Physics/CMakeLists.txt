@@ -1,3 +1,5 @@
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
+
 SET(BlazarPhysicsSources
         BlazarPhysics/PhysicsWorld.h
         BlazarPhysics/PhysicsWorld.cpp
@@ -15,4 +17,11 @@ TARGET_LINK_LIBRARIES(
         BlazarPhysics
         BlazarCore
         BlazarECS
+        Bullet3Common
+        Bullet3Geometry
+        BulletSoftBody
+        BulletDynamics
+        Bullet3Dynamics
+        Bullet3Collision
+        BulletCollision
 )

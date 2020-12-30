@@ -1,3 +1,5 @@
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
+
 SET(BlazarInputSources
         BlazarInput/GlobalEventHandler.h
         BlazarInput/GlobalEventHandler.cpp

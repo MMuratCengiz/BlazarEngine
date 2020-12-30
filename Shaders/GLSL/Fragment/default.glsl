@@ -34,15 +34,16 @@ struct SpotLight {
     vec4 specular;
 };
 
-layout(set = 2, binding = 0) uniform sampler2D Texture1;
-layout(set = 3, binding = 0) uniform Material {
+layout(set = 1, binding = 0) uniform sampler2D Texture1;
+layout(set = 2, binding = 0) uniform Material {
     vec4 diffuseColor;
     vec4 specularColor;
+    vec4 textureScale;
 
     float shininess;
 } mat;
 
-layout(set = 4, binding = 0) uniform EnvironmentLights {
+layout(set = 3, binding = 0) uniform EnvironmentLights {
     int ambientLightCount;
     int directionalLightCount;
     int pointLightCount;
@@ -60,6 +61,7 @@ layout (location = 2) in vec3 worldPos;
 
 layout (location = 0) out vec4 outputColor;
 
+vec2 texture1Coor;
 vec3 viewDirection;
 vec4 texturedDiffuse;
 vec4 texturedSpecular;
@@ -71,8 +73,10 @@ vec4 calculatePointLight(PointLight light);
 vec4 calculateSpotLight(SpotLight light);
 
 void main() {
-    texturedSpecular = vec4( 0.0f );
-    texturedDiffuse = texture(Texture1, transitTexture1Coor);
+    texture1Coor = transitTexture1Coor * mat.textureScale.xz;
+
+    texturedSpecular = vec4( 0.5f );
+    texturedDiffuse = texture(Texture1, texture1Coor);
     outputColor = vec4( 0 );
 
     for ( int i = 0; i < environment.ambientLightCount; ++i ) {

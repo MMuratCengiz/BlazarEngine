@@ -1,3 +1,4 @@
+#include <fstream>
 #include "Utilities.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
@@ -62,6 +63,27 @@ btQuaternion Utilities::toBtQuat( glm::vec3 euler, bool isInRadians )
     }
 
     return btQuaternion( );
+}
+
+
+std::vector< char > Utilities::readFile( const std::string &filename )
+{
+    std::ifstream file( filename, std::ios::ate | std::ios::binary );
+
+    if ( !file.is_open( ) )
+    {
+        throw std::runtime_error( "failed to open file!" );
+    }
+
+    size_t fileSize = static_cast<size_t>( file.tellg( ) );
+    std::vector< char > contents( fileSize );
+
+    file.seekg( 0 );
+    file.read( contents.data( ), fileSize );
+
+    file.close( );
+
+    return contents;
 }
 
 END_NAMESPACES

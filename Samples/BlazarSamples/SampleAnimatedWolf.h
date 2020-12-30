@@ -12,11 +12,11 @@ public:
     SampleAnimatedWolf( )
     {
         auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
-        mesh->path = PATH( "/assets/models/wolf.blend" );
+        mesh->path = PATH( "/assets/models/Wolf2.fbx" );
 
         auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
         auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/Wolf_Body.hpg";
+        texInfo.path = "/assets/textures/Wolf_Body.jpg";
 
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );
         transform->position = glm::vec3( 1.0f, 0.2f, -4.8f );

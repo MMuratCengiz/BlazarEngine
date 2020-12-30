@@ -9,16 +9,17 @@ namespace Sample
 class SampleOldHouse : public BlazarEngine::ECS::IGameEntity
 {
 public:
-    SampleOldHouse( )
+    explicit SampleOldHouse(  Scene::World * world )
     {
-        auto mesh = createComponent< BlazarEngine::ECS::CMesh >( );
-        mesh->path = PATH( "/assets/models/old_house.obj" );
-        mesh->cullMode = BlazarEngine::ECS::CullMode::None;
+        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/old_house.obj") );
 
-        auto texture = createComponent< BlazarEngine::ECS::CMaterial >( );
-        auto &texInfo = texture->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/old_house_body.jpg";
+        for ( auto& child: meshEntities->getChildren( ) )
+        {
+            auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+            texInfo.path = "/assets/textures/old_house_body.jpg";
+        }
 
+        addChild( meshEntities );
         auto transform = createComponent< BlazarEngine::ECS::CTransform >( );
         transform->position = glm::vec3( -5.5f, 0.15f, 5.0f );
         transform->scale = glm::vec3( 0.02f, 0.02f, 0.02f );

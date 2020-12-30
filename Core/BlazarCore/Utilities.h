@@ -14,6 +14,7 @@ public:
     static glm::vec4 toGlm( const btVector4& vec4 );
     static btVector3 toBt( glm::vec3 vec );
     static btQuaternion toBtQuat( glm::vec3 euler, bool isInRadians );
+    static std::vector< char > readFile( const std::string &filename );
 };
 
 END_NAMESPACES

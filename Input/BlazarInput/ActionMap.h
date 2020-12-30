@@ -25,11 +25,11 @@ struct ActionBinding
 class ActionMap
 {
 private:
-    std::shared_ptr< EventHandler > eventHandler;
+    EventHandler* eventHandler;
     std::unordered_map< std::string, std::vector< ActionCallback > > callbacks;
     ActionCallback proxyActionCallback;
 public:
-    explicit ActionMap( std::shared_ptr< EventHandler > eventHandler );
+    explicit ActionMap( EventHandler* eventHandler );
 
     void registerAction( const std::string &actionName, ActionBinding binding );
     void subscribeToAction( const std::string &actionName, ActionCallback callback );

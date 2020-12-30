@@ -13,11 +13,12 @@ struct PhysicsWorldConfiguration
 class PhysicsWorld
 {
 private:
-    std::shared_ptr< btDefaultCollisionConfiguration > collisionConfiguration;
-    std::shared_ptr< btCollisionDispatcher > collisionDispatcher;
-    std::shared_ptr< btDbvtBroadphase > overlappingPairCache;
-    std::shared_ptr< btSequentialImpulseConstraintSolver > sicSolver;
-    std::shared_ptr< btDiscreteDynamicsWorld > dynamicsWorld;
+    btDefaultCollisionConfiguration *collisionConfiguration;
+    btCollisionDispatcher *collisionDispatcher;
+    btDbvtBroadphase *overlappingPairCache;
+    btSequentialImpulseConstraintSolver *sicSolver;
+
+    std::unique_ptr< btDiscreteDynamicsWorld > dynamicsWorld;
     std::vector< ECS::CTransform > collisionTransforms;
 public:
     static const float GRAVITY_EARTH;
