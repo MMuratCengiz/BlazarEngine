@@ -15,9 +15,9 @@ class VulkanPipeline;
 struct VulkanRenderTarget : public IRenderTarget
 {
 private:
-    VulkanContext * context;
+    VulkanContext *context;
 public:
-    inline explicit VulkanRenderTarget( VulkanContext * context ) : context( context )
+    inline explicit VulkanRenderTarget( VulkanContext *context ) : context( context )
     { }
 
     vk::Framebuffer ref;
@@ -36,7 +36,7 @@ public:
 class VulkanRenderPass : public IRenderPass
 {
 private:
-    VulkanContext * context;
+    VulkanContext *context;
     std::shared_ptr< VulkanPipeline > boundPipeline;
     std::shared_ptr< VulkanRenderTarget > currentRenderTarget;
     std::shared_ptr< VertexData > vertexDataAttachment = nullptr;
@@ -47,7 +47,6 @@ private:
     std::vector< std::unique_ptr< VulkanResourceLock > > swapChainImageRendered;
     uint32_t swapChainIndex { };
     uint32_t frameIndex { };
-    uint32_t objectIndex { };
     // --
 
     std::function< void( ) > bindVertexBuffer;
@@ -56,7 +55,7 @@ private:
     std::vector< vk::CommandBuffer > buffers;
     vk::RenderPass renderPass;
 public:
-    explicit inline VulkanRenderPass( VulkanContext * context ) : context( context )
+    explicit inline VulkanRenderPass( VulkanContext *context ) : context( context )
     {
         swapChainImageAvailable.resize( this->context->swapChainImages.size( ) );
         swapChainImageRendered.resize( this->context->swapChainImages.size( ) );
@@ -69,11 +68,11 @@ public:
     }
 
     void create( const RenderPassRequest &request ) override;
-    void frameStart( const uint32_t& frameIndex ) override;
+    void frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > >& pipelines ) override;
     void begin( std::shared_ptr< IRenderTarget > renderTarget, std::array< float, 4 > clearColor ) override;
-    void prepareResource( std::shared_ptr< ShaderResource > resource ) override;
+    void bindPerFrame( std::shared_ptr< ShaderResource > resource ) override;
     void bindPipeline( std::shared_ptr< IPipeline > pipeline ) override;
-    void bindResource( std::shared_ptr< ShaderResource > resource ) override;
+    void bindPerObject( std::shared_ptr< ShaderResource > resource ) override;
     void draw( ) override;
     void submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) override;
     [[nodiscard]] const vk::RenderPass &getPassInstance( ) const;
@@ -85,9 +84,9 @@ public:
 class VulkanRenderPassProvider : public IRenderPassProvider
 {
 private:
-    VulkanContext * context;
+    VulkanContext *context;
 public:
-    explicit inline VulkanRenderPassProvider( VulkanContext * context ) : context( context )
+    explicit inline VulkanRenderPassProvider( VulkanContext *context ) : context( context )
     { }
 
     std::shared_ptr< IRenderPass > createRenderPass( const RenderPassRequest &request ) override;
@@ -95,7 +94,7 @@ public:
 
     ~VulkanRenderPassProvider( ) override = default;
 private:
-    VulkanTextureWrapper createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags& aspect );
+    VulkanTextureWrapper createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect );
 };
 
 END_NAMESPACES

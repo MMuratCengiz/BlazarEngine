@@ -11,10 +11,10 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 struct PassWrapper
 {
     std::vector< std::string > dependencies;
-    std::vector< std::string > adaptedInputs;
+    std::vector< std::vector< std::string > > adaptedInputs;
     std::vector< std::shared_ptr< IResourceLock > > executeLocks;
 
-    std::shared_ptr< IPipeline > pipeline;
+    std::vector< std::shared_ptr< IPipeline > > pipelines;
     std::shared_ptr< IRenderPass > renderPass;
     std::vector< std::shared_ptr< IRenderTarget > > renderTargets;
     std::shared_ptr< Pass > ref;

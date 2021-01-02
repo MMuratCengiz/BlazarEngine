@@ -33,33 +33,38 @@ public:
         children.push_back( std::move( child ) );
     }
 
-    const uint64_t &getUID( ) const
+    const uint64_t &getUID( ) const noexcept
     {
         return uid;
     }
 
-    const std::vector< std::shared_ptr< IGameEntity > > &getChildren( ) const
+    const std::vector< std::shared_ptr< IGameEntity > > &getChildren( ) const noexcept
     {
         return children;
     }
 
     template< class T >
-    bool hasComponent( )
+    bool hasComponent( ) noexcept
     {
         return componentMap.find( typeid( T ) ) != componentMap.end( );
     }
 
     template< class CastAs >
-    std::shared_ptr< CastAs > getComponent( )
+    std::shared_ptr< CastAs > getComponent( ) noexcept
     {
-        return std::dynamic_pointer_cast< CastAs >( componentMap[ typeid( CastAs ) ] );
+        auto component = componentMap.find( typeid( CastAs ) );
+        if ( component == componentMap.end( ) )
+        {
+            return nullptr;
+        }
+        return std::dynamic_pointer_cast< CastAs >( component->second );
     }
 
-    std::vector< std::shared_ptr< IComponent > > getAllComponents( )
+    std::vector< std::shared_ptr< IComponent > > getAllComponents( ) noexcept
     {
         auto result = std::vector< std::shared_ptr< IComponent > >( );
 
-        for ( const auto& pair: componentMap )
+        for ( const auto &pair: componentMap )
         {
             result.push_back( pair.second );
         }
@@ -82,7 +87,7 @@ typedef std::shared_ptr< IGameEntity > pGameEntity;
 class DynamicGameEntity : public IGameEntity
 {
 public:
-    ~DynamicGameEntity() override = default;
+    ~DynamicGameEntity( ) override = default;
 };
 
 END_NAMESPACES

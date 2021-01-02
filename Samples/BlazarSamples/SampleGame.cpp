@@ -40,7 +40,7 @@ void SampleGame::init( )
     car1 = std::make_shared< SampleCar1 >( world );
     car2 = std::make_shared< SampleCar2 >( world );
 //    cone = std::make_shared< SampleTrafficCone >( world );
-//    sky = std::make_shared< SampleCubeMap >( );
+    sky = std::make_shared< SampleCubeMap >( );
     crate = std::make_shared< SampleCrate >( );
     sampleBall = std::make_shared< SampleBall >( );
 //    sampleWolf = std::make_shared< SampleAnimatedWolf >( );
@@ -56,7 +56,7 @@ void SampleGame::init( )
     initialScene->addEntity( floor );
     initialScene->addEntity( crate );
     initialScene->addEntity( smallCrate );
-//    initialScene->addEntity( sky );
+    initialScene->addEntity( sky );
 //    initialScene->addEntity( sampleWolf );
     initialScene->addEntity( sampleMovingCrate );
     world->setScene( initialScene );

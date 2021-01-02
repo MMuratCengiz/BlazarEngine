@@ -190,9 +190,15 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     buffers = context->logicalDevice.allocateCommandBuffers( bufferAllocateInfo );
 }
 
-void VulkanRenderPass::frameStart( const uint32_t &frameIndex )
+void VulkanRenderPass::frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > >& pipelines )
 {
     this->frameIndex = frameIndex;
+
+    for ( auto& pipeline: pipelines )
+    {
+        auto vkPipeline = std::dynamic_pointer_cast< VulkanPipeline >( pipeline );
+        vkPipeline->descriptorManager->resetObjectCounter( );
+    }
 }
 
 void VulkanRenderPass::begin( std::shared_ptr< IRenderTarget > renderTarget, std::array< float, 4 > clearColor )
@@ -213,8 +219,6 @@ void VulkanRenderPass::begin( std::shared_ptr< IRenderTarget > renderTarget, std
     renderPassBeginInfo.renderArea.extent = context->surfaceExtent;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-
-    objectIndex = 0;
 
     vk::CommandBufferBeginInfo beginInfo { };
     beginInfo.flags = { };
@@ -241,7 +245,7 @@ vk::PipelineBindPoint VulkanRenderPass::getBoundPipelineBindPoint( ) const
     return bindPoint;
 }
 
-void VulkanRenderPass::prepareResource( std::shared_ptr< ShaderResource > resource )
+void VulkanRenderPass::bindPerFrame( std::shared_ptr< ShaderResource > resource )
 {
     if ( resource->type == ResourceType::Uniform && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
     {
@@ -253,7 +257,7 @@ void VulkanRenderPass::prepareResource( std::shared_ptr< ShaderResource > resour
                 resource->identifier.deviation
         );
     }
-    else if ( resource->type == ResourceType::Sampler2D && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
+    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
     {
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
@@ -264,7 +268,7 @@ void VulkanRenderPass::prepareResource( std::shared_ptr< ShaderResource > resour
     }
 }
 
-void VulkanRenderPass::bindResource( std::shared_ptr< ShaderResource > resource )
+void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource )
 {
     if ( resource->type == ResourceType::VertexData )
     {
@@ -315,17 +319,17 @@ void VulkanRenderPass::bindResource( std::shared_ptr< ShaderResource > resource 
                 frameIndex,
                 resource->identifier.name,
                 ( ( VulkanBufferWrapper * ) resource->apiSpecificBuffer )->buffer,
-                objectIndex,
+                boundPipeline->descriptorManager->getObjectCount( ),
                 resource->identifier.deviation
         );
     }
-    else if ( resource->type == ResourceType::Sampler2D && resource->bindStrategy == ResourceBindStrategy::BindPerObject )
+    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerObject )
     {
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
                 resource->identifier.getKey( ),
                 *( ( VulkanTextureWrapper * ) resource->apiSpecificBuffer ),
-                objectIndex
+                boundPipeline->descriptorManager->getObjectCount( )
         );
     }
 }
@@ -342,7 +346,7 @@ void VulkanRenderPass::draw( )
 {
     FUNCTION_BREAK( vertexDataAttachment == nullptr )
 
-    auto descriptorSets = boundPipeline->descriptorManager->getOrderedSets( frameIndex, objectIndex );
+    auto descriptorSets = boundPipeline->descriptorManager->getOrderedSets( frameIndex, boundPipeline->descriptorManager->getObjectCount( ) );
 
     buffers[ frameIndex ].bindPipeline( getBoundPipelineBindPoint( ), boundPipeline->pipeline );
 
@@ -353,6 +357,7 @@ void VulkanRenderPass::draw( )
     }
 
     buffers[ frameIndex ].setViewport( 0, context->viewport );
+    buffers[ frameIndex ].setScissor( 0, context->viewScissor );
 
     buffers[ frameIndex ].bindDescriptorSets(
             getBoundPipelineBindPoint( ),
@@ -394,7 +399,7 @@ void VulkanRenderPass::draw( )
         );
     }
 
-    objectIndex++;
+    boundPipeline->descriptorManager->incrementObjectCounter( );
     vertexDataAttachment = nullptr;
     indexDataAttachment = nullptr;
 }

@@ -79,6 +79,8 @@ private:
 
     vk::DescriptorPool uniformDescriptorPool;
     vk::DescriptorPool samplerDescriptorPool;
+
+    uint32_t objectCounter;
 public:
     explicit DescriptorManager( VulkanContext * context, std::shared_ptr< GLSLShaderSet > shaderSet );
 
@@ -95,6 +97,10 @@ public:
     std::vector< PushConstantParent > getPushConstantBindings( const uint32_t &frame );
 
     const std::vector< vk::DescriptorSetLayout > &getLayouts( );
+
+    inline void incrementObjectCounter( ) noexcept { objectCounter++; }
+    inline void resetObjectCounter( ) noexcept { objectCounter = 0; }
+    inline uint32_t getObjectCount( ) const noexcept { return objectCounter; }
     ~DescriptorManager( );
 private:
 

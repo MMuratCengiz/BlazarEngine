@@ -17,6 +17,7 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice *renderDevice, AssetMana
     globalModelResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
 
     frameResources.resize( renderDevice->getFrameCount( ) );
+    resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ) );
 }
 
 void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable > &componentTable, const uint32_t &frameIndex )
@@ -38,6 +39,8 @@ void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable
     }*/
 
     currentComponentTable = componentTable;
+    resourcesUpdatedThisFrame.clear( );
+    resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ), { } );
 }
 
 void GlobalResourceTable::addEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
@@ -74,7 +77,6 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
     MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
 
     GeometryData &data = geometryList.emplace_back( GeometryData { } );
-
     /*
      * Create vertex data:
      */
@@ -145,6 +147,7 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
     data.modelTransformPtr = transformComponent;
 
     entityGeometryMap[ entity->getUID( ) ] = geometryList.size( ) - 1;
+    data.referenceEntity = entity;
 }
 
 void GlobalResourceTable::createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities )
@@ -201,6 +204,12 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::Material ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
 
+    auto resourceUpdatedThisFrame = resourcesUpdatedThisFrame[ frameIndex ].find( resourceName );
+
+    FUNCTION_BREAK ( resourceUpdatedThisFrame != resourcesUpdatedThisFrame[ frameIndex ].end( ) )
+
+    resourcesUpdatedThisFrame[ frameIndex ][ resourceName ] = true;
+
     auto find = frameResources[ frameIndex ].find( resourceName );
 
     if ( find == frameResources[ frameIndex ].end( ) )
@@ -212,10 +221,23 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
     auto &wrapper = find->second;
 
     bool wrapperAllocatedThisFrame = !wrapper.isAllocated;
+
+    bool isEnvironmentLights = resourceName == StaticVars::getInputName( StaticVars::Input::EnvironmentLights );
+    bool isViewProjection = resourceName == StaticVars::getInputName( StaticVars::Input::ViewProjection );
+    bool isSkyBox = resourceName == StaticVars::getInputName( StaticVars::Input::SkyBox );
+
     if ( !wrapper.isAllocated )
     {
+
+        ResourceType resourceType = ResourceType::Uniform;
+
+        if ( isSkyBox )
+        {
+            resourceType = ResourceType::CubeMap;
+        }
+
         wrapper.isAllocated = true;
-        wrapper.ref = createResource( );
+        wrapper.ref = createResource( resourceType );
         wrapper.ref->identifier = { resourceName };
     }
     else
@@ -223,20 +245,18 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
         FUNCTION_BREAK( wrapper.ref->loadStrategy == ResourceLoadStrategy::LoadOnce )
     }
 
-    if ( resourceName == StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) )
+    if ( isEnvironmentLights )
     {
         attachStructDataAttachment( wrapper.ref, DataAttachmentFormatter::formatLightingEnvironment( currentComponentTable ), wrapperAllocatedThisFrame );
     }
 
-    if ( resourceName == StaticVars::getInputName( StaticVars::Input::ViewProjection ) )
+    if ( isViewProjection )
     {
         attachStructDataAttachment( wrapper.ref, DataAttachmentFormatter::formatCamera( currentComponentTable ), wrapperAllocatedThisFrame );
     }
 
-    if ( resourceName == StaticVars::getInputName( StaticVars::Input::SkyBox ) )
+    if ( isSkyBox )
     {
-        wrapper.ref->type = ResourceType::CubeMap;
-
         std::shared_ptr< CubeMapDataAttachment > cubeMapAttachment = std::make_shared< CubeMapDataAttachment >( );
 
         const auto &cubeMaps = currentComponentTable->getComponents< ECS::CCubeMap >( );

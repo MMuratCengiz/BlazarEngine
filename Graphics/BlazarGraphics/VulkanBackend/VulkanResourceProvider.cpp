@@ -253,6 +253,8 @@ void VulkanResourceProvider::createCubeMapAllocator( const std::shared_ptr< Shad
         auto &buffer = pWrapper->image;
 
         context->vma.destroyImage( pWrapper->image, pWrapper->allocation );
+        context->logicalDevice.destroyImageView( pWrapper->imageView );
+        context->logicalDevice.destroySampler( pWrapper->sampler );
 
         delete pWrapper;
     };

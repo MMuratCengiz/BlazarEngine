@@ -12,11 +12,12 @@ struct Pass
 {
     const std::string name;
 
-    PipelineRequest pipelineRequest; // Todo possibly create multiple
+    std::vector< PipelineRequest > pipelineRequests;
     RenderPassRequest renderPassRequest;
 
-    std::vector< std::string > inputs;
+    std::vector< std::vector< std::string > > pipeLineInputs;
     std::vector< OutputImage > outputs;
+    std::function< int( const std::shared_ptr< ECS::IGameEntity >& entity ) > selectPipeline;
 
     explicit Pass( std::string name ) : name( std::move( name ) )
     { }

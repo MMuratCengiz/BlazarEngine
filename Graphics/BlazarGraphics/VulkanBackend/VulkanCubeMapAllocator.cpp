@@ -8,7 +8,11 @@ void VulkanCubeMapAllocator::load( const CubeMapLoadArguments &arguments, Vulkan
     const auto &commandExecutor = arguments.commandExecutor;
     const auto &image = arguments.image;
 
-    int width, height, channels;
+    ASSERT_M( !image->images.empty( ), "Cube map textures cannot be empty!" );
+
+    int width = image->images[ 0 ]->width;
+    int height = image->images[ 0 ]->height;
+
     std::vector< std::pair< vk::Buffer, vma::Allocation > > stagingBuffers( arguments.image->images.size( ) );
 
     int mipStagingBufferIndex = 0;

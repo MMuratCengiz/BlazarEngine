@@ -265,7 +265,7 @@ void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::st
     ensureTextureHasDescriptor( frameIndex, uniformName, objectIndex );
 
     // Todo + texture index when texture arrays are implemented
-    const std::string &key = getUniformKey( Core::Constants::getConstant( Core::ConstantName::ShaderInputSampler ), 1 );
+    const std::string &key = getUniformKey( uniformName );
 
     UniformLocation &uniformLocation = uniformLocations[ key ];
     BindingUpdateInfo updateInfo {

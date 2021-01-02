@@ -41,6 +41,8 @@ public:
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Bottom,
                 "/assets/cubemaps/greensky/bottom.png" } );
+
+        cubeMap->sort( );
     }
 };
 

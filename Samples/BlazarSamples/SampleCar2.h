@@ -2,6 +2,7 @@
 
 #include <BlazarCore/Common.h>
 #include <BlazarECS/ECS.h>
+#include <BlazarPhysics/PhysicsTransformSystem.h>
 
 namespace Sample
 {
@@ -21,10 +22,9 @@ public:
 
         addChild( meshEntities );
 
-        auto transform = createComponent< BlazarEngine::ECS::CTransform >( );
-        transform->position = glm::vec3( -5.5f, 0.15f, -2.8f );
-        transform->scale = glm::vec3( 0.5f, 0.5f, 0.5f );
-        transform->rotation.euler = glm::vec3( 0.0f, 45.0f, 0.0f );
+        BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( this, glm::vec3( -5.5f, 0.15f, -2.8f ) );
+        BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( this, { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( 0.0f, 45.0f, 0.0f ) } );
+        BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( this, glm::vec3( 0.5f, 0.5f, 0.5f ) );
     }
 };
 

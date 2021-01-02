@@ -40,12 +40,12 @@ class IRenderPass
 {
 public:
     virtual void create( const RenderPassRequest& request ) = 0;
-    virtual void frameStart( const uint32_t& frameIndex ) = 0;
+    virtual void frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline> >& pipelines ) = 0;
     virtual void begin( std::shared_ptr< IRenderTarget > renderTarget, std::array< float, 4 > clearColor ) = 0;
 
-    virtual void prepareResource( std::shared_ptr< ShaderResource > resource ) = 0;
+    virtual void bindPerFrame( std::shared_ptr< ShaderResource > resource ) = 0;
     virtual void bindPipeline( std::shared_ptr< IPipeline > pipeline ) = 0;
-    virtual void bindResource( std::shared_ptr< ShaderResource > resource ) = 0;
+    virtual void bindPerObject( std::shared_ptr< ShaderResource > resource ) = 0;
 
     virtual void draw( ) = 0;
     virtual void submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) = 0;

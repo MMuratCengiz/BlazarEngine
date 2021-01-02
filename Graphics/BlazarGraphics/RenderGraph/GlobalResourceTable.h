@@ -23,6 +23,7 @@ struct GeometryData
     std::vector< std::shared_ptr< ShaderResource > > textures;
 
     std::shared_ptr< ECS::CTransform > modelTransformPtr;
+    std::shared_ptr< ECS::IGameEntity > referenceEntity;
 };
 
 // Mappings to shader versions:
@@ -43,6 +44,8 @@ private:
     std::shared_ptr< ECS::ComponentTable > currentComponentTable;
 
     std::vector< std::unordered_map< std::string, ShaderResourceWrapper > > frameResources;
+    std::vector< std::unordered_map< std::string, bool > > resourcesUpdatedThisFrame;
+
     std::vector< GeometryData > geometryList;
     std::unordered_map< uint64_t, uint32_t > entityGeometryMap;
 
@@ -83,6 +86,7 @@ private:
             dataAttachment->size = sizeof( StructType );
             dataAttachment->content = malloc( dataAttachment->size );
         }
+
         memcpy( dataAttachment->content, &structData, dataAttachment->size );
     }
 

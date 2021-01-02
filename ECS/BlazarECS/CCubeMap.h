@@ -31,6 +31,14 @@ struct CCubeMap : public IComponent
 public:
     std::vector< CubeMapSidePath > texturePaths;
     BLAZAR_COMPONENT( CCubeMap )
+
+    inline void sort( )
+    {
+        std::sort( texturePaths.begin( ), texturePaths.end( ), [ ]( const ECS::CubeMapSidePath &p1, const ECS::CubeMapSidePath &p2 ) -> bool
+        {
+            return static_cast< uint32_t >( p1.side ) > static_cast< uint32_t >( p2.side );
+        } );
+    }
 };
 
 END_NAMESPACES
