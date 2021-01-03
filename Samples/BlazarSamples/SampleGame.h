@@ -33,7 +33,7 @@ class SampleGame : public Scene::IPlayable
 
     std::shared_ptr< Scene::Scene > initialScene;
     std::shared_ptr< FpsCamera > camera;
-    std::vector< std::shared_ptr< ECS::DynamicGameEntity > > sceneLights;
+    std::shared_ptr< ECS::DynamicGameEntity > sceneLights;
     std::shared_ptr< ECS::DynamicGameEntity > cameraComponent;
     std::shared_ptr< SampleCar1 > car1;
     std::shared_ptr< SampleCar2 > car2;

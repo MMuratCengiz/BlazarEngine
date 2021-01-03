@@ -5,17 +5,17 @@ namespace Sample
 
 void SampleGame::init( )
 {
-    sceneLights.resize( 4, std::make_shared< ECS::DynamicGameEntity >( ) );
+    sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
 
-    sceneLights[ 0 ]->createComponent< ECS::CAmbientLight >( );
-    sceneLights[ 0 ]->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec4( 0.0f, 0.25f, 0.1f, 1.0f );
-    sceneLights[ 0 ]->getComponent< ECS::CAmbientLight >( )->power = 0.01f;
+    sceneLights->createComponent< ECS::CAmbientLight >( );
+    sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec4( 0.0f, 0.25f, 0.1f, 1.0f );
+    sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.01f;
 
-    sceneLights[ 1 ]->createComponent< ECS::CDirectionalLight >( );
-    sceneLights[ 1 ]->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec4( 0.1f, 0.25f, 0.1f, 1.0f );
-    sceneLights[ 1 ]->getComponent< ECS::CDirectionalLight >( )->direction = glm::vec4( glm::normalize( glm::vec3( 0.5f, 0.5f, 0.5f ) ), 1.0f );
-    sceneLights[ 1 ]->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec4( 0.0f );
-    sceneLights[ 1 ]->getComponent< ECS::CDirectionalLight >( )->power = 0.8f;
+    sceneLights->createComponent< ECS::CDirectionalLight >( );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec4( 0.1f, 0.25f, 0.1f, 1.0f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = glm::vec4( glm::normalize( glm::vec3( 0.5f, 0.5f, 0.5f ) ), 1.0f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec4( 0.0f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.8f;
 
 /*
     sceneLights[ 2 ]->createComponent< ECS::CPointLight >( );
@@ -47,8 +47,7 @@ void SampleGame::init( )
     smallCrate = std::make_shared< SampleSmallCrate >( );
 
     initialScene = std::make_shared< Scene::Scene >( );
-    initialScene->addEntity( sceneLights[ 0 ] );
-    initialScene->addEntity( sceneLights[ 1 ] );
+    initialScene->addEntity( sceneLights );
     initialScene->addEntity( cameraComponent );
     initialScene->addEntity( car1 );
     initialScene->addEntity( car2 );

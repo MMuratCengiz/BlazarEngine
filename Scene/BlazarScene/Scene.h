@@ -23,11 +23,7 @@ public:
     {
         NOT_NULL( entity );
 
-        for ( const auto& component: entity->getAllComponents( ) )
-        {
-            componentTable->addNewComponent( component );
-        }
-
+        componentTable->addAllEntityComponentRecursive( entity );
         entities.emplace_back( std::move( entity ) );
     }
 

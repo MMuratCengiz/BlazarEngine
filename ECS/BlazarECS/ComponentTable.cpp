@@ -1,8 +1,17 @@
-//
-// Created by Murat on 12/9/2020.
-//
-
 #include "ComponentTable.h"
+
+void BlazarEngine::ECS::ComponentTable::addAllEntityComponentRecursive( const std::shared_ptr< IGameEntity >& gameEntity )
+{
+    for ( const auto& component: gameEntity->getAllComponents( ) )
+    {
+        addNewComponent( component );
+    }
+
+    for ( auto child: gameEntity->getChildren( ) )
+    {
+        addAllEntityComponentRecursive( child );
+    }
+}
 
 void BlazarEngine::ECS::ComponentTable::addNewComponent( std::shared_ptr< IComponent > component )
 {

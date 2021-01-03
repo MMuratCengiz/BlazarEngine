@@ -66,11 +66,14 @@ public:
     
     void setScene( std::shared_ptr< Scene > scene )
     {
-        for ( const auto &entity: scene->getEntities( ) )
+        if ( currentScene != nullptr )
         {
-            for ( auto &system: systems )
+            for ( const auto &entity: currentScene->getEntities( ) )
             {
-                system->removeEntity( entity );
+                for ( auto &system: systems )
+                {
+                    system->removeEntity( entity );
+                }
             }
         }
         

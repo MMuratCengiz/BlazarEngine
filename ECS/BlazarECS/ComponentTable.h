@@ -15,6 +15,7 @@ private:
             std::vector < // dynamically indexed componentId != index
                 std::shared_ptr< IComponent > > > componentTable;
 public:
+    void addAllEntityComponentRecursive( const std::shared_ptr< IGameEntity >& gameEntity );
     void addNewComponent( std::shared_ptr< IComponent > component );
     // Expensive operation don't use often
     void removeComponent( const std::shared_ptr< IComponent >& component );
