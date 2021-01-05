@@ -13,19 +13,22 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
 
     std::vector< vk::ImageView > attachments { };
 
-    if ( ( request.targetImages == RenderTargetImages::Stencil ) || ( request.targetImages == RenderTargetImages::DepthAndStencil ) )
+    vk::SampleCountFlagBits msaaSampleCount = vk::SampleCountFlagBits::e1;
+
+    if ( request.targetImages.msaa )
     {
+        msaaSampleCount = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
         const vk::ImageUsageFlags &usage = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment;
-        renderTarget->stencilBuffer = createAttachment( context->imageFormat, usage, vk::ImageAspectFlagBits::eColor );
-        renderTarget->hasStencilBuffer = true;
-        attachments.push_back( renderTarget->stencilBuffer.imageView );
+        renderTarget->msaaBuffer = createAttachment( context->imageFormat, usage, vk::ImageAspectFlagBits::eColor, msaaSampleCount );
+        renderTarget->hasMsaaBuffer = true;
+        attachments.push_back( renderTarget->msaaBuffer.imageView );
     }
 
-    if ( ( request.targetImages == RenderTargetImages::Depth ) || ( request.targetImages == RenderTargetImages::DepthAndStencil ) )
+    if ( request.targetImages.depth )
     {
         vk::Format format = VulkanUtilities::findSupportedDepthFormat( context->physicalDevice );
 
-        renderTarget->depthBuffer = createAttachment( format, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageAspectFlagBits::eDepth );
+        renderTarget->depthBuffer = createAttachment( format, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageAspectFlagBits::eDepth, msaaSampleCount );
         renderTarget->hasDepthBuffer = true;
         attachments.push_back( renderTarget->depthBuffer.imageView );
     }
@@ -50,11 +53,41 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
             {
                 vkFormat = vk::Format::eR8G8B8A8Unorm;
             }
+            else if ( outputImage.imageFormat == ResourceImageFormat::B8G8R8A8Srgb )
+            {
+                vkFormat = vk::Format::eB8G8R8A8Srgb;
+            }
 
-            const VulkanTextureWrapper &colorAttachment = createAttachment( vkFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageAspectFlagBits::eColor );
+            VulkanTextureWrapper colorAttachment = createAttachment( vkFormat,
+                                                                     vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
+                                                                     vk::ImageAspectFlagBits::eColor,
+                                                                     vk::SampleCountFlagBits::e1 );
+            colorAttachment.previousUsage = ResourceUsage::RenderTarget;
+
             renderTarget->colorBuffers.push_back( colorAttachment );
-            renderTarget->hasDepthBuffer = true;
+            renderTarget->hasCustomColorAttachment = true;
             attachments.push_back( colorAttachment.imageView );
+
+            auto &imageResource = renderTarget->outputImages.emplace_back( std::make_shared< ShaderResource >( ) );
+            imageResource->type = ResourceType::Sampler2D;
+            imageResource->identifier = { outputImage.outputResourceName };
+
+            imageResource->apiSpecificBuffer = new VulkanTextureWrapper; // todo clean
+            imageResource->bindStrategy = ResourceBindStrategy::BindPerFrame;
+            imageResource->prepareForUsage = [ = ]( const ResourceUsage &usage )
+            {
+                /*auto *wrapper = ( VulkanTextureWrapper * ) imageResource->apiSpecificBuffer;
+                VulkanUtilities::prepareImageForUsage( commandExecutor.get( ), wrapper, usage );*/
+            };
+            renderTarget->outputImageMap[ outputImage.outputResourceName ] = imageResource;
+
+            auto * bufferRef = ( VulkanTextureWrapper * ) imageResource->apiSpecificBuffer;
+            bufferRef->mipLevels = colorAttachment.mipLevels;
+            bufferRef->imageView = colorAttachment.imageView;
+            bufferRef->image = colorAttachment.image;
+            bufferRef->sampler = colorAttachment.sampler;
+            bufferRef->previousUsage = colorAttachment.previousUsage;
+            bufferRef->allocation = colorAttachment.allocation;
         }
     }
 
@@ -72,7 +105,8 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
     return renderTarget;
 }
 
-VulkanTextureWrapper VulkanRenderPassProvider::createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect )
+VulkanTextureWrapper VulkanRenderPassProvider::createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect,
+                                                                 const vk::SampleCountFlagBits &sampleCount )
 {
     VulkanTextureWrapper textureWrapper { };
 
@@ -86,7 +120,7 @@ VulkanTextureWrapper VulkanRenderPassProvider::createAttachment( const vk::Forma
     imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
     imageCreateInfo.usage = usage;
     imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-    imageCreateInfo.samples = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
+    imageCreateInfo.samples = sampleCount;
     imageCreateInfo.mipLevels = 1;
     imageCreateInfo.arrayLayers = 1;
     imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;;
@@ -100,85 +134,179 @@ VulkanTextureWrapper VulkanRenderPassProvider::createAttachment( const vk::Forma
 
     VulkanUtilities::createImageView( context, textureWrapper.imageView, textureWrapper.image, format, aspect );
 
+    if ( usage & vk::ImageUsageFlagBits::eSampled )
+    {
+        vk::SamplerCreateInfo samplerCreateInfo { };
+
+        samplerCreateInfo.magFilter = vk::Filter::eNearest;
+        samplerCreateInfo.minFilter = vk::Filter::eNearest;
+        samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+        samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+        samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+//        samplerCreateInfo.anisotropyEnable = VK_TRUE;
+        samplerCreateInfo.maxAnisotropy = 1.0f;
+        samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+/*        samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerCreateInfo.compareEnable = VK_FALSE;
+        samplerCreateInfo.compareOp = vk::CompareOp::eAlways;*/
+        samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+        samplerCreateInfo.mipLodBias = 0.0f;
+        samplerCreateInfo.minLod = 0.0f;
+        samplerCreateInfo.maxLod = 1.0f;
+
+        textureWrapper.sampler = context->logicalDevice.createSampler( samplerCreateInfo );
+    }
+
     return textureWrapper;
 }
 
 void VulkanRenderPass::create( const RenderPassRequest &request )
 {
-    // Color Attachment
-    auto msaaSampleCount = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
-    vk::AttachmentDescription colorAttachmentDescription { };
-    colorAttachmentDescription.format = context->imageFormat;
-    colorAttachmentDescription.samples = msaaSampleCount;
-    colorAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-    colorAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-    colorAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-    colorAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-    colorAttachmentDescription.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    uint32_t attachmentIndex = 0;
 
-    vk::AttachmentReference colorAttachmentReference { };
-    colorAttachmentReference.attachment = 0;
-    colorAttachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-    // --
+    // colorAttachmentDescription, depthAttachmentDescription, colorAttachmentResolve
+    std::vector< vk::AttachmentDescription > attachments { };
 
-    // Depth attachment
-    vk::AttachmentDescription depthAttachmentDescription { };
-    depthAttachmentDescription.format = VulkanUtilities::findSupportedDepthFormat( context->physicalDevice );
-    depthAttachmentDescription.samples = msaaSampleCount;
-    depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-    depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eDontCare;
-    depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-    depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-    depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-    depthAttachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-    vk::AttachmentReference depthAttachmentReference { };
-    depthAttachmentReference.attachment = 1;
-    depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    // --
-
-    // Color Image Resolver for MSAA
-    vk::AttachmentDescription colorAttachmentResolve { };
-    colorAttachmentResolve.format = context->imageFormat;
-    colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
-    colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
-    colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
-    colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-    colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-    colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
-    colorAttachmentResolve.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-    vk::AttachmentReference colorAttachmentResolveReference { };
-    colorAttachmentResolveReference.attachment = 2;
-    colorAttachmentResolveReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-    // --
 
     vk::SubpassDescription subPass { };
     subPass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-    subPass.colorAttachmentCount = 1;
-    subPass.pColorAttachments = &colorAttachmentReference;
-    subPass.pDepthStencilAttachment = &depthAttachmentReference;
-    subPass.pResolveAttachments = &colorAttachmentResolveReference;
 
-    std::array< vk::AttachmentDescription, 3 > attachments {
-            colorAttachmentDescription, depthAttachmentDescription, colorAttachmentResolve };
+    // Color Attachment
+    vk::SampleCountFlagBits msaaSampleCount = vk::SampleCountFlagBits::e1;
 
-    vk::SubpassDependency dependency { };
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    dependency.srcAccessMask = { }; // TODO Recheck
-    dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+    if ( request.targetImages.msaa )
+    {
+        propertyVal_useMsaa = "true";
+        msaaSampleCount = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
+    }
+
+    {
+        vk::AttachmentDescription colorAttachmentDescription { };
+        colorAttachmentDescription.format = context->imageFormat;
+        colorAttachmentDescription.samples = msaaSampleCount;
+        colorAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
+        colorAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
+        colorAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+        colorAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+        colorAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
+
+        if ( request.isFinalDrawPass && !request.targetImages.msaa )
+        {
+            colorAttachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+        }
+        else
+        {
+            colorAttachmentDescription.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        }
+
+        vk::AttachmentReference colorAttachmentReference[1] { };
+        colorAttachmentReference[ 0 ].attachment = attachmentIndex++;
+        colorAttachmentReference[ 0 ].layout = vk::ImageLayout::eColorAttachmentOptimal;
+        // --
+
+        subPass.colorAttachmentCount = 1;
+        subPass.pColorAttachments = std::move( colorAttachmentReference );
+
+        attachments.push_back( std::move( colorAttachmentDescription ) );
+    }
+
+    if ( request.targetImages.depth )
+    {
+        // Depth attachment
+        vk::AttachmentDescription depthAttachmentDescription { };
+        depthAttachmentDescription.format = VulkanUtilities::findSupportedDepthFormat( context->physicalDevice );
+        depthAttachmentDescription.samples = msaaSampleCount;
+        depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
+        depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eDontCare;
+        depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+        depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+        depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
+        depthAttachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+        vk::AttachmentReference depthAttachmentReference[1] { };
+        depthAttachmentReference[ 0 ].attachment = attachmentIndex++;
+        depthAttachmentReference[ 0 ].layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+        // --
+
+        subPass.pDepthStencilAttachment = std::move( depthAttachmentReference );
+        attachments.push_back( std::move( depthAttachmentDescription ) );
+    }
+
+    if ( request.targetImages.msaa )
+    {
+        // Color Image Resolver for MSAA
+        vk::AttachmentDescription colorAttachmentResolve { };
+        colorAttachmentResolve.format = context->imageFormat;
+        colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
+        colorAttachmentResolve.loadOp = vk::AttachmentLoadOp::eDontCare;
+        colorAttachmentResolve.storeOp = vk::AttachmentStoreOp::eStore;
+        colorAttachmentResolve.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+        colorAttachmentResolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+        colorAttachmentResolve.initialLayout = vk::ImageLayout::eUndefined;
+
+        if ( request.isFinalDrawPass )
+        {
+            colorAttachmentResolve.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+        }
+        else
+        {
+            colorAttachmentResolve.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        }
+
+        vk::AttachmentReference colorAttachmentResolveReference[1] = { { } };
+        colorAttachmentResolveReference[ 0 ].attachment = attachmentIndex;
+        colorAttachmentResolveReference[ 0 ].layout = vk::ImageLayout::eColorAttachmentOptimal;
+        // --
+
+        subPass.pResolveAttachments = std::move( colorAttachmentResolveReference );
+        attachments.push_back( std::move( colorAttachmentResolve ) );
+    }
+
+
+    std::vector< vk::SubpassDependency > dependencies;
+
+    if ( request.isFinalDrawPass )
+    {
+        auto &dependency1 = dependencies.emplace_back( vk::SubpassDependency { } );
+        dependency1.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency1.dstSubpass = 0;
+
+        dependency1.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency1.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+        dependency1.srcAccessMask = { };
+        dependency1.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+    }
+    else
+    {
+        auto &dependency1 = dependencies.emplace_back( vk::SubpassDependency { } );
+        dependency1.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency1.dstSubpass = 0;
+
+        dependency1.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+        dependency1.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+        dependency1.srcAccessMask = vk::AccessFlagBits::eMemoryRead;
+        dependency1.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead;
+        ////////////////////////////////////////////////////////////////////////////
+        auto &dependency2 = dependencies.emplace_back( vk::SubpassDependency { } );
+        dependency2.srcSubpass = 0;
+        dependency2.dstSubpass = VK_SUBPASS_EXTERNAL;
+
+        dependency2.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency2.dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+
+        dependency2.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead;
+        dependency2.dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+    }
 
     vk::RenderPassCreateInfo renderPassCreateInfo { };
     renderPassCreateInfo.attachmentCount = attachments.size( );
     renderPassCreateInfo.pAttachments = attachments.data( );
     renderPassCreateInfo.subpassCount = 1;
     renderPassCreateInfo.pSubpasses = &subPass;
-    renderPassCreateInfo.dependencyCount = 1;
-    renderPassCreateInfo.pDependencies = &dependency;
+    renderPassCreateInfo.dependencyCount = dependencies.size( );
+    renderPassCreateInfo.pDependencies = dependencies.data( );
 
     renderPass = context->logicalDevice.createRenderPass( renderPassCreateInfo );
 
@@ -190,11 +318,21 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     buffers = context->logicalDevice.allocateCommandBuffers( bufferAllocateInfo );
 }
 
-void VulkanRenderPass::frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > >& pipelines )
+std::string VulkanRenderPass::getProperty( const std::string &propertyName )
+{
+    if ( propertyName == "UseMSAA" )
+    {
+        return propertyVal_useMsaa;
+    }
+
+    return "";
+}
+
+void VulkanRenderPass::frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > > &pipelines )
 {
     this->frameIndex = frameIndex;
 
-    for ( auto& pipeline: pipelines )
+    for ( auto &pipeline: pipelines )
     {
         auto vkPipeline = std::dynamic_pointer_cast< VulkanPipeline >( pipeline );
         vkPipeline->descriptorManager->resetObjectCounter( );
@@ -511,10 +649,10 @@ VulkanRenderTarget::~VulkanRenderTarget( )
         context->vma.destroyImage( depthBuffer.image, depthBuffer.allocation );
     }
 
-    if ( hasStencilBuffer )
+    if ( hasMsaaBuffer )
     {
-        context->logicalDevice.destroyImageView( stencilBuffer.imageView );
-        context->vma.destroyImage( stencilBuffer.image, stencilBuffer.allocation );
+        context->logicalDevice.destroyImageView( msaaBuffer.imageView );
+        context->vma.destroyImage( msaaBuffer.image, msaaBuffer.allocation );
     }
 
     if ( hasCustomColorAttachment )
@@ -522,6 +660,7 @@ VulkanRenderTarget::~VulkanRenderTarget( )
         for ( const auto &colorBuffer: colorBuffers )
         {
             context->logicalDevice.destroyImageView( colorBuffer.imageView );
+            context->logicalDevice.destroySampler( colorBuffer.sampler );
             context->vma.destroyImage( colorBuffer.image, colorBuffer.allocation );
         }
     }

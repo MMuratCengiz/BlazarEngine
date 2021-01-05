@@ -16,6 +16,8 @@ ADD_SHADER(vertex default)
 ADD_SHADER(fragment default)
 ADD_SHADER(vertex skybox_default)
 ADD_SHADER(fragment skybox_default)
+ADD_SHADER(vertex default_final)
+ADD_SHADER(fragment default_final)
 
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)

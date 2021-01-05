@@ -105,7 +105,16 @@ void VulkanPipelineProvider::configureVertexInput( PipelineCreateInfos &createIn
 void VulkanPipelineProvider::configureMultisampling( PipelineCreateInfos &createInfo )
 {
     createInfo.multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-    createInfo.multisampleStateCreateInfo.rasterizationSamples = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
+
+    if ( createInfo.request.parentPass->getProperty( "UseMSAA" ) == "true" )
+    {
+        createInfo.multisampleStateCreateInfo.rasterizationSamples = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
+    }
+    else
+    {
+        createInfo.multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    }
+
     createInfo.multisampleStateCreateInfo.minSampleShading = 1.0f;
     createInfo.multisampleStateCreateInfo.pSampleMask = nullptr;
     createInfo.multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;

@@ -14,11 +14,10 @@ enum class RenderTargetType
     Intermediate // Should manually create the images pass it to the outputImages list.
 };
 
-enum class RenderTargetImages
+struct RenderTargetImages
 {
-    Depth,
-    Stencil,
-    DepthAndStencil
+    bool msaa : 1;
+    bool depth : 1;
 };
 
 struct IRenderTarget
@@ -26,14 +25,22 @@ struct IRenderTarget
     RenderTargetType type;
     RenderTargetImages targetImages;
 
-
     std::vector< std::shared_ptr< ShaderResource > > outputImages;
+    std::unordered_map< std::string, std::shared_ptr< ShaderResource > > outputImageMap;
 
     virtual ~IRenderTarget( ) = default;
 };
 
+struct EnabledPassAttachments
+{
+    bool depthAttachment : 1;
+    bool msaaAttachment : 1;
+};
+
 struct RenderPassRequest
 {
+    RenderTargetImages targetImages;
+    bool isFinalDrawPass = false;
 };
 
 class IRenderPass
@@ -49,6 +56,7 @@ public:
 
     virtual void draw( ) = 0;
     virtual void submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) = 0;
+    virtual std::string getProperty( const std::string& propertyName ) = 0;
     virtual ~IRenderPass( ) = default;
 };
 
@@ -70,7 +78,6 @@ struct RenderTargetRequest
 
     std::vector< OutputImage > outputImages; // will result in the size of output images, resources will be created with the names in order
 };
-
 
 class IRenderPassProvider
 {

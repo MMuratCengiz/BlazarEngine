@@ -29,6 +29,7 @@ private:
 
     LitCubePrimitive litCubePrimitive { };
     PlainCubePrimitive plainCubePrimitive { };
+    PlainSquarePrimitive plainSquarePrimitive { };
 public:
     AssetManager( );
     std::shared_ptr< ECS::IGameEntity > createEntity( const std::string &meshPath );

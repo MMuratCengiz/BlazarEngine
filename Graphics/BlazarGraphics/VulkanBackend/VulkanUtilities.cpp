@@ -1,4 +1,6 @@
 #include "VulkanUtilities.h"
+#include "CommandExecutorArguments.h"
+#include "DescriptorManager.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -133,6 +135,58 @@ void VulkanUtilities::createImageView( const VulkanContext * context,
     imageViewCreateInfo.subresourceRange.layerCount = layerCount;
 
     imageView = context->logicalDevice.createImageView( imageViewCreateInfo );
+}
+
+void VulkanUtilities::prepareImageForUsage( VulkanCommandExecutor * commandExecutor, VulkanTextureWrapper * pWrapper, const ResourceUsage & usage )
+{
+    FUNCTION_BREAK( usage == pWrapper->previousUsage )
+
+    PipelineBarrierArgs args { };
+
+    args.mipLevel = pWrapper->mipLevels;
+    args.image = pWrapper->image;
+
+    auto attachLayoutOld = [ ]( PipelineBarrierArgs &args, const vk::ImageLayout &layout, const vk::AccessFlags &accessFlags, const vk::PipelineStageFlags &stageFlags )
+    {
+        args.oldLayout = layout;
+        args.sourceAccess = accessFlags;
+        args.sourceStage = stageFlags;
+    };
+
+    auto attachLayoutNew = [ ]( PipelineBarrierArgs &args, const vk::ImageLayout &layout, const vk::AccessFlags &accessFlags, const vk::PipelineStageFlags &stageFlags )
+    {
+        args.newLayout = layout;
+        args.destinationAccess = accessFlags;
+        args.destinationStage = stageFlags;
+    };
+
+    if ( pWrapper->previousUsage == ResourceUsage::None )
+    {
+        attachLayoutOld( args, vk::ImageLayout::eUndefined, { }, vk::PipelineStageFlagBits::eTopOfPipe );
+    }
+    else if ( pWrapper->previousUsage == ResourceUsage::ShaderInputSampler2D )
+    {
+        attachLayoutOld( args, vk::ImageLayout::eShaderReadOnlyOptimal, vk::AccessFlagBits::eShaderRead, vk::PipelineStageFlagBits::eFragmentShader );
+    }
+    else if ( pWrapper->previousUsage == ResourceUsage::RenderTarget )
+    {
+        attachLayoutOld( args, vk::ImageLayout::eColorAttachmentOptimal, vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput );
+    }
+
+    if ( usage == ResourceUsage::ShaderInputSampler2D )
+    {
+        attachLayoutNew( args, vk::ImageLayout::eShaderReadOnlyOptimal, vk::AccessFlagBits::eShaderRead, vk::PipelineStageFlagBits::eFragmentShader );
+    }
+    else if ( usage == ResourceUsage::RenderTarget )
+    {
+        attachLayoutNew( args, vk::ImageLayout::eColorAttachmentOptimal, vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput );
+    }
+
+    commandExecutor->startCommandExecution( )
+            ->generateBuffers( vk::CommandBufferUsageFlagBits::eOneTimeSubmit, 1 )
+            ->beginCommand( )
+            ->pipelineBarrier( args )
+            ->execute( );
 }
 
 END_NAMESPACES

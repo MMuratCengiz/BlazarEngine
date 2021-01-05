@@ -2,8 +2,21 @@
 
 #include "VulkanContext.h"
 #include "../GraphicsException.h"
+#include "../IResourceProvider.h"
+#include "VulkanCommandExecutor.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
+
+struct VulkanTextureWrapper
+{
+    ResourceUsage previousUsage { };
+
+    vk::Sampler sampler { };
+    vk::ImageView imageView { };
+    vk::Image image;
+    vma::Allocation allocation;
+    int mipLevels { };
+};
 
 class VulkanContext;
 
@@ -12,15 +25,15 @@ class VulkanUtilities
 private:
     VulkanUtilities( ) = default;
 public:
-    static void createSampler( const VulkanContext * context,
+    static void createSampler( const VulkanContext *context,
                                vk::Sampler &sampler,
                                const vk::SamplerCreateInfo &samplerCreateInfo );
 
-    static void allocateImageMemory( const VulkanContext * context,
+    static void allocateImageMemory( const VulkanContext *context,
                                      const vk::Image &image, vk::DeviceMemory &memory,
                                      const vk::MemoryPropertyFlags &properties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent );
 
-    static void initStagingBuffer( const VulkanContext * context,
+    static void initStagingBuffer( const VulkanContext *context,
                                    std::pair< vk::Buffer, vma::Allocation > &stagingBuffer,
                                    const void *data,
                                    const uint64_t &size );
@@ -29,16 +42,18 @@ public:
 
     static vk::Format findSupportedDepthFormat( vk::PhysicalDevice physicalDevice );
 
-    static uint32_t getMatchingMemoryType( const VulkanContext * context,
+    static uint32_t getMatchingMemoryType( const VulkanContext *context,
                                            const vk::MemoryPropertyFlags &memoryProperties,
                                            const vk::MemoryRequirements &memoryRequirements );
 
-    static void createImageView( const VulkanContext * context,
+    static void createImageView( const VulkanContext *context,
                                  vk::ImageView &imageView,
                                  const vk::Image &image,
                                  const vk::Format &format,
                                  const vk::ImageAspectFlags &aspectFlags,
-                                 const uint32_t& layerCount = 1 );
+                                 const uint32_t &layerCount = 1 );
+
+    static void prepareImageForUsage( VulkanCommandExecutor *commandExecutor, VulkanTextureWrapper *textureWrapper, const ResourceUsage &usage );
 };
 
 END_NAMESPACES

@@ -7,10 +7,10 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice* renderDevice )
 {
     auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
-    gBufferPass->pipeLineInputs.resize( 1 );
-    gBufferPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
-    gBufferPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
-    gBufferPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
+    gBufferPass->pipelineInputs.resize( 1 );
+    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
+    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
+    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
 
     gBufferPass->outputs.emplace_back( OutputImage { ResourceImageFormat::R8G8B8A8Unorm, "gBufferOutFrame" } );
 
@@ -26,7 +26,6 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice* renderDe
         return 0;
     };
 
-
     PipelineRequest &pipelineRequest = gBufferPass->pipelineRequests.emplace_back( PipelineRequest{ } );
 
     pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/gbuffer.spv" );
@@ -41,21 +40,26 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice* renderDe
 std::shared_ptr< Pass > CommonPasses::createDefaultPass( IRenderDevice* renderDevice )
 {
     auto defaultPass = std::make_shared< Pass >( "defaultPass" );
-    defaultPass->pipeLineInputs.resize( 2 );
-    defaultPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
-    defaultPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
-    defaultPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
-    defaultPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
-    defaultPass->pipeLineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
+    defaultPass->pipelineInputs.resize( 2 );
+    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
+    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
+    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
+    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
+    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
 
-    defaultPass->pipeLineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
-    defaultPass->pipeLineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
-    defaultPass->pipeLineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
+    defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
+    defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
+    defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
+
+    defaultPass->outputs.emplace_back( OutputImage { ResourceImageFormat::B8G8R8A8Srgb, "defaultPass_Result" } );
+    defaultPass->outputGeometry = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
+    renderPassRequest.targetImages.depth = true;
+    renderPassRequest.targetImages.msaa = true;
 
     defaultPass->renderPassRequest = renderPassRequest;
 
@@ -81,6 +85,38 @@ std::shared_ptr< Pass > CommonPasses::createDefaultPass( IRenderDevice* renderDe
     };
 
     return defaultPass;
+}
+
+std::shared_ptr< Pass > CommonPasses::createFinalDrawPass( IRenderDevice *renderDevice )
+{
+    auto finalDrawPass = std::make_shared< Pass >( "defaultFinal" );
+    finalDrawPass->pipelineInputs.resize( 1 );
+    finalDrawPass->pipelineInputs[ 0 ].push_back( "defaultPass_Result" );
+
+    auto &pipelineProvider = renderDevice->getPipelineProvider( );
+    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
+
+    RenderPassRequest renderPassRequest { };
+    renderPassRequest.targetImages.depth = false;
+    renderPassRequest.targetImages.msaa = false;
+    renderPassRequest.isFinalDrawPass = true;
+
+    finalDrawPass->renderPassRequest = renderPassRequest;
+
+    PipelineRequest &pipelineRequest = finalDrawPass->pipelineRequests.emplace_back( );
+
+    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/default_final.spv" );
+    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/default_final.spv" );
+    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.cullMode = ECS::CullMode::None;
+    pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    finalDrawPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity >& entity )
+    {
+        return 0;
+    };
+
+    return finalDrawPass;
 }
 
 END_NAMESPACES

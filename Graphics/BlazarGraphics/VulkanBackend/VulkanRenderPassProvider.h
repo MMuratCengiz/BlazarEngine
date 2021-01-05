@@ -22,11 +22,11 @@ public:
 
     vk::Framebuffer ref;
 
-    bool hasStencilBuffer { };
+    bool hasMsaaBuffer { };
     bool hasDepthBuffer { };
     bool hasCustomColorAttachment { };
 
-    VulkanTextureWrapper stencilBuffer;
+    VulkanTextureWrapper msaaBuffer;
     VulkanTextureWrapper depthBuffer;
     std::vector< VulkanTextureWrapper > colorBuffers;
 
@@ -54,6 +54,8 @@ private:
 
     std::vector< vk::CommandBuffer > buffers;
     vk::RenderPass renderPass;
+
+    std::string propertyVal_useMsaa = "false";
 public:
     explicit inline VulkanRenderPass( VulkanContext *context ) : context( context )
     {
@@ -73,6 +75,8 @@ public:
     void bindPerFrame( std::shared_ptr< ShaderResource > resource ) override;
     void bindPipeline( std::shared_ptr< IPipeline > pipeline ) override;
     void bindPerObject( std::shared_ptr< ShaderResource > resource ) override;
+    std::string getProperty( const std::string& propertyName ) override;
+
     void draw( ) override;
     void submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) override;
     [[nodiscard]] const vk::RenderPass &getPassInstance( ) const;
@@ -85,16 +89,20 @@ class VulkanRenderPassProvider : public IRenderPassProvider
 {
 private:
     VulkanContext *context;
+    std::unique_ptr< VulkanCommandExecutor > commandExecutor;
 public:
     explicit inline VulkanRenderPassProvider( VulkanContext *context ) : context( context )
-    { }
+    {
+        commandExecutor = std::make_unique< VulkanCommandExecutor >( context );
+    }
 
     std::shared_ptr< IRenderPass > createRenderPass( const RenderPassRequest &request ) override;
     std::shared_ptr< IRenderTarget > createRenderTarget( const RenderTargetRequest &request ) override;
 
     ~VulkanRenderPassProvider( ) override = default;
 private:
-    VulkanTextureWrapper createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect );
+    VulkanTextureWrapper createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect,
+                                           const vk::SampleCountFlagBits& sampleCount );
 };
 
 END_NAMESPACES

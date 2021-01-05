@@ -17,11 +17,65 @@ void RenderGraph::addPass( std::shared_ptr< Pass > pass )
     wrapper.renderPass = nullptr;
     wrapper.ref = std::move( pass );
 
-    passMap[ wrapper.ref->name ] = wrapper;
+    passMap[ wrapper.ref->name ] = passes.size( ) - 1;
 }
 
 void RenderGraph::buildGraph( )
 {
+    // flatten pipeline input, saves a loop later
+    for ( auto &pass: passes )
+    {
+        std::unordered_map< std::string, bool > inputsFlattened;
+
+        for ( const auto &pipelineInputs: pass.ref->pipelineInputs )
+        {
+            for ( const auto &input: pipelineInputs )
+            {
+                if ( inputsFlattened.find( input ) == inputsFlattened.end( ) )
+                {
+                    pass.pipelineInputsFlat.push_back( input );
+                    inputsFlattened[ input ] = true;
+                }
+            }
+        }
+    }
+
+    // build dependencies
+    for ( auto &firstPass: passes )
+    {
+        for ( const auto &secondPass: passes )
+        {
+            for ( const auto &firstPassInput: firstPass.pipelineInputsFlat )
+            {
+                for ( const auto &secondPassOutput: secondPass.ref->outputs )
+                {
+                    if ( firstPassInput == secondPassOutput.outputResourceName )
+                    {
+                        firstPass.dependencies.push_back( secondPass.ref->name );
+                    }
+                }
+            }
+        }
+    }
+
+    // Prepare input-output map
+    for ( const auto &pass: passes )
+    {
+        for ( const auto &dependency: pass.dependencies )
+        {
+            PassWrapper &dependencyPass = passes[ passMap[ dependency ] ];
+            for ( const auto &input: pass.pipelineInputsFlat )
+            {
+                for ( const auto &dependencyOutput: dependencyPass.ref->outputs )
+                {
+                    if ( input == dependencyOutput.outputResourceName )
+                    {
+                        this->pipelineInputOutputDependencies[ input ] = dependency;
+                    }
+                }
+            }
+        }
+    }
     // Todo
 }
 
@@ -47,11 +101,11 @@ void RenderGraph::preparePass( PassWrapper &pass )
     // Initialize inputs
     uint32_t pipelineIndex = 0;
 
-    if ( pass.adaptedInputs.empty() )
+    if ( pass.adaptedInputs.empty( ) )
     {
-        pass.adaptedInputs.resize( pass.ref->pipeLineInputs.size( ) );
+        pass.adaptedInputs.resize( pass.ref->pipelineInputs.size( ) );
 
-        for ( const auto &pipelineInput: pass.ref->pipeLineInputs )
+        for ( const auto &pipelineInput: pass.ref->pipelineInputs )
         {
             for ( auto &input: pipelineInput )
             {
@@ -66,7 +120,10 @@ void RenderGraph::preparePass( PassWrapper &pass )
                         pass.adaptedInputs[ pipelineIndex ].push_back( input );
                     }
 
-                    globalResourceTable->allocateResource( input, frameIndex );
+                    if ( pipelineInputOutputDependencies.find( input ) == pipelineInputOutputDependencies.end( ) )
+                    {
+                        globalResourceTable->allocateResource( input, frameIndex );
+                    }
                 }
             }
 
@@ -75,11 +132,14 @@ void RenderGraph::preparePass( PassWrapper &pass )
     }
     else
     {
-        for ( const auto& passInputs: pass.adaptedInputs )
+        for ( const auto &passInputs: pass.adaptedInputs )
         {
-            for ( const auto& input: passInputs )
+            for ( const auto &input: passInputs )
             {
-                globalResourceTable->allocateResource( input, frameIndex );
+                if ( pipelineInputOutputDependencies.find( input ) == pipelineInputOutputDependencies.end( ) )
+                {
+                    globalResourceTable->allocateResource( input, frameIndex );
+                }
             }
         }
     }
@@ -93,16 +153,15 @@ void RenderGraph::preparePass( PassWrapper &pass )
 
     if ( pass.renderTargets.empty( ) )
     {
-
         RenderTargetRequest renderTargetRequest { };
         renderTargetRequest.renderPass = pass.renderPass;
-        renderTargetRequest.targetImages = RenderTargetImages::DepthAndStencil; // todo dynamic
 
         pass.renderTargets.resize( renderDevice->getFrameCount( ) );
 
         for ( uint32_t frame = 0; frame < pass.renderTargets.size( ); ++frame )
         {
             renderTargetRequest.frameIndex = frame;
+            renderTargetRequest.targetImages = pass.ref->renderPassRequest.targetImages;
 
             if ( pass.ref->outputs.empty( ) )
             {
@@ -112,18 +171,13 @@ void RenderGraph::preparePass( PassWrapper &pass )
             {
                 renderTargetRequest.type = RenderTargetType::Intermediate;
                 renderTargetRequest.outputImages = pass.ref->outputs;
-
-                for ( const auto &outputImage: pass.ref->outputs )
-                {
-                    globalResourceTable->createEmptyImageResource( outputImage, frameIndex );
-                }
             }
 
             pass.renderTargets[ frame ] = renderDevice->getRenderPassProvider( )->createRenderTarget( renderTargetRequest );
         }
     }
 
-    if ( pass.pipelines.empty() )
+    if ( pass.pipelines.empty( ) )
     {
         pipelineIndex = 0;
         pass.pipelines.resize( pass.ref->pipelineRequests.size( ) );
@@ -161,9 +215,11 @@ void RenderGraph::executePass( const PassWrapper &pass )
     {
         geometries = globalResourceTable->getGeometryList( );
     }
-    else
+    else if ( !pass.dependencies.empty( ) )
     {
-        // geometries = globalResourceTable->singleQuad( );
+        // All dependencies should have similar output geometry
+        const PassWrapper &firstPassDependency = passes[ passMap[ pass.dependencies[ 0 ] ] ];
+        geometries = globalResourceTable->getOutputGeometryList( firstPassDependency.ref->outputGeometry );
     }
 
     std::shared_ptr< IRenderPass > renderPass = pass.renderPass;
@@ -172,12 +228,17 @@ void RenderGraph::executePass( const PassWrapper &pass )
 
     for ( auto &output: pass.ref->outputs )
     {
-        globalResourceTable->prepareResource( output.outputResourceName, ResourceUsage::RenderTarget, frameIndex );
+        std::shared_ptr< ShaderResource > &outputResource = pass.renderTargets[ frameIndex ]->outputImageMap[ output.outputResourceName ];
+        outputResource->prepareForUsage( ResourceUsage::RenderTarget );
     }
 
     for ( const auto &dependency: pass.dependencies )
     {
-        passMap[ dependency ].executeLocks[ frameIndex ]->wait( );
+        PassWrapper &dependencyPass = passes[ passMap[ dependency ] ];
+        if ( !dependencyPass.executeLocks.empty( ) )
+        {
+            dependencyPass.executeLocks[ frameIndex ]->wait( );
+        }
     }
 
     auto pipelineIndex = 0;
@@ -186,10 +247,7 @@ void RenderGraph::executePass( const PassWrapper &pass )
     {
         renderPass->bindPipeline( pipeline );
 
-        for ( auto &input: pass.adaptedInputs[ pipelineIndex ] )
-        {
-            renderPass->bindPerFrame( globalResourceTable->getResource( input, frameIndex ) );
-        }
+        bindAdaptedInputs( pass, renderPass, pipelineIndex, true );
 
         ++pipelineIndex;
     }
@@ -219,10 +277,8 @@ void RenderGraph::executePass( const PassWrapper &pass )
 
         globalResourceTable->setActiveGeometryModel( geometry );
 
-        for ( auto &input: pass.adaptedInputs[ selectedPipeline ] )
-        {
-            renderPass->bindPerObject( globalResourceTable->getResource( input, frameIndex ) );
-        }
+        bindAdaptedInputs( pass, renderPass, selectedPipeline, false );
+
         renderPass->draw( );
     }
 
@@ -230,7 +286,39 @@ void RenderGraph::executePass( const PassWrapper &pass )
 
     for ( auto &output: pass.ref->outputs )
     {
-        globalResourceTable->prepareResource( output.outputResourceName, ResourceUsage::ShaderInputSampler2D, frameIndex );
+        std::shared_ptr< ShaderResource > &outputResource = pass.renderTargets[ frameIndex ]->outputImageMap[ output.outputResourceName ];
+        outputResource->prepareForUsage( ResourceUsage::ShaderInputSampler2D );
+    }
+}
+
+void RenderGraph::bindAdaptedInputs( const PassWrapper &pass, std::shared_ptr< IRenderPass > &renderPass, int pipelineIndex, const bool& bindPerFrame )
+{
+    for ( auto &input: pass.adaptedInputs[ pipelineIndex ] )
+    {
+        auto find = pipelineInputOutputDependencies.find( input );
+        if ( find != pipelineInputOutputDependencies.end( ) )
+        {
+            PassWrapper &inputPass = passes[ passMap[ find->second ] ];
+            if ( bindPerFrame )
+            {
+                renderPass->bindPerFrame( inputPass.renderTargets[ frameIndex ]->outputImageMap[ input ] );
+            }
+            else
+            {
+                renderPass->bindPerObject( inputPass.renderTargets[ frameIndex ]->outputImageMap[ input ] );
+            }
+        }
+        else
+        {
+            if ( bindPerFrame )
+            {
+                renderPass->bindPerFrame( globalResourceTable->getResource( input, frameIndex ) );
+            }
+            else
+            {
+                renderPass->bindPerObject( globalResourceTable->getResource( input, frameIndex ) );
+            }
+        }
     }
 }
 

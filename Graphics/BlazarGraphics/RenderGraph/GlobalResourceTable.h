@@ -48,6 +48,7 @@ private:
 
     std::vector< GeometryData > geometryList;
     std::unordered_map< uint64_t, uint32_t > entityGeometryMap;
+    std::unordered_map< std::string, GeometryData > outputGeometryMap;
 
     std::shared_ptr< ShaderResource > globalModelResourcePlaceholder;
 public:
@@ -64,6 +65,7 @@ public:
 
     std::shared_ptr< ShaderResource > getResource( const std::string& resourceName, const uint32_t& frameIndex );
     std::vector< GeometryData > getGeometryList( );
+    std::vector< GeometryData > getOutputGeometryList( const std::string &outputGeometry );
 
     ~GlobalResourceTable( );
 private:
@@ -90,6 +92,7 @@ private:
         memcpy( dataAttachment->content, &structData, dataAttachment->size );
     }
 
+    GeometryData createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity );
     void createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity );
     void createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities );
     static void cleanGeometryData( GeometryData &geometryData ) ;

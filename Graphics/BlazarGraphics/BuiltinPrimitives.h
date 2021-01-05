@@ -8,7 +8,17 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 enum class PrimitiveType
 {
     LightedCube,
+    PlainSquare,
     PlainCube
+};
+
+struct PrimitiveData
+{
+    std::vector< float > vertices;
+    uint32_t vertexCount;
+
+    std::vector< float > indices;
+    uint32_t indexCount;
 };
 
 class LitCubePrimitive
@@ -139,6 +149,32 @@ public:
     }
 };
 
+class PlainSquarePrimitive
+{
+    std::vector< float > vertices;
+public:
+    PlainSquarePrimitive( )
+    {
+        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 0.0f } );
+        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
+        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
+
+        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
+        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 0.0f } );
+        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
+    }
+
+    uint32_t getVertexCount( )
+    {
+        return 6;
+    }
+
+    [[nodiscard]] const std::vector< float > &getVertices( ) const
+    {
+        return vertices;
+    }
+};
+
 class BuiltinPrimitives
 {
 public:
@@ -148,10 +184,10 @@ public:
         {
             case PrimitiveType::LightedCube:
                 return "BuiltinPrimitives/LightedCube";
-                break;
             case PrimitiveType::PlainCube:
                 return "BuiltinPrimitives/PlainCube";
-                break;
+            case PrimitiveType::PlainSquare:
+                return "BuiltinPrimitives/PlainSquare";
         }
 
         return "";

@@ -16,17 +16,6 @@ struct ShaderInputMaterial
     float shininess;
 };
 
-struct VulkanTextureWrapper
-{
-    ResourceUsage previousUsage;
-
-    vk::Sampler sampler { };
-    vk::ImageView imageView { };
-    vk::Image image;
-    vma::Allocation allocation;
-    int mipLevels;
-};
-
 struct TextureLoadArguments
 {
     VulkanContext* context;

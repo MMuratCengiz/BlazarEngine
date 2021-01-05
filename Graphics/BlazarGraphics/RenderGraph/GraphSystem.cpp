@@ -7,6 +7,8 @@ GraphSystem::GraphSystem( IRenderDevice* renderDevice, AssetManager* assetManage
     renderGraph = std::make_unique< RenderGraph >( this->renderDevice, this->assetManager );
 
     renderGraph->addPass( CommonPasses::createDefaultPass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createFinalDrawPass( this->renderDevice ) );
+    renderGraph->buildGraph( );
 }
 
 void GraphSystem::addEntity( const std::shared_ptr< ECS::IGameEntity > &entity )

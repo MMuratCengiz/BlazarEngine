@@ -58,7 +58,6 @@ private:
     };
 
     VulkanContext * context;
-    std::shared_ptr< VulkanRenderPass > renderPass;
     std::vector< std::shared_ptr< VulkanPipeline > > pipelineInstances;
     std::vector< vk::ShaderModule > shaderModules;
 public:

@@ -68,15 +68,23 @@ void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity 
 
 void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity )
 {
+    FUNCTION_BREAK( !entity->hasComponent< ECS::CMesh >( ) )
+
+    geometryList.emplace_back( std::move( createGeometryData( entity ) ) );
+
+    entityGeometryMap[ entity->getUID( ) ] = geometryList.size( ) - 1;
+}
+
+GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity )
+{
+
     auto transformComponent = entity->getComponent< ECS::CTransform >( );
     auto meshComponent = entity->getComponent< ECS::CMesh >( );
     auto materialComponent = entity->getComponent< ECS::CMaterial >( );
 
-    FUNCTION_BREAK( meshComponent == nullptr )
-
     MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
 
-    GeometryData &data = geometryList.emplace_back( GeometryData { } );
+    GeometryData data { };
     /*
      * Create vertex data:
      */
@@ -145,9 +153,9 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
         //---
     }
     data.modelTransformPtr = transformComponent;
+    data.referenceEntity = entity ;
 
-    entityGeometryMap[ entity->getUID( ) ] = geometryList.size( ) - 1;
-    data.referenceEntity = entity;
+    return std::move( data );
 }
 
 void GlobalResourceTable::createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities )
@@ -184,9 +192,8 @@ void GlobalResourceTable::createEmptyImageResource( const OutputImage &image, co
     frameResources[ frameIndex ][ image.outputResourceName ] = { };
     auto &wrapper = frameResources[ frameIndex ][ image.outputResourceName ];
 
-    wrapper.ref = createResource( );
+    wrapper.ref = createResource( ResourceType::Sampler2D );
     wrapper.isAllocated = true;
-    wrapper.ref->type = ResourceType::Sampler2D;
     wrapper.ref->identifier = { image.outputResourceName };
 
     std::shared_ptr< SamplerDataAttachment > attachment = std::make_shared< SamplerDataAttachment >( );
@@ -334,6 +341,32 @@ std::vector< GeometryData > GlobalResourceTable::getGeometryList( )
     return geometryList;
 }
 
+std::vector< GeometryData > GlobalResourceTable::getOutputGeometryList( const std::string &outputGeometry )
+{
+    std::vector< GeometryData > geometryData;
+
+    auto find = outputGeometryMap.find( outputGeometry );
+
+    if ( find == outputGeometryMap.end( ) )
+    {
+        auto ptr = std::make_shared< ECS::DynamicGameEntity >( );
+        ptr->createComponent< ECS::CMesh >( );
+        ptr->getComponent< ECS::CMesh >( )->path = outputGeometry;
+
+        const auto& assetGeometry = assetManager->getMeshGeometry( outputGeometry );
+
+        outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ) );
+
+        geometryData.emplace_back( outputGeometryMap[ outputGeometry ] );
+    }
+    else
+    {
+        geometryData.emplace_back( find->second );
+    }
+
+    return geometryData;
+}
+
 GlobalResourceTable::~GlobalResourceTable( )
 {
     for ( uint32_t frameIndex = 0; frameIndex < renderDevice->getFrameCount( ); ++frameIndex )
@@ -357,6 +390,11 @@ GlobalResourceTable::~GlobalResourceTable( )
     for ( auto &geometry: geometryList )
     {
         cleanGeometryData( geometry );
+    }
+
+    for ( auto &geometry: outputGeometryMap )
+    {
+        cleanGeometryData( geometry.second );
     }
 
     free( globalModelResourcePlaceholder->dataAttachment->content );

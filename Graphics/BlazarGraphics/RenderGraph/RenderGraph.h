@@ -17,6 +17,8 @@ struct PassWrapper
     std::vector< std::shared_ptr< IPipeline > > pipelines;
     std::shared_ptr< IRenderPass > renderPass;
     std::vector< std::shared_ptr< IRenderTarget > > renderTargets;
+    std::vector< std::string > pipelineInputsFlat;
+
     std::shared_ptr< Pass > ref;
     bool usesGeometryData = false;
 };
@@ -29,7 +31,8 @@ private:
     std::unique_ptr< GlobalResourceTable > globalResourceTable;
 
     std::vector< PassWrapper > passes;
-    std::unordered_map< std::string, PassWrapper > passMap;
+    std::unordered_map< std::string, uint32_t > passMap;
+    std::unordered_map< std::string, std::string > pipelineInputOutputDependencies;
     uint32_t frameIndex = 0;
 public:
     explicit RenderGraph( IRenderDevice* renderDevice, AssetManager* assetManager );
@@ -46,6 +49,7 @@ public:
 private:
     void preparePass( PassWrapper &pass );
     void executePass( const PassWrapper &pass );
+    void bindAdaptedInputs( const PassWrapper &pass, std::shared_ptr< IRenderPass > &renderPass, int pipelineIndex, const bool& bindPerFrame );
 };
 
 END_NAMESPACES
