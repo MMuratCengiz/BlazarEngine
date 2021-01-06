@@ -60,6 +60,7 @@ layout (location = 1) in vec3 norm;
 layout (location = 2) in vec3 worldPos;
 
 layout (location = 0) out vec4 outputColor;
+layout (location = 1) out vec4 outputColorRed;
 
 vec2 texture1Coor;
 vec3 viewDirection;
@@ -94,6 +95,8 @@ void main() {
     for ( int i = 0; i < environment.spotLightCount; ++i ) {
         outputColor += calculateSpotLight( environment.spotLights[ i ] );
     }
+
+    outputColorRed = vec4( 1.0f, 0.0f, 0.0f, 1.0f );
 }
 
 vec4 calculateDirectional(DirectionalLight light) {

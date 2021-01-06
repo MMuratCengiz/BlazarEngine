@@ -12,7 +12,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice* renderDe
     gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
     gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
 
-    gBufferPass->outputs.emplace_back( OutputImage { ResourceImageFormat::R8G8B8A8Unorm, "gBufferOutFrame" } );
+//    gBufferPass->outputs.emplace_back( OutputImage { ResourceImageFormat::R8G8B8A8Unorm, "gBufferOutFrame" } );
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
@@ -51,15 +51,31 @@ std::shared_ptr< Pass > CommonPasses::createDefaultPass( IRenderDevice* renderDe
     defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
     defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
 
-    defaultPass->outputs.emplace_back( OutputImage { ResourceImageFormat::B8G8R8A8Srgb, "defaultPass_Result" } );
+    auto & depthBuffer = defaultPass->outputs.emplace_back( );
+    depthBuffer.outputResourceName = "depthBuffer";
+    depthBuffer.imageFormat = ResourceImageFormat::BestDepthFormat;
+    depthBuffer.flags.msaaSampled = true;
+    depthBuffer.attachmentType = ResourceAttachmentType::Depth;
+
+    auto & defaultPass_Result = defaultPass->outputs.emplace_back( OutputImage{ } );
+    defaultPass_Result.outputResourceName = "defaultPass_Result";
+    defaultPass_Result.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    defaultPass_Result.flags.msaaSampled = true;
+    defaultPass_Result.attachmentType = ResourceAttachmentType::Color;
+
+    auto & defaultPass_ResultRed = defaultPass->outputs.emplace_back( OutputImage{ } );
+    defaultPass_ResultRed.outputResourceName = "defaultPass_ResultRed";
+    defaultPass_ResultRed.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    defaultPass_ResultRed.flags.msaaSampled = true;
+    defaultPass_ResultRed.attachmentType = ResourceAttachmentType::Color;
+
     defaultPass->outputGeometry = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
-    renderPassRequest.targetImages.depth = true;
-    renderPassRequest.targetImages.msaa = true;
+    renderPassRequest.outputImages = defaultPass->outputs;
 
     defaultPass->renderPassRequest = renderPassRequest;
 
@@ -92,13 +108,19 @@ std::shared_ptr< Pass > CommonPasses::createFinalDrawPass( IRenderDevice *render
     auto finalDrawPass = std::make_shared< Pass >( "defaultFinal" );
     finalDrawPass->pipelineInputs.resize( 1 );
     finalDrawPass->pipelineInputs[ 0 ].push_back( "defaultPass_Result" );
+    finalDrawPass->pipelineInputs[ 0 ].push_back( "defaultPass_ResultRed" );
+
+    auto & presentImage = finalDrawPass->outputs.emplace_back( OutputImage { } );
+    presentImage.outputResourceName = "presentImage";
+    presentImage.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    presentImage.flags.msaaSampled = false;
+    presentImage.flags.presentedImage = true;
+    presentImage.attachmentType = ResourceAttachmentType::Color;
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
-    renderPassRequest.targetImages.depth = false;
-    renderPassRequest.targetImages.msaa = false;
     renderPassRequest.isFinalDrawPass = true;
 
     finalDrawPass->renderPassRequest = renderPassRequest;

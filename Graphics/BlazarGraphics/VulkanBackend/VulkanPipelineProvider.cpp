@@ -172,21 +172,28 @@ void VulkanPipelineProvider::configureRasterization( PipelineCreateInfos &create
 
 void VulkanPipelineProvider::configureColorBlend( PipelineCreateInfos &createInfo )
 {
-    createInfo.colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                     vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    createInfo.colorBlendAttachment.blendEnable = false;
-    createInfo.colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;
-    createInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;
-    createInfo.colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
-    createInfo.colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-    createInfo.colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-    createInfo.colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
+    int attachmentCount = std::stoi( createInfo.request.parentPass->getProperty( "AttachmentCount" ) );
+
+    createInfo.colorBlendAttachments.resize( attachmentCount );
+
+    for ( int i = 0; i < attachmentCount; ++i )
+    {
+        createInfo.colorBlendAttachments[ i ].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                                                         vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+        createInfo.colorBlendAttachments[ i ].blendEnable = false;
+        createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eOne;
+        createInfo.colorBlendAttachments[ i ].dstColorBlendFactor = vk::BlendFactor::eZero;
+        createInfo.colorBlendAttachments[ i ].colorBlendOp = vk::BlendOp::eAdd;
+        createInfo.colorBlendAttachments[ i ].srcAlphaBlendFactor = vk::BlendFactor::eOne;
+        createInfo.colorBlendAttachments[ i ].dstAlphaBlendFactor = vk::BlendFactor::eZero;
+        createInfo.colorBlendAttachments[ i ].alphaBlendOp = vk::BlendOp::eAdd;
+    }
 
     // This overwrites the above
     createInfo.colorBlending.logicOpEnable = false;
     createInfo.colorBlending.logicOp = vk::LogicOp::eCopy;
-    createInfo.colorBlending.attachmentCount = 1;
-    createInfo.colorBlending.pAttachments = &createInfo.colorBlendAttachment;
+    createInfo.colorBlending.attachmentCount = attachmentCount;
+    createInfo.colorBlending.pAttachments = createInfo.colorBlendAttachments.data( );
     createInfo.colorBlending.blendConstants[ 0 ] = 0.0f;
     createInfo.colorBlending.blendConstants[ 1 ] = 0.0f;
     createInfo.colorBlending.blendConstants[ 2 ] = 0.0f;

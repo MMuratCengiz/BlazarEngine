@@ -21,14 +21,7 @@ public:
     { }
 
     vk::Framebuffer ref;
-
-    bool hasMsaaBuffer { };
-    bool hasDepthBuffer { };
-    bool hasCustomColorAttachment { };
-
-    VulkanTextureWrapper msaaBuffer;
-    VulkanTextureWrapper depthBuffer;
-    std::vector< VulkanTextureWrapper > colorBuffers;
+    std::vector< VulkanTextureWrapper > buffers;
 
     ~VulkanRenderTarget( ) override;
 };
@@ -45,6 +38,7 @@ private:
     // In case we're rendering into the swapChain
     std::vector< std::unique_ptr< VulkanResourceLock > > swapChainImageAvailable;
     std::vector< std::unique_ptr< VulkanResourceLock > > swapChainImageRendered;
+    std::vector< vk::ClearValue > clearColors;
     uint32_t swapChainIndex { };
     uint32_t frameIndex { };
     // --
@@ -56,6 +50,7 @@ private:
     vk::RenderPass renderPass;
 
     std::string propertyVal_useMsaa = "false";
+    std::string propertyVal_attachmentCount = "0";
 public:
     explicit inline VulkanRenderPass( VulkanContext *context ) : context( context )
     {
@@ -98,6 +93,12 @@ public:
 
     std::shared_ptr< IRenderPass > createRenderPass( const RenderPassRequest &request ) override;
     std::shared_ptr< IRenderTarget > createRenderTarget( const RenderTargetRequest &request ) override;
+
+    static vk::Format getOutputImageVkFormat( VulkanContext *context, const OutputImage &outputImage );
+    static vk::SampleCountFlagBits getOutputImageSamples( VulkanContext *context, const OutputImage &outputImage, bool force1ForColorAttachment = false );
+    static vk::ImageUsageFlags getOutputImageVkUsage( VulkanContext *context, const OutputImage &outputImage );
+    static vk::ImageAspectFlags getOutputImageVkAspect( VulkanContext *context, const OutputImage &outputImage );
+    static vk::ImageLayout getOutputImageVkLayout( VulkanContext *context, const OutputImage &outputImage );
 
     ~VulkanRenderPassProvider( ) override = default;
 private:

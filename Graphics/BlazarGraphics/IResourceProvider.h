@@ -54,6 +54,7 @@ enum class ResourceUsage
 enum class ResourceImageFormat
 {
     MatchSwapChainImageFormat,
+    BestDepthFormat,
     R16G16B16A16Sfloat,
     R8G8B8A8Unorm,
     B8G8R8A8Srgb,

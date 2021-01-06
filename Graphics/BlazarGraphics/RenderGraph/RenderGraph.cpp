@@ -147,6 +147,7 @@ void RenderGraph::preparePass( PassWrapper &pass )
 
     if ( pass.renderPass == nullptr )
     {
+        pass.ref->renderPassRequest.outputImages = pass.ref->outputs;
         pass.renderPass = renderDevice->getRenderPassProvider( )->createRenderPass( pass.ref->renderPassRequest );
         pass.renderPass->create( pass.ref->renderPassRequest );
     }
@@ -161,17 +162,17 @@ void RenderGraph::preparePass( PassWrapper &pass )
         for ( uint32_t frame = 0; frame < pass.renderTargets.size( ); ++frame )
         {
             renderTargetRequest.frameIndex = frame;
-            renderTargetRequest.targetImages = pass.ref->renderPassRequest.targetImages;
+            renderTargetRequest.type = RenderTargetType::Intermediate;
 
-            if ( pass.ref->outputs.empty( ) )
+            for ( const auto& output: pass.ref->outputs )
             {
-                renderTargetRequest.type = RenderTargetType::SwapChain;
+                if ( output.flags.presentedImage )
+                {
+                    renderTargetRequest.type = RenderTargetType::SwapChain;
+                }
             }
-            else
-            {
-                renderTargetRequest.type = RenderTargetType::Intermediate;
-                renderTargetRequest.outputImages = pass.ref->outputs;
-            }
+
+            renderTargetRequest.outputImages = pass.ref->outputs;
 
             pass.renderTargets[ frame ] = renderDevice->getRenderPassProvider( )->createRenderTarget( renderTargetRequest );
         }
@@ -229,7 +230,10 @@ void RenderGraph::executePass( const PassWrapper &pass )
     for ( auto &output: pass.ref->outputs )
     {
         std::shared_ptr< ShaderResource > &outputResource = pass.renderTargets[ frameIndex ]->outputImageMap[ output.outputResourceName ];
-        outputResource->prepareForUsage( ResourceUsage::RenderTarget );
+        if ( outputResource != nullptr ) // Could be a non resource output
+        {
+            outputResource->prepareForUsage( ResourceUsage::RenderTarget );
+        }
     }
 
     for ( const auto &dependency: pass.dependencies )
@@ -287,7 +291,10 @@ void RenderGraph::executePass( const PassWrapper &pass )
     for ( auto &output: pass.ref->outputs )
     {
         std::shared_ptr< ShaderResource > &outputResource = pass.renderTargets[ frameIndex ]->outputImageMap[ output.outputResourceName ];
-        outputResource->prepareForUsage( ResourceUsage::ShaderInputSampler2D );
+        if ( outputResource != nullptr ) // Could be a non resource output
+        {
+            outputResource->prepareForUsage( ResourceUsage::ShaderInputSampler2D );
+        }
     }
 }
 

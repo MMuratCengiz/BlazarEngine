@@ -31,7 +31,7 @@ struct PipelineCreateInfos
 {
     // Pipeline createInfo required structures in class scope
     std::vector< vk::PipelineShaderStageCreateInfo > pipelineStageCreateInfos;
-    vk::PipelineColorBlendAttachmentState colorBlendAttachment { };
+    std::vector< vk::PipelineColorBlendAttachmentState > colorBlendAttachments { };
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo { };
     vk::PipelineColorBlendStateCreateInfo colorBlending { };
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo { };

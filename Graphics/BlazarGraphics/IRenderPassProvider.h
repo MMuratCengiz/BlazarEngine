@@ -14,16 +14,35 @@ enum class RenderTargetType
     Intermediate // Should manually create the images pass it to the outputImages list.
 };
 
-struct RenderTargetImages
+enum class ResourceAttachmentType
 {
-    bool msaa : 1;
-    bool depth : 1;
+    Depth,
+    Stencil,
+    DepthAndStencil,
+    Color
+};
+
+struct OutputImageFlags
+{
+    bool msaaSampled : 1;
+    bool presentedImage : 1;
+};
+
+struct OutputImage
+{
+    ResourceImageFormat imageFormat;
+    ResourceAttachmentType attachmentType = ResourceAttachmentType::Color;
+    OutputImageFlags flags;
+
+    std::string outputResourceName;
+    uint32_t width = 0; // 0 means full size
+    uint32_t height = 0;
+    uint32_t channels = 4;
 };
 
 struct IRenderTarget
 {
     RenderTargetType type;
-    RenderTargetImages targetImages;
 
     std::vector< std::shared_ptr< ShaderResource > > outputImages;
     std::unordered_map< std::string, std::shared_ptr< ShaderResource > > outputImageMap;
@@ -39,7 +58,7 @@ struct EnabledPassAttachments
 
 struct RenderPassRequest
 {
-    RenderTargetImages targetImages;
+    std::vector< OutputImage > outputImages;
     bool isFinalDrawPass = false;
 };
 
@@ -60,20 +79,10 @@ public:
     virtual ~IRenderPass( ) = default;
 };
 
-struct OutputImage
-{
-    ResourceImageFormat imageFormat;
-    std::string outputResourceName;
-    uint32_t width = 0; // 0 means full size
-    uint32_t height = 0;
-    uint32_t channels = 4;
-};
-
 struct RenderTargetRequest
 {
     std::shared_ptr< IRenderPass > renderPass;
     RenderTargetType type;
-    RenderTargetImages targetImages;
     uint32_t frameIndex;
 
     std::vector< OutputImage > outputImages; // will result in the size of output images, resources will be created with the names in order
