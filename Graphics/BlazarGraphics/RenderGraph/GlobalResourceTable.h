@@ -36,6 +36,15 @@ struct ShaderMaterialStruct
     float shininess;
 };
 
+struct AttachmentContent
+{
+    char * data;
+    uint32_t size;
+    ResourceType resourceType;
+};
+
+typedef std::function< AttachmentContent( const std::shared_ptr< ECS::ComponentTable > &components  ) > FormatterFunc;
+
 class GlobalResourceTable
 {
 private:
@@ -49,14 +58,17 @@ private:
     std::vector< GeometryData > geometryList;
     std::unordered_map< uint64_t, uint32_t > entityGeometryMap;
     std::unordered_map< std::string, GeometryData > outputGeometryMap;
+    std::unordered_map< std::string, FormatterFunc > customFormatters;
 
     std::shared_ptr< ShaderResource > globalModelResourcePlaceholder;
+    std::shared_ptr< ShaderResource > globalNormalModelResourcePlaceholder;
 public:
     explicit GlobalResourceTable( IRenderDevice* renderDevice, AssetManager* assetManager );
 
     void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
     void updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
     void removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
+    void registerCustomFormatter( const std::string& resourceName, FormatterFunc func );
     void prepareResource( const std::string &resourceName, const ResourceUsage &usage, const uint32_t& frameIndex );
     void allocateResource( const std::string& resourceName, const uint32_t& frameIndex );
     void createEmptyImageResource( const OutputImage& image, const uint32_t& frameIndex );

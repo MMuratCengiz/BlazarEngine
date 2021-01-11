@@ -1,5 +1,9 @@
 #pragma once
 
+#define SHOULD_FLIP_Y false
+
+#define FLIP_Y( data, start, offset ) for ( int i = start; i < data.size( ); i += offset ) data[ i ] *= -1;
+
 #include <BlazarCore/Common.h>
 #include <BlazarCore/DynamicMemory.h>
 
@@ -80,6 +84,11 @@ public:
         vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
         vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
         vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f } );
+
+        if ( SHOULD_FLIP_Y )
+        {
+            FLIP_Y( vertices, 1, 8 )
+        }
     }
 
     uint32_t getVertexCount( )
@@ -136,6 +145,10 @@ public:
         vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f } );
         vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f } );
 
+        if ( SHOULD_FLIP_Y )
+        {
+            FLIP_Y( vertices, 1, 8 )
+        }
     }
 
     uint32_t getVertexCount( )
@@ -162,6 +175,11 @@ public:
         vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
         vertices.insert( vertices.end( ), { 1.0f, 1.0f, 0.0f } );
         vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
+
+        if ( SHOULD_FLIP_Y )
+        {
+            FLIP_Y( vertices, 1, 8 )
+        }
     }
 
     uint32_t getVertexCount( )

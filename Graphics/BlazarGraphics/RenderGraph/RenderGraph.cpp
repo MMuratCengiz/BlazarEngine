@@ -101,6 +101,11 @@ void RenderGraph::preparePass( PassWrapper &pass )
     // Initialize inputs
     uint32_t pipelineIndex = 0;
 
+    for ( const auto& customFormatter: pass.ref->customFormatters )
+    {
+        globalResourceTable->registerCustomFormatter( customFormatter.first, customFormatter.second );
+    }
+
     if ( pass.adaptedInputs.empty( ) )
     {
         pass.adaptedInputs.resize( pass.ref->pipelineInputs.size( ) );
@@ -124,6 +129,12 @@ void RenderGraph::preparePass( PassWrapper &pass )
                     {
                         globalResourceTable->allocateResource( input, frameIndex );
                     }
+
+                    // Todo fix this this is embarrassing
+                    if ( input == StaticVars::getInputName( StaticVars::Input::Material ) || input == StaticVars::getInputName( StaticVars::Input::SkyBox ) )
+                    {
+                        pass.attachesTextures = true;
+                    }
                 }
             }
 
@@ -139,6 +150,12 @@ void RenderGraph::preparePass( PassWrapper &pass )
                 if ( pipelineInputOutputDependencies.find( input ) == pipelineInputOutputDependencies.end( ) )
                 {
                     globalResourceTable->allocateResource( input, frameIndex );
+                }
+
+                // Todo fix this this is embarrassing
+                if ( input == StaticVars::getInputName( StaticVars::Input::Material ) || input == StaticVars::getInputName( StaticVars::Input::SkyBox ) )
+                {
+                    pass.attachesTextures = true;
                 }
             }
         }
@@ -163,6 +180,7 @@ void RenderGraph::preparePass( PassWrapper &pass )
         {
             renderTargetRequest.frameIndex = frame;
             renderTargetRequest.type = RenderTargetType::Intermediate;
+            renderTargetRequest.renderArea = pass.ref->renderPassRequest.renderArea;
 
             for ( const auto& output: pass.ref->outputs )
             {
@@ -205,7 +223,10 @@ void RenderGraph::execute( )
         executePass( pass );
     }
 
-    frameIndex = ( frameIndex + 1 ) % renderDevice->getFrameCount( );
+    if ( !redrawFrame )
+    {
+        frameIndex = ( frameIndex + 1 ) % renderDevice->getFrameCount( );
+    }
 }
 
 void RenderGraph::executePass( const PassWrapper &pass )
@@ -220,7 +241,7 @@ void RenderGraph::executePass( const PassWrapper &pass )
     {
         // All dependencies should have similar output geometry
         const PassWrapper &firstPassDependency = passes[ passMap[ pass.dependencies[ 0 ] ] ];
-        geometries = globalResourceTable->getOutputGeometryList( firstPassDependency.ref->outputGeometry );
+        geometries = globalResourceTable->getOutputGeometryList( BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare ) );
     }
 
     std::shared_ptr< IRenderPass > renderPass = pass.renderPass;
@@ -263,30 +284,37 @@ void RenderGraph::executePass( const PassWrapper &pass )
         int selectedPipeline = pass.ref->selectPipeline( geometry.referenceEntity );
         renderPass->bindPipeline( pass.pipelines[ selectedPipeline ] );
 
-        for ( auto &texture: geometry.textures )
+        if ( pass.attachesTextures )
         {
-            renderPass->bindPerObject( texture );
+            for ( auto &texture: geometry.textures )
+            {
+                renderPass->bindPerObject( texture );
+            }
         }
 
-        renderPass->bindPerObject( geometry.vertices );
-
+        if ( geometry.vertices != nullptr )
+        {
+            renderPass->bindPerObject( geometry.vertices );
+        }
         if ( geometry.indices != nullptr )
         {
             renderPass->bindPerObject( geometry.indices );
         }
-        if ( geometry.material != nullptr )
+        if ( geometry.material != nullptr && pass.attachesTextures )
         {
             renderPass->bindPerObject( geometry.material );
         }
-
-        globalResourceTable->setActiveGeometryModel( geometry );
+        if ( geometry.modelTransformPtr != nullptr )
+        {
+            globalResourceTable->setActiveGeometryModel( geometry );
+        }
 
         bindAdaptedInputs( pass, renderPass, selectedPipeline, false );
 
         renderPass->draw( );
     }
 
-    renderPass->submit( std::vector< std::shared_ptr< IResourceLock > >( ), pass.executeLocks[ frameIndex ] );
+    redrawFrame = !renderPass->submit( std::vector< std::shared_ptr< IResourceLock > >( ), pass.executeLocks[ frameIndex ] );
 
     for ( auto &output: pass.ref->outputs )
     {
@@ -347,6 +375,26 @@ void RenderGraph::removeEntity( const std::shared_ptr< ECS::IGameEntity > &entit
 RenderGraph::~RenderGraph( )
 {
     globalResourceTable.reset( );
+
+    for ( auto & pass: passes )
+    {
+        for ( auto & lock: pass.executeLocks )
+        {
+            lock->cleanup( );
+        }
+
+        for ( auto & pipeline: pass.pipelines )
+        {
+            pipeline->cleanup( );
+        }
+
+        for ( auto & renderTarget: pass.renderTargets )
+        {
+            renderTarget->cleanup( );
+        }
+
+        pass.renderPass->cleanup( );
+    }
 }
 
 

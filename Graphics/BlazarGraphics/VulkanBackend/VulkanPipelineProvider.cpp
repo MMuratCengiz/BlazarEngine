@@ -38,6 +38,7 @@ void VulkanPipelineProvider::createPipeline( const PipelineRequest &request, con
 {
     PipelineCreateInfos createInfo { };
     createInfo.request = request;
+    createInfo.parentPass = std::dynamic_pointer_cast< VulkanRenderPass >( request.parentPass );
 
     auto glslShaderSet = std::make_shared< GLSLShaderSet >( shaderInfos );
 
@@ -127,13 +128,23 @@ void VulkanPipelineProvider::configureMultisampling( PipelineCreateInfos &create
 
 void VulkanPipelineProvider::configureViewport( PipelineCreateInfos &createInfo )
 {
-    createInfo.viewScissor.offset = vk::Offset2D { 0, 0 };
-    createInfo.viewScissor.extent = context->surfaceExtent;
+    RenderArea renderArea = createInfo.request.parentPass->getRenderArea( );
+
+    createInfo.viewScissor.offset = vk::Offset2D { renderArea.x, renderArea.y };
+
+    if ( renderArea.width == 0 || renderArea.height == 0 )
+    {
+        createInfo.viewScissor.extent = context->surfaceExtent;
+    }
+    else
+    {
+        createInfo.viewScissor.extent = vk::Extent2D { renderArea.width, renderArea.height };
+    }
 
     createInfo.viewportStateCreateInfo.viewportCount = 1;
-    createInfo.viewportStateCreateInfo.pViewports = &context->viewport;
+    createInfo.viewportStateCreateInfo.pViewports = &createInfo.parentPass->getViewport( );
     createInfo.viewportStateCreateInfo.scissorCount = 1;
-    createInfo.viewportStateCreateInfo.pScissors = &createInfo.viewScissor;
+    createInfo.viewportStateCreateInfo.pScissors = &createInfo.parentPass->getViewScissor( );
 
     createInfo.pipelineCreateInfo.pViewportState = &createInfo.viewportStateCreateInfo;
 }
@@ -162,7 +173,7 @@ void VulkanPipelineProvider::configureRasterization( PipelineCreateInfos &create
     }
 
     createInfo.rasterizationStateCreateInfo.frontFace = vk::FrontFace::eCounterClockwise;
-    createInfo.rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+    createInfo.rasterizationStateCreateInfo.depthBiasEnable = createInfo.request.parentPass->getProperty( "DepthBiasEnabled" ) == "true";
     createInfo.rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
     createInfo.rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
     createInfo.rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;

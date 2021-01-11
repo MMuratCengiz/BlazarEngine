@@ -19,7 +19,6 @@ public:
     ~VulkanSurface( );
 private:
     void createSurface( );
-    void updateViewport( const uint32_t &width, const uint32_t &height );
     void createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCapabilities );
     void createImageView( vk::ImageView &imageView, const vk::Image &image, const vk::Format &format, const vk::ImageAspectFlags &aspectFlags );
     void chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabilities );

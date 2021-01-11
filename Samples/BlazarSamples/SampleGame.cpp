@@ -8,12 +8,15 @@ void SampleGame::init( )
     sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
 
     sceneLights->createComponent< ECS::CAmbientLight >( );
-    sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec4( 0.0f, 0.25f, 0.1f, 1.0f );
+    sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec4( 0.25f, 0.25f, 0.22f, 1.0f );
     sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.01f;
 
+    glm::vec3 pos = glm::vec3( 10.4072, 11.5711, -9.09731 );
+    glm::vec3 front = glm::vec3( -0.68921, -0.48481, 0.53847 );
+
     sceneLights->createComponent< ECS::CDirectionalLight >( );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec4( 0.1f, 0.25f, 0.1f, 1.0f );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = glm::vec4( glm::normalize( glm::vec3( 0.5f, 0.5f, 0.5f ) ), 1.0f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec4( 0.65f, 1.0f, 0.65f, 1.0f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = glm::vec4( front - pos, 1.0f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec4( 0.0f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.8f;
 
@@ -55,9 +58,9 @@ void SampleGame::init( )
     initialScene->addEntity( floor );
     initialScene->addEntity( crate );
     initialScene->addEntity( smallCrate );
-    initialScene->addEntity( sky );
+//    initialScene->addEntity( sky );
 //    initialScene->addEntity( sampleWolf );
-    initialScene->addEntity( sampleMovingCrate );
+//    initialScene->addEntity( sampleMovingCrate );
     world->setScene( initialScene );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )

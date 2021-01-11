@@ -25,7 +25,8 @@ public:
         SkyBox,
         EnvironmentLights,
         Material,
-        ModelMatrix
+        ModelMatrix,
+        NormalModelMatrix
     };
 
     static std::string getInputName( const Input &inputName )
@@ -44,6 +45,8 @@ public:
                 return "Material";
             case Input::ModelMatrix:
                 return "ModelMatrix";
+            case Input::NormalModelMatrix:
+                return "NormalModelMatrix";
         }
 
         return "";

@@ -22,6 +22,7 @@ private:
     vk::Semaphore semaphore { };
 
     VulkanContext* context;
+    bool resourceCleaned = false;
 public:
     VulkanResourceLock( VulkanContext* context, const ResourceLockType &lockType );
     void wait( ) override;
@@ -30,6 +31,8 @@ public:
 
     const vk::Fence &getVkFence( );
     const vk::Semaphore &getVkSemaphore( );
+
+    void cleanup( ) override;
     ~VulkanResourceLock( ) override;
 };
 

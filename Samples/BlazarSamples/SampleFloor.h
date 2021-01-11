@@ -19,7 +19,7 @@ public:
 
         auto material = createComponent< ECS::CMaterial >( );
         auto &texInfo = material->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/floor2.png";
+        texInfo.path = "/assets/textures/MartianBarrensRocky_albedo.png";
 
         material->textureScaleOptions.scaleX = true;
         material->textureScaleOptions.scaleY = true;

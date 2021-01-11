@@ -52,8 +52,6 @@ public:
     vk::CommandPool computeQueueCommandPool;
 
     vk::Extent2D surfaceExtent { };
-    vk::Viewport viewport { };
-    vk::Rect2D viewScissor { };
 
     RenderWindow* window;
     std::unordered_map< QueueType, QueueFamily > queueFamilies;

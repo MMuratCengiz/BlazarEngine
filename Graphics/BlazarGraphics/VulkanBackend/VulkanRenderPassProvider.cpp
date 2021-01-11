@@ -11,69 +11,89 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
 {
     auto renderTarget = std::make_shared< VulkanRenderTarget >( context );
 
-    std::vector< vk::ImageView > attachments { };
-
-    for ( const auto &outputImage: request.outputImages )
+    renderTarget->recreateBuffer = [ = ]( )
     {
-        if ( outputImage.flags.presentedImage )
+        std::vector< vk::ImageView > attachments { };
+
+        for ( const auto &outputImage: request.outputImages )
         {
-            attachments.push_back( context->swapChainImageViews[ request.frameIndex ] );
-            continue;
-        }
-
-        auto msaaSampleCount = getOutputImageSamples( context, outputImage, true );
-        auto vkFormat = getOutputImageVkFormat( context, outputImage );
-        auto usageFlags = getOutputImageVkUsage( context, outputImage );
-        auto aspectFlags = getOutputImageVkAspect( context, outputImage );
-
-        auto attachment = createAttachment( vkFormat, usageFlags, aspectFlags, msaaSampleCount );
-
-        if ( outputImage.attachmentType == ResourceAttachmentType::Color )
-        {
-            if ( outputImage.flags.msaaSampled )
+            if ( outputImage.flags.presentedImage )
             {
-                msaaSampleCount = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
-                usageFlags = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransientAttachment;
-
-                auto msaaAttachment = createAttachment( vkFormat, usageFlags, aspectFlags, msaaSampleCount );
-
-                attachments.push_back( msaaAttachment.imageView );
-                renderTarget->buffers.push_back( msaaAttachment );
+                attachments.push_back( context->swapChainImageViews[ request.frameIndex ] );
+                continue;
             }
 
-            auto &imageResource = renderTarget->outputImages.emplace_back( std::make_shared< ShaderResource >( ) );
-            imageResource->type = ResourceType::Sampler2D;
-            imageResource->identifier = { outputImage.outputResourceName };
-            imageResource->apiSpecificBuffer = new VulkanTextureWrapper; // todo clean
-            imageResource->bindStrategy = ResourceBindStrategy::BindPerFrame;
-            imageResource->prepareForUsage = [ = ]( const ResourceUsage &usage )
-            { };
+            auto msaaSampleCount = getOutputImageSamples( context, outputImage, true );
+            auto vkFormat = getOutputImageVkFormat( context, outputImage );
+            auto usageFlags = getOutputImageVkUsage( context, outputImage );
+            auto aspectFlags = getOutputImageVkAspect( context, outputImage );
 
-            renderTarget->outputImageMap[ outputImage.outputResourceName ] = imageResource;
+            auto attachment = createAttachment( vkFormat, usageFlags, aspectFlags, msaaSampleCount, request );
 
-            auto *bufferRef = ( VulkanTextureWrapper * ) imageResource->apiSpecificBuffer;
-            bufferRef->mipLevels = attachment.mipLevels;
-            bufferRef->imageView = attachment.imageView;
-            bufferRef->image = attachment.image;
-            bufferRef->sampler = attachment.sampler;
-            bufferRef->previousUsage = attachment.previousUsage;
-            bufferRef->allocation = attachment.allocation;
+            if ( outputImage.attachmentType == ResourceAttachmentType::Color || outputImage.attachmentType == ResourceAttachmentType::Depth )
+            {
+                if ( outputImage.flags.msaaSampled && outputImage.attachmentType == ResourceAttachmentType::Color )
+                {
+                    msaaSampleCount = VulkanUtilities::maxDeviceMSAASampleCount( context->physicalDevice );
+                    usageFlags = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransientAttachment;
+
+                    auto msaaAttachment = createAttachment( vkFormat, usageFlags, aspectFlags, msaaSampleCount, request );
+
+                    attachments.push_back( msaaAttachment.imageView );
+                    renderTarget->buffers.push_back( msaaAttachment );
+                }
+
+                ResourceType type = ResourceType::Sampler2D;
+
+                if ( outputImage.attachmentType == ResourceAttachmentType::Depth )
+                {
+                    type = ResourceType::DepthImage;
+                }
+
+                auto &imageResource = renderTarget->outputImages.emplace_back( std::make_shared< ShaderResource >( ) );
+                imageResource->type = type;
+                imageResource->identifier = { outputImage.outputResourceName };
+                imageResource->apiSpecificBuffer = new VulkanTextureWrapper; // todo clean
+                imageResource->bindStrategy = ResourceBindStrategy::BindPerFrame;
+                imageResource->prepareForUsage = [ = ]( const ResourceUsage &usage )
+                { };
+
+                renderTarget->outputImageMap[ outputImage.outputResourceName ] = imageResource;
+
+                auto *bufferRef = ( VulkanTextureWrapper * ) imageResource->apiSpecificBuffer;
+                bufferRef->mipLevels = attachment.mipLevels;
+                bufferRef->imageView = attachment.imageView;
+                bufferRef->image = attachment.image;
+                bufferRef->sampler = attachment.sampler;
+                bufferRef->previousUsage = attachment.previousUsage;
+                bufferRef->allocation = attachment.allocation;
+            }
+
+            renderTarget->buffers.push_back( attachment );
+            attachments.push_back( attachment.imageView );
         }
 
-        renderTarget->buffers.push_back( attachment );
-        attachments.push_back( attachment.imageView );
-    }
+        vk::FramebufferCreateInfo framebufferCreateInfo { };
+        framebufferCreateInfo.renderPass = std::dynamic_pointer_cast< VulkanRenderPass >( request.renderPass )->getPassInstance( );
+        framebufferCreateInfo.attachmentCount = attachments.size( );
+        framebufferCreateInfo.pAttachments = attachments.data( );
+        framebufferCreateInfo.width = request.renderArea.width == 0 ? context->surfaceExtent.width : request.renderArea.width;
+        framebufferCreateInfo.height = request.renderArea.height == 0 ? context->surfaceExtent.height : request.renderArea.height;
+        framebufferCreateInfo.layers = 1;
 
-    vk::FramebufferCreateInfo framebufferCreateInfo { };
-    framebufferCreateInfo.renderPass = std::dynamic_pointer_cast< VulkanRenderPass >( request.renderPass )->getPassInstance( );
-    framebufferCreateInfo.attachmentCount = attachments.size( );
-    framebufferCreateInfo.pAttachments = attachments.data( );
-    framebufferCreateInfo.width = context->surfaceExtent.width;
-    framebufferCreateInfo.height = context->surfaceExtent.height;
-    framebufferCreateInfo.layers = 1;
+        renderTarget->ref = context->logicalDevice.createFramebuffer( framebufferCreateInfo );
+        renderTarget->type = request.type;
+    };
 
-    renderTarget->ref = context->logicalDevice.createFramebuffer( framebufferCreateInfo );
-    renderTarget->type = request.type;
+    renderTarget->recreateBuffer( );
+
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ = ]( const Input::EventType &type, std::shared_ptr< Input::IEventParameters > )
+    {
+        context->logicalDevice.waitIdle( );
+        renderTarget->cleanup( );
+        renderTarget->recreateBuffer( );
+        context->logicalDevice.waitIdle( );
+    } );
 
     return renderTarget;
 }
@@ -124,7 +144,7 @@ vk::ImageUsageFlags VulkanRenderPassProvider::getOutputImageVkUsage( VulkanConte
         usageFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment;
     }
 
-    if ( outputImage.attachmentType == ResourceAttachmentType::Color && !outputImage.flags.presentedImage )
+    if ( outputImage.attachmentType == ResourceAttachmentType::Color || outputImage.attachmentType == ResourceAttachmentType::Depth && !outputImage.flags.presentedImage )
     {
         usageFlags |= vk::ImageUsageFlagBits::eSampled;
     }
@@ -157,6 +177,10 @@ vk::Format VulkanRenderPassProvider::getOutputImageVkFormat( VulkanContext *cont
     {
         vkFormat = vk::Format::eR16G16B16A16Sfloat;
     }
+    else if ( outputImage.imageFormat == ResourceImageFormat::R32G32B32A32Sfloat )
+    {
+        vkFormat = vk::Format::eR32G32B32A32Sfloat;
+    }
     else if ( outputImage.imageFormat == ResourceImageFormat::R8G8B8A8Unorm )
     {
         vkFormat = vk::Format::eR8G8B8A8Unorm;
@@ -173,20 +197,24 @@ vk::Format VulkanRenderPassProvider::getOutputImageVkFormat( VulkanContext *cont
     {
         vkFormat = VulkanUtilities::findSupportedDepthFormat( context->physicalDevice );
     }
+    else if ( outputImage.imageFormat == ResourceImageFormat::D32Sfloat )
+    {
+        vkFormat = vk::Format::eD32Sfloat;
+    }
 
     return vkFormat;
 }
 
 VulkanTextureWrapper VulkanRenderPassProvider::createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect,
-                                                                 const vk::SampleCountFlagBits &sampleCount )
+                                                                 const vk::SampleCountFlagBits &sampleCount, const RenderTargetRequest request )
 {
     VulkanTextureWrapper textureWrapper { };
 
     vk::ImageCreateInfo imageCreateInfo { };
 
     imageCreateInfo.imageType = vk::ImageType::e2D;
-    imageCreateInfo.extent.width = context->surfaceExtent.width;
-    imageCreateInfo.extent.height = context->surfaceExtent.height;
+    imageCreateInfo.extent.width = request.renderArea.width == 0 ? context->surfaceExtent.width : request.renderArea.width;
+    imageCreateInfo.extent.height = request.renderArea.height == 0 ? context->surfaceExtent.height : request.renderArea.height;
     imageCreateInfo.extent.depth = 1;
     imageCreateInfo.format = format;
     imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
@@ -252,11 +280,22 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     {
         if ( outputImage.attachmentType == ResourceAttachmentType::Depth )
         {
-            attachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+            if ( outputImage.flags.presentedImage )
+            {
+                attachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+            }
+            else
+            {
+                attachmentDescription.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            }
         }
         else if ( outputImage.flags.presentedImage && !outputImage.flags.msaaSampled )
         {
             attachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+        }
+        else if ( !outputImage.flags.presentedImage && !outputImage.flags.msaaSampled )
+        {
+            attachmentDescription.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         }
         else
         {
@@ -269,7 +308,7 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     {
         if ( outputImage.attachmentType == ResourceAttachmentType::Color )
         {
-            std::array< float, 4 > clearColor( { 0.0f, 0.0f, 0.0f, 1.0f  } );
+            std::array< float, 4 > clearColor( { 0.0f, 0.0f, 0.0f, 0.0f } );
             clearColors.push_back( vk::ClearColorValue { clearColor } );
         }
         else
@@ -308,7 +347,7 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
             {
                 auto &colorAttachmentResolve = attachments.emplace_back( vk::AttachmentDescription { } );
 
-                colorAttachmentResolve.format =  VulkanRenderPassProvider::getOutputImageVkFormat( context, outputImage );
+                colorAttachmentResolve.format = VulkanRenderPassProvider::getOutputImageVkFormat( context, outputImage );
                 colorAttachmentResolve.samples = vk::SampleCountFlagBits::e1;
                 initAttachmentDefaults( colorAttachmentResolve );
 
@@ -355,7 +394,7 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
         dependency1.srcAccessMask = { };
         dependency1.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
     }
-    else
+    else if ( request.dependencySet == DependencySet::DefaultColor )
     {
         auto &dependency1 = dependencies.emplace_back( vk::SubpassDependency { } );
         dependency1.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -376,6 +415,30 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
 
         dependency2.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead;
         dependency2.dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+    }
+    else if ( request.dependencySet == DependencySet::ShadowMap )
+    {
+        auto &dependency1 = dependencies.emplace_back( vk::SubpassDependency { } );
+        dependency1.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency1.dstSubpass = 0;
+
+        dependency1.srcStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+        dependency1.dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+
+        dependency1.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+        dependency1.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+        dependency1.dependencyFlags = vk::DependencyFlagBits::eByRegion;
+        ////////////////////////////////////////////////////////////////////////////
+        auto &dependency2 = dependencies.emplace_back( vk::SubpassDependency { } );
+        dependency2.srcSubpass = 0;
+        dependency2.dstSubpass = VK_SUBPASS_EXTERNAL;
+
+        dependency2.srcStageMask = vk::PipelineStageFlagBits::eLateFragmentTests;
+        dependency2.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+
+        dependency2.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+        dependency2.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+        dependency2.dependencyFlags = vk::DependencyFlagBits::eByRegion;
     }
 
     vk::SubpassDescription subPass { };
@@ -401,6 +464,28 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     bufferAllocateInfo.commandBufferCount = context->swapChainImages.size( );
 
     buffers = context->logicalDevice.allocateCommandBuffers( bufferAllocateInfo );
+
+    setDepthBias = request.setDepthBias;
+    depthBiasConstant = request.depthBiasConstant;
+    depthBiasSlope = request.depthBiasSlope;
+    renderArea = request.renderArea;
+
+    renderArea.width = renderArea.width == 0 ? context->surfaceExtent.width : renderArea.width;
+    renderArea.height = renderArea.height == 0 ? context->surfaceExtent.height : renderArea.height;
+
+    updateViewport( renderArea.width, renderArea.height );
+
+    // Only update renderArea which want to match screen size
+    if ( request.renderArea.width == 0 )
+    {
+        Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+        {
+            auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
+            this->context->logicalDevice.waitIdle( );
+
+            updateViewport( parameters->width, parameters->height );
+        } );
+    }
 }
 
 std::string VulkanRenderPass::getProperty( const std::string &propertyName )
@@ -413,6 +498,10 @@ std::string VulkanRenderPass::getProperty( const std::string &propertyName )
     if ( propertyName == "AttachmentCount" )
     {
         return propertyVal_attachmentCount;
+    }
+    if ( propertyName == "DepthBiasEnabled" )
+    {
+        return setDepthBias ? "true" : "false";
     }
 
     return "";
@@ -439,8 +528,8 @@ void VulkanRenderPass::begin( std::shared_ptr< IRenderTarget > renderTarget, std
 
     renderPassBeginInfo.renderPass = renderPass;
     renderPassBeginInfo.framebuffer = currentRenderTarget->ref;
-    renderPassBeginInfo.renderArea.offset = vk::Offset2D { 0, 0 };
-    renderPassBeginInfo.renderArea.extent = context->surfaceExtent;
+    renderPassBeginInfo.renderArea.offset = vk::Offset2D { renderArea.x, renderArea.y };
+    renderPassBeginInfo.renderArea.extent = vk::Extent2D { renderArea.width, renderArea.height };
     renderPassBeginInfo.clearValueCount = clearColors.size( );
     renderPassBeginInfo.pClearValues = clearColors.data( );
 
@@ -481,7 +570,7 @@ void VulkanRenderPass::bindPerFrame( std::shared_ptr< ShaderResource > resource 
                 resource->identifier.deviation
         );
     }
-    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
+    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::DepthImage || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
     {
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
@@ -547,7 +636,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
                 resource->identifier.deviation
         );
     }
-    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerObject )
+    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::DepthImage || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerObject )
     {
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
@@ -572,16 +661,21 @@ void VulkanRenderPass::draw( )
 
     auto descriptorSets = boundPipeline->descriptorManager->getOrderedSets( frameIndex, boundPipeline->descriptorManager->getObjectCount( ) );
 
+    buffers[ frameIndex ].setViewport( 0, 1, &viewport );
+    buffers[ frameIndex ].setScissor( 0, 1, &viewScissor );
     buffers[ frameIndex ].bindPipeline( getBoundPipelineBindPoint( ), boundPipeline->pipeline );
 
     bindVertexBuffer( );
+
     if ( indexDataAttachment != nullptr )
     {
         bindIndexBuffer( );
     }
 
-    buffers[ frameIndex ].setViewport( 0, context->viewport );
-    buffers[ frameIndex ].setScissor( 0, context->viewScissor );
+    if ( setDepthBias )
+    {
+        buffers[ frameIndex ].setDepthBias( depthBiasConstant, 0.0f, depthBiasSlope );
+    }
 
     buffers[ frameIndex ].bindDescriptorSets(
             getBoundPipelineBindPoint( ),
@@ -628,7 +722,7 @@ void VulkanRenderPass::draw( )
     indexDataAttachment = nullptr;
 }
 
-void VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence )
+bool VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence )
 {
     buffers[ frameIndex ].endRenderPass( );
     buffers[ frameIndex ].end( );
@@ -640,9 +734,9 @@ void VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > w
         if ( result.result == vk::Result::eErrorOutOfDateKHR )
         {
             Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
-            return;
+            return false;
         }
-        else if ( result.result != vk::Result::eSuccess && result.result == vk::Result::eSuboptimalKHR )
+        else if ( result.result != vk::Result::eSuccess && result.result != vk::Result::eSuboptimalKHR )
         {
             throw std::runtime_error( "failed to acquire swap chain image!" );
         }
@@ -691,6 +785,8 @@ void VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > w
     {
         presentPassToSwapChain( );
     }
+
+    return true;
 }
 
 const vk::RenderPass &VulkanRenderPass::getPassInstance( ) const
@@ -722,12 +818,47 @@ void VulkanRenderPass::presentPassToSwapChain( )
     }
 }
 
+void VulkanRenderPass::updateViewport( const uint32_t& width, const uint32_t& height )
+{
+    viewport.x = renderArea.x;
+//    viewport.y = (float ) height - renderArea.y;
+    viewport.y = renderArea.y;
+    viewport.width = width;
+//    viewport.height = - ( ( float ) height );
+    viewport.height = ( ( float ) height );
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    viewScissor.offset = vk::Offset2D( viewport.x, renderArea.y );
+    viewScissor.extent = vk::Extent2D( width, height );
+}
+
 VulkanRenderPass::~VulkanRenderPass( )
 {
+    VulkanRenderPass::cleanup( );
+}
+
+void VulkanRenderPass::cleanup( )
+{
+    for ( auto &lock: swapChainImageAvailable )
+    {
+        lock->cleanup( );
+    }
+
+    for ( auto &lock: swapChainImageRendered )
+    {
+        lock->cleanup( );
+    }
+
     context->logicalDevice.destroyRenderPass( renderPass );
 }
 
 VulkanRenderTarget::~VulkanRenderTarget( )
+{
+    VulkanRenderTarget::cleanup( );
+}
+
+void VulkanRenderTarget::cleanup( )
 {
     for ( auto &buffer: buffers )
     {
@@ -735,6 +866,8 @@ VulkanRenderTarget::~VulkanRenderTarget( )
         context->logicalDevice.destroySampler( buffer.sampler );
         context->vma.destroyImage( buffer.image, buffer.allocation );
     }
+
+    buffers.clear( );
 
     context->logicalDevice.destroyFramebuffer( ref );
 }

@@ -19,11 +19,16 @@ struct VulkanPipeline : IPipeline {
     vk::Pipeline pipeline;
     vk::PipelineLayout layout;
 
-    ~VulkanPipeline( ) override
+    inline void cleanup( ) override
     {
         descriptorManager.reset( );
         context->logicalDevice.destroyPipeline( pipeline );
         context->logicalDevice.destroyPipelineLayout( layout );
+    }
+
+    ~VulkanPipeline( ) override
+    {
+        VulkanPipeline::cleanup( );
     }
 };
 
@@ -47,13 +52,15 @@ struct PipelineCreateInfos
     std::shared_ptr< GLSLShaderSet > shaderSet;
     // --
     PipelineRequest request;
+    std::shared_ptr< VulkanRenderPass > parentPass;
 };
 
 class VulkanPipelineProvider: public IPipelineProvider
 {
 private:
-    const std::array< vk::DynamicState, 2 > dynamicStates = {
+    const std::array< vk::DynamicState, 3 > dynamicStates = {
             vk::DynamicState::eViewport,
+            vk::DynamicState::eDepthBias,
             vk::DynamicState::eLineWidth
     };
 

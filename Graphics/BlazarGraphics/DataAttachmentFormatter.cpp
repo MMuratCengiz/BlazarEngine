@@ -107,6 +107,16 @@ glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS
     return modelMatrix;
 }
 
+glm::mat4 DataAttachmentFormatter::formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform )
+{
+    glm::mat3 normalMatrix = glm::mat3( formatModelMatrix( transform ) );
+
+    normalMatrix = glm::inverse( normalMatrix );
+    normalMatrix = glm::transpose( normalMatrix );
+
+    return glm::mat4( normalMatrix );
+}
+
 Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform > &transform )
 {
     glm::vec4 textureScale;

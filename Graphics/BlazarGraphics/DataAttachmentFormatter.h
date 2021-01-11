@@ -78,6 +78,7 @@ public:
     static ViewProjection formatCamera( const std::shared_ptr< ECS::ComponentTable > &components );
     static EnvironmentLights formatLightingEnvironment( const std::shared_ptr< ECS::ComponentTable > &components );
     static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform );
+    static glm::mat4 formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform );
 
 };
 

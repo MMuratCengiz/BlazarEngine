@@ -20,6 +20,7 @@ enum class ResourceType
     IndexData,
     CubeMap,
     PushConstant,
+    DepthImage,
     Sampler2D,
     Sampler3D,
     Uniform
@@ -55,6 +56,8 @@ enum class ResourceImageFormat
 {
     MatchSwapChainImageFormat,
     BestDepthFormat,
+    D32Sfloat,
+    R32G32B32A32Sfloat,
     R16G16B16A16Sfloat,
     R8G8B8A8Unorm,
     B8G8R8A8Srgb,
@@ -73,6 +76,7 @@ public:
     virtual void reset( ) = 0;
     virtual void notify( ) = 0;
 
+    virtual void cleanup( ) = 0;
     virtual ~IResourceLock( ) = default;;
 };
 

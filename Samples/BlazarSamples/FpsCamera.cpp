@@ -14,18 +14,16 @@ FpsCamera::FpsCamera( std::shared_ptr< BlazarEngine::ECS::CCamera > cameraCompon
     // todo dynamic
 
     this->cameraComponent->projection = glm::perspective( glm::radians( 60.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
-    this->cameraComponent->projection[ 1 ][ 1 ] = -this->cameraComponent->projection[ 1 ][ 1 ];
+    this->cameraComponent->projection = VK_CORRECTION_MATRIX * this->cameraComponent->projection;
 
     calculateView( );
-
-
 }
 
 
 void FpsCamera::updateAspectRatio( const uint32_t &windowWidth, const uint32_t &windowHeight )
 {
     this->cameraComponent->projection = glm::perspective( glm::radians( 60.0f ), windowWidth / ( float ) windowHeight, 0.1f, 100.0f );
-    this->cameraComponent->projection[ 1 ][ 1 ] *= -1.0f;
+    this->cameraComponent->projection = VK_CORRECTION_MATRIX * this->cameraComponent->projection;
 }
 
 void FpsCamera::processKeyboardEvents( GLFWwindow *window )
@@ -50,6 +48,37 @@ void FpsCamera::processKeyboardEvents( GLFWwindow *window )
     if ( glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS )
     {
         this->cameraComponent->position += right * sensitivity;
+    }
+
+    if ( glfwGetKey( window, GLFW_KEY_R ) == GLFW_PRESS )
+    {
+        this->cameraComponent->position += up * sensitivity;
+    }
+
+    if ( glfwGetKey( window, GLFW_KEY_F ) == GLFW_PRESS )
+    {
+        this->cameraComponent->position -= up * sensitivity;
+    }
+
+    if ( glfwGetKey( window, GLFW_KEY_SPACE ) == GLFW_PRESS )
+    {
+        FILE *file = fopen( "C:/Users/Murat/Documents/Garbage/debugCam.txt", "ab+" );
+
+        std::stringstream contents;
+        contents << "position: " <<
+                 this->cameraComponent->position.x << "," <<
+                 this->cameraComponent->position.y << "," <<
+                 this->cameraComponent->position.z << "\r\n";
+
+        contents << "front: " <<
+                 this->front.x << "," <<
+                 this->front.y << "," <<
+                 this->front.z << "\r\n";
+
+
+        fwrite( contents.str( ).data( ), 1, contents.str( ).size( ), file );
+
+        fclose( file );
     }
 
     calculateView( );

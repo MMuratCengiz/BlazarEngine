@@ -6,7 +6,7 @@
 #define END_NAMESPACE }
 
 #define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
 #include <stdlib.h>
@@ -62,5 +62,11 @@
 #define IS_NULL( val ) ( val == nullptr )
 #define FUNCTION_BREAK( condition ) if ( condition ) return;
 
+#define VK_CORRECTION_MATRIX glm::mat4(  1.0f,  0.0f, 0.0f, 0.0f, \
+                                         0.0f, -1.0f, 0.0f, 0.0f, \
+                                         0.0f,  0.0f, 0.5f, 0.0f, \
+                                         0.0f,  0.0f, 0.5f, 1.0f)
+
 #include "Constants.h"
 
+//#define ENABLE_SHADOW_DEBUG_OUTPUT

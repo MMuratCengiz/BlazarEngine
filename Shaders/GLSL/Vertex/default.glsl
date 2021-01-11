@@ -23,6 +23,6 @@ void main() {
     transitWorldPos = worldPos4.xyz;
 
     transitTexture1Coor = texture1Coor;
-    transitNormal = normalize(vec3( inNormal.x, -inNormal.y, inNormal.z ) );
+    transitNormal = normalize(vec3( inNormal.x, inNormal.y, inNormal.z ) );
 //    transitNormal = mat3(transpose(inverse(pushConstants.model))) * transitNormal;
 }

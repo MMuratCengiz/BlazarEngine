@@ -70,6 +70,7 @@ public:
 
     GlobalEventHandler( GlobalEventHandler const & ) = delete;
     void operator=( GlobalEventHandler const & ) = delete;
+    void cleanup( );
 private:
     void ensureMapContainsEvent( const EventType &event );
 };

@@ -9,5 +9,5 @@ layout (location = 1) out vec4 outputColorRed;
 
 void main() {
     outputColor = texture( SkyBox, transitTextureCoordinates );
-    outputColorRed = vec4( 1.0f, 0.0f, 0.0f, 1.0f );
+    outputColorRed = vec4( 1.0f, 1.0f, 1.0f, 1.0f );
 }

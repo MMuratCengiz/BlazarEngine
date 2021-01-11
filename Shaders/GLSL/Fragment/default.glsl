@@ -96,7 +96,7 @@ void main() {
         outputColor += calculateSpotLight( environment.spotLights[ i ] );
     }
 
-    outputColorRed = vec4( 1.0f, 0.0f, 0.0f, 1.0f );
+    outputColorRed = vec4( 1.0f, 1.0f, 1.0f, 1.0f );
 }
 
 vec4 calculateDirectional(DirectionalLight light) {

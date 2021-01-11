@@ -28,7 +28,7 @@ private:
 
     void calculateView( );
 public:
-    explicit FpsCamera( std::shared_ptr< BlazarEngine::ECS::CCamera > cameraComponent, glm::vec3 front = glm::vec3( 0.0f, 0.0f, -1.0f ) );
+    explicit FpsCamera( std::shared_ptr< BlazarEngine::ECS::CCamera > cameraComponent, glm::vec3 front = glm::vec3( 0.0f, 0.0f, 1.0f ) );
     void processKeyboardEvents( GLFWwindow *window );
     void processMouseEvents( GLFWwindow *window );
     void updateAspectRatio( const uint32_t &windowWidth, const uint32_t &windowHeight );

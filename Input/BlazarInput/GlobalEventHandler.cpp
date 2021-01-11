@@ -55,4 +55,9 @@ std::shared_ptr< TickParameters > GlobalEventHandler::createTickParameters( GLFW
     return params;
 }
 
+void GlobalEventHandler::cleanup( )
+{
+    eventSubscribers.clear( );
+}
+
 END_NAMESPACES

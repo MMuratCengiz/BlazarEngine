@@ -2,12 +2,17 @@
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-GraphSystem::GraphSystem( IRenderDevice* renderDevice, AssetManager* assetManager ) : renderDevice( renderDevice ), assetManager( assetManager )
+GraphSystem::GraphSystem( IRenderDevice *renderDevice, AssetManager *assetManager ) : renderDevice( renderDevice ), assetManager( assetManager )
 {
     renderGraph = std::make_unique< RenderGraph >( this->renderDevice, this->assetManager );
 
-    renderGraph->addPass( CommonPasses::createDefaultPass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createShadowMapPass( this->renderDevice ) );
+
+#ifndef ENABLE_SHADOW_DEBUG_OUTPUT
+    renderGraph->addPass( CommonPasses::createGBufferPass( this->renderDevice ) );
     renderGraph->addPass( CommonPasses::createFinalDrawPass( this->renderDevice ) );
+#endif
+
     renderGraph->buildGraph( );
 }
 

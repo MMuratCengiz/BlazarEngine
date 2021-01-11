@@ -13,6 +13,7 @@ private:
     CommonPasses( ) = default;
 public:
     static std::shared_ptr< Pass > createGBufferPass(  IRenderDevice* renderDevice );
+    static std::shared_ptr< Pass > createShadowMapPass(  IRenderDevice* renderDevice );
     static std::shared_ptr< Pass > createDefaultPass(  IRenderDevice* renderDevice );
     static std::shared_ptr< Pass > createFinalDrawPass(  IRenderDevice* renderDevice );
 };

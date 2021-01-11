@@ -8,14 +8,6 @@ VulkanSurface::VulkanSurface( VulkanContext * context ) : context( context )
 {
     createSurface( );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
-    {
-        auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
-        this->context->logicalDevice.waitIdle( );
-
-        updateViewport( parameters->width, parameters->height );
-    } );
-
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
     {
         this->context->logicalDevice.waitIdle( );
@@ -37,7 +29,6 @@ void VulkanSurface::createSurface( )
 void VulkanSurface::createSwapChain( const vk::SurfaceCapabilitiesKHR &surfaceCapabilities )
 {
     chooseExtent2D( surfaceCapabilities );
-    updateViewport( surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height );
 
     vk::SwapchainCreateInfoKHR createInfo { };
 
@@ -101,19 +92,6 @@ void VulkanSurface::chooseExtent2D( const vk::SurfaceCapabilitiesKHR &capabiliti
 
     context->surfaceExtent.width = std::clamp( context->window->getWidth( ), capabilities.minImageExtent.width, capabilities.maxImageExtent.width );
     context->surfaceExtent.height = std::clamp( context->window->getHeight( ), capabilities.minImageExtent.height, capabilities.maxImageExtent.height );
-}
-
-void VulkanSurface::updateViewport( const uint32_t &width, const uint32_t &height )
-{
-    context->viewport.x = 0.0f;
-    context->viewport.y = 0.0f;
-    context->viewport.width = width;
-    context->viewport.height = height;
-    context->viewport.minDepth = 0.0f;
-    context->viewport.maxDepth = 1.0f;
-
-    context->viewScissor.offset = vk::Offset2D( 0, 0 );
-    context->viewScissor.extent = vk::Extent2D( width, height );
 }
 
 void VulkanSurface::createImageView( vk::ImageView &imageView, const vk::Image &image,

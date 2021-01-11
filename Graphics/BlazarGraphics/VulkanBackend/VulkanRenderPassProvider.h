@@ -17,12 +17,15 @@ struct VulkanRenderTarget : public IRenderTarget
 private:
     VulkanContext *context;
 public:
+    std::function< void( ) > recreateBuffer;
+
     inline explicit VulkanRenderTarget( VulkanContext *context ) : context( context )
     { }
 
     vk::Framebuffer ref;
     std::vector< VulkanTextureWrapper > buffers;
 
+    void cleanup( ) override;
     ~VulkanRenderTarget( ) override;
 };
 
@@ -34,6 +37,8 @@ private:
     std::shared_ptr< VulkanRenderTarget > currentRenderTarget;
     std::shared_ptr< VertexData > vertexDataAttachment = nullptr;
     std::shared_ptr< IndexData > indexDataAttachment = nullptr;
+
+    RenderArea renderArea;
 
     // In case we're rendering into the swapChain
     std::vector< std::unique_ptr< VulkanResourceLock > > swapChainImageAvailable;
@@ -51,6 +56,13 @@ private:
 
     std::string propertyVal_useMsaa = "false";
     std::string propertyVal_attachmentCount = "0";
+
+    vk::Viewport viewport { };
+    vk::Rect2D viewScissor { };
+
+    bool setDepthBias = false;
+    float depthBiasConstant;
+    float depthBiasSlope;
 public:
     explicit inline VulkanRenderPass( VulkanContext *context ) : context( context )
     {
@@ -72,12 +84,19 @@ public:
     void bindPerObject( std::shared_ptr< ShaderResource > resource ) override;
     std::string getProperty( const std::string& propertyName ) override;
 
+    [[nodiscard]] inline RenderArea getRenderArea( ) const override { return renderArea; };
+    const inline vk::Viewport& getViewport( ) { return viewport; };
+    const inline vk::Rect2D& getViewScissor( ) { return viewScissor; };
+    void updateViewport( const uint32_t& width, const uint32_t& height );
+
     void draw( ) override;
-    void submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) override;
+    bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) override;
     [[nodiscard]] const vk::RenderPass &getPassInstance( ) const;
     [[nodiscard]] vk::PipelineBindPoint getBoundPipelineBindPoint( ) const;
-    ~VulkanRenderPass( ) override;
     void presentPassToSwapChain( );
+
+    void cleanup( ) override;
+    ~VulkanRenderPass( ) override;
 };
 
 class VulkanRenderPassProvider : public IRenderPassProvider
@@ -102,8 +121,7 @@ public:
 
     ~VulkanRenderPassProvider( ) override = default;
 private:
-    VulkanTextureWrapper createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect,
-                                           const vk::SampleCountFlagBits& sampleCount );
+    VulkanTextureWrapper createAttachment( const vk::Format &format, const vk::ImageUsageFlags &usage, const vk::ImageAspectFlags &aspect, const vk::SampleCountFlagBits &sampleCount, const RenderTargetRequest request );
 };
 
 END_NAMESPACES

@@ -24,8 +24,8 @@ enum class ResourceAttachmentType
 
 struct OutputImageFlags
 {
-    bool msaaSampled : 1;
-    bool presentedImage : 1;
+    bool msaaSampled: 1;
+    bool presentedImage: 1;
 };
 
 struct OutputImage
@@ -47,35 +47,62 @@ struct IRenderTarget
     std::vector< std::shared_ptr< ShaderResource > > outputImages;
     std::unordered_map< std::string, std::shared_ptr< ShaderResource > > outputImageMap;
 
+    virtual void cleanup( ) = 0;
     virtual ~IRenderTarget( ) = default;
 };
 
 struct EnabledPassAttachments
 {
-    bool depthAttachment : 1;
-    bool msaaAttachment : 1;
+    bool depthAttachment: 1;
+    bool msaaAttachment: 1;
+};
+
+struct RenderArea
+{
+    int32_t x = 0;
+    int32_t y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+};
+
+enum class DependencySet
+{
+    DefaultColor,
+    ShadowMap
 };
 
 struct RenderPassRequest
 {
+    DependencySet dependencySet = DependencySet::DefaultColor;
+
     std::vector< OutputImage > outputImages;
     bool isFinalDrawPass = false;
+
+    RenderArea renderArea;
+
+    bool setDepthBias;
+    float depthBiasConstant;
+    float depthBiasSlope;
 };
 
 class IRenderPass
 {
 public:
-    virtual void create( const RenderPassRequest& request ) = 0;
-    virtual void frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline> >& pipelines ) = 0;
+    virtual void create( const RenderPassRequest &request ) = 0;
+    virtual void frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > > &pipelines ) = 0;
     virtual void begin( std::shared_ptr< IRenderTarget > renderTarget, std::array< float, 4 > clearColor ) = 0;
 
     virtual void bindPerFrame( std::shared_ptr< ShaderResource > resource ) = 0;
     virtual void bindPipeline( std::shared_ptr< IPipeline > pipeline ) = 0;
     virtual void bindPerObject( std::shared_ptr< ShaderResource > resource ) = 0;
 
+    virtual RenderArea getRenderArea( ) const = 0;
+
     virtual void draw( ) = 0;
-    virtual void submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) = 0;
-    virtual std::string getProperty( const std::string& propertyName ) = 0;
+    // Returns if the submission was successful or not
+    virtual bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) = 0;
+    virtual std::string getProperty( const std::string &propertyName ) = 0;
+    virtual void cleanup( ) = 0;
     virtual ~IRenderPass( ) = default;
 };
 
@@ -85,14 +112,16 @@ struct RenderTargetRequest
     RenderTargetType type;
     uint32_t frameIndex;
 
+    RenderArea renderArea;
+
     std::vector< OutputImage > outputImages; // will result in the size of output images, resources will be created with the names in order
 };
 
 class IRenderPassProvider
 {
 public:
-    virtual std::shared_ptr< IRenderPass > createRenderPass( const RenderPassRequest& request ) = 0;
-    virtual std::shared_ptr< IRenderTarget > createRenderTarget( const RenderTargetRequest& request ) = 0;
+    virtual std::shared_ptr< IRenderPass > createRenderPass( const RenderPassRequest &request ) = 0;
+    virtual std::shared_ptr< IRenderTarget > createRenderTarget( const RenderTargetRequest &request ) = 0;
     virtual ~IRenderPassProvider( ) = default;
 };
 

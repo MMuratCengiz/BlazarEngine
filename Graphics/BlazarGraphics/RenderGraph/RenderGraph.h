@@ -21,6 +21,7 @@ struct PassWrapper
 
     std::shared_ptr< Pass > ref;
     bool usesGeometryData = false;
+    bool attachesTextures;
 };
 
 class RenderGraph
@@ -33,6 +34,8 @@ private:
     std::vector< PassWrapper > passes;
     std::unordered_map< std::string, uint32_t > passMap;
     std::unordered_map< std::string, std::string > pipelineInputOutputDependencies;
+
+    bool redrawFrame = false;
     uint32_t frameIndex = 0;
 public:
     explicit RenderGraph( IRenderDevice* renderDevice, AssetManager* assetManager );

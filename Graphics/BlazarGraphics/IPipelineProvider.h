@@ -56,6 +56,7 @@ struct IPipeline
 {
     std::string name;
     BindPoint bindPoint;
+    virtual void cleanup( ) = 0;
     virtual ~IPipeline( ) = default;
 };
 

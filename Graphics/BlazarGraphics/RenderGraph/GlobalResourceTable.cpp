@@ -1,5 +1,7 @@
 #include "GlobalResourceTable.h"
 
+#include <utility>
+
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 /*
@@ -16,28 +18,20 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice *renderDevice, AssetMana
     globalModelResourcePlaceholder->dataAttachment->content = malloc( 4 * 4 * sizeof( float ) );
     globalModelResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
 
+    globalNormalModelResourcePlaceholder = createResource( );
+    globalNormalModelResourcePlaceholder->type = ResourceType::PushConstant;
+    globalNormalModelResourcePlaceholder->identifier = { StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) };
+    globalNormalModelResourcePlaceholder->dataAttachment = std::make_shared< IDataAttachment >( );
+    globalNormalModelResourcePlaceholder->dataAttachment->size = 4 * 4 * sizeof( float );
+    globalNormalModelResourcePlaceholder->dataAttachment->content = malloc( 4 * 4 * sizeof( float ) );
+    globalNormalModelResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
+
     frameResources.resize( renderDevice->getFrameCount( ) );
     resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ) );
 }
 
 void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable > &componentTable, const uint32_t &frameIndex )
 {
-/*    for ( auto it = frameResources[ frameIndex ].begin( ); it != frameResources[ frameIndex ].end( ); )
-    {
-        ShaderResourceWrapper &resourceWrapper = it->second;
-        if ( resourceWrapper.isAllocated && resourceWrapper.ref->loadStrategy == ResourceLoadStrategy::LoadPerFrame )
-        {
-            resourceWrapper.ref->deallocate( );
-            free( resourceWrapper.ref->dataAttachment->content );
-
-            it = frameResources[ frameIndex ].erase( it );
-        }
-        else
-        {
-            ++it;
-        }
-    }*/
-
     currentComponentTable = componentTable;
     resourcesUpdatedThisFrame.clear( );
     resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ), { } );
@@ -153,7 +147,7 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
         //---
     }
     data.modelTransformPtr = transformComponent;
-    data.referenceEntity = entity ;
+    data.referenceEntity = entity;
 
     return std::move( data );
 }
@@ -185,6 +179,9 @@ void GlobalResourceTable::setActiveGeometryModel( const GeometryData &data )
 {
     auto modelMat = DataAttachmentFormatter::formatModelMatrix( data.modelTransformPtr );
     memcpy( globalModelResourcePlaceholder->dataAttachment->content, &modelMat, globalModelResourcePlaceholder->dataAttachment->size );
+
+    auto normalMat = DataAttachmentFormatter::formatNormalMatrix( data.modelTransformPtr );
+    memcpy( globalNormalModelResourcePlaceholder->dataAttachment->content, &normalMat, globalModelResourcePlaceholder->dataAttachment->size );
 }
 
 void GlobalResourceTable::createEmptyImageResource( const OutputImage &image, const uint32_t &frameIndex )
@@ -210,6 +207,7 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::GeometryData ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::Material ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
+    FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
 
     auto resourceUpdatedThisFrame = resourcesUpdatedThisFrame[ frameIndex ].find( resourceName );
 
@@ -250,6 +248,26 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
     else
     {
         FUNCTION_BREAK( wrapper.ref->loadStrategy == ResourceLoadStrategy::LoadOnce )
+    }
+
+    auto customFormatter = customFormatters.find( resourceName );
+    if ( customFormatter != customFormatters.end( ) )
+    {
+        if ( wrapperAllocatedThisFrame )
+        {
+            wrapper.ref->dataAttachment = std::make_shared< IDataAttachment >( );
+        }
+
+        std::shared_ptr< IDataAttachment > &dataAttachment = wrapper.ref->dataAttachment;
+
+        free( dataAttachment->content );
+
+        auto content = customFormatter->second( currentComponentTable );
+
+        dataAttachment->size = content.size;
+        dataAttachment->content = content.data;
+
+        wrapper.ref->type = ResourceType::Uniform; // Todo maybe dynamic
     }
 
     if ( isEnvironmentLights )
@@ -295,6 +313,11 @@ std::shared_ptr< ShaderResource > GlobalResourceTable::getResource( const std::s
         return globalModelResourcePlaceholder;
     }
 
+    if ( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
+    {
+        return globalNormalModelResourcePlaceholder;
+    }
+
     auto findIt = frameResources[ frameIndex ].find( resourceName );
 
     if ( findIt == frameResources[ frameIndex ].end( ) )
@@ -336,6 +359,11 @@ void GlobalResourceTable::cleanGeometryData( GeometryData &geometryData )
     }
 }
 
+void GlobalResourceTable::registerCustomFormatter( const std::string &resourceName, FormatterFunc func )
+{
+    customFormatters[ resourceName ] = std::move( func );
+}
+
 std::vector< GeometryData > GlobalResourceTable::getGeometryList( )
 {
     return geometryList;
@@ -353,7 +381,7 @@ std::vector< GeometryData > GlobalResourceTable::getOutputGeometryList( const st
         ptr->createComponent< ECS::CMesh >( );
         ptr->getComponent< ECS::CMesh >( )->path = outputGeometry;
 
-        const auto& assetGeometry = assetManager->getMeshGeometry( outputGeometry );
+        const auto &assetGeometry = assetManager->getMeshGeometry( outputGeometry );
 
         outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ) );
 
@@ -398,6 +426,7 @@ GlobalResourceTable::~GlobalResourceTable( )
     }
 
     free( globalModelResourcePlaceholder->dataAttachment->content );
+    free( globalNormalModelResourcePlaceholder->dataAttachment->content );
 }
 
 END_NAMESPACES

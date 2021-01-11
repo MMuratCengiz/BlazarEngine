@@ -167,6 +167,8 @@ public:
 
     ~World( )
     {
+        Input::GlobalEventHandler::Instance( ).cleanup( );
+
         renderDevice->beforeDelete( );
 
         transformSystem.reset( );

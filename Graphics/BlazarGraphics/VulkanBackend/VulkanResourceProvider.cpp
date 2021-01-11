@@ -278,14 +278,7 @@ void BlazarEngine::Graphics::VulkanResourceLock::notify( )
 
 VulkanResourceLock::~VulkanResourceLock( )
 {
-    if ( lockType == ResourceLockType::Fence )
-    {
-        context->logicalDevice.destroyFence( fence );
-    }
-    else
-    {
-        context->logicalDevice.destroySemaphore( semaphore );
-    }
+    VulkanResourceLock::cleanup( );
 }
 
 const vk::Fence &VulkanResourceLock::getVkFence( )
@@ -296,6 +289,21 @@ const vk::Fence &VulkanResourceLock::getVkFence( )
 const vk::Semaphore &VulkanResourceLock::getVkSemaphore( )
 {
     return semaphore;
+}
+
+void VulkanResourceLock::cleanup( )
+{
+    FUNCTION_BREAK( resourceCleaned )
+    resourceCleaned = true;
+
+    if ( lockType == ResourceLockType::Fence )
+    {
+        context->logicalDevice.destroyFence( fence );
+    }
+    else
+    {
+        context->logicalDevice.destroySemaphore( semaphore );
+    }
 }
 
 END_NAMESPACES
