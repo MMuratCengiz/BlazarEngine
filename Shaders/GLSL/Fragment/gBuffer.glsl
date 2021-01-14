@@ -1,14 +1,16 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(set = 1, binding = 0) uniform sampler2D Texture1;
 layout(set = 2, binding = 0) uniform Material {
     vec4 diffuseColor;
     vec4 specularColor;
     vec4 textureScale;
 
     float shininess;
+    uint hasHeightMap;
 } mat;
+
+layout(set = 3, binding = 0) uniform sampler2D Texture1;
 
 layout (location = 0) in vec3 transitVertexPosition;
 layout (location = 1) in vec3 transitNormal;

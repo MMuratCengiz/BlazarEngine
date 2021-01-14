@@ -124,12 +124,14 @@ Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr
     textureScale.x = material->textureScaleOptions.scaleX ? transform->scale.x : 1.0f;
     textureScale.y = material->textureScaleOptions.scaleX ? transform->scale.y : 1.0f;
     textureScale.z = material->textureScaleOptions.scaleX ? transform->scale.z : 1.0f;
+    textureScale.w = 1.0f;
 
     return {
         material->diffuse,
         material->specular,
         textureScale,
-        material->shininess
+        material->shininess,
+        ( uint32_t ) (material->heightMap.path.empty( ) ? 0 : 1 )
     };
 }
 

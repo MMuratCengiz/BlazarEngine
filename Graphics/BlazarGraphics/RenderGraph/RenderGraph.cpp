@@ -1,6 +1,7 @@
 #include "RenderGraph.h"
 
 #include <utility>
+#include <boost/format.hpp>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -25,16 +26,14 @@ void RenderGraph::buildGraph( )
     // flatten pipeline input, saves a loop later
     for ( auto &pass: passes )
     {
-        std::unordered_map< std::string, bool > inputsFlattened;
-
         for ( const auto &pipelineInputs: pass.ref->pipelineInputs )
         {
             for ( const auto &input: pipelineInputs )
             {
-                if ( inputsFlattened.find( input ) == inputsFlattened.end( ) )
+                if ( pass.pipelineInputsMap.find( input ) == pass.pipelineInputsMap.end( ) )
                 {
                     pass.pipelineInputsFlat.push_back( input );
-                    inputsFlattened[ input ] = true;
+                    pass.pipelineInputsMap[ input ] = true;
                 }
             }
         }
@@ -101,7 +100,7 @@ void RenderGraph::preparePass( PassWrapper &pass )
     // Initialize inputs
     uint32_t pipelineIndex = 0;
 
-    for ( const auto& customFormatter: pass.ref->customFormatters )
+    for ( const auto &customFormatter: pass.ref->customFormatters )
     {
         globalResourceTable->registerCustomFormatter( customFormatter.first, customFormatter.second );
     }
@@ -118,6 +117,14 @@ void RenderGraph::preparePass( PassWrapper &pass )
                 {
                     pass.usesGeometryData = true;
                 }
+                else if ( input == "ScreenQuad" )
+                {
+                    pass.inputGeometry = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
+                }
+                else if ( input == "ScreenCube" )
+                {
+                    pass.inputGeometry = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
+                }
                 else
                 {
                     if ( input != StaticVars::getInputName( StaticVars::Input::Material ) )
@@ -128,12 +135,6 @@ void RenderGraph::preparePass( PassWrapper &pass )
                     if ( pipelineInputOutputDependencies.find( input ) == pipelineInputOutputDependencies.end( ) )
                     {
                         globalResourceTable->allocateResource( input, frameIndex );
-                    }
-
-                    // Todo fix this this is embarrassing
-                    if ( input == StaticVars::getInputName( StaticVars::Input::Material ) || input == StaticVars::getInputName( StaticVars::Input::SkyBox ) )
-                    {
-                        pass.attachesTextures = true;
                     }
                 }
             }
@@ -150,12 +151,6 @@ void RenderGraph::preparePass( PassWrapper &pass )
                 if ( pipelineInputOutputDependencies.find( input ) == pipelineInputOutputDependencies.end( ) )
                 {
                     globalResourceTable->allocateResource( input, frameIndex );
-                }
-
-                // Todo fix this this is embarrassing
-                if ( input == StaticVars::getInputName( StaticVars::Input::Material ) || input == StaticVars::getInputName( StaticVars::Input::SkyBox ) )
-                {
-                    pass.attachesTextures = true;
                 }
             }
         }
@@ -182,7 +177,7 @@ void RenderGraph::preparePass( PassWrapper &pass )
             renderTargetRequest.type = RenderTargetType::Intermediate;
             renderTargetRequest.renderArea = pass.ref->renderPassRequest.renderArea;
 
-            for ( const auto& output: pass.ref->outputs )
+            for ( const auto &output: pass.ref->outputs )
             {
                 if ( output.flags.presentedImage )
                 {
@@ -231,17 +226,18 @@ void RenderGraph::execute( )
 
 void RenderGraph::executePass( const PassWrapper &pass )
 {
+    auto logEntry = boost::format( "Running pass with name: %1%." ) % pass.ref->name;
+    TRACE( "RenderGraph", VERBOSITY_LOW, logEntry.str( ).c_str( ) )
+
     std::vector< GeometryData > geometries;
 
     if ( pass.usesGeometryData )
     {
         geometries = globalResourceTable->getGeometryList( );
     }
-    else if ( !pass.dependencies.empty( ) )
+    else
     {
-        // All dependencies should have similar output geometry
-        const PassWrapper &firstPassDependency = passes[ passMap[ pass.dependencies[ 0 ] ] ];
-        geometries = globalResourceTable->getOutputGeometryList( BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare ) );
+        geometries = globalResourceTable->getOutputGeometryList( pass.inputGeometry );
     }
 
     std::shared_ptr< IRenderPass > renderPass = pass.renderPass;
@@ -284,26 +280,14 @@ void RenderGraph::executePass( const PassWrapper &pass )
         int selectedPipeline = pass.ref->selectPipeline( geometry.referenceEntity );
         renderPass->bindPipeline( pass.pipelines[ selectedPipeline ] );
 
-        if ( pass.attachesTextures )
+        for ( const auto &resource: geometry.resources )
         {
-            for ( auto &texture: geometry.textures )
+            if ( pass.pipelineInputsMap.find( resource.boundResourceName ) != pass.pipelineInputsMap.end( ) )
             {
-                renderPass->bindPerObject( texture );
+                renderPass->bindPerObject( resource.ref );
             }
         }
 
-        if ( geometry.vertices != nullptr )
-        {
-            renderPass->bindPerObject( geometry.vertices );
-        }
-        if ( geometry.indices != nullptr )
-        {
-            renderPass->bindPerObject( geometry.indices );
-        }
-        if ( geometry.material != nullptr && pass.attachesTextures )
-        {
-            renderPass->bindPerObject( geometry.material );
-        }
         if ( geometry.modelTransformPtr != nullptr )
         {
             globalResourceTable->setActiveGeometryModel( geometry );
@@ -324,9 +308,12 @@ void RenderGraph::executePass( const PassWrapper &pass )
             outputResource->prepareForUsage( ResourceUsage::ShaderInputSampler2D );
         }
     }
+
+    logEntry = boost::format( "Pass with name: %1% ended." ) % pass.ref->name;
+    TRACE( "RenderGraph", VERBOSITY_LOW, logEntry.str( ).c_str( ) )
 }
 
-void RenderGraph::bindAdaptedInputs( const PassWrapper &pass, std::shared_ptr< IRenderPass > &renderPass, int pipelineIndex, const bool& bindPerFrame )
+void RenderGraph::bindAdaptedInputs( const PassWrapper &pass, std::shared_ptr< IRenderPass > &renderPass, int pipelineIndex, const bool &bindPerFrame )
 {
     for ( auto &input: pass.adaptedInputs[ pipelineIndex ] )
     {
@@ -376,19 +363,19 @@ RenderGraph::~RenderGraph( )
 {
     globalResourceTable.reset( );
 
-    for ( auto & pass: passes )
+    for ( auto &pass: passes )
     {
-        for ( auto & lock: pass.executeLocks )
+        for ( auto &lock: pass.executeLocks )
         {
             lock->cleanup( );
         }
 
-        for ( auto & pipeline: pass.pipelines )
+        for ( auto &pipeline: pass.pipelines )
         {
             pipeline->cleanup( );
         }
 
-        for ( auto & renderTarget: pass.renderTargets )
+        for ( auto &renderTarget: pass.renderTargets )
         {
             renderTarget->cleanup( );
         }

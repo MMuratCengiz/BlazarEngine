@@ -158,6 +158,13 @@ void GLSLShaderSet::createDescriptorSetBinding( const spirv_cross::Compiler &com
 
     DescriptorSet &descriptorSet = descriptorSetMap[ decoration.set ];
 
+    if ( descriptorSet.descriptorSetBindingMap.find( decoration.name ) != descriptorSet.descriptorSetBindingMap.end( ) )
+    {
+        updateDecoration( bindingCreateInfo, decoration, descriptorSet );
+
+        return;
+    }
+
     vk::DescriptorSetLayoutBinding &layoutBinding = descriptorSet.descriptorSetLayoutBindings.emplace_back( vk::DescriptorSetLayoutBinding { } );
 
     layoutBinding.binding = decoration.binding;
@@ -170,12 +177,52 @@ void GLSLShaderSet::createDescriptorSetBinding( const spirv_cross::Compiler &com
     binding.size = decoration.size;
     binding.type = bindingCreateInfo.type;
     binding.name = decoration.name;
-    binding.binding = layoutBinding;
+    binding.layout = layoutBinding;
 
     descriptorSet.descriptorSetBindingMap[ decoration.name ] = binding;
     descriptorSets.emplace_back( descriptorSet );
 }
 
+void GLSLShaderSet::updateDecoration( const GLSLShaderSet::DescriptorBindingCreateInfo &bindingCreateInfo, const GLSLShaderSet::SpvDecoration &decoration, const DescriptorSet &descriptorSet )
+{
+    DescriptorSetBinding &binding = descriptorSetMap[ decoration.set ].descriptorSetBindingMap[ decoration.name ];
+    binding.layout.stageFlags |= bindingCreateInfo.stage;
+
+    for ( auto & set: descriptorSets )
+    {
+        for( auto & setBinding: set.descriptorSetBindings )
+        {
+            if ( setBinding.name == binding.name )
+            {
+                setBinding.layout.stageFlags |= bindingCreateInfo.stage;
+
+                for( auto & layoutBinding: set.descriptorSetLayoutBindings )
+                {
+                    if ( layoutBinding.binding == decoration.binding )
+                    {
+                        layoutBinding.stageFlags |= bindingCreateInfo.stage;
+                    }
+                }
+            }
+        }
+    }
+
+    for( auto & setBinding: descriptorSetMap[ decoration.set ].descriptorSetBindings )
+    {
+        if ( setBinding.name == binding.name )
+        {
+            setBinding.layout.stageFlags |= bindingCreateInfo.stage;
+        }
+    }
+
+    for( auto & layoutBinding: descriptorSetMap[ decoration.set ].descriptorSetLayoutBindings )
+    {
+        if ( layoutBinding.binding == decoration.binding )
+        {
+            layoutBinding.stageFlags |= bindingCreateInfo.stage;
+        }
+    }
+}
 
 GLSLShaderSet::GLSLType GLSLShaderSet::spvToGLSLType( const spirv_cross::SPIRType &type )
 {

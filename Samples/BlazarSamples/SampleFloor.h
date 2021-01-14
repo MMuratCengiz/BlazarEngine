@@ -19,7 +19,9 @@ public:
 
         auto material = createComponent< ECS::CMaterial >( );
         auto &texInfo = material->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/MartianBarrensRocky_albedo.png";
+        texInfo.path = "/assets/textures/Stone_Base_Color.tga";
+
+//        material->heightMap.path = "/assets/textures/Stone_Height.tga";
 
         material->textureScaleOptions.scaleX = true;
         material->textureScaleOptions.scaleY = true;

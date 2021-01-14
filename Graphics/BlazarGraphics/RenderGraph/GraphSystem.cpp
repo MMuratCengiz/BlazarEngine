@@ -7,11 +7,10 @@ GraphSystem::GraphSystem( IRenderDevice *renderDevice, AssetManager *assetManage
     renderGraph = std::make_unique< RenderGraph >( this->renderDevice, this->assetManager );
 
     renderGraph->addPass( CommonPasses::createShadowMapPass( this->renderDevice ) );
-
-#ifndef ENABLE_SHADOW_DEBUG_OUTPUT
     renderGraph->addPass( CommonPasses::createGBufferPass( this->renderDevice ) );
-    renderGraph->addPass( CommonPasses::createFinalDrawPass( this->renderDevice ) );
-#endif
+    renderGraph->addPass( CommonPasses::createLightingPass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createSkyBoxPass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createPresentPass( this->renderDevice ) );
 
     renderGraph->buildGraph( );
 }

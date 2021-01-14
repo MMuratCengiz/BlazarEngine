@@ -39,7 +39,7 @@ struct DescriptorSetBinding
 {
     uint16_t index;
     vk::DescriptorType type;
-    vk::DescriptorSetLayoutBinding binding;
+    vk::DescriptorSetLayoutBinding layout;
     vk::DeviceSize size;
     std::string name;
 };
@@ -152,6 +152,7 @@ private:
     void createDescriptorSetBinding( const spirv_cross::Compiler &compiler, const DescriptorBindingCreateInfo &bindingCreateInfo );
     GLSLType spvToGLSLType( const spirv_cross::SPIRType &type );
     SpvDecoration getDecoration( const spirv_cross::Compiler &compiler, const spirv_cross::Resource &resource );
+    void updateDecoration( const DescriptorBindingCreateInfo &bindingCreateInfo, const SpvDecoration &decoration, const DescriptorSet &descriptorSet );
 };
 
 

@@ -63,36 +63,51 @@ void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity 
 void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity )
 {
     FUNCTION_BREAK( !entity->hasComponent< ECS::CMesh >( ) )
+    FUNCTION_BREAK( entity->hasComponent< ECS::CCubeMap >( ) )
 
     geometryList.emplace_back( std::move( createGeometryData( entity ) ) );
 
     entityGeometryMap[ entity->getUID( ) ] = geometryList.size( ) - 1;
 }
 
-GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity )
+GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string& outputGeometry )
 {
-
     auto transformComponent = entity->getComponent< ECS::CTransform >( );
     auto meshComponent = entity->getComponent< ECS::CMesh >( );
     auto materialComponent = entity->getComponent< ECS::CMaterial >( );
 
     MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
 
+    std::string parentBoundingName = StaticVars::getInputName( StaticVars::Input::GeometryData );
+
+    if ( outputGeometry == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube ) )
+    {
+        parentBoundingName = "ScreenCube";
+    }
+
+    if ( outputGeometry == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare ) )
+    {
+        parentBoundingName = "ScreenQuad";
+    }
+
     GeometryData data { };
     /*
      * Create vertex data:
      */
-    data.vertices = createResource( ResourceType::VertexData, ResourceLoadStrategy::LoadOnce );
-    data.vertices->identifier = { "VertexData" };
+    auto vertices = createResource( ResourceType::VertexData, ResourceLoadStrategy::LoadOnce );
+
+    vertices->identifier = { "VertexData" };
 
     std::shared_ptr< VertexData > vertexData = std::make_shared< VertexData >( );
     vertexData->vertexCount = geometry.vertexCount;
     vertexData->content = geometry.vertices.data( );
     vertexData->size = geometry.vertices.size( ) * sizeof( float );
 
-    data.vertices->dataAttachment = std::move( vertexData );
-    data.vertices->bindStrategy = ResourceBindStrategy::BindPerObject;
-    data.vertices->allocate( );
+    vertices->dataAttachment = std::move( vertexData );
+    vertices->bindStrategy = ResourceBindStrategy::BindPerObject;
+    vertices->allocate( );
+
+    data.resources.push_back( { true, parentBoundingName, std::move( vertices ) } );
     // ---
 
     /*
@@ -100,15 +115,17 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
      */
     if ( geometry.hasIndices )
     {
-        data.indices = createResource( ResourceType::IndexData, ResourceLoadStrategy::LoadOnce );
-        data.indices->identifier = { "IndexData" };
-        data.indices->bindStrategy = ResourceBindStrategy::BindPerObject;
+        auto indices = createResource( ResourceType::IndexData, ResourceLoadStrategy::LoadOnce );
+        indices->identifier = { "IndexData" };
+        indices->bindStrategy = ResourceBindStrategy::BindPerObject;
         std::shared_ptr< IndexData > indexData = std::make_shared< IndexData >( );
         indexData->indexCount = geometry.indices.size( );
         indexData->content = geometry.indices.data( );
         indexData->size = geometry.indices.size( ) * sizeof( uint32_t );
-        data.indices->dataAttachment = std::move( indexData );
-        data.indices->allocate( );
+        indices->dataAttachment = std::move( indexData );
+        indices->allocate( );
+
+        data.resources.push_back( { true, parentBoundingName, std::move( indices ) } );
     }
     //---
     /*
@@ -123,26 +140,44 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
         shaderData.shininess = materialComponent->shininess;
         shaderData.textureScale = glm::vec4( transformComponent->scale, 1.0f );
 
-        data.material = createResource( );
-        data.material->identifier = { StaticVars::getInputName( StaticVars::Input::Material ) };
-        data.material->bindStrategy = ResourceBindStrategy::BindPerObject;
-        attachStructDataAttachment( data.material, DataAttachmentFormatter::formatMaterialComponent( materialComponent, transformComponent ), true );
-        data.material->allocate( );
+        auto material = createResource( );
+        material->identifier = { StaticVars::getInputName( StaticVars::Input::Material ) };
+        material->bindStrategy = ResourceBindStrategy::BindPerObject;
+        attachStructDataAttachment( material, DataAttachmentFormatter::formatMaterialComponent( materialComponent, transformComponent ), true );
+        material->allocate( );
+
+        data.resources.push_back( { true, "Material", std::move( material ) } );
         //---
         /*
          * Create texture data:
          */
-        data.textures.resize( materialComponent->textures.size( ) );
-
-        for ( int i = 0; i < data.textures.size( ); ++i )
+        for ( int i = 0; i < materialComponent->textures.size( ); ++i )
         {
-            data.textures[ i ] = createResource( ResourceType::Sampler2D, ResourceLoadStrategy::LoadOnce, ResourcePersistStrategy::StoreOnDeviceMemory, ResourceShaderStage::Fragment );
-            data.textures[ i ]->identifier = { "Texture", i + 1 };
+            auto texture = createResource( ResourceType::Sampler2D, ResourceLoadStrategy::LoadOnce, ResourcePersistStrategy::StoreOnDeviceMemory, ResourceShaderStage::Fragment );
+            texture->identifier = { "Texture", i + 1 };
             auto textureData = assetManager->getImage( materialComponent->textures[ i ].path );
             textureData->textureInfo = materialComponent->textures[ i ];
-            data.textures[ i ]->dataAttachment = std::move( textureData );
-            data.textures[ i ]->bindStrategy = ResourceBindStrategy::BindPerObject;
-            data.textures[ i ]->allocate( );
+            texture->dataAttachment = std::move( textureData );
+            texture->bindStrategy = ResourceBindStrategy::BindPerObject;
+            texture->allocate( );
+
+            data.resources.push_back( { true, "Material", std::move( texture ) } );
+        }
+        //---
+        /*
+         * Create HeightMap data:
+         */
+        if ( !materialComponent->heightMap.path.empty( ) )
+        {
+            auto texture = createResource( ResourceType::Sampler2D, ResourceLoadStrategy::LoadOnce, ResourcePersistStrategy::StoreOnDeviceMemory, ResourceShaderStage::Vertex );
+            texture->identifier = { "HeightMap" };
+            auto textureData = assetManager->getImage( materialComponent->heightMap.path );
+            textureData->textureInfo = materialComponent->heightMap;
+            texture->dataAttachment = std::move( textureData );
+            texture->bindStrategy = ResourceBindStrategy::BindPerObject;
+            texture->allocate( );
+
+            data.resources.push_back(  { true, "Material", std::move( texture ) } );
         }
         //---
     }
@@ -204,10 +239,13 @@ void GlobalResourceTable::createEmptyImageResource( const OutputImage &image, co
 
 void GlobalResourceTable::allocateResource( const std::string &resourceName, const uint32_t &frameIndex )
 {
+    // Todo maybe specify which ones are geometry data that is specified else where
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::GeometryData ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::Material ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
+    FUNCTION_BREAK( resourceName == "Texture1" )
+    FUNCTION_BREAK( resourceName == "HeightMap" )
 
     auto resourceUpdatedThisFrame = resourcesUpdatedThisFrame[ frameIndex ].find( resourceName );
 
@@ -340,22 +378,15 @@ void GlobalResourceTable::prepareResource( const std::string &resourceName, cons
 
 void GlobalResourceTable::cleanGeometryData( GeometryData &geometryData )
 {
-    geometryData.vertices->deallocate( );
-
-    if ( geometryData.indices != nullptr )
+    for ( auto & resource: geometryData.resources )
     {
-        geometryData.indices->deallocate( );
-    }
+        resource.ref->deallocate( );
 
-    if ( geometryData.material != nullptr )
-    {
-        geometryData.material->deallocate( );
-        free( geometryData.material->dataAttachment->content );
-    }
-
-    for ( auto &tex: geometryData.textures )
-    {
-        tex->deallocate( );
+        /* todo wtf crashes
+        if ( resource.ref->dataAttachment != nullptr && resource.ref->dataAttachment->content && !resource.ref->dataAttachment->autoFree)
+        {
+            free( resource.ref->dataAttachment->content );
+        }*/
     }
 }
 
@@ -383,7 +414,7 @@ std::vector< GeometryData > GlobalResourceTable::getOutputGeometryList( const st
 
         const auto &assetGeometry = assetManager->getMeshGeometry( outputGeometry );
 
-        outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ) );
+        outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ), outputGeometry );
 
         geometryData.emplace_back( outputGeometryMap[ outputGeometry ] );
     }

@@ -20,8 +20,8 @@ struct Material
     alignas( 16 ) glm::vec4 diffuse;
     alignas( 16 ) glm::vec4 specular;
     alignas( 16 ) glm::vec4 textureScale;
-
     alignas( 4 ) float shininess;
+    alignas( 4 ) uint32_t hasHeightMap;
 };
 
 struct DirectionalLight
@@ -59,7 +59,7 @@ struct EnvironmentLights
     alignas( 4 ) int pointLightCount { };
     alignas( 4 ) int spotLightCount { };
 
-    alignas( 16 ) AmbientLight ambientLights[ MAX_ALLOWED_LIGHTS ] { };
+    alignas( 16 ) AmbientLight ambientLights[MAX_ALLOWED_LIGHTS] { };
     alignas( 16 ) DirectionalLight directionalLights[MAX_ALLOWED_LIGHTS] { };
     alignas( 16 ) PointLight pointLights[MAX_ALLOWED_LIGHTS] { };
     alignas( 16 ) SpotLight spotLights[MAX_ALLOWED_LIGHTS] { };
@@ -69,12 +69,12 @@ struct ViewProjection
 {
     glm::mat4 view;
     glm::mat4 projection;
-} ;
+};
 
 class DataAttachmentFormatter
 {
 public:
-    static Material formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform >& transform );
+    static Material formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform > &transform );
     static ViewProjection formatCamera( const std::shared_ptr< ECS::ComponentTable > &components );
     static EnvironmentLights formatLightingEnvironment( const std::shared_ptr< ECS::ComponentTable > &components );
     static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform );

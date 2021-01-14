@@ -68,5 +68,3 @@
                                          0.0f,  0.0f, 0.5f, 1.0f)
 
 #include "Constants.h"
-
-//#define ENABLE_SHADOW_DEBUG_OUTPUT

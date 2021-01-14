@@ -12,16 +12,13 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 struct ShaderResourceWrapper
 {
     bool isAllocated = false;
+    std::string boundResourceName;
     std::shared_ptr< ShaderResource > ref;
 };
 
 struct GeometryData
 {
-    std::shared_ptr< ShaderResource > vertices;
-    std::shared_ptr< ShaderResource > indices;
-    std::shared_ptr< ShaderResource > material;
-    std::vector< std::shared_ptr< ShaderResource > > textures;
-
+    std::vector< ShaderResourceWrapper > resources;
     std::shared_ptr< ECS::CTransform > modelTransformPtr;
     std::shared_ptr< ECS::IGameEntity > referenceEntity;
 };
@@ -104,7 +101,7 @@ private:
         memcpy( dataAttachment->content, &structData, dataAttachment->size );
     }
 
-    GeometryData createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity );
+    GeometryData createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string& outputGeometry = "" );
     void createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity );
     void createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities );
     static void cleanGeometryData( GeometryData &geometryData ) ;

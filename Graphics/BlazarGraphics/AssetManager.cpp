@@ -66,7 +66,10 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity >& rootEnt
         throw std::runtime_error( ss.str( ) );
     }
 
-    onEachNode( rootEntity, path, scene, scene->mRootNode );
+    if ( scene->mRootNode->mNumChildren > 0 || scene->mRootNode->mNumMeshes > 0 )
+    {
+        onEachNode( rootEntity, path, scene, scene->mRootNode );
+    }
     // TODO handle scene->mAnimations
 }
 
@@ -77,9 +80,13 @@ void AssetManager::onEachNode( const std::shared_ptr< ECS::IGameEntity >& curren
     // Todo test child mechanism
     for ( unsigned int i = 0; i < pNode->mNumChildren; ++i )
     {
-        std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
-        currentEntity->addChild( child );
-        onEachNode( child, currentRootPath, scene, pNode->mChildren[ i ] );
+        if ( pNode->mChildren[ i ]->mNumChildren > 0 || pNode->mChildren[ i ]->mNumMeshes > 0 )
+        {
+            std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
+            currentEntity->addChild( child );
+
+            onEachNode( child, currentRootPath, scene, pNode->mChildren[ i ] );
+        }
     }
 
     for ( unsigned int m = 0; m < pNode->mNumMeshes; m++ )

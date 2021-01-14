@@ -1,6 +1,7 @@
 #include "DescriptorManager.h"
 
 #include <utility>
+#include <BlazarCore/Utilities.h>
 
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
@@ -84,6 +85,10 @@ DescriptorManager::DescriptorManager( VulkanContext * context, std::shared_ptr< 
 
         return o1.set < o2.set;
     } );
+
+    frameUpdatedTextures.resize( this->context->swapChainImages.size( ) );
+
+    createNullResources( );
 }
 
 void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout, const uint32_t& objectIndex  )
@@ -267,6 +272,8 @@ void DescriptorManager::updateTexture( const uint32_t &frameIndex, const std::st
     // Todo + texture index when texture arrays are implemented
     const std::string &key = getUniformKey( uniformName );
 
+    frameUpdatedTextures[ frameIndex ][ uniformName ] = true;
+
     UniformLocation &uniformLocation = uniformLocations[ key ];
     BindingUpdateInfo updateInfo {
             uniformLocation.binding,
@@ -300,16 +307,28 @@ std::vector< vk::DescriptorSet > DescriptorManager::getOrderedSets( const uint32
 
     for ( uint32_t i = 0; i < set.size( ); ++i )
     {
+        std::string &uniformName = orders[ i ].name;
+
         if ( orders[ i ].type == vk::DescriptorType::eCombinedImageSampler )
         {
-            const auto &objects = textureSetMaps[ orders[ i ].name ];
+            auto &objects = textureSetMaps[ uniformName ];
             // If it is an object updated per frame and not per object, only the 0th index will have values
             // Todo maybe add the possibility to mark an descriptorSet as per frame or per object
+            // In case an image input is not provided pass a null image
+            if ( objects.empty( ) || frameUpdatedTextures[ frame ].find( uniformName ) == frameUpdatedTextures[ frame ].end( ) )
+            {
+                auto logEntry = boost::format( "Note, the shader input with name: %1% has no matching parameter a null value is being passed." ) % uniformName;
+                TRACE( "DescriptorManager", VERBOSITY_LOW, logEntry.str( ).c_str( ) )
+                updateTexture( frame, uniformName, emptyImage, objectIndex );
+                objects = textureSetMaps[ uniformName ];
+            }
+
             set[ i ] = objects[ objectIndex ].empty( ) ? objects[ 0 ][ frame ] : objects[ objectIndex ][ frame ];
         }
         else
         {
-            const auto &objects = uniformSetMaps[ orders[ i ].name ];
+            const auto &objects = uniformSetMaps[ uniformName ];
+
             set[ i ] = objects[ objectIndex ].empty( ) ? objects[ 0 ][ frame ] : objects[ objectIndex ][ frame ];
         }
     }
@@ -343,8 +362,10 @@ std::string DescriptorManager::getUniformKey( const std::string &uniformName, co
 
 DescriptorManager::~DescriptorManager( )
 {
-    context->logicalDevice.destroySampler( sampler );
-    context->logicalDevice.destroyImageView( imageView );
+    free( nullAttachment->content );
+    context->vma.destroyImage( emptyImage.image, emptyImage.allocation );
+    context->logicalDevice.destroySampler( emptyImage.sampler );
+    context->logicalDevice.destroyImageView( emptyImage.imageView );
 
     for ( auto &layout: layouts )
     {
@@ -361,6 +382,24 @@ DescriptorManager::~DescriptorManager( )
 
     context->logicalDevice.destroyDescriptorPool( uniformDescriptorPool );
     context->logicalDevice.destroyDescriptorPool( samplerDescriptorPool );
+}
+
+void DescriptorManager::createNullResources( )
+{
+    commandExecutor = std::make_shared< VulkanCommandExecutor >( context );
+    nullAttachment = std::make_shared< SamplerDataAttachment >( );
+    nullAttachment->content = new int[4]{ 0, 0, 0, 0 };
+    nullAttachment->width = 1;
+    nullAttachment->height = 1;
+    nullAttachment->textureInfo = { };
+    nullAttachment->format = ResourceImageFormat::R8G8B8A8Srgb;
+
+    TextureLoadArguments textureLoadArguments{ };
+    textureLoadArguments.image = nullAttachment;
+    textureLoadArguments.commandExecutor = commandExecutor;
+    textureLoadArguments.context = context;
+
+    VulkanSamplerAllocator::load( textureLoadArguments, &emptyImage );
 }
 
 END_NAMESPACES

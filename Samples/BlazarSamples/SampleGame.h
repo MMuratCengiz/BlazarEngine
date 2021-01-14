@@ -31,6 +31,11 @@ class SampleGame : public Scene::IPlayable
 {
     Scene::World *world;
 
+    std::shared_ptr< ECS::IGameEntity > cuteBoat;
+    std::shared_ptr< ECS::IGameEntity > tree1;
+    std::shared_ptr< ECS::IGameEntity > tree2;
+    std::shared_ptr< ECS::IGameEntity > tree3;
+
     std::shared_ptr< Scene::Scene > initialScene;
     std::shared_ptr< FpsCamera > camera;
     std::shared_ptr< ECS::DynamicGameEntity > sceneLights;

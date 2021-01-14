@@ -19,7 +19,6 @@ void SampleGame::init( )
     sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = glm::vec4( front - pos, 1.0f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec4( 0.0f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.8f;
-
 /*
     sceneLights[ 2 ]->createComponent< ECS::CPointLight >( );
     sceneLights[ 2 ]->getComponent< ECS::CPointLight >( )->position = glm::vec4( -0.6f, 1.5f, 7.4f, 1.0f );
@@ -49,16 +48,58 @@ void SampleGame::init( )
 //    sampleWolf = std::make_shared< SampleAnimatedWolf >( );
     smallCrate = std::make_shared< SampleSmallCrate >( );
 
+    // Tree1
+    tree1 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type1 04.dae" ) );
+
+    for ( auto& child: tree1->getChildren( ) )
+    {
+        auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+        texInfo.path = "/assets/textures/Colorsheet Tree Normal.png";
+    }
+
+    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree1.get( ), glm::vec3( 4.0f, 0.15f, 2.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( tree1.get( ), { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( -0.0f, 0.0f, 0.0f ) } );
+    BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( tree1.get( ), glm::vec3( 0.5f, 0.5f, 0.5f ));
+
+    // Burito Boat
+    cuteBoat = world->getAssetManager( )->createEntity( PATH( "/assets/models/cute_boat_modified.dae" ) );
+
+    for ( auto& child: cuteBoat->getChildren( ) )
+    {
+        auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+        texInfo.path = "/assets/textures/paper_ship.jpg";
+    }
+
+    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( cuteBoat.get( ), glm::vec3( 6.0f, 0.15f, 3.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( cuteBoat.get( ), { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( -90.0f, 0.0f, 0.0f ) } );
+    BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( cuteBoat.get( ), glm::vec3( 0.5f, 0.5f, 0.5f ));
+
+    // Tree1
+    tree2 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type3 04.dae" ) );
+
+    for ( auto& child: tree2->getChildren( ) )
+    {
+        auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+        texInfo.path = "/assets/textures/Colorsheet Tree Normal.png";
+    }
+
+    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree2.get( ), glm::vec3( -4.0f, 0.15f, 2.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( tree2.get( ), { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( -0.0f, 0.0f, 0.0f ) } );
+    BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( tree2.get( ), glm::vec3( 0.5f, 0.5f, 0.5f ));
+
     initialScene = std::make_shared< Scene::Scene >( );
     initialScene->addEntity( sceneLights );
     initialScene->addEntity( cameraComponent );
     initialScene->addEntity( car1 );
     initialScene->addEntity( car2 );
+    initialScene->addEntity( tree1 );
+    initialScene->addEntity( tree2 );
+    initialScene->addEntity( cuteBoat );
 //    initialScene->addEntity( cone );
     initialScene->addEntity( floor );
     initialScene->addEntity( crate );
     initialScene->addEntity( smallCrate );
-//    initialScene->addEntity( sky );
+    initialScene->addEntity( sky );
 //    initialScene->addEntity( sampleWolf );
 //    initialScene->addEntity( sampleMovingCrate );
     world->setScene( initialScene );

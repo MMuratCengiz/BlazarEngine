@@ -56,7 +56,7 @@ ADD_LIBRARY(BlazarGraphics ${BlazarGraphicsSources})
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
 
 SET(INCLUDE_BOOST_TARGET BlazarGraphics)
-SET(REQUESTED_BOOST_LIBS thread)
+SET(REQUESTED_BOOST_LIBS thread format)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
 

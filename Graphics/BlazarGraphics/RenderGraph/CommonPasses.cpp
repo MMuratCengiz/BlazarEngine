@@ -62,111 +62,46 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     return gBufferPass;
 }
 
-std::shared_ptr< Pass > CommonPasses::createDefaultPass( IRenderDevice *renderDevice )
+std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderDevice )
 {
-    auto defaultPass = std::make_shared< Pass >( "defaultPass" );
-    defaultPass->pipelineInputs.resize( 2 );
-    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
-    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
-    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
-    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
-    defaultPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
+    auto lightingPass = std::make_shared< Pass >( "lightingPass" );
+    lightingPass->pipelineInputs.resize( 1 );
+    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_AlbedoSpec" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Scene" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
+    lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
+    lightingPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
 
-    defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
-    defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
-    defaultPass->pipelineInputs[ 1 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
-
-    auto &depthBuffer = defaultPass->outputs.emplace_back( );
-    depthBuffer.outputResourceName = "depthBuffer";
-    depthBuffer.imageFormat = ResourceImageFormat::BestDepthFormat;
-    depthBuffer.flags.msaaSampled = true;
-    depthBuffer.attachmentType = ResourceAttachmentType::Depth;
-
-    auto &defaultPass_Result = defaultPass->outputs.emplace_back( OutputImage { } );
-    defaultPass_Result.outputResourceName = "defaultPass_Result";
-    defaultPass_Result.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
-    defaultPass_Result.flags.msaaSampled = true;
-    defaultPass_Result.attachmentType = ResourceAttachmentType::Color;
-
-    auto &defaultPass_ResultRed = defaultPass->outputs.emplace_back( OutputImage { } );
-    defaultPass_ResultRed.outputResourceName = "defaultPass_ResultRed";
-    defaultPass_ResultRed.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
-    defaultPass_ResultRed.flags.msaaSampled = true;
-    defaultPass_ResultRed.attachmentType = ResourceAttachmentType::Color;
-
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
-
-    RenderPassRequest renderPassRequest { };
-    renderPassRequest.outputImages = defaultPass->outputs;
-
-    defaultPass->renderPassRequest = renderPassRequest;
-
-    PipelineRequest &pipelineRequest = defaultPass->pipelineRequests.emplace_back( );
-
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/default.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/default.spv" );
-    pipelineRequest.enabledPipelineStages = { true, true };
-    pipelineRequest.cullMode = ECS::CullMode::None;
-    pipelineRequest.depthCompareOp = CompareOp::Less;
-
-    PipelineRequest &cubeMapPipelineRequest = defaultPass->pipelineRequests.emplace_back( );
-
-    cubeMapPipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/skybox_default.spv" );
-    cubeMapPipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/skybox_default.spv" );
-    cubeMapPipelineRequest.enabledPipelineStages = { true, true };
-    cubeMapPipelineRequest.cullMode = ECS::CullMode::None;
-    cubeMapPipelineRequest.depthCompareOp = CompareOp::LessOrEqual;
-
-    defaultPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
-    {
-        return entity->hasComponent< ECS::CCubeMap >( ) ? 1 : 0;
-    };
-
-    return defaultPass;
-}
-
-std::shared_ptr< Pass > CommonPasses::createFinalDrawPass( IRenderDevice *renderDevice )
-{
-    auto finalDrawPass = std::make_shared< Pass >( "defaultFinal" );
-    finalDrawPass->pipelineInputs.resize( 1 );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( "gBuffer_AlbedoSpec" );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( "gBuffer_Scene" );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
-    finalDrawPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
-
-    auto &presentImage = finalDrawPass->outputs.emplace_back( OutputImage { } );
-    presentImage.outputResourceName = "presentImage";
+    auto &presentImage = lightingPass->outputs.emplace_back( OutputImage { } );
+    presentImage.outputResourceName = "litScene";
     presentImage.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
     presentImage.flags.msaaSampled = false;
-    presentImage.flags.presentedImage = true;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
-    renderPassRequest.isFinalDrawPass = true;
 
-    finalDrawPass->renderPassRequest = renderPassRequest;
+    lightingPass->renderPassRequest = renderPassRequest;
 
-    PipelineRequest &pipelineRequest = finalDrawPass->pipelineRequests.emplace_back( );
+    PipelineRequest &pipelineRequest = lightingPass->pipelineRequests.emplace_back( );
 
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/default_final.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/default_final.spv" );
+    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
+    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/lighting_pass.spv" );
     pipelineRequest.enabledPipelineStages = { true, true };
     pipelineRequest.cullMode = ECS::CullMode::FrontFace;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    finalDrawPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    lightingPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
         return 0;
     };
 
-    return finalDrawPass;
+    return lightingPass;
 }
 
 std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *renderDevice )
@@ -175,9 +110,6 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     shadowMapPass->pipelineInputs.resize( 1 );
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
-#ifdef ENABLE_SHADOW_DEBUG_OUTPUT
-    shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
-#endif
     shadowMapPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
 
     shadowMapPass->customFormatters[ "LightViewProjectionMatrix" ] = [ ]( const std::shared_ptr< ECS::ComponentTable > &components )
@@ -210,7 +142,6 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
         for ( const auto &light: directionalLights )
         {
             glm::mat4 lightProjection = glm::ortho( -10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 50.0f );
-//            lightProjection = glm::perspective( glm::radians( 60.0f ), 800.0f / 600.0f, 0.1f, 100.0f );
 
             lightProjection = VK_CORRECTION_MATRIX * lightProjection;
 
@@ -220,12 +151,6 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
             glm::vec3 right = glm::cross( front, glm::vec3( 0.0f, 1.0f, 0.0f ) );
             glm::vec3 up = glm::cross( right, front );
             glm::mat4 lightView = glm::lookAt( pos, pos + front, up );
-
-/*            glm::mat4 lightView = glm::lookAt(glm::vec3( 4.0f,  2.0f, 10.0f ),
-                                              light->direction - glm::vec3( 4.0f,  2.0f, 10.0f ),
-                                              glm::vec3( 0.0f, 1.0f,  0.0f));*/
-
-//            glm::mat4 lightView = glm::lookAt( glm::vec3( 0.0f, 3.0f, 0.0f ), activeCamera->position, glm::vec3( 0.0f, 1.0f, 0.0f ) );
 
             glm::mat4 result = lightProjection * lightView;
 
@@ -248,14 +173,6 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     shadowMap.imageFormat = ResourceImageFormat::BestDepthFormat;
     shadowMap.attachmentType = ResourceAttachmentType::Depth;
 
-#ifdef ENABLE_SHADOW_DEBUG_OUTPUT
-    auto &shadowMap_RGB = shadowMapPass->outputs.emplace_back( OutputImage { } );
-    shadowMap_RGB.outputResourceName = "shadowMap_RGB";
-    shadowMap_RGB.flags.presentedImage = true;
-    shadowMap_RGB.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
-    shadowMap_RGB.attachmentType = ResourceAttachmentType::Color;
-#endif
-
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
@@ -266,10 +183,7 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     renderPassRequest.dependencySet = DependencySet::ShadowMap;
 
     shadowMapPass->renderPassRequest = renderPassRequest;
-
-#ifndef ENABLE_SHADOW_DEBUG_OUTPUT
     shadowMapPass->renderPassRequest.renderArea = { 0, 0, 2048, 2048 };
-#endif
 
     PipelineRequest &pipelineRequest = shadowMapPass->pipelineRequests.emplace_back( );
 
@@ -277,10 +191,6 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/shadowMap.spv" );
     pipelineRequest.enabledPipelineStages.vertex = true;
     pipelineRequest.enabledPipelineStages.fragment = false;
-#ifdef ENABLE_SHADOW_DEBUG_OUTPUT
-    pipelineRequest.enabledPipelineStages.fragment = true;
-#endif
-
     pipelineRequest.cullMode = ECS::CullMode::FrontFace;
     pipelineRequest.depthCompareOp = CompareOp::LessOrEqual;
 
@@ -290,6 +200,82 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     };
 
     return shadowMapPass;
+}
+
+std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDevice )
+{
+    auto skyboxPass = std::make_shared< Pass >( "skyBoxPass" );
+    skyboxPass->pipelineInputs.resize( 1 );
+    skyboxPass->pipelineInputs[ 0 ].push_back( "ViewProjection" );
+    skyboxPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
+    skyboxPass->pipelineInputs[ 0 ].push_back( "ScreenCube" );
+
+    auto &presentImage = skyboxPass->outputs.emplace_back( OutputImage { } );
+    presentImage.outputResourceName = "skyBoxTex";
+    presentImage.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    presentImage.flags.msaaSampled = false;
+    presentImage.attachmentType = ResourceAttachmentType::Color;
+
+    auto &pipelineProvider = renderDevice->getPipelineProvider( );
+    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
+
+    RenderPassRequest renderPassRequest { };
+
+    skyboxPass->renderPassRequest = renderPassRequest;
+
+    PipelineRequest &pipelineRequest = skyboxPass->pipelineRequests.emplace_back( );
+
+    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/cube_position.spv" );
+    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/skybox_pass.spv" );
+    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.cullMode = ECS::CullMode::None;
+    pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    skyboxPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    {
+        return 0;
+    };
+
+    return skyboxPass;
+}
+
+std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDevice )
+{
+    auto presentPass = std::make_shared< Pass >( "presentPass" );
+    presentPass->pipelineInputs.resize( 1 );
+    presentPass->pipelineInputs[ 0 ].push_back( "litScene" );
+    presentPass->pipelineInputs[ 0 ].push_back( "skyBoxTex" );
+    presentPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
+
+    auto &presentImage = presentPass->outputs.emplace_back( OutputImage { } );
+    presentImage.outputResourceName = "presentImage";
+    presentImage.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    presentImage.flags.msaaSampled = false;
+    presentImage.flags.presentedImage = true;
+    presentImage.attachmentType = ResourceAttachmentType::Color;
+
+    auto &pipelineProvider = renderDevice->getPipelineProvider( );
+    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
+
+    RenderPassRequest renderPassRequest { };
+    renderPassRequest.isFinalDrawPass = true;
+
+    presentPass->renderPassRequest = renderPassRequest;
+
+    PipelineRequest &pipelineRequest = presentPass->pipelineRequests.emplace_back( );
+
+    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
+    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/present_pass.spv" );
+    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.cullMode = ECS::CullMode::None;
+    pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    presentPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    {
+        return 0;
+    };
+
+    return presentPass;
 }
 
 END_NAMESPACES

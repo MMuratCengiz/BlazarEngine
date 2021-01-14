@@ -59,6 +59,7 @@ struct CMaterial : public IComponent
 public:
     Material::TextureScaleOptions textureScaleOptions;
     std::vector< Material::TextureInfo > textures;
+    Material::TextureInfo heightMap{ };
     glm::vec4 diffuse { };
     glm::vec4 specular { };
     float shininess { };

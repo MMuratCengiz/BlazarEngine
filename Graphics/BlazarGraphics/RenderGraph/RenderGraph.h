@@ -18,10 +18,11 @@ struct PassWrapper
     std::shared_ptr< IRenderPass > renderPass;
     std::vector< std::shared_ptr< IRenderTarget > > renderTargets;
     std::vector< std::string > pipelineInputsFlat;
+    std::unordered_map< std::string, bool > pipelineInputsMap;
 
     std::shared_ptr< Pass > ref;
+    std::string inputGeometry;
     bool usesGeometryData = false;
-    bool attachesTextures;
 };
 
 class RenderGraph
