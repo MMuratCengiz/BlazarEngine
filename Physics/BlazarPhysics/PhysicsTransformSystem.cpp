@@ -92,4 +92,19 @@ btTransform PhysicsTransformSystem::toBtTransform( const std::shared_ptr< ECS::C
     return btTransform;
 }
 
+void PhysicsTransformSystem::addInstanceRecursive( ECS::IGameEntity *entity, std::shared_ptr< ECS::CTransform > transform )
+{
+    if ( !entity->hasComponent< ECS::CInstances >( ) )
+    {
+        entity->createComponent< ECS::CInstances >( );
+    }
+
+    entity->getComponent< ECS::CInstances >( )->transforms.push_back( transform );
+
+    for ( auto &child: entity->getChildren( ) )
+    {
+        PhysicsTransformSystem::addInstanceRecursive( child.get( ), transform );
+    }
+}
+
 END_NAMESPACES

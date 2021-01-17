@@ -11,10 +11,23 @@ layout(set = 0, binding = 0) uniform LightViewProjectionMatrix {
     int arraySize;
 } lvpm;
 
+layout(set = 1, binding = 0) uniform InstanceData
+{
+    mat4 model[ 100 ];
+    uint instanceCount;
+} instanceData;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inTextureCoor;
 
 void main() {
-    gl_Position = lvpm.casters[ 0 ] * pushConstants.ModelMatrix * vec4( inPosition, 1.0f );
+    mat4 model = pushConstants.ModelMatrix;
+
+    if ( instanceData.instanceCount > 0 && gl_InstanceIndex > 0 )
+    {
+        model = instanceData.model[ gl_InstanceIndex - 1 ];
+    }
+
+    gl_Position = lvpm.casters[ 0 ] * model * vec4( inPosition, 1.0f );
 }

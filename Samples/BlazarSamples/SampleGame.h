@@ -21,6 +21,10 @@
 #include "FpsCamera.h"
 #include "SampleAnimatedWolf.h"
 #include "SampleMovingCrate.h"
+#include "boost/random.hpp"
+#include "boost/generator_iterator.hpp"
+#include <iostream>
+#include <dirent.h>
 
 using namespace BlazarEngine;
 
@@ -34,7 +38,7 @@ class SampleGame : public Scene::IPlayable
     std::shared_ptr< ECS::IGameEntity > cuteBoat;
     std::shared_ptr< ECS::IGameEntity > tree1;
     std::shared_ptr< ECS::IGameEntity > tree2;
-    std::shared_ptr< ECS::IGameEntity > tree3;
+    std::shared_ptr< ECS::IGameEntity > rocks;
 
     std::shared_ptr< Scene::Scene > initialScene;
     std::shared_ptr< FpsCamera > camera;
@@ -44,13 +48,10 @@ class SampleGame : public Scene::IPlayable
     std::shared_ptr< SampleCar2 > car2;
     std::shared_ptr< SampleTrafficCone > cone;
     std::shared_ptr< SampleFloor > floor;
-    std::shared_ptr< SampleOldHouse > oldHouse;
     std::shared_ptr< SampleCubeMap > sky;
     std::shared_ptr< SampleCrate > crate;
     std::shared_ptr< SampleSmallCrate > smallCrate;
     std::shared_ptr< SampleBall > sampleBall;
-    std::shared_ptr< SampleAnimatedWolf > sampleWolf;
-    std::shared_ptr< SampleMovingCrate > sampleMovingCrate;
     Input::ActionCallback inputCallback;
 public:
     inline explicit SampleGame( Scene::World *world ) : world( world )

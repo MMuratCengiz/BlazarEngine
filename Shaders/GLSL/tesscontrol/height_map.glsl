@@ -10,7 +10,7 @@ layout(location = 0) out vec4 outPosition[3];
 layout(location = 1) out vec3 outNormal[3];
 layout(location = 2) out vec2 outTextureCoor[3];
 
-layout(set = 4, binding = 0) uniform Tessellation {
+layout(set = 5, binding = 0) uniform Tessellation {
     float innerLevel;
     float outerLevel;
 } tessellationLevel;

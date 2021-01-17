@@ -8,11 +8,12 @@ NAMESPACES( ENGINE_NAMESPACE, Core )
 class Time
 {
 private:
-    static long long int prev;
-    static float deltaTime;
+    static double prev;
+    static double deltaTime;
 public:
+    static double doubleEpochNow( );
     static void tick( );
-    static float getDeltaTime( );
+    static double getDeltaTime( );
 };
 
 

@@ -14,9 +14,11 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) );
+        gBufferPass->pipelineInputs[ i ].push_back( "InstanceData" );
 
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
         gBufferPass->pipelineInputs[ i ].push_back( "Texture1" );
+
         if ( i == 1 )
         {
             gBufferPass->pipelineInputs[ i ].push_back( "HeightMap" );
@@ -121,6 +123,7 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     shadowMapPass->pipelineInputs.resize( 1 );
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
+    shadowMapPass->pipelineInputs[ 0 ].push_back( "InstanceData" );
     shadowMapPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
 
     auto &shadowMap = shadowMapPass->outputs.emplace_back( OutputImage { } );
@@ -138,7 +141,7 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     renderPassRequest.dependencySet = DependencySet::ShadowMap;
 
     shadowMapPass->renderPassRequest = renderPassRequest;
-    shadowMapPass->renderPassRequest.renderArea = { 0, 0, 2048, 2048 };
+    shadowMapPass->renderPassRequest.renderArea = { 0, 0, 4096, 4096 };
 
     PipelineRequest &pipelineRequest = shadowMapPass->pipelineRequests.emplace_back( );
 

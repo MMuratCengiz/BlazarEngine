@@ -22,6 +22,10 @@ SET(BlazarSamplesSources
 
 ADD_LIBRARY(BlazarSamples ${BlazarSamplesSources})
 
+SET(INCLUDE_BOOST_TARGET BlazarSamples)
+
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
+
 SET_TARGET_PROPERTIES(BlazarSamples PROPERTIES LINKER_LANGUAGE CXX)
 
 TARGET_LINK_LIBRARIES(

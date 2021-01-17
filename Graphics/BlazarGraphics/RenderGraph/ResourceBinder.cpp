@@ -28,14 +28,7 @@ ResourceBinder::ResourceBinder( )
             RESOURCE_TYPE( ResourceType::Uniform )
             FUNC( [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> UniformAttachmentContent
                   {
-                      const std::shared_ptr< ECS::CInstances > instances = entity->getComponent< ECS::CInstances >( );
-
-                      if ( instances == nullptr )
-                      {
-                          ATTACH_EMPTY( )
-                      }
-
-                      auto data = DataAttachmentFormatter::formatInstances( instances );
+                      auto data = DataAttachmentFormatter::formatInstances( entity->getComponent< ECS::CInstances >( ) );
                       ATTACH_DATA( data, InstanceData )
                   } )
     END_RESOURCE_DEFINITION( )
@@ -84,7 +77,7 @@ ResourceBinder::ResourceBinder( )
 
                       for ( const auto &light: directionalLights )
                       {
-                          glm::mat4 lightProjection = glm::ortho( -10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 50.0f );
+                          glm::mat4 lightProjection = glm::ortho( -100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 50.0f );
 
                           lightProjection = VK_CORRECTION_MATRIX * lightProjection;
 

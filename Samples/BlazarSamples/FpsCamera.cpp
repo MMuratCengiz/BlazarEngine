@@ -28,7 +28,7 @@ void FpsCamera::updateAspectRatio( const uint32_t &windowWidth, const uint32_t &
 
 void FpsCamera::processKeyboardEvents( GLFWwindow *window )
 {
-    float sensitivity = ( BlazarEngine::Core::Time::getDeltaTime( ) );
+    float sensitivity = ( BlazarEngine::Core::Time::getDeltaTime( ) ) * 10.0f;
 
     if ( glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS )
     {

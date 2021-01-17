@@ -28,14 +28,18 @@ SET(CORE_BOOST_LIBS
         exception
         throw_exception
         date_time
+        random
+        generator_iterator
+        range
+        math
+        concept_check
         config)
 
 FOREACH (CORE_BOOST_LIB IN LISTS CORE_BOOST_LIBS)
     TARGET_INCLUDE_DIRECTORIES(${INCLUDE_BOOST_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/external/boost/libs/${CORE_BOOST_LIB}/include)
 ENDFOREACH ()
 
-SET(PLATFORM_BOOST_LIBS
-        winapi)
+SET(PLATFORM_BOOST_LIBS winapi )
 
 FOREACH (PLATFORM_BOOST_LIB IN LISTS PLATFORM_BOOST_LIBS)
     TARGET_INCLUDE_DIRECTORIES(${INCLUDE_BOOST_TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/external/boost/libs/${PLATFORM_BOOST_LIB}/include)

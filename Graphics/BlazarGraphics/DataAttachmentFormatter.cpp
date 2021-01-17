@@ -145,6 +145,15 @@ InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< EC
 {
     std::array< glm::mat4, 100 > result { };
 
+    if ( instances == nullptr )
+    {
+        return
+                {
+                    result,
+                    0
+                };
+    }
+
     uint32_t i;
     for ( i = 0; i < instances->transforms.size( ); ++i )
     {

@@ -52,7 +52,7 @@ public:
             bool hasReachedDestination = glm::length( transform->position - destination ) <= 0.01f;
             if ( !hasReachedDestination )
             {
-                transform->position += currentMovement * Core::Time::getDeltaTime( ) * 0.1f;
+                transform->position += currentMovement * ( float ) Core::Time::getDeltaTime( );
             }
 
             if ( hasReachedDestination && countSeconds >= 1.0f )
