@@ -11,7 +11,10 @@ class IRenderPass;
 enum class ShaderType
 {
     Vertex,
-    Fragment
+    Fragment,
+    TessellationEval,
+    TessellationControl,
+    Geometry
 };
 
 struct Shader
@@ -34,20 +37,12 @@ enum class BindPoint
     Compute
 };
 
-struct EnabledPipelineStages
-{
-    bool vertex : 1;
-    bool fragment : 1;
-};
-
 struct PipelineRequest
 {
     ECS::CullMode cullMode;
     CompareOp depthCompareOp;
 
-    EnabledPipelineStages enabledPipelineStages;
-    std::string vertexShaderPath;
-    std::string fragmentShaderPath;
+    std::unordered_map< ShaderType, std::string > shaderPaths;
 
     std::shared_ptr< IRenderPass > parentPass;
 };

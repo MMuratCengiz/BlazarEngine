@@ -12,17 +12,16 @@ layout(push_constant) uniform PushConstants {
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec2 inTextureCoor;
+layout(location = 2) in vec2 textureCoor;
 
-layout (location = 0) out vec4 outPosition;
-layout (location = 1) out vec3 outNormal;
-layout (location = 2) out vec2 outTextureCoor;
+layout(location = 0) out vec4 outPosition;
+layout(location = 1) out vec3 outNormal;
+layout(location = 2) out vec2 outTextureCoor;
 
 void main() {
     outPosition = pushConstants.ModelMatrix * vec4(inPosition, 1.0f);
-
-    gl_Position = viewProjection.proj * viewProjection.view * outPosition;
-
-    outTextureCoor = inTextureCoor;
     outNormal = normalize(mat3(pushConstants.NormalModelMatrix) * inNormal);
+
+    outTextureCoor = textureCoor;
+    gl_Position = viewProjection.proj * viewProjection.view * outPosition;
 }

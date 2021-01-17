@@ -284,6 +284,7 @@ void VulkanDevice::createLogicalDevice( )
     vk::PhysicalDeviceFeatures features { };
     features.samplerAnisotropy = true;
     features.sampleRateShading = true;
+    features.tessellationShader = true;
 
 #ifdef DEBUG
     std::vector< const char * > layers;

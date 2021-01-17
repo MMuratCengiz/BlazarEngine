@@ -16,6 +16,10 @@ public:
     {
         auto mesh = createComponent< ECS::CMesh >( );
         mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LightedCube );
+/*
+        auto tessellation = createComponent< ECS::CTessellation >( );
+        getComponent< ECS::CTessellation >( )->innerLevel = 100.0f;
+        getComponent< ECS::CTessellation >( )->outerLevel = 100.0f;*/
 
         auto material = createComponent< ECS::CMaterial >( );
         auto &texInfo = material->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );

@@ -89,7 +89,7 @@ public:
     const inline vk::Rect2D& getViewScissor( ) { return viewScissor; };
     void updateViewport( const uint32_t& width, const uint32_t& height );
 
-    void draw( ) override;
+    void draw( const uint32_t& instanceCount ) override;
     bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) override;
     [[nodiscard]] const vk::RenderPass &getPassInstance( ) const;
     [[nodiscard]] vk::PipelineBindPoint getBoundPipelineBindPoint( ) const;

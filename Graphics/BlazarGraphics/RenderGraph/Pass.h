@@ -18,7 +18,6 @@ struct Pass
 
     std::vector< std::vector< std::string > > pipelineInputs;
     std::vector< OutputImage > outputs;
-    std::unordered_map< std::string, FormatterFunc > customFormatters;
 
     std::function< int( const std::shared_ptr< ECS::IGameEntity >& entity ) > selectPipeline;
 

@@ -13,7 +13,7 @@ layout(set = 0, binding = 0) uniform LightViewProjectionMatrix {
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec2 texture1Coor;
+layout(location = 2) in vec2 inTextureCoor;
 
 void main() {
     gl_Position = lvpm.casters[ 0 ] * pushConstants.ModelMatrix * vec4( inPosition, 1.0f );

@@ -49,6 +49,8 @@ public:
 
     void prepare( const std::shared_ptr< ECS::ComponentTable >& componentTable );
     void execute( );
+
+    inline const ResourceBinder* getResourceBinder( ) {  return globalResourceTable->getResourceBinder( ); }
     ~RenderGraph( );
 private:
     void preparePass( PassWrapper &pass );

@@ -655,7 +655,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
  * -
  */
 
-void VulkanRenderPass::draw( )
+void VulkanRenderPass::draw( const uint32_t& instanceCount )
 {
     FUNCTION_BREAK( vertexDataAttachment == nullptr )
 
@@ -701,7 +701,7 @@ void VulkanRenderPass::draw( )
     {
         buffers[ frameIndex ].drawIndexed(
                 indexDataAttachment->indexCount,
-                1,
+                instanceCount,
                 0,
                 0,
                 0
@@ -711,7 +711,7 @@ void VulkanRenderPass::draw( )
     {
         buffers[ frameIndex ].draw(
                 vertexDataAttachment->vertexCount,
-                1,
+                instanceCount,
                 0,
                 0
         );

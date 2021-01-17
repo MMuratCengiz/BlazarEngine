@@ -28,6 +28,8 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice *renderDevice, AssetMana
 
     frameResources.resize( renderDevice->getFrameCount( ) );
     resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ) );
+
+    resourceBinder = std::make_unique< ResourceBinder >( );
 }
 
 void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable > &componentTable, const uint32_t &frameIndex )
@@ -70,11 +72,12 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
     entityGeometryMap[ entity->getUID( ) ] = geometryList.size( ) - 1;
 }
 
-GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string& outputGeometry )
+GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &outputGeometry )
 {
     auto transformComponent = entity->getComponent< ECS::CTransform >( );
     auto meshComponent = entity->getComponent< ECS::CMesh >( );
     auto materialComponent = entity->getComponent< ECS::CMaterial >( );
+    auto tessellationComponent = entity->getComponent< ECS::CTessellation >( );
 
     MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
 
@@ -127,60 +130,56 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
 
         data.resources.push_back( { true, parentBoundingName, std::move( indices ) } );
     }
-    //---
-    /*
-     * Create material data:
-     */
 
-    if ( materialComponent != nullptr )
+    for ( const std::string &resourceName: resourceBinder->getAllPerEntityBinders( ) )
     {
-        ShaderMaterialStruct shaderData { };
-        shaderData.diffuseColor = materialComponent->diffuse;
-        shaderData.specularColor = materialComponent->specular;
-        shaderData.shininess = materialComponent->shininess;
-        shaderData.textureScale = glm::vec4( transformComponent->scale, 1.0f );
+        // Todo load once is not respected here
+        auto resource = createResource( resourceBinder->getResourceType( resourceName ) );
 
-        auto material = createResource( );
-        material->identifier = { StaticVars::getInputName( StaticVars::Input::Material ) };
-        material->bindStrategy = ResourceBindStrategy::BindPerObject;
-        attachStructDataAttachment( material, DataAttachmentFormatter::formatMaterialComponent( materialComponent, transformComponent ), true );
-        material->allocate( );
+        resource->identifier = { resourceName };
+        resource->bindStrategy = ResourceBindStrategy::BindPerObject;
 
-        data.resources.push_back( { true, "Material", std::move( material ) } );
-        //---
-        /*
-         * Create texture data:
-         */
-        for ( int i = 0; i < materialComponent->textures.size( ); ++i )
+        bool validResource = true;
+
+        if ( resource->type == ResourceType::Uniform )
         {
-            auto texture = createResource( ResourceType::Sampler2D, ResourceLoadStrategy::LoadOnce, ResourcePersistStrategy::StoreOnDeviceMemory, ResourceShaderStage::Fragment );
-            texture->identifier = { "Texture", i + 1 };
-            auto textureData = assetManager->getImage( materialComponent->textures[ i ].path );
-            textureData->textureInfo = materialComponent->textures[ i ];
-            texture->dataAttachment = std::move( textureData );
-            texture->bindStrategy = ResourceBindStrategy::BindPerObject;
-            texture->allocate( );
+            auto binder = resourceBinder->getResourcePerEntityUniformBinder( resourceName );
 
-            data.resources.push_back( { true, "Material", std::move( texture ) } );
+            auto content = binder( entity );
+
+            validResource = content.size != 0;
+
+            if ( validResource )
+            {
+                resource->dataAttachment = std::make_shared< IDataAttachment >( );
+                resource->dataAttachment->size = content.size;
+                resource->dataAttachment->content = content.data;
+            }
         }
-        //---
-        /*
-         * Create HeightMap data:
-         */
-        if ( !materialComponent->heightMap.path.empty( ) )
+        else if ( resource->type == ResourceType::Sampler2D )
         {
-            auto texture = createResource( ResourceType::Sampler2D, ResourceLoadStrategy::LoadOnce, ResourcePersistStrategy::StoreOnDeviceMemory, ResourceShaderStage::Vertex );
-            texture->identifier = { "HeightMap" };
-            auto textureData = assetManager->getImage( materialComponent->heightMap.path );
-            textureData->textureInfo = materialComponent->heightMap;
-            texture->dataAttachment = std::move( textureData );
-            texture->bindStrategy = ResourceBindStrategy::BindPerObject;
-            texture->allocate( );
+            auto binder = resourceBinder->getResourcePerEntityTextureBinder( resourceName );
 
-            data.resources.push_back(  { true, "Material", std::move( texture ) } );
+            auto content = binder( entity );
+
+            validResource = !content.textures.empty( );
+
+            if ( validResource )
+            {
+                auto textureData = assetManager->getImage( content.textures[ 0 ].path );
+
+                textureData->textureInfo = content.textures[ 0 ];
+                resource->dataAttachment = std::move( textureData );
+            }
         }
-        //---
+
+        if ( validResource )
+        {
+            resource->allocate( );
+            data.resources.push_back( { true, resourceName, std::move( resource ) } );
+        }
     }
+
     data.modelTransformPtr = transformComponent;
     data.referenceEntity = entity;
 
@@ -219,33 +218,14 @@ void GlobalResourceTable::setActiveGeometryModel( const GeometryData &data )
     memcpy( globalNormalModelResourcePlaceholder->dataAttachment->content, &normalMat, globalModelResourcePlaceholder->dataAttachment->size );
 }
 
-void GlobalResourceTable::createEmptyImageResource( const OutputImage &image, const uint32_t &frameIndex )
-{
-    frameResources[ frameIndex ][ image.outputResourceName ] = { };
-    auto &wrapper = frameResources[ frameIndex ][ image.outputResourceName ];
-
-    wrapper.ref = createResource( ResourceType::Sampler2D );
-    wrapper.isAllocated = true;
-    wrapper.ref->identifier = { image.outputResourceName };
-
-    std::shared_ptr< SamplerDataAttachment > attachment = std::make_shared< SamplerDataAttachment >( );
-    attachment->content = nullptr;
-    attachment->width = image.width;
-    attachment->height = image.height;
-
-    wrapper.ref->dataAttachment = std::move( attachment );
-    wrapper.ref->allocate( );
-}
-
 void GlobalResourceTable::allocateResource( const std::string &resourceName, const uint32_t &frameIndex )
 {
-    // Todo maybe specify which ones are geometry data that is specified else where
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::GeometryData ) )
-    FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::Material ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
-    FUNCTION_BREAK( resourceName == "Texture1" )
-    FUNCTION_BREAK( resourceName == "HeightMap" )
+
+    auto bindType = resourceBinder->getResourceBindType( resourceName );
+    FUNCTION_BREAK( bindType == ResourceBindType::PerEntityTexture || bindType == ResourceBindType::PerEntityUniform )
 
     auto resourceUpdatedThisFrame = resourcesUpdatedThisFrame[ frameIndex ].find( resourceName );
 
@@ -265,73 +245,80 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
 
     bool wrapperAllocatedThisFrame = !wrapper.isAllocated;
 
-    bool isEnvironmentLights = resourceName == StaticVars::getInputName( StaticVars::Input::EnvironmentLights );
-    bool isViewProjection = resourceName == StaticVars::getInputName( StaticVars::Input::ViewProjection );
-    bool isSkyBox = resourceName == StaticVars::getInputName( StaticVars::Input::SkyBox );
+    ResourceType resourceType = resourceBinder->getResourceType( resourceName );
 
-    if ( !wrapper.isAllocated )
+    if ( wrapperAllocatedThisFrame )
     {
-
-        ResourceType resourceType = ResourceType::Uniform;
-
-        if ( isSkyBox )
-        {
-            resourceType = ResourceType::CubeMap;
-        }
-
         wrapper.isAllocated = true;
         wrapper.ref = createResource( resourceType );
         wrapper.ref->identifier = { resourceName };
+        wrapper.ref->type = resourceType;
     }
     else
     {
         FUNCTION_BREAK( wrapper.ref->loadStrategy == ResourceLoadStrategy::LoadOnce )
     }
 
-    auto customFormatter = customFormatters.find( resourceName );
-    if ( customFormatter != customFormatters.end( ) )
+    if ( wrapperAllocatedThisFrame )
     {
-        if ( wrapperAllocatedThisFrame )
+        if ( wrapper.ref->type == ResourceType::Uniform )
         {
             wrapper.ref->dataAttachment = std::make_shared< IDataAttachment >( );
         }
+        if ( wrapper.ref->type == ResourceType::CubeMap )
+        {
+            wrapper.ref->dataAttachment = std::make_shared< CubeMapDataAttachment >( );
+        }
+        if ( wrapper.ref->type == ResourceType::Sampler2D )
+        {
+            wrapper.ref->dataAttachment = std::make_shared< SamplerDataAttachment >( );
+        }
+    }
 
+    if ( wrapper.ref->type == ResourceType::Uniform )
+    {
+        wrapper.ref->dataAttachment = std::make_shared< IDataAttachment >( );
         std::shared_ptr< IDataAttachment > &dataAttachment = wrapper.ref->dataAttachment;
 
         free( dataAttachment->content );
 
-        auto content = customFormatter->second( currentComponentTable );
+        // Per entity
+        auto binder = resourceBinder->getResourcePerFrameUniformBinder( resourceName );
+        auto content = binder( currentComponentTable );
 
         dataAttachment->size = content.size;
         dataAttachment->content = content.data;
-
-        wrapper.ref->type = ResourceType::Uniform; // Todo maybe dynamic
     }
 
-    if ( isEnvironmentLights )
-    {
-        attachStructDataAttachment( wrapper.ref, DataAttachmentFormatter::formatLightingEnvironment( currentComponentTable ), wrapperAllocatedThisFrame );
-    }
-
-    if ( isViewProjection )
-    {
-        attachStructDataAttachment( wrapper.ref, DataAttachmentFormatter::formatCamera( currentComponentTable ), wrapperAllocatedThisFrame );
-    }
-
-    if ( isSkyBox )
+    if ( wrapper.ref->type == ResourceType::CubeMap )
     {
         std::shared_ptr< CubeMapDataAttachment > cubeMapAttachment = std::make_shared< CubeMapDataAttachment >( );
 
-        const auto &cubeMaps = currentComponentTable->getComponents< ECS::CCubeMap >( );
+        auto binder = resourceBinder->getResourcePerFrameTextureBinder( resourceName );
+        auto content = binder( currentComponentTable );
 
-        FUNCTION_BREAK( cubeMaps.empty( ) ) // Todo don't die here or the flow breaks
-
-        for ( auto &cm: cubeMaps[ 0 ]->texturePaths )
+        for ( const auto &texture: content.textures )
         {
-            cubeMapAttachment->images.push_back( assetManager->getImage( cm.path ) );
+            cubeMapAttachment->images.push_back( assetManager->getImage( texture.path ) );
         }
 
         wrapper.ref->dataAttachment = std::move( cubeMapAttachment );
+    }
+
+    if ( wrapper.ref->type == ResourceType::Sampler2D )
+    {
+        std::shared_ptr< SamplerDataAttachment > samplerAttachment;
+
+        auto binder = resourceBinder->getResourcePerFrameTextureBinder( resourceName );
+        auto content = binder( currentComponentTable );
+
+        for ( const auto &texture: content.textures )
+        {
+            samplerAttachment = assetManager->getImage( texture.path );
+            samplerAttachment->textureInfo = texture;
+        }
+
+        wrapper.ref->dataAttachment = std::move( samplerAttachment );
     }
 
     if ( wrapperAllocatedThisFrame )
@@ -378,7 +365,7 @@ void GlobalResourceTable::prepareResource( const std::string &resourceName, cons
 
 void GlobalResourceTable::cleanGeometryData( GeometryData &geometryData )
 {
-    for ( auto & resource: geometryData.resources )
+    for ( auto &resource: geometryData.resources )
     {
         resource.ref->deallocate( );
 
@@ -388,11 +375,6 @@ void GlobalResourceTable::cleanGeometryData( GeometryData &geometryData )
             free( resource.ref->dataAttachment->content );
         }*/
     }
-}
-
-void GlobalResourceTable::registerCustomFormatter( const std::string &resourceName, FormatterFunc func )
-{
-    customFormatters[ resourceName ] = std::move( func );
 }
 
 std::vector< GeometryData > GlobalResourceTable::getGeometryList( )

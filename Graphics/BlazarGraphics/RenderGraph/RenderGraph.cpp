@@ -99,12 +99,7 @@ void RenderGraph::preparePass( PassWrapper &pass )
 {
     // Initialize inputs
     uint32_t pipelineIndex = 0;
-
-    for ( const auto &customFormatter: pass.ref->customFormatters )
-    {
-        globalResourceTable->registerCustomFormatter( customFormatter.first, customFormatter.second );
-    }
-
+    
     if ( pass.adaptedInputs.empty( ) )
     {
         pass.adaptedInputs.resize( pass.ref->pipelineInputs.size( ) );
@@ -127,7 +122,9 @@ void RenderGraph::preparePass( PassWrapper &pass )
                 }
                 else
                 {
-                    if ( input != StaticVars::getInputName( StaticVars::Input::Material ) )
+                    auto bindType = globalResourceTable->getResourceBinder( )->getResourceBindTypeOptional( input );
+
+                    if ( !bindType.has_value( ) || bindType.value( ) == ResourceBindType::PerFrameTexture || bindType.value( ) == ResourceBindType::PerFrameUniform )
                     {
                         pass.adaptedInputs[ pipelineIndex ].push_back( input );
                     }
@@ -295,7 +292,15 @@ void RenderGraph::executePass( const PassWrapper &pass )
 
         bindAdaptedInputs( pass, renderPass, selectedPipeline, false );
 
-        renderPass->draw( );
+        uint32_t instanceCount = 1;
+
+        auto instances = geometry.referenceEntity->getComponent< ECS::CInstances >( );
+        if ( instances != nullptr )
+        {
+            instanceCount += instances->transforms.size( );
+        }
+
+        renderPass->draw( instanceCount );
     }
 
     redrawFrame = !renderPass->submit( std::vector< std::shared_ptr< IResourceLock > >( ), pass.executeLocks[ frameIndex ] );

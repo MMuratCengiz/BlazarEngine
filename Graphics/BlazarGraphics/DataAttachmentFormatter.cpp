@@ -17,7 +17,7 @@ ViewProjection BlazarEngine::Graphics::DataAttachmentFormatter::formatCamera( co
         }
     }
 
-    ASSERT_M( oneFound, "At least one camera should be present in the scene and set to active!");
+    ASSERT_M( oneFound, "At least one camera should be present in the scene and set to active!" );
 
     return vp;
 }
@@ -126,13 +126,36 @@ Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr
     textureScale.z = material->textureScaleOptions.scaleX ? transform->scale.z : 1.0f;
     textureScale.w = 1.0f;
 
-    return {
-        material->diffuse,
-        material->specular,
-        textureScale,
-        material->shininess,
-        ( uint32_t ) (material->heightMap.path.empty( ) ? 0 : 1 )
-    };
+    return
+            {
+                    material->diffuse,
+                    material->specular,
+                    textureScale,
+                    material->shininess,
+                    ( uint32_t ) ( material->heightMap.path.empty( ) ? 0 : 1 )
+            };
+}
+
+Tessellation DataAttachmentFormatter::formatTessellationComponent( const std::shared_ptr< ECS::CTessellation > &tessellation )
+{
+    return { tessellation->innerLevel, tessellation->outerLevel };
+}
+
+InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< ECS::CInstances > &instances )
+{
+    std::array< glm::mat4, 100 > result { };
+
+    uint32_t i;
+    for ( i = 0; i < instances->transforms.size( ); ++i )
+    {
+        result[ i ] = formatModelMatrix( instances->transforms[ i ] );
+    }
+
+    return
+            {
+                result,
+                i
+            };
 }
 
 END_NAMESPACES

@@ -98,7 +98,7 @@ public:
 
     virtual RenderArea getRenderArea( ) const = 0;
 
-    virtual void draw( ) = 0;
+    virtual void draw( const uint32_t& instanceCount ) = 0;
     // Returns if the submission was successful or not
     virtual bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) = 0;
     virtual std::string getProperty( const std::string &propertyName ) = 0;

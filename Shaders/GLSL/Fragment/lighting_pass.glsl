@@ -42,10 +42,9 @@ layout(push_constant) uniform PushConstants {
 layout(set = 0, binding = 0) uniform sampler2D gBuffer_Position;
 layout(set = 1, binding = 0) uniform sampler2D gBuffer_Normal;
 layout(set = 2, binding = 0) uniform sampler2D gBuffer_AlbedoSpec;
-layout(set = 3, binding = 0) uniform sampler2D gBuffer_Scene;
-layout(set = 4, binding = 0) uniform sampler2D shadowMap;
+layout(set = 3, binding = 0) uniform sampler2D shadowMap;
 
-layout(set = 5, binding = 0) uniform EnvironmentLights {
+layout(set = 4, binding = 0) uniform EnvironmentLights {
     int ambientLightCount;
     int directionalLightCount;
     int pointLightCount;
@@ -57,12 +56,12 @@ layout(set = 5, binding = 0) uniform EnvironmentLights {
     SpotLight spotLights[ALLOWED_LIGHTS];
 } environment;
 
-layout(set = 6, binding = 0) uniform LightViewProjectionMatrix {
+layout(set = 5, binding = 0) uniform LightViewProjectionMatrix {
     mat4[MAX_ALLOWED_SHADOW_CASTERS] casters;
     int arraySize;
 } lvpm;
 
-layout (location = 0) in vec3 transitPosition;
+layout (location = 0) in vec3 inPosition;
 
 layout (location = 0) out vec4 outputColor;
 
@@ -119,7 +118,7 @@ float shadowCalculationPCF(vec4 fragPosLightSpace)
 }
 
 void main() {
-    vec4 fragPos = texture(gBuffer_Scene, transitPosition.xy);
+    vec4 fragPos = texture(gBuffer_Position, inPosition.xy);
 
     if ( fragPos.w == 0 )
     {
@@ -127,11 +126,10 @@ void main() {
         return;
     }
 
-    vec4 albedoSpec = texture(gBuffer_AlbedoSpec, transitPosition.xy).rgba;
+    vec4 albedoSpec = texture(gBuffer_AlbedoSpec, inPosition.xy).rgba;
 
-    position = texture(gBuffer_Position, transitPosition.xy).rgb;
-    normal = texture(gBuffer_Normal, transitPosition.xy).rgb;
-    albedo = texture(gBuffer_AlbedoSpec, transitPosition.xy).rgba;
+    normal = texture(gBuffer_Normal, inPosition.xy).rgb;
+    albedo = texture(gBuffer_AlbedoSpec, inPosition.xy).rgba;
 
     albedo.a = 1.0f;
     spec = albedoSpec.a;
@@ -146,8 +144,6 @@ void main() {
     }
 
     float shadow = shadowCalculationPCF(posInLightSpace);
-
-    //    outputColor = vec4( shadow );
 
     for (int i = 0; i < environment.ambientLightCount; ++i) {
         outputColor += normalize(albedo + environment.ambientLights[i].diffuse) *  environment.ambientLights[i].power;

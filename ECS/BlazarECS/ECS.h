@@ -9,7 +9,9 @@
 #include <BlazarECS/IComponent.h>
 #include <BlazarECS/ISystem.h>
 #include <BlazarECS/CMaterial.h>
+#include <BlazarECS/CTessellation.h>
 #include <BlazarECS/CMesh.h>
+#include <BlazarECS/CInstances.h>
 #include <BlazarECS/CCubeMap.h>
 #include <BlazarECS/CCamera.h>
 #include <BlazarECS/CCollisionObject.h>

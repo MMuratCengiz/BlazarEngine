@@ -10,21 +10,48 @@ std::shared_ptr< IPipeline > VulkanPipelineProvider::createPipeline( const Pipel
     auto pipeline = std::make_shared< VulkanPipeline >( );
     pipeline->context = context;
 
-    std::vector< GLSLShaderInfo > glslShaders{ };
+    std::vector< GLSLShaderInfo > glslShaders { };
 
     // todo make sure maybe have a dynamic path once multiple render apis are supported
-    if ( request.enabledPipelineStages.vertex )
+    auto vertexShaderSearch = request.shaderPaths.find( ShaderType::Vertex );
+    auto fragmentShaderSearch = request.shaderPaths.find( ShaderType::Fragment );
+    auto tessControlShaderSearch = request.shaderPaths.find( ShaderType::TessellationControl );
+    auto tessEvalShaderSearch = request.shaderPaths.find( ShaderType::TessellationEval );
+    auto geometryShaderSearch = request.shaderPaths.find( ShaderType::Geometry );
+
+    if ( vertexShaderSearch != request.shaderPaths.end( ) )
     {
-        auto& vertexShader = glslShaders.emplace_back( );
+        auto &vertexShader = glslShaders.emplace_back( );
         vertexShader.type = vk::ShaderStageFlagBits::eVertex;
-        vertexShader.path = request.vertexShaderPath;
+        vertexShader.path = vertexShaderSearch->second;
     }
 
-    if ( request.enabledPipelineStages.fragment )
+    if ( fragmentShaderSearch != request.shaderPaths.end( ) )
     {
-        auto& vertexShader = glslShaders.emplace_back( );
-        vertexShader.type = vk::ShaderStageFlagBits::eFragment;
-        vertexShader.path = request.fragmentShaderPath;
+        auto &fragmentShader = glslShaders.emplace_back( );
+        fragmentShader.type = vk::ShaderStageFlagBits::eFragment;
+        fragmentShader.path = fragmentShaderSearch->second;
+    }
+
+    if ( tessControlShaderSearch != request.shaderPaths.end( ) )
+    {
+        auto &tessControlShader = glslShaders.emplace_back( );
+        tessControlShader.type = vk::ShaderStageFlagBits::eTessellationControl;
+        tessControlShader.path = tessControlShaderSearch->second;
+    }
+
+    if ( tessEvalShaderSearch != request.shaderPaths.end( ) )
+    {
+        auto &tessEvalShader = glslShaders.emplace_back( );
+        tessEvalShader.type = vk::ShaderStageFlagBits::eTessellationEvaluation;
+        tessEvalShader.path = tessEvalShaderSearch->second;
+    }
+
+    if ( geometryShaderSearch != request.shaderPaths.end( ) )
+    {
+        auto &geometryShader = glslShaders.emplace_back( );
+        geometryShader.type = vk::ShaderStageFlagBits::eGeometry;
+        geometryShader.path = geometryShaderSearch->second;
     }
 
     // TODO cache depending on the pipeline, or maybe cache somewhere else
@@ -72,6 +99,8 @@ void VulkanPipelineProvider::createPipeline( const PipelineRequest &request, con
 
 void VulkanPipelineProvider::configureVertexInput( PipelineCreateInfos &createInfo )
 {
+    bool hasTessellationShaders = false;
+
     for ( const GLSLShaderInfo &shader: createInfo.shaders )
     {
         vk::PipelineShaderStageCreateInfo shaderStageCreateInfo { };
@@ -84,6 +113,9 @@ void VulkanPipelineProvider::configureVertexInput( PipelineCreateInfos &createIn
 
         createInfo.pipelineStageCreateInfos.emplace_back( shaderStageCreateInfo );
         shaderModules.emplace_back( shaderModule );
+
+        hasTessellationShaders = hasTessellationShaders || shader.type == vk::ShaderStageFlagBits::eTessellationEvaluation;
+        hasTessellationShaders = hasTessellationShaders || shader.type == vk::ShaderStageFlagBits::eTessellationControl;
     }
 
     const auto &attributeDescription = createInfo.shaderSet->getVertexAttributeDescriptions( );
@@ -99,6 +131,16 @@ void VulkanPipelineProvider::configureVertexInput( PipelineCreateInfos &createIn
 
     createInfo.pipelineCreateInfo.stageCount = static_cast< uint32_t >( createInfo.pipelineStageCreateInfos.size( ) );
     createInfo.pipelineCreateInfo.pStages = createInfo.pipelineStageCreateInfos.data( );
+
+    // Todo read patch control points from either pipelineRequest or from GLSLShaderSet
+    createInfo.tessellationStateCreateInfo.patchControlPoints = 3;
+
+    if ( hasTessellationShaders )
+    {
+        createInfo.inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::ePatchList;
+        createInfo.pipelineCreateInfo.pTessellationState = &createInfo.tessellationStateCreateInfo;
+    }
+
     createInfo.pipelineCreateInfo.pVertexInputState = &createInfo.inputStateCreateInfo;
     createInfo.pipelineCreateInfo.pInputAssemblyState = &createInfo.inputAssemblyCreateInfo;
 }
@@ -190,7 +232,7 @@ void VulkanPipelineProvider::configureColorBlend( PipelineCreateInfos &createInf
     for ( int i = 0; i < attachmentCount; ++i )
     {
         createInfo.colorBlendAttachments[ i ].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                         vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+                                                               vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
         createInfo.colorBlendAttachments[ i ].blendEnable = false;
         createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eOne;
         createInfo.colorBlendAttachments[ i ].dstColorBlendFactor = vk::BlendFactor::eZero;
@@ -293,7 +335,7 @@ VulkanPipelineProvider::~VulkanPipelineProvider( )
         context->logicalDevice.destroyShaderModule( module );
     }
 
-    for ( auto& instance: pipelineInstances )
+    for ( auto &instance: pipelineInstances )
     {
         instance.reset( );
     }

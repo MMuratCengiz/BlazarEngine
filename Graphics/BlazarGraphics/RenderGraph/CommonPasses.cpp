@@ -7,12 +7,22 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
 {
     auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
-    gBufferPass->pipelineInputs.resize( 1 );
-    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
-    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
-    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
-    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
-    gBufferPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) );
+    gBufferPass->pipelineInputs.resize( 2 );
+    for ( int i = 0; i < 2; ++i )
+    {
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) );
+
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
+        gBufferPass->pipelineInputs[ i ].push_back( "Texture1" );
+        if ( i == 1 )
+        {
+            gBufferPass->pipelineInputs[ i ].push_back( "HeightMap" );
+            gBufferPass->pipelineInputs[ i ].push_back( "Tessellation" );
+        }
+    }
 
     auto &depthBuffer = gBufferPass->outputs.emplace_back( );
     depthBuffer.outputResourceName = "depthBuffer";
@@ -34,11 +44,6 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     gBuffer_AlbedoSpec.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
     gBuffer_AlbedoSpec.attachmentType = ResourceAttachmentType::Color;
 
-    auto &gBuffer_Scene = gBufferPass->outputs.emplace_back( OutputImage { } );
-    gBuffer_Scene.outputResourceName = "gBuffer_Scene";
-    gBuffer_Scene.imageFormat = ResourceImageFormat::R32G32B32A32Sfloat;
-    gBuffer_Scene.attachmentType = ResourceAttachmentType::Color;
-
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
@@ -48,16 +53,24 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 
     gBufferPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        return entity->hasComponent< ECS::CTessellation >( ) ? 1 : 0;
     };
 
     PipelineRequest &pipelineRequest = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
 
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/gBuffer.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
-    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
     pipelineRequest.cullMode = ECS::CullMode::BackFace;
     pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    PipelineRequest &heightmapTessellationPipeline = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
+
+    heightmapTessellationPipeline.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer.spv" );
+    heightmapTessellationPipeline.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
+    heightmapTessellationPipeline.shaderPaths[ ShaderType::TessellationControl ] = PATH( "/Shaders/SPIRV/tesscontrol/height_map.spv" );
+    heightmapTessellationPipeline.shaderPaths[ ShaderType::TessellationEval ] = PATH( "/Shaders/SPIRV/tesseval/height_map.spv" );
+    heightmapTessellationPipeline.cullMode = ECS::CullMode::BackFace;
+    heightmapTessellationPipeline.depthCompareOp = CompareOp::Less;
 
     return gBufferPass;
 }
@@ -69,7 +82,6 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_AlbedoSpec" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Scene" );
     lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
     lightingPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
     lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
@@ -90,9 +102,8 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
 
     PipelineRequest &pipelineRequest = lightingPass->pipelineRequests.emplace_back( );
 
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/lighting_pass.spv" );
-    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/lighting_pass.spv" );
     pipelineRequest.cullMode = ECS::CullMode::FrontFace;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
@@ -111,62 +122,6 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
-
-    shadowMapPass->customFormatters[ "LightViewProjectionMatrix" ] = [ ]( const std::shared_ptr< ECS::ComponentTable > &components )
-    {
-        AttachmentContent content { };
-
-        const auto directionalLights = components->getComponents< ECS::CDirectionalLight >( );
-        const auto cameras = components->getComponents< ECS::CCamera >( );
-
-        std::shared_ptr< ECS::CCamera > activeCamera;
-
-        for ( const auto &camera : cameras )
-        {
-            if ( camera->isActive )
-            {
-                activeCamera = camera;
-                break;
-            }
-        }
-
-        size_t mat4Size = 4 * 4 * sizeof( float );
-
-        uint32_t arraySize = 3;
-
-        content.size = 3 * mat4Size + sizeof( int );
-        content.data = ( char * ) malloc( content.size );
-
-        uint32_t offset = 0;
-
-        for ( const auto &light: directionalLights )
-        {
-            glm::mat4 lightProjection = glm::ortho( -10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 50.0f );
-
-            lightProjection = VK_CORRECTION_MATRIX * lightProjection;
-
-            glm::vec3 pos = glm::vec3( 10.4072, 11.5711, -9.09731 );
-            glm::vec3 front = glm::vec3( -0.68921, -0.48481, 0.53847 );
-
-            glm::vec3 right = glm::cross( front, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-            glm::vec3 up = glm::cross( right, front );
-            glm::mat4 lightView = glm::lookAt( pos, pos + front, up );
-
-            glm::mat4 result = lightProjection * lightView;
-
-            memcpy( content.data + offset, &result, mat4Size );
-            offset += mat4Size;
-
-            if ( offset == content.size )
-            {
-                break;
-            }
-        }
-
-        memcpy( content.data + ( content.size - sizeof( int ) ), &arraySize, sizeof( int ) );
-
-        return content;
-    };
 
     auto &shadowMap = shadowMapPass->outputs.emplace_back( OutputImage { } );
     shadowMap.outputResourceName = "shadowMap";
@@ -187,10 +142,7 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
 
     PipelineRequest &pipelineRequest = shadowMapPass->pipelineRequests.emplace_back( );
 
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/shadowMap.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/shadowMap.spv" );
-    pipelineRequest.enabledPipelineStages.vertex = true;
-    pipelineRequest.enabledPipelineStages.fragment = false;
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/shadowMap.spv" );
     pipelineRequest.cullMode = ECS::CullMode::FrontFace;
     pipelineRequest.depthCompareOp = CompareOp::LessOrEqual;
 
@@ -225,9 +177,8 @@ std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
 
     PipelineRequest &pipelineRequest = skyboxPass->pipelineRequests.emplace_back( );
 
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/cube_position.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/skybox_pass.spv" );
-    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/cube_position.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/skybox_pass.spv" );
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
@@ -264,9 +215,8 @@ std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDe
 
     PipelineRequest &pipelineRequest = presentPass->pipelineRequests.emplace_back( );
 
-    pipelineRequest.vertexShaderPath = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
-    pipelineRequest.fragmentShaderPath = PATH( "/Shaders/SPIRV/Fragment/present_pass.spv" );
-    pipelineRequest.enabledPipelineStages = { true, true };
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/present_pass.spv" );
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 

@@ -24,6 +24,12 @@ struct Material
     alignas( 4 ) uint32_t hasHeightMap;
 };
 
+struct Tessellation
+{
+    alignas( 4 ) float innerLevel;
+    alignas( 4 ) float outerLevel;
+};
+
 struct DirectionalLight
 {
     alignas( 4 ) float power;
@@ -71,14 +77,22 @@ struct ViewProjection
     glm::mat4 projection;
 };
 
+struct InstanceData
+{
+    std::array< glm::mat4, 100 > instances;
+    uint32_t instanceCount;
+};
+
 class DataAttachmentFormatter
 {
 public:
     static Material formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform > &transform );
+    static Tessellation formatTessellationComponent( const std::shared_ptr< ECS::CTessellation > &tessellation );
     static ViewProjection formatCamera( const std::shared_ptr< ECS::ComponentTable > &components );
     static EnvironmentLights formatLightingEnvironment( const std::shared_ptr< ECS::ComponentTable > &components );
     static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform );
     static glm::mat4 formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform );
+    static InstanceData formatInstances( const std::shared_ptr< ECS::CInstances > &instances );
 
 };
 
