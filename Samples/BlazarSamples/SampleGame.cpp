@@ -52,7 +52,7 @@ void SampleGame::init( )
                 auto &texInfo = child->getChildren( )[ 0 ]->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
                 texInfo.path = "/assets/textures/Rocks/Colorsheet Rock Grey.png";
 
-                BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( child.get( ), glm::vec3( randomRange( ), 0.15, randomRange( ) ) );
+                BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( child.get( ), glm::vec3( randomRange( ), 0.10, randomRange( ) ) );
 
                 rocks->addChild( std::move( child ) );
             }
@@ -77,11 +77,11 @@ void SampleGame::init( )
         texInfo.path = "/assets/textures/Colorsheet Tree Normal.png";
     }
 
-    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree1.get( ), glm::vec3( 4.0f, 0.15f, 2.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree1.get( ), glm::vec3( 4.0f, 0.10f, 2.0f ) );
     BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( tree1.get( ), { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( -0.0f, 0.0f, 0.0f ) } );
     BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( tree1.get( ), glm::vec3( 0.5f, 0.5f, 0.5f ) );
 
-    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree2.get( ), glm::vec3( -4.0f, 0.15f, 2.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree2.get( ), glm::vec3( -4.0f, 0.10f, 2.0f ) );
     BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( tree2.get( ), { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( -0.0f, 0.0f, 0.0f ) } );
     BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( tree2.get( ), glm::vec3( 0.5f, 0.5f, 0.5f ) );
 

@@ -1,3 +1,1 @@
-cd build
-cmake --build . --target SomeVulkan --config Debug
-cd ..
+cmake --build ./cmake-build-debug --target BlazarEngine -- -j 9

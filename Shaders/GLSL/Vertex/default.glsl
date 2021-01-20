@@ -11,7 +11,7 @@ layout(push_constant) uniform PushConstants {
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec2 texture1Coor;
+layout(location = 2) in vec2 textureCoor;
 
 layout (location = 0) out vec2 transitTexture1Coor;
 layout (location = 1) out vec3 transitNormal;
@@ -22,7 +22,7 @@ void main() {
     gl_Position = vp.proj * vp.view * worldPos4;
     transitWorldPos = worldPos4.xyz;
 
-    transitTexture1Coor = texture1Coor;
+    transitTexture1Coor = textureCoor;
     transitNormal = normalize(vec3( inNormal.x, inNormal.y, inNormal.z ) );
 //    transitNormal = mat3(transpose(inverse(pushConstants.model))) * transitNormal;
 }

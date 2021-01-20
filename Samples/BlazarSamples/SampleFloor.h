@@ -39,7 +39,7 @@ public:
         rigidBody->mass = 0.0f;
 
         Physics::CollisionShapeInitializer( rigidBody, transform ).initializeBoxCollisionShape( transform->scale );
-        rigidBody->instance->setFriction( 0.11f );
+        rigidBody->instance->setFriction( 0.95 );
     }
 };
 

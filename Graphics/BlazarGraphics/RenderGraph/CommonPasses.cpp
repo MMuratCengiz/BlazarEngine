@@ -193,11 +193,122 @@ std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
     return skyboxPass;
 }
 
+std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderDevice )
+{
+    auto smaaEdgePass = std::make_shared< Pass >( "smaaEdgePass" );
+    smaaEdgePass->pipelineInputs.resize( 1 );
+    smaaEdgePass->pipelineInputs[ 0 ].push_back( "Resolution" );
+    smaaEdgePass->pipelineInputs[ 0 ].push_back( "litScene" );
+    smaaEdgePass->pipelineInputs[ 0 ].push_back( "ScreenOversizedTriangle" );
+
+    auto &edgesTex = smaaEdgePass->outputs.emplace_back( OutputImage { } );
+    edgesTex.outputResourceName = "edgesTex";
+    edgesTex.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    edgesTex.flags.msaaSampled = false;
+    edgesTex.attachmentType = ResourceAttachmentType::Color;
+
+    auto &pipelineProvider = renderDevice->getPipelineProvider( );
+    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
+
+    RenderPassRequest renderPassRequest { };
+
+    smaaEdgePass->renderPassRequest = renderPassRequest;
+
+    PipelineRequest &pipelineRequest = smaaEdgePass->pipelineRequests.emplace_back( );
+
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/smaaEdge.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/smaaEdge.spv" );
+    pipelineRequest.cullMode = ECS::CullMode::None;
+    pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    smaaEdgePass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    {
+        return 0;
+    };
+
+    return smaaEdgePass;
+}
+
+std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *renderDevice )
+{
+    auto smaaBlendWeightPass = std::make_shared< Pass >( "smaaBlendWeightPass" );
+    smaaBlendWeightPass->pipelineInputs.resize( 1 );
+    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "Resolution" );
+    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "edgesTex" );
+    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "areaTex" );
+    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "searchTex" );
+    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "ScreenOversizedTriangle" );
+
+    auto &blendTex = smaaBlendWeightPass->outputs.emplace_back( OutputImage { } );
+    blendTex.outputResourceName = "blendTex";
+    blendTex.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    blendTex.flags.msaaSampled = false;
+    blendTex.attachmentType = ResourceAttachmentType::Color;
+
+    auto &pipelineProvider = renderDevice->getPipelineProvider( );
+    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
+
+    RenderPassRequest renderPassRequest { };
+
+    smaaBlendWeightPass->renderPassRequest = renderPassRequest;
+
+    PipelineRequest &pipelineRequest = smaaBlendWeightPass->pipelineRequests.emplace_back( );
+
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/smaaBlendWeight.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/smaaBlendWeight.spv" );
+    pipelineRequest.cullMode = ECS::CullMode::None;
+    pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    smaaBlendWeightPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    {
+        return 0;
+    };
+
+    return smaaBlendWeightPass;
+}
+
+std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *renderDevice )
+{
+    auto smaaNeighborPass = std::make_shared< Pass >( "smaaNeighborPass" );
+    smaaNeighborPass->pipelineInputs.resize( 1 );
+    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "Resolution" );
+    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "litScene" );
+    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "blendTex" );
+    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "ScreenOversizedTriangle" );
+
+    auto &aliasedImage = smaaNeighborPass->outputs.emplace_back( OutputImage { } );
+    aliasedImage.outputResourceName = "aliasedImage";
+    aliasedImage.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    aliasedImage.flags.msaaSampled = false;
+    aliasedImage.attachmentType = ResourceAttachmentType::Color;
+
+    auto &pipelineProvider = renderDevice->getPipelineProvider( );
+    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
+
+    RenderPassRequest renderPassRequest { };
+
+    smaaNeighborPass->renderPassRequest = renderPassRequest;
+
+    PipelineRequest &pipelineRequest = smaaNeighborPass->pipelineRequests.emplace_back( );
+
+    pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/smaaNeighbor.spv" );
+    pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/smaaNeighbor.spv" );
+    pipelineRequest.cullMode = ECS::CullMode::None;
+    pipelineRequest.depthCompareOp = CompareOp::Less;
+
+    smaaNeighborPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    {
+        return 0;
+    };
+
+    return smaaNeighborPass;
+}
+
 std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDevice )
 {
     auto presentPass = std::make_shared< Pass >( "presentPass" );
     presentPass->pipelineInputs.resize( 1 );
-    presentPass->pipelineInputs[ 0 ].push_back( "litScene" );
+    presentPass->pipelineInputs[ 0 ].push_back( "aliasedImage" );
     presentPass->pipelineInputs[ 0 ].push_back( "skyBoxTex" );
     presentPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
 

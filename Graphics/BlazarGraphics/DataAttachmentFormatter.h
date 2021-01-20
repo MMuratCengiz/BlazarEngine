@@ -83,6 +83,12 @@ struct InstanceData
     uint32_t instanceCount;
 };
 
+struct Resolution
+{
+    uint32_t width;
+    uint32_t height;
+};
+
 class DataAttachmentFormatter
 {
 public:
@@ -93,7 +99,7 @@ public:
     static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform );
     static glm::mat4 formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform );
     static InstanceData formatInstances( const std::shared_ptr< ECS::CInstances > &instances );
-
+    static Resolution formatResolution( const uint32_t& width, const uint32_t& height );
 };
 
 END_NAMESPACES

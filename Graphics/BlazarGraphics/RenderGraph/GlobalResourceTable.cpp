@@ -93,6 +93,11 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
         parentBoundingName = "ScreenQuad";
     }
 
+    if ( outputGeometry == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle ) )
+    {
+        parentBoundingName = "ScreenOversizedTriangle";
+    }
+
     GeometryData data { };
     /*
      * Create vertex data:
@@ -166,7 +171,7 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
 
             if ( validResource )
             {
-                auto textureData = assetManager->getImage( content.textures[ 0 ].path );
+                auto textureData = getSamplerDataAttachment( content.textures[ 0 ] );
 
                 textureData->textureInfo = content.textures[ 0 ];
                 resource->dataAttachment = std::move( textureData );
@@ -314,8 +319,7 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
 
         for ( const auto &texture: content.textures )
         {
-            samplerAttachment = assetManager->getImage( texture.path );
-            samplerAttachment->textureInfo = texture;
+            samplerAttachment = getSamplerDataAttachment( texture );
         }
 
         wrapper.ref->dataAttachment = std::move( samplerAttachment );
@@ -329,6 +333,27 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
     {
         wrapper.ref->update( );
     }
+}
+
+std::shared_ptr< SamplerDataAttachment > GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo &texture )
+{
+    std::shared_ptr< SamplerDataAttachment > samplerAttachment;
+
+    if ( texture.isInMemory )
+    {
+        samplerAttachment = std::make_shared< SamplerDataAttachment >( );
+        samplerAttachment->content = texture.inMemoryTexture.contents;
+        samplerAttachment->width = texture.inMemoryTexture.width;
+        samplerAttachment->height = texture.inMemoryTexture.height;
+        samplerAttachment->channels = texture.inMemoryTexture.channels;
+    }
+    else
+    {
+        samplerAttachment = assetManager->getImage( texture.path );
+        samplerAttachment->textureInfo = texture;
+    }
+
+    return samplerAttachment;
 }
 
 std::shared_ptr< ShaderResource > GlobalResourceTable::getResource( const std::string &resourceName, const uint32_t &frameIndex )

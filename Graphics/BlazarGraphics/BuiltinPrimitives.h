@@ -13,6 +13,7 @@ enum class PrimitiveType
 {
     LightedCube,
     PlainSquare,
+    PlainTriangle,
     PlainCube
 };
 
@@ -193,6 +194,33 @@ public:
     }
 };
 
+class PlainTrianglePrimitive
+{
+    std::vector< float > vertices;
+public:
+    PlainTrianglePrimitive( )
+    {
+        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 0.0f } );
+        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
+        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
+
+        if ( SHOULD_FLIP_Y )
+        {
+            FLIP_Y( vertices, 1, 8 )
+        }
+    }
+
+    uint32_t getVertexCount( )
+    {
+        return 3;
+    }
+
+    [[nodiscard]] const std::vector< float > &getVertices( ) const
+    {
+        return vertices;
+    }
+};
+
 class BuiltinPrimitives
 {
 public:
@@ -206,6 +234,8 @@ public:
                 return "BuiltinPrimitives/PlainCube";
             case PrimitiveType::PlainSquare:
                 return "BuiltinPrimitives/PlainSquare";
+            case PrimitiveType::PlainTriangle:
+                return "BuiltinPrimitives/PlainTriangle";
         }
 
         return "";

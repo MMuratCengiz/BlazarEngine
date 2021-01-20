@@ -47,7 +47,7 @@ public:
 
         renderDevice = std::make_unique< Graphics::VulkanDevice >( );
         renderDevice->createDevice( window->getRenderWindow( ) );
-        renderDevice->listDevices()[ 0 ].select( );
+        renderDevice->listDevices( )[ 0 ].select( );
 
         Input::GlobalEventHandler::Instance( ).initWindowEvents( window->getWindow( ) );
 
@@ -58,12 +58,12 @@ public:
         auto graphSystem = std::make_unique< Graphics::GraphSystem >( renderDevice.get( ), assetManager.get( ) );
         registerSystem( std::move( graphSystem ) );
     }
-    
+
     void registerSystem( std::unique_ptr< ECS::ISystem > system )
     {
         systems.push_back( std::move( system ) );
     }
-    
+
     void setScene( std::shared_ptr< Scene > scene )
     {
         if ( currentScene != nullptr )
@@ -76,16 +76,36 @@ public:
                 }
             }
         }
-        
+
         currentScene = std::move( scene );
+
+        // * attach game state entity
+
+        auto gameState = std::make_shared< ECS::DynamicGameEntity >( );
+        gameState->createComponent< ECS::CGameState >( );
+
+        auto gameStateComponent = gameState->getComponent< ECS::CGameState >( );
+        gameStateComponent->surfaceWidth = window->getRenderWindow( )->getWidth( );
+        gameStateComponent->surfaceHeight = window->getRenderWindow( )->getHeight( );
+
+        Input::GlobalEventHandler::Instance().subscribeToEvent(
+                Input::EventType::WindowResized, [ = ]( const Input::EventType& eventType, std::shared_ptr< Input::IEventParameters > parameters )
+                {
+                    auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
+
+                    gameStateComponent->surfaceWidth  = windowResizeParameters->width;
+                    gameStateComponent->surfaceHeight = windowResizeParameters->height;
+                });
+
+        currentScene->addEntity( std::move( gameState ) );
 
         for ( const auto &entity: currentScene->getEntities( ) )
         {
             for ( auto &system: systems )
             {
-                system->addEntity( entity );    
+                system->addEntity( entity );
             }
-            
+
             physicsWorld->addOrUpdateEntity( entity );
         }
     }
@@ -118,7 +138,7 @@ public:
 
             if ( width > 0 && height > 0 )
             {
-                for ( auto & entity: currentScene->getEntities( ) )
+                for ( auto &entity: currentScene->getEntities( ) )
                 {
                     for ( auto &system: systems )
                     {
@@ -143,24 +163,24 @@ public:
 
         renderDevice->beforeDelete( );
     }
-    
-    const std::unique_ptr< Graphics::AssetManager >& getAssetManager( )
+
+    const std::unique_ptr< Graphics::AssetManager > &getAssetManager( )
     {
         return assetManager;
     }
 
-    const std::unique_ptr< Input::ActionMap >& getActionMap( )
+    const std::unique_ptr< Input::ActionMap > &getActionMap( )
     {
         return actionMap;
     }
 
-    const std::unique_ptr< Physics::PhysicsTransformSystem >& getTransformSystem( )
+    const std::unique_ptr< Physics::PhysicsTransformSystem > &getTransformSystem( )
     {
         return transformSystem;
     }
 
     // todo remove later
-    GLFWwindow* getGLFWwindow( )
+    GLFWwindow *getGLFWwindow( )
     {
         return window->getWindow( );
     }
@@ -174,7 +194,7 @@ public:
         transformSystem.reset( );
         physicsWorld.reset( );
 
-        for ( auto& system: systems )
+        for ( auto &system: systems )
         {
             system->cleanup( );
         }

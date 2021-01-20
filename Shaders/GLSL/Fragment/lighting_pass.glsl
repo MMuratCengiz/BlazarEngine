@@ -1,5 +1,7 @@
 #version 450
 
+#include "frag_utilities.glsl"
+
 #define MAX_ALLOWED_SHADOW_CASTERS 3
 #define ALLOWED_LIGHTS 16
 
@@ -152,6 +154,8 @@ void main() {
     for (int i = 0; i < environment.directionalLightCount; ++i) {
         outputColor += calculateDirectional(environment.directionalLights[i]) * (shadow);
     }
+
+    outputColor = gammaCorrectColor( outputColor );
 }
 
 vec4 calculateDirectional(DirectionalLight light) {

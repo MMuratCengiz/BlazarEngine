@@ -167,4 +167,9 @@ InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< EC
             };
 }
 
+Resolution DataAttachmentFormatter::formatResolution( const uint32_t& width, const uint32_t& height )
+{
+    return Resolution{ width, height };
+}
+
 END_NAMESPACES

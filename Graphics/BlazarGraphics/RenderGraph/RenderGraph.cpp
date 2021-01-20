@@ -120,6 +120,10 @@ void RenderGraph::preparePass( PassWrapper &pass )
                 {
                     pass.inputGeometry = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
                 }
+                else if ( input == "ScreenOversizedTriangle" )
+                {
+                    pass.inputGeometry = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle );
+                }
                 else
                 {
                     auto bindType = globalResourceTable->getResourceBinder( )->getResourceBindTypeOptional( input );

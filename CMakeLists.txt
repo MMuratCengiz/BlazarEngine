@@ -1,3 +1,5 @@
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/set_compiler.cmake)
+
 CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
 
 PROJECT(BlazarEngine)
@@ -25,6 +27,15 @@ ADD_SHADER(fragment gBuffer)
 ADD_SHADER(vertex shadowMap)
 ADD_SHADER(tesscontrol height_map)
 ADD_SHADER(tesseval height_map)
+
+# SMAA SHADERS:
+ADD_SHADER(vertex smaaEdge)
+ADD_SHADER(fragment smaaEdge)
+ADD_SHADER(vertex smaaNeighbor)
+ADD_SHADER(fragment smaaNeighbor)
+ADD_SHADER(vertex smaaBlendWeight)
+ADD_SHADER(fragment smaaBlendWeight)
+# //---
 
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)

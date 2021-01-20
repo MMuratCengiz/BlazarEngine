@@ -1,4 +1,6 @@
 #include "ResourceBinder.h"
+#include "AreaTex.h"
+#include "SearchTex.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -152,6 +154,18 @@ ResourceBinder::ResourceBinder( )
     END_RESOURCE_DEFINITION( )
 
     START_RESOURCE_DEFINITION( )
+            RESOURCE_NAME( "Resolution" )
+            RESOURCE_BIND_TYPE( ResourceBindType::PerFrameUniform )
+            RESOURCE_TYPE( ResourceType::Uniform )
+            FUNC( [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> UniformAttachmentContent
+                  {
+                      auto gameStateComponent = table->getComponents< ECS::CGameState >( )[ 0 ];
+                      auto data = DataAttachmentFormatter::formatResolution( gameStateComponent->surfaceWidth, gameStateComponent->surfaceHeight );
+                      ATTACH_DATA( data, Resolution )
+                  } )
+    END_RESOURCE_DEFINITION( )
+
+    START_RESOURCE_DEFINITION( )
             RESOURCE_NAME( "SkyBox" )
             RESOURCE_BIND_TYPE( ResourceBindType::PerFrameTexture )
             RESOURCE_TYPE( ResourceType::CubeMap )
@@ -169,6 +183,64 @@ ResourceBinder::ResourceBinder( )
 
                       TextureAttachmentContent attachment { };
                       attachment.resourceType = ResourceType::CubeMap;
+                      attachment.textures = result;
+
+                      return attachment;
+                  } )
+    END_RESOURCE_DEFINITION( )
+
+    START_RESOURCE_DEFINITION( )
+            RESOURCE_NAME( "searchTex" )
+            RESOURCE_BIND_TYPE( ResourceBindType::PerFrameTexture )
+            RESOURCE_TYPE( ResourceType::Sampler2D )
+            FUNC( [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> TextureAttachmentContent
+                  {
+                      std::vector< ECS::Material::TextureInfo > result;
+
+                      auto &areaTexInfo = result.emplace_back( ECS::Material::TextureInfo { } );
+
+                      areaTexInfo.U = ECS::Material::AddressMode::ClampToEdge;
+                      areaTexInfo.V = ECS::Material::AddressMode::ClampToEdge;
+                      areaTexInfo.W = ECS::Material::AddressMode::ClampToEdge;
+
+                      areaTexInfo.isInMemory = true;
+                      areaTexInfo.inMemoryTexture = { };
+                      areaTexInfo.inMemoryTexture.contents = searchTexBytes;
+                      areaTexInfo.inMemoryTexture.width = SEARCHTEX_WIDTH;
+                      areaTexInfo.inMemoryTexture.height = SEARCHTEX_HEIGHT;
+                      areaTexInfo.inMemoryTexture.channels = 4;
+
+                      TextureAttachmentContent attachment { };
+                      attachment.resourceType = ResourceType::Sampler2D;
+                      attachment.textures = result;
+
+                      return attachment;
+                  } )
+    END_RESOURCE_DEFINITION( )
+
+    START_RESOURCE_DEFINITION( )
+            RESOURCE_NAME( "areaTex" )
+            RESOURCE_BIND_TYPE( ResourceBindType::PerFrameTexture )
+            RESOURCE_TYPE( ResourceType::Sampler2D )
+            FUNC( [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> TextureAttachmentContent
+                  {
+                      std::vector< ECS::Material::TextureInfo > result;
+
+                      auto &areaTexInfo = result.emplace_back( ECS::Material::TextureInfo { } );
+
+                      areaTexInfo.U = ECS::Material::AddressMode::ClampToEdge;
+                      areaTexInfo.V = ECS::Material::AddressMode::ClampToEdge;
+                      areaTexInfo.W = ECS::Material::AddressMode::ClampToEdge;
+
+                      areaTexInfo.isInMemory = true;
+                      areaTexInfo.inMemoryTexture = { };
+                      areaTexInfo.inMemoryTexture.contents = areaTexBytes;
+                      areaTexInfo.inMemoryTexture.width = AREATEX_WIDTH;
+                      areaTexInfo.inMemoryTexture.height = AREATEX_HEIGHT;
+                      areaTexInfo.inMemoryTexture.channels = 4;
+
+                      TextureAttachmentContent attachment { };
+                      attachment.resourceType = ResourceType::Sampler2D;
                       attachment.textures = result;
 
                       return attachment;
@@ -305,12 +377,12 @@ std::vector< std::string > ResourceBinder::getAllPerEntityBinders( ) const
 {
     std::vector< std::string > result;
 
-    for ( const auto& pair: perEntityTextureBinders )
+    for ( const auto &pair: perEntityTextureBinders )
     {
         result.push_back( pair.first );
     }
 
-    for ( const auto& pair: perEntityUniformBinders )
+    for ( const auto &pair: perEntityUniformBinders )
     {
         result.push_back( pair.first );
     }

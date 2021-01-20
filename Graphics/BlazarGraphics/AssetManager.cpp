@@ -22,6 +22,12 @@ AssetManager::AssetManager( )
     MeshGeometry &plainSquare = geometryMap[ plainSquarePath ];
     plainSquare.vertices = plainSquarePrimitive.getVertices( );
     plainSquare.vertexCount = plainSquarePrimitive.getVertexCount( );
+
+    const std::string &plainTrianglePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle );
+    geometryMap[ plainTrianglePath ] = { };
+    MeshGeometry &plainTriangle = geometryMap[ plainTrianglePath ];
+    plainTriangle.vertices = plainTrianglePrimitive.getVertices( );
+    plainTriangle.vertexCount = plainTrianglePrimitive.getVertexCount( );
 }
 
 std::shared_ptr< ECS::IGameEntity > AssetManager::createEntity( const std::string &meshPath )

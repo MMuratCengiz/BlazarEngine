@@ -71,6 +71,8 @@ public:
     void setActiveGeometryModel( const GeometryData &data );
 
     std::shared_ptr< ShaderResource > getResource( const std::string &resourceName, const uint32_t &frameIndex );
+    std::shared_ptr< SamplerDataAttachment > getSamplerDataAttachment( const ECS::Material::TextureInfo& texture );
+
     std::vector< GeometryData > getGeometryList( );
     std::vector< GeometryData > getOutputGeometryList( const std::string &outputGeometry );
 

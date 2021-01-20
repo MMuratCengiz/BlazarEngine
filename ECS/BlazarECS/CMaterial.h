@@ -31,14 +31,26 @@ enum class MipmapMode
     eLinear
 };
 
+struct InMemoryTexture
+{
+    unsigned char * contents;
+    uint32_t width;
+    uint32_t height;
+    uint32_t channels;
+};
+
 struct TextureInfo
 {
     std::string path;
+
+    bool isInMemory = false;
+    InMemoryTexture inMemoryTexture;
+
     Filter magFilter = Filter::Linear;
     Filter minFilter = Filter::Linear;
     AddressMode U = AddressMode::Repeat;
-    AddressMode V = AddressMode::Repeat;;
-    AddressMode W = AddressMode::Repeat;;
+    AddressMode V = AddressMode::Repeat;
+    AddressMode W = AddressMode::Repeat;
     MipmapMode mipmapMode = MipmapMode::eLinear;
     float mipLodBias = 0.0f;
     float minLod = 0.0f;

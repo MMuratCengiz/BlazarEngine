@@ -10,6 +10,9 @@ GraphSystem::GraphSystem( IRenderDevice *renderDevice, AssetManager *assetManage
     renderGraph->addPass( CommonPasses::createGBufferPass( this->renderDevice ) );
     renderGraph->addPass( CommonPasses::createLightingPass( this->renderDevice ) );
     renderGraph->addPass( CommonPasses::createSkyBoxPass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createSMAAEdgePass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createSMAABlendWeightPass( this->renderDevice ) );
+    renderGraph->addPass( CommonPasses::createSMAANeighborPass( this->renderDevice ) );
     renderGraph->addPass( CommonPasses::createPresentPass( this->renderDevice ) );
 
     renderGraph->buildGraph( );

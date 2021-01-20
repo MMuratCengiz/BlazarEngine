@@ -17,3 +17,4 @@
 #include <BlazarECS/CCollisionObject.h>
 #include <BlazarECS/CRigidBody.h>
 #include <BlazarECS/ComponentTable.h>
+#include <BlazarECS/CGameState.h>
