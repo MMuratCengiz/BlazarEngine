@@ -14,4 +14,7 @@
 
 vec4 SMAA_RT_METRICS;
 
+#define SMAA_AREATEX_SELECT(sample) sample.rg
+#define SMAA_SEARCHTEX_SELECT(sample) sample.r
+
 #include "../External/SMAA.h"

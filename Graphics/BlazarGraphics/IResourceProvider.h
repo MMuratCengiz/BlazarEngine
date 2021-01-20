@@ -60,6 +60,9 @@ enum class ResourceImageFormat
     R32G32B32A32Sfloat,
     R16G16B16A16Sfloat,
     R8G8B8A8Unorm,
+    R8G8B8Unorm,
+    R8G8Unorm,
+    R8Unorm,
     B8G8R8A8Srgb,
     R8G8B8A8Srgb,
 };
@@ -154,7 +157,7 @@ struct IndexData : IDataAttachment
 
 struct SamplerDataAttachment : IDataAttachment
 {
-    ResourceImageFormat format;
+    ResourceImageFormat format = ResourceImageFormat::R8G8B8A8Srgb;
     uint32_t width { };
     uint32_t height { };
     uint32_t channels { };

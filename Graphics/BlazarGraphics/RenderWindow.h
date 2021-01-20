@@ -28,8 +28,11 @@ public:
                 {
                     auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
 
-                    this->width  = windowResizeParameters->width;
-                    this->height = windowResizeParameters->height;
+                    if ( windowResizeParameters->width > 0 && windowResizeParameters->height > 0 )
+                    {
+                        this->width = windowResizeParameters->width;
+                        this->height = windowResizeParameters->height;
+                    }
                 });
     }
 

@@ -16,6 +16,12 @@ GraphSystem::GraphSystem( IRenderDevice *renderDevice, AssetManager *assetManage
     renderGraph->addPass( CommonPasses::createPresentPass( this->renderDevice ) );
 
     renderGraph->buildGraph( );
+
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+    {
+        auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
+        isSystemActive = parameters->width > 0 && parameters->height > 0;
+    } );
 }
 
 void GraphSystem::addEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
@@ -44,6 +50,8 @@ void GraphSystem::entityTick( const std::shared_ptr< ECS::IGameEntity > &entity 
 
 void GraphSystem::frameEnd( const std::shared_ptr< ECS::ComponentTable > &componentTable )
 {
+    FUNCTION_BREAK( !isSystemActive )
+
     renderGraph->execute( );
 }
 

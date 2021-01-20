@@ -31,12 +31,21 @@ enum class MipmapMode
     eLinear
 };
 
+enum class ImageFormat
+{
+    R8G8B8A8Unorm,
+    R8G8B8Unorm,
+    R8G8Unorm,
+    R8Unorm,
+};
+
 struct InMemoryTexture
 {
     unsigned char * contents;
     uint32_t width;
     uint32_t height;
     uint32_t channels;
+    ImageFormat format;
 };
 
 struct TextureInfo

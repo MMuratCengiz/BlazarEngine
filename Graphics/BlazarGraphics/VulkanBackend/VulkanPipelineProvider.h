@@ -64,9 +64,10 @@ struct PipelineCreateInfos
 class VulkanPipelineProvider : public IPipelineProvider
 {
 private:
-    const std::array< vk::DynamicState, 3 > dynamicStates = {
+    const std::array< vk::DynamicState, 4 > dynamicStates = {
             vk::DynamicState::eViewport,
             vk::DynamicState::eDepthBias,
+            vk::DynamicState::eScissor,
             vk::DynamicState::eLineWidth
     };
 

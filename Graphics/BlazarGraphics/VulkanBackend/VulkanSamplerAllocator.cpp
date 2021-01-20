@@ -18,7 +18,42 @@ void VulkanSamplerAllocator::load( const TextureLoadArguments& arguments, Vulkan
         mipLevels = 1;
     }
 
-    vk::Format format = vk::Format::eR8G8B8A8Srgb;
+
+    vk::Format format = vk::Format::eR8G8B8A8Unorm;
+
+    switch ( image->format )
+    {
+        case ResourceImageFormat::R8G8B8A8Srgb:
+            format = vk::Format::eR8G8B8A8Srgb;
+            break;
+        case ResourceImageFormat::MatchSwapChainImageFormat:
+        case ResourceImageFormat::BestDepthFormat:
+            break;
+        case ResourceImageFormat::D32Sfloat:
+            format = vk::Format::eD32Sfloat;
+            break;
+        case ResourceImageFormat::R32G32B32A32Sfloat:
+            format = vk::Format::eR32G32B32A32Sfloat;
+            break;
+        case ResourceImageFormat::R16G16B16A16Sfloat:
+            format = vk::Format::eR16G16B16A16Sfloat;
+            break;
+        case ResourceImageFormat::R8G8B8A8Unorm:
+            format = vk::Format::eR8G8B8A8Unorm;
+            break;
+        case ResourceImageFormat::R8G8B8Unorm:
+            format = vk::Format::eR8G8B8Unorm;
+            break;
+        case ResourceImageFormat::R8G8Unorm:
+            format = vk::Format::eR8G8Unorm;
+            break;
+        case ResourceImageFormat::R8Unorm:
+            format = vk::Format::eR8Unorm;
+            break;
+        case ResourceImageFormat::B8G8R8A8Srgb:
+            format = vk::Format::eB8G8R8A8Srgb;
+            break;
+    }
 
     target->mipLevels = mipLevels;
 

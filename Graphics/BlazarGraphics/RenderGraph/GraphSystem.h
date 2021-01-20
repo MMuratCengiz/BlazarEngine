@@ -2,6 +2,7 @@
 
 #include <BlazarCore/Common.h>
 #include <BlazarECS/ECS.h>
+#include <BlazarInput/GlobalEventHandler.h>
 #include "RenderGraph.h"
 #include "CommonPasses.h"
 #include "../IRenderDevice.h"
@@ -15,6 +16,7 @@ private:
     std::unique_ptr< RenderGraph > renderGraph;
     IRenderDevice* renderDevice;
     AssetManager* assetManager;
+    bool isSystemActive = true;
 public:
     GraphSystem( IRenderDevice* renderDevice, AssetManager* assetManager );
     void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) override;

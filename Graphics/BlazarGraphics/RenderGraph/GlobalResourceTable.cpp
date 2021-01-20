@@ -346,6 +346,22 @@ std::shared_ptr< SamplerDataAttachment > GlobalResourceTable::getSamplerDataAtta
         samplerAttachment->width = texture.inMemoryTexture.width;
         samplerAttachment->height = texture.inMemoryTexture.height;
         samplerAttachment->channels = texture.inMemoryTexture.channels;
+
+        switch ( texture.inMemoryTexture.format )
+        {
+            case ECS::Material::ImageFormat::R8G8B8A8Unorm:
+                samplerAttachment->format = ResourceImageFormat::R8G8B8A8Unorm;
+                break;
+            case ECS::Material::ImageFormat::R8G8B8Unorm:
+                samplerAttachment->format = ResourceImageFormat::R8G8B8Unorm;
+                break;
+            case ECS::Material::ImageFormat::R8G8Unorm:
+                samplerAttachment->format = ResourceImageFormat::R8G8Unorm;
+                break;
+            case ECS::Material::ImageFormat::R8Unorm:
+                samplerAttachment->format = ResourceImageFormat::R8Unorm;
+                break;
+        }
     }
     else
     {

@@ -197,18 +197,19 @@ ResourceBinder::ResourceBinder( )
                   {
                       std::vector< ECS::Material::TextureInfo > result;
 
-                      auto &areaTexInfo = result.emplace_back( ECS::Material::TextureInfo { } );
+                      auto &searchTextInfo = result.emplace_back( ECS::Material::TextureInfo { } );
 
-                      areaTexInfo.U = ECS::Material::AddressMode::ClampToEdge;
-                      areaTexInfo.V = ECS::Material::AddressMode::ClampToEdge;
-                      areaTexInfo.W = ECS::Material::AddressMode::ClampToEdge;
+                      searchTextInfo.U = ECS::Material::AddressMode::ClampToEdge;
+                      searchTextInfo.V = ECS::Material::AddressMode::ClampToEdge;
+                      searchTextInfo.W = ECS::Material::AddressMode::ClampToEdge;
 
-                      areaTexInfo.isInMemory = true;
-                      areaTexInfo.inMemoryTexture = { };
-                      areaTexInfo.inMemoryTexture.contents = searchTexBytes;
-                      areaTexInfo.inMemoryTexture.width = SEARCHTEX_WIDTH;
-                      areaTexInfo.inMemoryTexture.height = SEARCHTEX_HEIGHT;
-                      areaTexInfo.inMemoryTexture.channels = 4;
+                      searchTextInfo.isInMemory = true;
+                      searchTextInfo.inMemoryTexture = { };
+                      searchTextInfo.inMemoryTexture.contents = searchTexBytes;
+                      searchTextInfo.inMemoryTexture.width = SEARCHTEX_WIDTH;
+                      searchTextInfo.inMemoryTexture.height = SEARCHTEX_HEIGHT;
+                      searchTextInfo.inMemoryTexture.channels = 4;
+                      searchTextInfo.inMemoryTexture.format = ECS::Material::ImageFormat::R8Unorm;
 
                       TextureAttachmentContent attachment { };
                       attachment.resourceType = ResourceType::Sampler2D;
@@ -238,6 +239,7 @@ ResourceBinder::ResourceBinder( )
                       areaTexInfo.inMemoryTexture.width = AREATEX_WIDTH;
                       areaTexInfo.inMemoryTexture.height = AREATEX_HEIGHT;
                       areaTexInfo.inMemoryTexture.channels = 4;
+                      areaTexInfo.inMemoryTexture.format = ECS::Material::ImageFormat::R8G8Unorm;
 
                       TextureAttachmentContent attachment { };
                       attachment.resourceType = ResourceType::Sampler2D;

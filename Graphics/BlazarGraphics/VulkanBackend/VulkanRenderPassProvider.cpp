@@ -90,9 +90,12 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ = ]( const Input::EventType &type, std::shared_ptr< Input::IEventParameters > )
     {
         context->logicalDevice.waitIdle( );
-        renderTarget->cleanup( );
-        renderTarget->recreateBuffer( );
-        context->logicalDevice.waitIdle( );
+        if ( context->surfaceExtent.width > 0 && context->surfaceExtent.height > 0 )
+        {
+            renderTarget->cleanup( );
+            renderTarget->recreateBuffer( );
+            context->logicalDevice.waitIdle( );
+        }
     } );
 
     return renderTarget;
@@ -482,8 +485,8 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
         {
             auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
             this->context->logicalDevice.waitIdle( );
-
             updateViewport( parameters->width, parameters->height );
+            this->context->logicalDevice.waitIdle( );
         } );
     }
 }
@@ -655,7 +658,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
  * -
  */
 
-void VulkanRenderPass::draw( const uint32_t& instanceCount )
+void VulkanRenderPass::draw( const uint32_t &instanceCount )
 {
     FUNCTION_BREAK( vertexDataAttachment == nullptr )
 
@@ -818,19 +821,22 @@ void VulkanRenderPass::presentPassToSwapChain( )
     }
 }
 
-void VulkanRenderPass::updateViewport( const uint32_t& width, const uint32_t& height )
+void VulkanRenderPass::updateViewport( const uint32_t &width, const uint32_t &height )
 {
+    FUNCTION_BREAK( width == 0 || height == 0 )
+
     viewport.x = renderArea.x;
-//    viewport.y = (float ) height - renderArea.y;
     viewport.y = renderArea.y;
     viewport.width = width;
-//    viewport.height = - ( ( float ) height );
     viewport.height = ( ( float ) height );
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     viewScissor.offset = vk::Offset2D( viewport.x, renderArea.y );
     viewScissor.extent = vk::Extent2D( width, height );
+
+    renderArea.width = width;
+    renderArea.height = height;
 }
 
 VulkanRenderPass::~VulkanRenderPass( )

@@ -117,7 +117,10 @@ void SampleGame::init( )
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )
     {
         auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
-        camera->updateAspectRatio( windowParams->width, windowParams->height );
+        if ( windowParams->width > 0 && windowParams->height > 0 )
+        {
+            camera->updateAspectRatio( windowParams->width, windowParams->height );
+        }
     } );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::Tick, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )

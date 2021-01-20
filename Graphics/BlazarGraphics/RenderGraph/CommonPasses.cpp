@@ -43,7 +43,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 
     auto &gBuffer_AlbedoSpec = gBufferPass->outputs.emplace_back( OutputImage { } );
     gBuffer_AlbedoSpec.outputResourceName = "gBuffer_AlbedoSpec";
-    gBuffer_AlbedoSpec.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    gBuffer_AlbedoSpec.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
     gBuffer_AlbedoSpec.attachmentType = ResourceAttachmentType::Color;
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
@@ -91,7 +91,7 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
 
     auto &presentImage = lightingPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "litScene";
-    presentImage.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    presentImage.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
     presentImage.flags.msaaSampled = false;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 
@@ -203,7 +203,7 @@ std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderD
 
     auto &edgesTex = smaaEdgePass->outputs.emplace_back( OutputImage { } );
     edgesTex.outputResourceName = "edgesTex";
-    edgesTex.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    edgesTex.imageFormat = ResourceImageFormat::R32G32B32A32Sfloat;
     edgesTex.flags.msaaSampled = false;
     edgesTex.attachmentType = ResourceAttachmentType::Color;
 
@@ -241,7 +241,7 @@ std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *
 
     auto &blendTex = smaaBlendWeightPass->outputs.emplace_back( OutputImage { } );
     blendTex.outputResourceName = "blendTex";
-    blendTex.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    blendTex.imageFormat = ResourceImageFormat::R32G32B32A32Sfloat;
     blendTex.flags.msaaSampled = false;
     blendTex.attachmentType = ResourceAttachmentType::Color;
 
@@ -278,7 +278,7 @@ std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *ren
 
     auto &aliasedImage = smaaNeighborPass->outputs.emplace_back( OutputImage { } );
     aliasedImage.outputResourceName = "aliasedImage";
-    aliasedImage.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    aliasedImage.imageFormat = ResourceImageFormat::R32G32B32A32Sfloat;
     aliasedImage.flags.msaaSampled = false;
     aliasedImage.attachmentType = ResourceAttachmentType::Color;
 
