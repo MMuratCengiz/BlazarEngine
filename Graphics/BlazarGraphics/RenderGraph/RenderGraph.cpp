@@ -26,16 +26,22 @@ void RenderGraph::buildGraph( )
     // flatten pipeline input, saves a loop later
     for ( auto &pass: passes )
     {
+        uint32_t pipelineIndex = 0;
+
+        pass.pipelineInputsMap.resize( pass.ref->pipelineInputs.size( ) );
+
         for ( const auto &pipelineInputs: pass.ref->pipelineInputs )
         {
             for ( const auto &input: pipelineInputs )
             {
-                if ( pass.pipelineInputsMap.find( input ) == pass.pipelineInputsMap.end( ) )
+                if ( pass.pipelineInputsMap[ pipelineIndex ].find( input ) == pass.pipelineInputsMap[ pipelineIndex ].end( ) )
                 {
                     pass.pipelineInputsFlat.push_back( input );
-                    pass.pipelineInputsMap[ input ] = true;
+                    pass.pipelineInputsMap[ pipelineIndex ][ input ] = true;
                 }
             }
+
+            pipelineIndex++;
         }
     }
 
@@ -99,7 +105,7 @@ void RenderGraph::preparePass( PassWrapper &pass )
 {
     // Initialize inputs
     uint32_t pipelineIndex = 0;
-    
+
     if ( pass.adaptedInputs.empty( ) )
     {
         pass.adaptedInputs.resize( pass.ref->pipelineInputs.size( ) );
@@ -278,33 +284,37 @@ void RenderGraph::executePass( const PassWrapper &pass )
 
     for ( auto &geometry: geometries )
     {
-        int selectedPipeline = pass.ref->selectPipeline( geometry.referenceEntity );
-        renderPass->bindPipeline( pass.pipelines[ selectedPipeline ] );
+        auto selectedPipelines = pass.ref->selectPipeline( geometry.referenceEntity );
 
-        for ( const auto &resource: geometry.resources )
+        for ( auto selectedPipeline: selectedPipelines )
         {
-            if ( pass.pipelineInputsMap.find( resource.boundResourceName ) != pass.pipelineInputsMap.end( ) )
+            renderPass->bindPipeline( pass.pipelines[ selectedPipeline ] );
+
+            for ( const auto &resource: geometry.resources )
             {
-                renderPass->bindPerObject( resource.ref );
+                if ( pass.pipelineInputsMap[ selectedPipeline ].find( resource.boundResourceName ) != pass.pipelineInputsMap[ selectedPipeline ].end( ) )
+                {
+                    renderPass->bindPerObject( resource.ref );
+                }
             }
+
+            if ( geometry.modelTransformPtr != nullptr )
+            {
+                globalResourceTable->setActiveGeometryModel( geometry );
+            }
+
+            bindAdaptedInputs( pass, renderPass, selectedPipeline, false );
+
+            uint32_t instanceCount = 1;
+
+            auto instances = geometry.referenceEntity->getComponent< ECS::CInstances >( );
+            if ( instances != nullptr )
+            {
+                instanceCount += instances->transforms.size( );
+            }
+
+            renderPass->draw( instanceCount );
         }
-
-        if ( geometry.modelTransformPtr != nullptr )
-        {
-            globalResourceTable->setActiveGeometryModel( geometry );
-        }
-
-        bindAdaptedInputs( pass, renderPass, selectedPipeline, false );
-
-        uint32_t instanceCount = 1;
-
-        auto instances = geometry.referenceEntity->getComponent< ECS::CInstances >( );
-        if ( instances != nullptr )
-        {
-            instanceCount += instances->transforms.size( );
-        }
-
-        renderPass->draw( instanceCount );
     }
 
     redrawFrame = !renderPass->submit( std::vector< std::shared_ptr< IResourceLock > >( ), pass.executeLocks[ frameIndex ] );

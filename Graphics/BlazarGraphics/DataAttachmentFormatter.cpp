@@ -83,7 +83,7 @@ EnvironmentLights DataAttachmentFormatter::formatLightingEnvironment( const std:
     return lights;
 }
 
-glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform )
+glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity )
 {
     glm::mat4 modelMatrix { 1 };
 
@@ -107,9 +107,9 @@ glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS
     return modelMatrix;
 }
 
-glm::mat4 DataAttachmentFormatter::formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform )
+glm::mat4 DataAttachmentFormatter::formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity )
 {
-    glm::mat3 normalMatrix = glm::mat3( formatModelMatrix( transform ) );
+    glm::mat3 normalMatrix = glm::mat3( formatModelMatrix( transform, refEntity ) );
 
     normalMatrix = glm::inverse( normalMatrix );
     normalMatrix = glm::transpose( normalMatrix );
@@ -141,7 +141,7 @@ Tessellation DataAttachmentFormatter::formatTessellationComponent( const std::sh
     return { tessellation->innerLevel, tessellation->outerLevel };
 }
 
-InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< ECS::CInstances > &instances )
+InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< ECS::CInstances > &instances, const std::shared_ptr< ECS::IGameEntity > &entity )
 {
     std::array< glm::mat4, 100 > result { };
 
@@ -157,7 +157,7 @@ InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< EC
     uint32_t i;
     for ( i = 0; i < instances->transforms.size( ); ++i )
     {
-        result[ i ] = formatModelMatrix( instances->transforms[ i ] );
+        result[ i ] = formatModelMatrix( instances->transforms[ i ], entity );
     }
 
     return

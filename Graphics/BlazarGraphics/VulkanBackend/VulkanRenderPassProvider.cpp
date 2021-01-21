@@ -109,10 +109,15 @@ vk::ImageAspectFlags VulkanRenderPassProvider::getOutputImageVkAspect( VulkanCon
     {
         aspectFlags = vk::ImageAspectFlagBits::eDepth;
     }
+    else if ( outputImage.attachmentType == ResourceAttachmentType::Stencil )
+    {
+        aspectFlags = vk::ImageAspectFlagBits::eStencil;
+    }
     else if ( outputImage.attachmentType == ResourceAttachmentType::DepthAndStencil )
     {
         aspectFlags = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
     }
+
     return aspectFlags;
 }
 
@@ -274,7 +279,7 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     {
         attachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
         attachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-        attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+        attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eClear;
         attachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
         attachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
     };
@@ -291,6 +296,10 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
             {
                 attachmentDescription.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             }
+        }
+        else if ( outputImage.attachmentType == ResourceAttachmentType::DepthAndStencil )
+        {
+            attachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
         }
         else if ( outputImage.flags.presentedImage && !outputImage.flags.msaaSampled )
         {
@@ -404,7 +413,7 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
         dependency1.dstSubpass = 0;
 
         dependency1.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-        dependency1.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency1.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput ;
 
         dependency1.srcAccessMask = vk::AccessFlagBits::eMemoryRead;
         dependency1.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead;

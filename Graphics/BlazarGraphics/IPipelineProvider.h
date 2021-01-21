@@ -25,10 +25,38 @@ struct Shader
 
 enum class CompareOp
 {
+    Equal,
+    NotEqual,
+    Always,
     Less,
     LessOrEqual,
     Greater,
     GreaterOrEqual
+};
+
+enum class StencilOp
+{
+    Keep,
+    Zero,
+    Replace,
+    IncrementAndClamp,
+    DecrementAndClamp,
+    Invert,
+    IncrementAndWrap,
+    DecrementAndWrap
+};
+
+struct StencilTestState
+{
+    bool enabled = false;
+    CompareOp compareOp;
+    uint32_t compareMask;
+    uint32_t writeMask;
+    uint32_t ref;
+
+    StencilOp failOp;
+    StencilOp passOp;
+    StencilOp depthFailOp;
 };
 
 enum class BindPoint
@@ -41,6 +69,10 @@ struct PipelineRequest
 {
     ECS::CullMode cullMode;
     CompareOp depthCompareOp;
+    bool enableDepthTest = true;
+
+    StencilTestState stencilTestStateFront { };
+    StencilTestState stencilTestStateBack { };
 
     std::unordered_map< ShaderType, std::string > shaderPaths;
 

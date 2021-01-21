@@ -216,10 +216,10 @@ std::shared_ptr< ShaderResource > GlobalResourceTable::createResource( const Res
 
 void GlobalResourceTable::setActiveGeometryModel( const GeometryData &data )
 {
-    auto modelMat = DataAttachmentFormatter::formatModelMatrix( data.modelTransformPtr );
+    auto modelMat = DataAttachmentFormatter::formatModelMatrix( data.modelTransformPtr, data.referenceEntity );
     memcpy( globalModelResourcePlaceholder->dataAttachment->content, &modelMat, globalModelResourcePlaceholder->dataAttachment->size );
 
-    auto normalMat = DataAttachmentFormatter::formatNormalMatrix( data.modelTransformPtr );
+    auto normalMat = DataAttachmentFormatter::formatNormalMatrix( data.modelTransformPtr, data.referenceEntity );
     memcpy( globalNormalModelResourcePlaceholder->dataAttachment->content, &normalMat, globalModelResourcePlaceholder->dataAttachment->size );
 }
 

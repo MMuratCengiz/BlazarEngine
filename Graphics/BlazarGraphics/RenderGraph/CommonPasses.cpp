@@ -2,13 +2,15 @@
 #include "CommonPasses.h"
 #include "StaticVars.h"
 
+#define RETURN_SINGLE_PIPELINE( value ) std::vector< int > v; v.push_back( value ); return v;
+
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
 {
     auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
-    gBufferPass->pipelineInputs.resize( 2 );
-    for ( int i = 0; i < 2; ++i )
+    gBufferPass->pipelineInputs.resize( 4 );
+    for ( int i = 0; i < 4; ++i )
     {
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
@@ -24,12 +26,18 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
             gBufferPass->pipelineInputs[ i ].push_back( "HeightMap" );
             gBufferPass->pipelineInputs[ i ].push_back( "Tessellation" );
         }
+
+        if ( i == 3 )
+        {
+            gBufferPass->pipelineInputs[ i ].push_back( "OutlineScale" );
+            gBufferPass->pipelineInputs[ i ].push_back( "OutlineColor" );
+        }
     }
 
     auto &depthBuffer = gBufferPass->outputs.emplace_back( );
     depthBuffer.outputResourceName = "depthBuffer";
     depthBuffer.imageFormat = ResourceImageFormat::BestDepthFormat;
-    depthBuffer.attachmentType = ResourceAttachmentType::Depth;
+    depthBuffer.attachmentType = ResourceAttachmentType::DepthAndStencil;
 
     auto &gBuffer_Position = gBufferPass->outputs.emplace_back( OutputImage { } );
     gBuffer_Position.outputResourceName = "gBuffer_Position";
@@ -55,7 +63,29 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 
     gBufferPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return entity->hasComponent< ECS::CTessellation >( ) ? 1 : 0;
+        int pipeline = entity->hasComponent< ECS::CTessellation >( ) ? 1 : 0;
+
+        if ( entity->hasComponent< ECS::COutlined >( ) )
+        {
+            std::vector< int > pipelines;
+            pipelines.push_back( 3 );
+            pipelines.push_back( 2 );
+            return pipelines;
+        }
+
+        RETURN_SINGLE_PIPELINE( pipeline )
+    };
+
+    auto setPipelineStencilDefaults = [ ]( PipelineRequest &request )
+    {
+        request.stencilTestStateFront.compareMask = 0xFF;
+        request.stencilTestStateFront.writeMask = 0xFF;
+        request.stencilTestStateFront.compareOp = CompareOp::Always;
+        request.stencilTestStateFront.enabled = true;
+        request.stencilTestStateFront.ref = 1;
+        request.stencilTestStateFront.failOp = StencilOp::Replace;
+        request.stencilTestStateFront.depthFailOp = StencilOp::Replace;
+        request.stencilTestStateFront.passOp = StencilOp::Replace;
     };
 
     PipelineRequest &pipelineRequest = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
@@ -73,6 +103,28 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     heightmapTessellationPipeline.shaderPaths[ ShaderType::TessellationEval ] = PATH( "/Shaders/SPIRV/tesseval/height_map.spv" );
     heightmapTessellationPipeline.cullMode = ECS::CullMode::BackFace;
     heightmapTessellationPipeline.depthCompareOp = CompareOp::Less;
+
+    PipelineRequest &stencilTestEnabled = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
+
+    stencilTestEnabled.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer.spv" );
+    stencilTestEnabled.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
+    stencilTestEnabled.cullMode = ECS::CullMode::None;
+    stencilTestEnabled.depthCompareOp = CompareOp::Less;
+    setPipelineStencilDefaults( stencilTestEnabled );
+
+    PipelineRequest &outlinedPipeline = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
+
+    outlinedPipeline.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer_outlined.spv" );
+    outlinedPipeline.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer_outlined.spv" );
+    outlinedPipeline.cullMode = ECS::CullMode::FrontFace;
+    outlinedPipeline.depthCompareOp = CompareOp::Less;
+    outlinedPipeline.enableDepthTest = false;
+
+    setPipelineStencilDefaults( outlinedPipeline );
+    outlinedPipeline.stencilTestStateFront.compareOp = CompareOp::NotEqual;
+    outlinedPipeline.stencilTestStateFront.failOp = StencilOp::Keep;
+    outlinedPipeline.stencilTestStateFront.depthFailOp = StencilOp::Keep;
+    outlinedPipeline.stencilTestStateFront.passOp = StencilOp::Replace;
 
     return gBufferPass;
 }
@@ -111,7 +163,7 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
 
     lightingPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return lightingPass;
@@ -151,7 +203,7 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
 
     shadowMapPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return shadowMapPass;
@@ -187,7 +239,7 @@ std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
 
     skyboxPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return skyboxPass;
@@ -223,7 +275,7 @@ std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderD
 
     smaaEdgePass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return smaaEdgePass;
@@ -261,7 +313,7 @@ std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *
 
     smaaBlendWeightPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return smaaBlendWeightPass;
@@ -298,7 +350,7 @@ std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *ren
 
     smaaNeighborPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return smaaNeighborPass;
@@ -336,7 +388,7 @@ std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDe
 
     presentPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
-        return 0;
+        RETURN_SINGLE_PIPELINE( 0 )
     };
 
     return presentPass;

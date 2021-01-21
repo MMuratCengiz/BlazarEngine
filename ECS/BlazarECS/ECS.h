@@ -18,3 +18,4 @@
 #include <BlazarECS/CRigidBody.h>
 #include <BlazarECS/ComponentTable.h>
 #include <BlazarECS/CGameState.h>
+#include <BlazarECS/COutlined.h>

@@ -288,31 +288,96 @@ void VulkanPipelineProvider::createRenderPass( PipelineCreateInfos &createInfo )
 
 void VulkanPipelineProvider::createDepthAttachmentImages( PipelineCreateInfos &createInfo )
 {
-    createInfo.depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;//createInfo.options.depthTestEnable;
-    createInfo.depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE; //createInfo.options.depthTestEnable;
+    createInfo.depthStencilStateCreateInfo.depthTestEnable = createInfo.request.enableDepthTest;
+    createInfo.depthStencilStateCreateInfo.depthWriteEnable = createInfo.request.enableDepthTest;
 
-    switch ( createInfo.request.depthCompareOp )
+    auto setCompareOp = [ ]( vk::CompareOp & vkCompareOp, const CompareOp& blazarCompareOp )
     {
-        case CompareOp::Less:
-            createInfo.depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
-            break;
-        case CompareOp::LessOrEqual:
-            createInfo.depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eLessOrEqual;
-            break;
-        case CompareOp::Greater:
-            createInfo.depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreater;
-            break;
-        case CompareOp::GreaterOrEqual:
-            createInfo.depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eGreaterOrEqual;
-            break;
-    }
+        switch ( blazarCompareOp )
+        {
+            case CompareOp::Always:
+                vkCompareOp = vk::CompareOp::eAlways;
+                break;
+            case CompareOp::Equal:
+                vkCompareOp = vk::CompareOp::eEqual;
+                break;
+            case CompareOp::NotEqual:
+                vkCompareOp = vk::CompareOp::eNotEqual;
+                break;
+            case CompareOp::Less:
+                vkCompareOp = vk::CompareOp::eLess;
+                break;
+            case CompareOp::LessOrEqual:
+                vkCompareOp = vk::CompareOp::eLessOrEqual;
+                break;
+            case CompareOp::Greater:
+                vkCompareOp = vk::CompareOp::eGreater;
+                break;
+            case CompareOp::GreaterOrEqual:
+                vkCompareOp = vk::CompareOp::eGreaterOrEqual;
+                break;
+        }
+    };
+
+    auto setStencilOp = [ ]( vk::StencilOp & vkStencilOp, const StencilOp& blazarStencilOp )
+    {
+        switch ( blazarStencilOp )
+        {
+            case StencilOp::Keep:
+                vkStencilOp = vk::StencilOp::eKeep;
+                break;
+            case StencilOp::Zero:
+                vkStencilOp = vk::StencilOp::eZero;
+                break;
+            case StencilOp::Replace:
+                vkStencilOp = vk::StencilOp::eReplace;
+                break;
+            case StencilOp::IncrementAndClamp:
+                vkStencilOp = vk::StencilOp::eIncrementAndClamp;
+                break;
+            case StencilOp::DecrementAndClamp:
+                vkStencilOp = vk::StencilOp::eDecrementAndClamp;
+                break;
+            case StencilOp::Invert:
+                vkStencilOp = vk::StencilOp::eInvert;
+                break;
+            case StencilOp::IncrementAndWrap:
+                vkStencilOp = vk::StencilOp::eIncrementAndWrap;
+                break;
+            case StencilOp::DecrementAndWrap:
+                vkStencilOp = vk::StencilOp::eDecrementAndWrap;
+                break;
+        }
+    };
+
+    setCompareOp( createInfo.depthStencilStateCreateInfo.depthCompareOp, createInfo.request.depthCompareOp );
 
     createInfo.depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
     createInfo.depthStencilStateCreateInfo.minDepthBounds = 0.0f;
     createInfo.depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
-    createInfo.depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+
+    bool enableStencilTest = createInfo.request.stencilTestStateFront.enabled || createInfo.request.stencilTestStateBack.enabled;
+
+    createInfo.depthStencilStateCreateInfo.stencilTestEnable = enableStencilTest;
+
     createInfo.depthStencilStateCreateInfo.front = vk::StencilOpState { };
     createInfo.depthStencilStateCreateInfo.back = vk::StencilOpState { };
+
+    auto initStencilState = [ = ]( vk::StencilOpState& state, const StencilTestState& blazarState )
+    {
+        FUNCTION_BREAK( !blazarState.enabled );
+
+        setCompareOp( state.compareOp, blazarState.compareOp );
+        state.compareMask = blazarState.compareMask;
+        state.writeMask = blazarState.writeMask;
+        state.reference = blazarState.ref;
+        setStencilOp( state.failOp, blazarState.failOp );
+        setStencilOp( state.passOp, blazarState.passOp );
+        setStencilOp( state.depthFailOp, blazarState.depthFailOp );
+    };
+
+    initStencilState( createInfo.depthStencilStateCreateInfo.front, createInfo.request.stencilTestStateFront );
+    initStencilState( createInfo.depthStencilStateCreateInfo.back, createInfo.request.stencilTestStateFront );
 
     createInfo.pipelineCreateInfo.pDepthStencilState = &createInfo.depthStencilStateCreateInfo;
 }

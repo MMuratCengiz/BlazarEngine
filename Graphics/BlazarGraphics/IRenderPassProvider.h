@@ -26,6 +26,7 @@ struct OutputImageFlags
 {
     bool msaaSampled: 1;
     bool presentedImage: 1;
+    bool shaderRead : 1;
 };
 
 struct OutputImage

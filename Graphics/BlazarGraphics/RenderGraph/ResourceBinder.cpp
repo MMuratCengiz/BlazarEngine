@@ -30,8 +30,44 @@ ResourceBinder::ResourceBinder( )
             RESOURCE_TYPE( ResourceType::Uniform )
             FUNC( [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> UniformAttachmentContent
                   {
-                      auto data = DataAttachmentFormatter::formatInstances( entity->getComponent< ECS::CInstances >( ) );
+                      auto data = DataAttachmentFormatter::formatInstances( entity->getComponent< ECS::CInstances >( ), entity );
                       ATTACH_DATA( data, InstanceData )
+                  } )
+    END_RESOURCE_DEFINITION( )
+
+    START_RESOURCE_DEFINITION( )
+            RESOURCE_NAME( "OutlineColor" )
+            RESOURCE_BIND_TYPE( ResourceBindType::PerEntityUniform )
+            RESOURCE_TYPE( ResourceType::Uniform )
+            FUNC( [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> UniformAttachmentContent
+                  {
+                      auto outlineComponent = entity->getComponent< ECS::COutlined >( );
+
+                      if ( outlineComponent == nullptr )
+                      {
+                          ATTACH_EMPTY( )
+                      }
+
+                      auto data = outlineComponent->outlineColor;
+                      ATTACH_DATA( data, glm::vec4 )
+                  } )
+    END_RESOURCE_DEFINITION( )
+
+    START_RESOURCE_DEFINITION( )
+            RESOURCE_NAME( "OutlineScale" )
+            RESOURCE_BIND_TYPE( ResourceBindType::PerEntityUniform )
+            RESOURCE_TYPE( ResourceType::Uniform )
+            FUNC( [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> UniformAttachmentContent
+                  {
+                      auto outlineComponent = entity->getComponent< ECS::COutlined >( );
+
+                      if ( outlineComponent == nullptr )
+                      {
+                          ATTACH_EMPTY( )
+                      }
+
+                      auto data = glm::vec4( outlineComponent->borderScale );
+                      ATTACH_DATA( data, glm::vec4 )
                   } )
     END_RESOURCE_DEFINITION( )
 

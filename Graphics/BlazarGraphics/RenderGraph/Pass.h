@@ -19,7 +19,8 @@ struct Pass
     std::vector< std::vector< std::string > > pipelineInputs;
     std::vector< OutputImage > outputs;
 
-    std::function< int( const std::shared_ptr< ECS::IGameEntity >& entity ) > selectPipeline;
+    // If more than one pipelines are returned the same object is rendered multiple times with different pipelines
+    std::function< std::vector< int >( const std::shared_ptr< ECS::IGameEntity >& entity ) > selectPipeline;
 
     explicit Pass( std::string name ) : name( std::move( name ) )
     { }

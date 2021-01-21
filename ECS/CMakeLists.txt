@@ -17,7 +17,7 @@ SET(BlazarECSSources
         BlazarECS/CCamera.h
         BlazarECS/ComponentTable.h
         BlazarECS/ComponentTable.cpp
-        )
+        BlazarECS/COutlined.h)
 
 ADD_LIBRARY(BlazarECS ${BlazarECSSources})
 
