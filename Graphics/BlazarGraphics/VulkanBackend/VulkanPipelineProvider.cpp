@@ -248,7 +248,7 @@ void VulkanPipelineProvider::configureColorBlend( PipelineCreateInfos &createInf
         if ( createInfo.request.blendMode == BlendMode::TransparentBlend )
         {
             createInfo.colorBlendAttachments[ i ].blendEnable = true;
-            createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eOne;
+            createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
             createInfo.colorBlendAttachments[ i ].dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
 
             createInfo.colorBlendAttachments[ i ].srcAlphaBlendFactor = vk::BlendFactor::eOne;
