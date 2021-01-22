@@ -18,10 +18,10 @@ layout (location = 2) in vec2 inTextureCoor;
 
 layout (location = 0) out vec4 gBuffer_Position;
 layout (location = 1) out vec4 gBuffer_Normal;
-layout (location = 2) out vec4 gBuffer_AlbedoSpec;
+layout (location = 2) out vec4 gBuffer_Albedo;
 
 void main() {
     gBuffer_Position = inPosition;
     gBuffer_Normal = vec4( inNormal, 0.0f );
-    gBuffer_AlbedoSpec = vec4( texture( Texture1, inTextureCoor * mat.textureScale.xz ).rgb, mat.shininess );
+    gBuffer_Albedo = texture( Texture1, inTextureCoor * mat.textureScale.xz );
 }

@@ -50,7 +50,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     gBuffer_Normal.attachmentType = ResourceAttachmentType::Color;
 
     auto &gBuffer_AlbedoSpec = gBufferPass->outputs.emplace_back( OutputImage { } );
-    gBuffer_AlbedoSpec.outputResourceName = "gBuffer_AlbedoSpec";
+    gBuffer_AlbedoSpec.outputResourceName = "gBuffer_Albedo";
     gBuffer_AlbedoSpec.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
     gBuffer_AlbedoSpec.attachmentType = ResourceAttachmentType::Color;
 
@@ -135,7 +135,7 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     lightingPass->pipelineInputs.resize( 1 );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_AlbedoSpec" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Albedo" );
     lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
     lightingPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
     lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );

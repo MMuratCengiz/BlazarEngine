@@ -233,13 +233,27 @@ void VulkanPipelineProvider::configureColorBlend( PipelineCreateInfos &createInf
     {
         createInfo.colorBlendAttachments[ i ].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                                                                vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+
         createInfo.colorBlendAttachments[ i ].blendEnable = false;
-        createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eOne;
+
         createInfo.colorBlendAttachments[ i ].dstColorBlendFactor = vk::BlendFactor::eZero;
-        createInfo.colorBlendAttachments[ i ].colorBlendOp = vk::BlendOp::eAdd;
-        createInfo.colorBlendAttachments[ i ].srcAlphaBlendFactor = vk::BlendFactor::eOne;
         createInfo.colorBlendAttachments[ i ].dstAlphaBlendFactor = vk::BlendFactor::eZero;
+
+        createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eOne;
+        createInfo.colorBlendAttachments[ i ].srcAlphaBlendFactor = vk::BlendFactor::eOne;
+
+        createInfo.colorBlendAttachments[ i ].colorBlendOp = vk::BlendOp::eAdd;
         createInfo.colorBlendAttachments[ i ].alphaBlendOp = vk::BlendOp::eAdd;
+
+        if ( createInfo.request.blendMode == BlendMode::TransparentBlend )
+        {
+            createInfo.colorBlendAttachments[ i ].blendEnable = true;
+            createInfo.colorBlendAttachments[ i ].srcColorBlendFactor = vk::BlendFactor::eOne;
+            createInfo.colorBlendAttachments[ i ].dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+
+            createInfo.colorBlendAttachments[ i ].srcAlphaBlendFactor = vk::BlendFactor::eOne;
+            createInfo.colorBlendAttachments[ i ].dstAlphaBlendFactor = vk::BlendFactor::eZero;
+        }
     }
 
     // This overwrites the above

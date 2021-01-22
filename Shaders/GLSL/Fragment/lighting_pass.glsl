@@ -43,7 +43,7 @@ layout(push_constant) uniform PushConstants {
 
 layout(set = 0, binding = 0) uniform sampler2D gBuffer_Position;
 layout(set = 1, binding = 0) uniform sampler2D gBuffer_Normal;
-layout(set = 2, binding = 0) uniform sampler2D gBuffer_AlbedoSpec;
+layout(set = 2, binding = 0) uniform sampler2D gBuffer_Albedo;
 layout(set = 3, binding = 0) uniform sampler2D shadowMap;
 
 layout(set = 4, binding = 0) uniform EnvironmentLights {
@@ -128,13 +128,12 @@ void main() {
         return;
     }
 
-    vec4 albedoSpec = texture(gBuffer_AlbedoSpec, inPosition.xy).rgba;
+    vec4 albedo = texture(gBuffer_Albedo, inPosition.xy).rgba;
 
     normal = texture(gBuffer_Normal, inPosition.xy).rgb;
-    albedo = texture(gBuffer_AlbedoSpec, inPosition.xy).rgba;
+    albedo = texture(gBuffer_Albedo, inPosition.xy).rgba;
 
-    albedo.a = 1.0f;
-    spec = albedoSpec.a;
+    spec = 0.0f;
 
     outputColor = vec4(0.0f);
 

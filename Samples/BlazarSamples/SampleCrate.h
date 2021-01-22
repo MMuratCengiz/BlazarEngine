@@ -30,7 +30,6 @@ public:
         auto rigidBody = createComponent< ECS::CRigidBody >( );
         rigidBody->mass = 0.2f;
 
-        createComponent< ECS::COutlined >( );
         Physics::CollisionShapeInitializer( rigidBody, transform ).initializeBoxCollisionShape( transform->scale );
     }
 };

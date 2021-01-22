@@ -65,6 +65,12 @@ enum class BindPoint
     Compute
 };
 
+enum class BlendMode
+{
+    None,
+    TransparentBlend
+};
+
 struct PipelineRequest
 {
     ECS::CullMode cullMode;
@@ -77,6 +83,7 @@ struct PipelineRequest
     std::unordered_map< ShaderType, std::string > shaderPaths;
 
     std::shared_ptr< IRenderPass > parentPass;
+    BlendMode blendMode = BlendMode::None;
 };
 
 struct IPipeline
