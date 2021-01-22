@@ -49,10 +49,10 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     gBuffer_Normal.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
     gBuffer_Normal.attachmentType = ResourceAttachmentType::Color;
 
-    auto &gBuffer_AlbedoSpec = gBufferPass->outputs.emplace_back( OutputImage { } );
-    gBuffer_AlbedoSpec.outputResourceName = "gBuffer_Albedo";
-    gBuffer_AlbedoSpec.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
-    gBuffer_AlbedoSpec.attachmentType = ResourceAttachmentType::Color;
+    auto &gBuffer_Albedo = gBufferPass->outputs.emplace_back( OutputImage { } );
+    gBuffer_Albedo.outputResourceName = "gBuffer_Albedo";
+    gBuffer_Albedo.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    gBuffer_Albedo.attachmentType = ResourceAttachmentType::Color;
 
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
@@ -94,6 +94,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
     pipelineRequest.cullMode = ECS::CullMode::BackFace;
     pipelineRequest.depthCompareOp = CompareOp::Less;
+    pipelineRequest.blendMode = BlendMode::AlphaBlend;
 
     PipelineRequest &heightmapTessellationPipeline = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
 

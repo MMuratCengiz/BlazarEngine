@@ -68,7 +68,7 @@ enum class BindPoint
 enum class BlendMode
 {
     None,
-    TransparentBlend
+    AlphaBlend
 };
 
 struct PipelineRequest

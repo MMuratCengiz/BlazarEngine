@@ -128,10 +128,8 @@ void main() {
         return;
     }
 
-    vec4 albedo = texture(gBuffer_Albedo, inPosition.xy).rgba;
-
     normal = texture(gBuffer_Normal, inPosition.xy).rgb;
-    albedo = texture(gBuffer_Albedo, inPosition.xy).rgba;
+    albedo = texture(gBuffer_Albedo, inPosition.xy);
 
     spec = 0.0f;
 
