@@ -83,7 +83,7 @@ public:
     Material::TextureInfo heightMap{ };
     glm::vec4 diffuse { };
     glm::vec4 specular { };
-    float shininess { };
+    float shininess = 0.3f;
 
     BLAZAR_COMPONENT( CMaterial )
 };

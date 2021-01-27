@@ -12,17 +12,17 @@ void SampleGame::init( )
     sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
 
     sceneLights->createComponent< ECS::CAmbientLight >( );
-    sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec4( 0.25f, 0.25f, 0.22f, 1.0f );
-    sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.01f;
+    sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec3( 0.25f, 0.25f, 0.22f );
+    sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.005f;
 
-    glm::vec3 pos = glm::vec3( 10.4072, 11.5711, -9.09731 );
-    glm::vec3 front = glm::vec3( -0.68921, -0.48481, 0.53847 );
+    glm::vec3 pos = glm::vec3( 1, 1, 1 );
+    glm::vec3 front = glm::vec3( 0.0, 0.0, 0.0 );
 
     sceneLights->createComponent< ECS::CDirectionalLight >( );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec4( 0.65f, 1.0f, 0.65f, 1.0f );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = glm::vec4( front - pos, 1.0f );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec4( 0.0f );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.8f;
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec3( 1.0, 1.0f, 0.99f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = front - pos;
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec3( 1.0, 1.0f, 0.99f );
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.35f;
 
     cameraComponent = std::make_shared< ECS::DynamicGameEntity >( );
     cameraComponent->createComponent< ECS::CCamera >( );

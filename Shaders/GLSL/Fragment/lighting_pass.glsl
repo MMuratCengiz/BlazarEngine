@@ -44,9 +44,10 @@ layout(push_constant) uniform PushConstants {
 layout(set = 0, binding = 0) uniform sampler2D gBuffer_Position;
 layout(set = 1, binding = 0) uniform sampler2D gBuffer_Normal;
 layout(set = 2, binding = 0) uniform sampler2D gBuffer_Albedo;
-layout(set = 3, binding = 0) uniform sampler2D shadowMap;
+layout(set = 3, binding = 0) uniform sampler2D gBuffer_Material;
+layout(set = 4, binding = 0) uniform sampler2D shadowMap;
 
-layout(set = 4, binding = 0) uniform EnvironmentLights {
+layout(set = 5, binding = 0) uniform EnvironmentLights {
     int ambientLightCount;
     int directionalLightCount;
     int pointLightCount;
@@ -58,10 +59,15 @@ layout(set = 4, binding = 0) uniform EnvironmentLights {
     SpotLight spotLights[ALLOWED_LIGHTS];
 } environment;
 
-layout(set = 5, binding = 0) uniform LightViewProjectionMatrix {
+layout(set = 6, binding = 0) uniform LightViewProjectionMatrix {
     mat4[MAX_ALLOWED_SHADOW_CASTERS] casters;
     int arraySize;
 } lvpm;
+
+layout(set = 7, binding = 0) uniform WorldContext
+{
+    vec4 cameraPosition;
+} worldContext;
 
 layout (location = 0) in vec3 inPosition;
 
@@ -69,12 +75,13 @@ layout (location = 0) out vec4 outputColor;
 
 vec4 calculateDirectional(DirectionalLight light);
 float calculateSpecularPower(vec3 direction);
+int getShininess( );
 
 vec3 viewDirection;
 vec3 position;
 vec3 normal;
 vec4 albedo;
-float spec;
+float shininess;
 
 const mat4 depthNormalizeTransform = mat4(
 0.5, 0.0, 0.0, 0.0,
@@ -122,18 +129,18 @@ float shadowCalculationPCF(vec4 fragPosLightSpace)
 void main() {
     vec4 fragPos = texture(gBuffer_Position, inPosition.xy);
 
-    if ( fragPos.w == 0 )
+    outputColor = vec4( 0 );
+
+    if (fragPos.w == 0)
     {
-        outputColor = vec4( 0 );
-        return;
+        discard;
     }
 
     normal = texture(gBuffer_Normal, inPosition.xy).rgb;
     albedo = texture(gBuffer_Albedo, inPosition.xy);
+    shininess = texture(gBuffer_Material, inPosition.xy).r;
 
-    spec = 0.0f;
-
-    outputColor = vec4(0.0f);
+    viewDirection = normalize( worldContext.cameraPosition.xyz - fragPos.xyz );
 
     vec4 posInLightSpace = depthNormalizeTransform * lvpm.casters[0] * vec4(vec3(fragPos), 1.0f);
 
@@ -149,10 +156,10 @@ void main() {
     }
 
     for (int i = 0; i < environment.directionalLightCount; ++i) {
-        outputColor += calculateDirectional(environment.directionalLights[i]) * (shadow);
+        outputColor += calculateDirectional(environment.directionalLights[i]) * environment.directionalLights[i].power * (shadow);
     }
 
-    outputColor = gammaCorrectColor( outputColor );
+    outputColor = gammaCorrectColor(outputColor);
 }
 
 vec4 calculateDirectional(DirectionalLight light) {
@@ -161,15 +168,48 @@ vec4 calculateDirectional(DirectionalLight light) {
     float diffPower = max(dot(normal, surfaceToLight), 0.0f);
     vec4 diffuse = light.diffuse * (diffPower * albedo);
 
-    float spec = calculateSpecularPower(-light.direction.xyz);
-    vec4 specular = light.specular * (spec * albedo);
+    float spec = calculateSpecularPower(surfaceToLight);
+    vec4 specular = light.diffuse * (spec * albedo);
 
     return diffuse + specular;
 }
 
 float calculateSpecularPower(vec3 direction) {
-    vec3 normalizedDirection = normalize(direction);
-    vec3 reflectionDirection = reflect(-normalizedDirection, normal);
+    vec3 halfwayVector = normalize( direction + viewDirection );
+    return pow(max(dot(normal, halfwayVector), 0.0), getShininess( ) );
+}
 
-    return pow(max(dot(viewDirection, reflectionDirection), 0.0), 256);
+int getShininess( )
+{
+    if ( shininess >= 0.8 )
+    {
+        return 2;
+    }
+
+    if ( shininess >= 0.65 )
+    {
+        return 4;
+    }
+
+    if ( shininess >= 0.5 )
+    {
+        return 8;
+    }
+
+    if ( shininess >= 0.35 )
+    {
+        return 16;
+    }
+
+    if ( shininess >= 0.20 )
+    {
+        return 32;
+    }
+
+    if ( shininess >= 0.10 )
+    {
+        return 64;
+    }
+
+    return 128;
 }

@@ -54,6 +54,11 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     gBuffer_Albedo.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
     gBuffer_Albedo.attachmentType = ResourceAttachmentType::Color;
 
+    auto &gBuffer_Material = gBufferPass->outputs.emplace_back( OutputImage { } );
+    gBuffer_Material.outputResourceName = "gBuffer_Material";
+    gBuffer_Material.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    gBuffer_Material.attachmentType = ResourceAttachmentType::Color;
+
     auto &pipelineProvider = renderDevice->getPipelineProvider( );
     auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
@@ -94,7 +99,6 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
     pipelineRequest.cullMode = ECS::CullMode::BackFace;
     pipelineRequest.depthCompareOp = CompareOp::Less;
-    pipelineRequest.blendMode = BlendMode::AlphaBlend;
 
     PipelineRequest &heightmapTessellationPipeline = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
 
@@ -137,6 +141,8 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Albedo" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Material" );
+    lightingPass->pipelineInputs[ 0 ].push_back( "WorldContext" );
     lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
     lightingPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
     lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );

@@ -72,6 +72,34 @@ ResourceBinder::ResourceBinder( )
     END_RESOURCE_DEFINITION( )
 
     START_RESOURCE_DEFINITION( )
+            RESOURCE_NAME( "WorldContext" )
+            RESOURCE_BIND_TYPE( ResourceBindType::PerFrameUniform )
+            RESOURCE_TYPE( ResourceType::Uniform )
+            FUNC( [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> UniformAttachmentContent
+                  {
+                      auto cameras = table->getComponents< ECS::CCamera >( );
+
+                      auto activeCamera = cameras[ 0 ];
+
+                      int i = 0;
+                      while ( !activeCamera->isActive )
+                      {
+                          ASSERT_M( i < cameras.size( ), "You must   have a single active camera." );
+                          activeCamera = cameras[ ++i ];
+                      }
+
+                      struct WorldContext
+                      {
+                          glm::vec4 cameraPosition;
+                      };
+
+                      WorldContext data{ };
+                      data.cameraPosition = glm::vec4( activeCamera->position, 1.0f );
+                      ATTACH_DATA( data, WorldContext )
+                  } )
+    END_RESOURCE_DEFINITION( )
+
+    START_RESOURCE_DEFINITION( )
             RESOURCE_NAME( "EnvironmentLights" )
             RESOURCE_BIND_TYPE( ResourceBindType::PerFrameUniform )
             RESOURCE_TYPE( ResourceType::Uniform )
@@ -119,12 +147,10 @@ ResourceBinder::ResourceBinder( )
 
                           lightProjection = VK_CORRECTION_MATRIX * lightProjection;
 
-                          glm::vec3 pos = glm::vec3( 10.4072, 11.5711, -9.09731 );
-                          glm::vec3 front = glm::vec3( -0.68921, -0.48481, 0.53847 );
+                          glm::vec3 pos = glm::normalize( -light->direction ) * 30.0f;
+                          glm::vec3 front = glm::vec3( 0, 0, 0 );
 
-                          glm::vec3 right = glm::cross( front, glm::vec3( 0.0f, 1.0f, 0.0f ) );
-                          glm::vec3 up = glm::cross( right, front );
-                          glm::mat4 lightView = glm::lookAt( pos, pos + front, up );
+                          glm::mat4 lightView = glm::lookAt( pos, front, glm::vec3( 0.0f, 1.0f, 0.0f ) );
 
                           glm::mat4 result = lightProjection * lightView;
 

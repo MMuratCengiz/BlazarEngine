@@ -16,6 +16,7 @@ public:
 
         for ( auto& child: meshEntities->getChildren( ) )
         {
+            child->getComponent< BlazarEngine::ECS::CMaterial >( )->shininess = 1.0f;
             auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
             texInfo.path = "/assets/textures/Car Texture 2.png";
         }

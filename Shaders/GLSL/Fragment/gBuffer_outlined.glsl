@@ -23,9 +23,11 @@ layout (location = 2) in vec2 inTextureCoor;
 layout (location = 0) out vec4 gBuffer_Position;
 layout (location = 1) out vec4 gBuffer_Normal;
 layout (location = 2) out vec4 gBuffer_Albedo;
+layout (location = 3) out vec4 gBuffer_Material;
 
 void main() {
     gBuffer_Position = inPosition;
     gBuffer_Normal = vec4( inNormal, 0.0f );
     gBuffer_Albedo = outlineColor.rgba;
+    gBuffer_Material = vec4( mat.shininess );
 }
