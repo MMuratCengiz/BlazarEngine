@@ -5,7 +5,8 @@ Custom Game Engine developed in C++ and Vulkan, it is still work in progress, th
 - Pure Entity Component System design, everything is an entity(containing only data). Logic is than handled through Systems. 
 - A RenderGraph system for the graphics backend.
   
-##The graphics engine supports:
+
+## The graphics engine supports:
 
 - The expected core of, model loading, texture loading and cameras.
 - ShadowMaps, ie. rendering shadows.
@@ -14,13 +15,16 @@ Custom Game Engine developed in C++ and Vulkan, it is still work in progress, th
 - Directional/Ambient/Spot lights.
 - SMAA.
 
-###The Engine itself currently also integrates the Bullet3 Physics engine.
 
-##Todo:
+### The Engine itself currently also integrates the Bullet3 Physics engine.
+
+
+## Todo:
 
 - Animations.
 - Physically based rendering.
 - Scripting integration.
+
 
 # Demo
 
