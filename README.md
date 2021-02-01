@@ -2,7 +2,7 @@
 
 Custom Game Engine developed in C++ and Vulkan, it is still work in progress, the design is based off of:
 
-- Pure Entity Component System design, everything is an entity(containing only data). Logic is than handled through Systems. 
+- Pure Entity Component System design, everything is an entity(containing only data). Logic is then handled through Systems. 
 - A RenderGraph system for the graphics backend.
   
 
