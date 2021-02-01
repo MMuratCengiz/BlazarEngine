@@ -36,6 +36,7 @@ class SampleGame : public Scene::IPlayable
     Scene::World *world;
 
     std::shared_ptr< ECS::IGameEntity > cuteBoat;
+    std::shared_ptr< ECS::IGameEntity > anim1;
     std::shared_ptr< ECS::IGameEntity > tree1;
     std::shared_ptr< ECS::IGameEntity > tree2;
     std::shared_ptr< ECS::IGameEntity > rocks;

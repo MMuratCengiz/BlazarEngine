@@ -28,4 +28,6 @@ Custom Game Engine developed in C++ and Vulkan, it is still work in progress, th
 
 # Demo
 
-![Demo](/docs/sample_1.mp4)
+Note the visual quality and framerate are compressed so the gif could be embedded in a reasonable file size and browsing speed. 
+
+![Demo](/docs/sample_1.gif)

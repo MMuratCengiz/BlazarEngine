@@ -156,7 +156,7 @@ void main() {
     }
 
     for (int i = 0; i < environment.directionalLightCount; ++i) {
-        outputColor += calculateDirectional(environment.directionalLights[i]) * environment.directionalLights[i].power * (shadow);
+        outputColor += calculateDirectional(environment.directionalLights[i]) * (shadow);
     }
 
     outputColor = gammaCorrectColor(outputColor);
@@ -171,7 +171,7 @@ vec4 calculateDirectional(DirectionalLight light) {
     float spec = calculateSpecularPower(surfaceToLight);
     vec4 specular = light.diffuse * (spec * albedo);
 
-    return diffuse + specular;
+    return diffuse * light.power + specular;
 }
 
 float calculateSpecularPower(vec3 direction) {

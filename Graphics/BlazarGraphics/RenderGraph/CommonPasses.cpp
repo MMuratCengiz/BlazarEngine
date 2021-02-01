@@ -150,7 +150,7 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
 
     auto &presentImage = lightingPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "litScene";
-    presentImage.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
+    presentImage.imageFormat = ResourceImageFormat::R16G16B16A16Sfloat;
     presentImage.flags.msaaSampled = false;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 
@@ -226,7 +226,7 @@ std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
 
     auto &presentImage = skyboxPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "skyBoxTex";
-    presentImage.imageFormat = ResourceImageFormat::MatchSwapChainImageFormat;
+    presentImage.imageFormat = ResourceImageFormat::R16G16B16A16Sfloat;
     presentImage.flags.msaaSampled = false;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 

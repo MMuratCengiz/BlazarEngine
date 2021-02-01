@@ -76,6 +76,13 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity >& rootEnt
     {
         onEachNode( rootEntity, path, scene, scene->mRootNode );
     }
+
+    if ( scene->mNumAnimations > 0 )
+    {
+        auto anim = scene->mAnimations;
+        int x = 1;
+    }
+
     // TODO handle scene->mAnimations
 }
 

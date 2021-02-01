@@ -9,8 +9,9 @@ void SampleGame::init( )
     boost::uniform_real< > range( -28.0f, 28.0f );
     boost::variate_generator< boost::mt19937, boost::uniform_real< >> randomRange( rng, range );
 
-    sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
+    anim1 = world->getAssetManager( )->createEntity( PATH( "/assets/models/middle finger test.fbx" ) );
 
+    sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
     sceneLights->createComponent< ECS::CAmbientLight >( );
     sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec3( 0.25f, 0.25f, 0.22f );
     sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.005f;
@@ -22,7 +23,7 @@ void SampleGame::init( )
     sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec3( 1.0, 1.0f, 0.99f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = front - pos;
     sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec3( 1.0, 1.0f, 0.99f );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.35f;
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.15f;
 
     cameraComponent = std::make_shared< ECS::DynamicGameEntity >( );
     cameraComponent->createComponent< ECS::CCamera >( );
