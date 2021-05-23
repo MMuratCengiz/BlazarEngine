@@ -150,7 +150,6 @@ void AssetManager::onEachNode( const SceneContext &context,
         std::ostringstream keyBuilder;
         keyBuilder << currentRootPath << "#" << mesh->mName.C_Str( );
 
-        std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
         currentEntity->createComponent< ECS::CMaterial >( );
 
         // Todo implement:
@@ -193,7 +192,7 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
 
     uint32_t numVertices = mesh == nullptr ? animMesh->mNumVertices : mesh->mNumVertices;
 
-    geometry.hasColors = mesh->mMaterialIndex == 0;
+    geometry.hasColors = mesh != nullptr && mesh->mMaterialIndex == 0;
     geometry.hasBoneData = !geometry.boneIndices.empty( );
 
     glm::vec3 currentNormal;
@@ -224,6 +223,16 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
             }
         }*/
 
+        auto *coordinates = mesh == nullptr ? animMesh->mTextureCoords : mesh->mTextureCoords;
+
+        if ( coordinates[ 0 ] )
+        {
+            const aiVector3D &textureCoordinates = coordinates[ 0 ][ i ];
+
+            geometry.vertices.push_back( textureCoordinates.x );
+            geometry.vertices.push_back( textureCoordinates.y );
+        }
+
         if ( !geometry.boneIndices.empty( ) )
         {
             geometry.vertices.push_back( geometry.boneIndices[ i ] );
@@ -235,16 +244,6 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
             geometry.vertices.push_back( geometry.boneWeights[ i + 1 ] );
             geometry.vertices.push_back( geometry.boneWeights[ i + 2 ] );
             geometry.vertices.push_back( geometry.boneWeights[ i + 3 ] );
-        }
-
-        auto *coordinates = mesh == nullptr ? animMesh->mTextureCoords : mesh->mTextureCoords;
-
-        if ( coordinates[ 0 ] )
-        {
-            const aiVector3D &textureCoordinates = coordinates[ 0 ][ i ];
-
-            geometry.vertices.push_back( textureCoordinates.x );
-            geometry.vertices.push_back( textureCoordinates.y );
         }
     }
 }

@@ -40,7 +40,7 @@ struct PushConstantParent
 {
     char *data { };
     uint32_t totalSize { };
-    vk::ShaderStageFlags stage{ };
+    vk::ShaderStageFlags stage { };
 };
 
 struct PushConstantBinding
@@ -49,12 +49,19 @@ struct PushConstantBinding
     StructChild ref;
 };
 
+struct DescriptorPool
+{
+    int freeDescriptors;
+    vk::DescriptorPool pool;
+};
+
 class DescriptorManager
 {
 private:
     static const uint32_t texturePreallocateCount;
+    static const uint32_t descriptorPoolSize;
 
-    VulkanContext * context;
+    VulkanContext *context;
     std::shared_ptr< GLSLShaderSet > shaderSet;
 
     std::unordered_map< std::string, UniformLocation > uniformLocations;
@@ -77,8 +84,8 @@ private:
     std::vector< vk::DescriptorSetLayout > textureLayouts;
     std::vector< vk::DescriptorSetLayout > layouts;
 
-    vk::DescriptorPool uniformDescriptorPool;
-    vk::DescriptorPool samplerDescriptorPool;
+    std::vector< DescriptorPool > uniformDescriptorPool;
+    std::vector< DescriptorPool > samplerDescriptorPool;
 
     std::shared_ptr< VulkanCommandExecutor > commandExecutor;
     std::shared_ptr< SamplerDataAttachment > nullAttachment;
@@ -86,7 +93,7 @@ private:
 
     uint32_t objectCounter;
 public:
-    explicit DescriptorManager( VulkanContext * context, std::shared_ptr< GLSLShaderSet > shaderSet );
+    explicit DescriptorManager( VulkanContext *context, std::shared_ptr< GLSLShaderSet > shaderSet );
 
     void updatePushConstant( const uint32_t &frameIndex, const std::string &uniformName, void *data );
     void updateUniform( const uint32_t &frameIndex, const std::string &uniformName, const std::pair< vk::Buffer, vma::Allocation > &buffer,
@@ -102,14 +109,20 @@ public:
 
     const std::vector< vk::DescriptorSetLayout > &getLayouts( );
 
-    inline void incrementObjectCounter( ) noexcept { objectCounter++; }
-    inline void resetObjectCounter( ) noexcept {
+    inline void incrementObjectCounter( ) noexcept
+    { objectCounter++; }
+
+    inline void resetObjectCounter( ) noexcept
+    {
         objectCounter = 0;
         auto frameSize = frameUpdatedTextures.size( );
         frameUpdatedTextures.clear( );
         frameUpdatedTextures.resize( frameSize );
     }
-    inline uint32_t getObjectCount( ) const noexcept { return objectCounter; }
+
+    inline uint32_t getObjectCount( ) const noexcept
+    { return objectCounter; }
+
     ~DescriptorManager( );
 private:
 
@@ -124,6 +137,7 @@ private:
     void addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout, const uint32_t &objectIndex );
     void addTextureDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout, const uint32_t &objectIndex );
 
+    DescriptorPool &findFreeDescriptorPool( const bool &findUniformPool, const int &requiredAllocations );
     void createNullResources( );
 };
 

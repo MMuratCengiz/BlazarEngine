@@ -1,0 +1,5 @@
+IF(WIN32)
+    SET(CMAKE_C_COMPILER "C:/MingwPosix/mingw32/bin/gcc.exe")
+    SET(CMAKE_CXX_COMPILER "C:/MingwPosix/mingw32/bin/g++.exe")
+    MESSAGE("MingwPosix compiler for Win32 set.")
+ENDIF()

@@ -7,6 +7,7 @@
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 const uint32_t DescriptorManager::texturePreallocateCount = 12;
+const uint32_t DescriptorManager::descriptorPoolSize = 120;
 
 DescriptorManager::DescriptorManager( VulkanContext * context, std::shared_ptr< GLSLShaderSet > shaderSet ) : context( context ), shaderSet( std::move( shaderSet ) )
 {
@@ -95,12 +96,17 @@ void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName,
 {
     uint32_t swapChainImageCount = context->swapChainImages.size( );
 
-    std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
+    std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount * descriptorPoolSize, layout };
+
+    int freeIndex = -1;
+
+    DescriptorPool & pool = findFreeDescriptorPool( false, layoutsPtr.size( ) );
 
     vk::DescriptorSetAllocateInfo allocateInfo { };
-    allocateInfo.descriptorPool = uniformDescriptorPool;
+    allocateInfo.descriptorPool = pool.pool;
     allocateInfo.descriptorSetCount = layoutsPtr.size( );
     allocateInfo.pSetLayouts = layoutsPtr.data( );
+    pool.freeDescriptors -= layoutsPtr.size( );
 
     if ( uniformSetMaps.find( uniformName ) == uniformSetMaps.end( ) )
     {
@@ -121,10 +127,13 @@ void DescriptorManager::addTextureDescriptorSet( const std::string &uniformName,
 
     std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
 
+    DescriptorPool & pool = findFreeDescriptorPool( false, layoutsPtr.size( ) );
+
     vk::DescriptorSetAllocateInfo allocateInfo { };
-    allocateInfo.descriptorPool = samplerDescriptorPool;
+    allocateInfo.descriptorPool = pool.pool;
     allocateInfo.descriptorSetCount = layoutsPtr.size( );
     allocateInfo.pSetLayouts = layoutsPtr.data( );
+    pool.freeDescriptors -= layoutsPtr.size( );
 
     if ( textureSetMaps.find( uniformName ) == textureSetMaps.end( ) )
     {
@@ -139,32 +148,35 @@ void DescriptorManager::addTextureDescriptorSet( const std::string &uniformName,
     textureSetMaps[ uniformName ][ objectIndex ] = context->logicalDevice.allocateDescriptorSets( allocateInfo );
 }
 
-// Todo create more pools as necessary
 void DescriptorManager::createDescriptorPool( )
 {
     auto swapChainImageCount = static_cast< uint32_t >( context->swapChainImages.size( ) );
 
     vk::DescriptorPoolSize uniformPoolSize { };
     uniformPoolSize.type = vk::DescriptorType::eUniformBuffer;
-    uniformPoolSize.descriptorCount = swapChainImageCount;
+    uniformPoolSize.descriptorCount = swapChainImageCount * descriptorPoolSize;
 
     vk::DescriptorPoolCreateInfo uniformDescriptorPoolCreateInfo { };
     uniformDescriptorPoolCreateInfo.poolSizeCount = 1;
     uniformDescriptorPoolCreateInfo.pPoolSizes = &uniformPoolSize;
-    uniformDescriptorPoolCreateInfo.maxSets = swapChainImageCount * 120;
+    uniformDescriptorPoolCreateInfo.maxSets = swapChainImageCount * descriptorPoolSize;
 
-    uniformDescriptorPool = context->logicalDevice.createDescriptorPool( uniformDescriptorPoolCreateInfo );
+    auto & uniformPool = uniformDescriptorPool.emplace_back( );
+    uniformPool.pool = context->logicalDevice.createDescriptorPool( uniformDescriptorPoolCreateInfo );
+    uniformPool.freeDescriptors = swapChainImageCount * descriptorPoolSize;
 
     vk::DescriptorPoolSize samplerPoolSize { };
     samplerPoolSize.type = vk::DescriptorType::eCombinedImageSampler;
-    samplerPoolSize.descriptorCount = swapChainImageCount;
+    samplerPoolSize.descriptorCount = swapChainImageCount * descriptorPoolSize;
 
     vk::DescriptorPoolCreateInfo samplerDescriptorPoolCreateInfo { };
     samplerDescriptorPoolCreateInfo.poolSizeCount = 1;
     samplerDescriptorPoolCreateInfo.pPoolSizes = &samplerPoolSize;
-    samplerDescriptorPoolCreateInfo.maxSets = swapChainImageCount * 120;
+    samplerDescriptorPoolCreateInfo.maxSets = swapChainImageCount * descriptorPoolSize;
 
-    samplerDescriptorPool = context->logicalDevice.createDescriptorPool( samplerDescriptorPoolCreateInfo );
+    auto & samplerPool = samplerDescriptorPool.emplace_back( );
+    samplerPool.pool = context->logicalDevice.createDescriptorPool( samplerDescriptorPoolCreateInfo );
+    samplerPool.freeDescriptors = swapChainImageCount * descriptorPoolSize;
 }
 
 vk::WriteDescriptorSet DescriptorManager::getCommonWriteDescriptorSet( const UniformLocation &uniformLocation, const BindingUpdateInfo &updateInfo )
@@ -360,6 +372,23 @@ std::string DescriptorManager::getUniformKey( const std::string &uniformName, co
     return key.str( );
 }
 
+DescriptorPool& DescriptorManager::findFreeDescriptorPool( const bool& findUniformPool, const int& requiredAllocations )
+{
+    auto & pools = findUniformPool ? uniformDescriptorPool : samplerDescriptorPool;
+
+    for ( DescriptorPool & pool : pools )
+    {
+        if ( pool.freeDescriptors >= requiredAllocations )
+        {
+            return pool;
+        }
+    }
+
+    // No free descriptor not found
+    createDescriptorPool( );
+    return findFreeDescriptorPool( findUniformPool, requiredAllocations );
+}
+
 DescriptorManager::~DescriptorManager( )
 {
     free( nullAttachment->content );
@@ -380,8 +409,15 @@ DescriptorManager::~DescriptorManager( )
         }
     }
 
-    context->logicalDevice.destroyDescriptorPool( uniformDescriptorPool );
-    context->logicalDevice.destroyDescriptorPool( samplerDescriptorPool );
+    for ( auto & pool: uniformDescriptorPool )
+    {
+        context->logicalDevice.destroyDescriptorPool( pool.pool );
+    }
+
+    for ( auto & pool: samplerDescriptorPool )
+    {
+        context->logicalDevice.destroyDescriptorPool( pool.pool );
+    }
 }
 
 void DescriptorManager::createNullResources( )
