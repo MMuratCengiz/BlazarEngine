@@ -74,7 +74,7 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
 
     entityGeometryMap[ entity->getUID( ) ] = { };
 
-    for ( unsigned int i = geometryList.size() - 1; i >= geometryList.size() - entityGeometries.size( ); --i )
+    for ( uint32_t i = geometryList.size() - entityGeometries.size( ); i < geometryList.size( ); ++i )
     {
         entityGeometryMap[ entity->getUID( ) ].push_back( i );
     }
