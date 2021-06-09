@@ -44,7 +44,6 @@ SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_external.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_assimp.cmake)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_blazar.cmake)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_bullet.cmake)
 
@@ -117,7 +116,6 @@ ADD_EXECUTABLE(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Shaders} $
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine
-        assimp
         Vulkan::Vulkan
 # Blazar Libraries
         BlazarCore

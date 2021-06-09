@@ -256,7 +256,12 @@ void VulkanResourceLock::reset( )
 {
     if ( lockType == ResourceLockType::Fence )
     {
-        context->logicalDevice.resetFences( 1, &fence );
+        vk::Result result = context->logicalDevice.resetFences( 1, &fence );
+
+        if ( result != vk::Result::eSuccess )
+        {
+
+        }
     }
     else
     {

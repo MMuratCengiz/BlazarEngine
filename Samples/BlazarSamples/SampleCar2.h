@@ -12,7 +12,7 @@ class SampleCar2 : public BlazarEngine::ECS::IGameEntity
 public:
     explicit SampleCar2( Scene::World * world )
     {
-        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_2.fbx" ) );
+        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_2.gltf" ) );
 
         for ( auto& child: meshEntities->getChildren( ) )
         {

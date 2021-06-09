@@ -9,8 +9,6 @@ void SampleGame::init( )
     boost::uniform_real< > range( -28.0f, 28.0f );
     boost::variate_generator< boost::mt19937, boost::uniform_real< >> randomRange( rng, range );
 
-    anim1 = world->getAssetManager( )->createEntity( PATH( "/assets/models/middle finger test.fbx" ) );
-
     sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
     sceneLights->createComponent< ECS::CAmbientLight >( );
     sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec3( 0.25f, 0.25f, 0.22f );
@@ -35,8 +33,9 @@ void SampleGame::init( )
     car2 = std::make_shared< SampleCar2 >( world );
     sky = std::make_shared< SampleCubeMap >( );
     crate = std::make_shared< SampleCrate >( );
-    sampleBall = std::make_shared< SampleBall >( );
     smallCrate = std::make_shared< SampleSmallCrate >( );
+
+    animDummy = world->getAssetManager( )->createEntity( PATH( "/assets/models/fox.gltf" ) );
 
     rocks = std::make_shared< ECS::DynamicGameEntity >( );
 
@@ -48,7 +47,7 @@ void SampleGame::init( )
         {
             if ( ent->d_namlen > 2 )
             {
-                auto child = world->getAssetManager( )->createEntity( PATH( "/assets/models/Rocks/" ) + std::string(  ent->d_name ) );
+                auto child = world->getAssetManager( )->createEntity( PATH( "/assets/models/Rocks/" ) + std::string( ent->d_name ) );
 
                 auto &texInfo = child->getChildren( )[ 0 ]->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
                 texInfo.path = "/assets/textures/Rocks/Colorsheet Rock Grey.png";
@@ -62,7 +61,7 @@ void SampleGame::init( )
         closedir( dir );
     }
 
-    tree1 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type1 04.dae" ) );
+    tree1 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type1 04.gltf" ) );
 
     for ( auto &child: tree1->getChildren( ) )
     {
@@ -70,7 +69,7 @@ void SampleGame::init( )
         texInfo.path = "/assets/textures/Colorsheet Tree Normal.png";
     }
 
-    tree2 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type3 04.dae" ) );
+    tree2 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type3 04.gltf" ) );
 
     for ( auto &child: tree2->getChildren( ) )
     {
@@ -113,6 +112,7 @@ void SampleGame::init( )
     initialScene->addEntity( rocks );
     initialScene->addEntity( smallCrate );
     initialScene->addEntity( sky );
+//        initialScene->addEntity( animDummy );
     world->setScene( initialScene );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )

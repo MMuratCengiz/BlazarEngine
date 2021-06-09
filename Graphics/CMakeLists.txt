@@ -61,7 +61,6 @@ SET(REQUESTED_BOOST_LIBS thread format)
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
 
 TARGET_LINK_LIBRARIES(BlazarGraphics
-        assimp
         glfw
         Vulkan::Vulkan
         BlazarCore

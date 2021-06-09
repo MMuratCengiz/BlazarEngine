@@ -25,13 +25,10 @@ using namespace BlazarEngine;
 namespace Sample
 {
 
-class SampleGame : public Scene::IPlayable
+class SampleGame_Small : public Scene::IPlayable
 {
     Scene::World *world;
 
-    std::shared_ptr< ECS::IGameEntity > cuteBoat;
-    std::shared_ptr< ECS::IGameEntity > tree1;
-    std::shared_ptr< ECS::IGameEntity > tree2;
     std::shared_ptr< ECS::IGameEntity > animDummy;
     std::shared_ptr< ECS::IGameEntity > rocks;
 
@@ -39,15 +36,12 @@ class SampleGame : public Scene::IPlayable
     std::shared_ptr< FpsCamera > camera;
     std::shared_ptr< ECS::DynamicGameEntity > sceneLights;
     std::shared_ptr< ECS::DynamicGameEntity > cameraComponent;
-    std::shared_ptr< SampleCar1 > car1;
-    std::shared_ptr< SampleCar2 > car2;
     std::shared_ptr< SampleFloor > floor;
     std::shared_ptr< SampleCubeMap > sky;
-    std::shared_ptr< SampleCrate > crate;
-    std::shared_ptr< SampleSmallCrate > smallCrate;
+    std::shared_ptr< SampleCar1 > car1;
     Input::ActionCallback inputCallback;
 public:
-    inline explicit SampleGame( Scene::World *world ) : world( world )
+    inline explicit SampleGame_Small( Scene::World *world ) : world( world )
     { }
 
     void init( ) override;

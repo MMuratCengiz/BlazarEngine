@@ -134,8 +134,7 @@ void GLSLShaderSet::createVertexInput( const uint32_t &offset, const GLSLType &t
     if ( interleavedMode )
     {
         desc.binding = 0;
-    }
-    else
+    } else
     {
         vk::VertexInputBindingDescription &bindingDesc = inputBindingDescriptions.emplace_back( vk::VertexInputBindingDescription { } );
         bindingDesc.binding = inputBindingDescriptions.size( ) - 1;
@@ -188,15 +187,15 @@ void GLSLShaderSet::updateDecoration( const GLSLShaderSet::DescriptorBindingCrea
     DescriptorSetBinding &binding = descriptorSetMap[ decoration.set ].descriptorSetBindingMap[ decoration.name ];
     binding.layout.stageFlags |= bindingCreateInfo.stage;
 
-    for ( auto & set: descriptorSets )
+    for ( auto &set: descriptorSets )
     {
-        for( auto & setBinding: set.descriptorSetBindings )
+        for ( auto &setBinding: set.descriptorSetBindings )
         {
             if ( setBinding.name == binding.name )
             {
                 setBinding.layout.stageFlags |= bindingCreateInfo.stage;
 
-                for( auto & layoutBinding: set.descriptorSetLayoutBindings )
+                for ( auto &layoutBinding: set.descriptorSetLayoutBindings )
                 {
                     if ( layoutBinding.binding == decoration.binding )
                     {
@@ -207,7 +206,7 @@ void GLSLShaderSet::updateDecoration( const GLSLShaderSet::DescriptorBindingCrea
         }
     }
 
-    for( auto & setBinding: descriptorSetMap[ decoration.set ].descriptorSetBindings )
+    for ( auto &setBinding: descriptorSetMap[ decoration.set ].descriptorSetBindings )
     {
         if ( setBinding.name == binding.name )
         {
@@ -215,7 +214,7 @@ void GLSLShaderSet::updateDecoration( const GLSLShaderSet::DescriptorBindingCrea
         }
     }
 
-    for( auto & layoutBinding: descriptorSetMap[ decoration.set ].descriptorSetLayoutBindings )
+    for ( auto &layoutBinding: descriptorSetMap[ decoration.set ].descriptorSetLayoutBindings )
     {
         if ( layoutBinding.binding == decoration.binding )
         {
@@ -226,77 +225,95 @@ void GLSLShaderSet::updateDecoration( const GLSLShaderSet::DescriptorBindingCrea
 
 GLSLShaderSet::GLSLType GLSLShaderSet::spvToGLSLType( const spirv_cross::SPIRType &type )
 {
-
-#define not_supported( )
-
-#define makeFormat_1( bits, baseType ) vk::Format::eR##bits####baseType
-#define makeFormat_2( bits, baseType ) vk::Format::eR##bits##G##bits####baseType
-#define makeFormat_3( bits, baseType ) vk::Format::eR##bits##G##bits##B##bits####baseType
-#define makeFormat_4( bits, baseType ) vk::Format::eR##bits##G##bits##B##bits##A##bits####baseType
-#define mfc( count, bits, baseType ) if ( type.vecsize == count ) { format = makeFormat_##count( bits, baseType ); }
-#define makeFormat( bits, baseType ) mfc( 1, bits, baseType ) mfc( 2, bits, baseType ) mfc( 3, bits, baseType ) mfc( 4, bits, baseType )
-
     vk::Format format = vk::Format::eUndefined;
     uint32_t size = 0;
+
+    auto make32Int = [ ]( const uint32_t &numOfElements ) -> vk::Format
+    {
+        if (numOfElements == 1) return vk::Format::eR32Sint;
+        if (numOfElements == 2) return vk::Format::eR32G32Sint;
+        if (numOfElements == 3) return vk::Format::eR32G32B32Sint;
+        if (numOfElements == 4) return vk::Format::eR32G32B32A32Sint;
+        return vk::Format::eUndefined;
+    };
+
+    auto make64Int = [ ]( const uint32_t &numOfElements ) -> vk::Format
+    {
+        if (numOfElements == 1) return vk::Format::eR64Sint;
+        if (numOfElements == 2) return vk::Format::eR64G64Sint;
+        if (numOfElements == 3) return vk::Format::eR64G64B64Sint;
+        if (numOfElements == 4) return vk::Format::eR64G64B64A64Sint;
+        return vk::Format::eUndefined;
+    };
+
+    auto make32UInt = [ ]( const uint32_t &numOfElements ) -> vk::Format
+    {
+        if (numOfElements == 1) return vk::Format::eR32Uint;
+        if (numOfElements == 2) return vk::Format::eR32G32Uint;
+        if (numOfElements == 3) return vk::Format::eR32G32B32Uint;
+        if (numOfElements == 4) return vk::Format::eR32G32B32A32Uint;
+        return vk::Format::eUndefined;
+    };
+
+    auto make64UInt = [ ]( const uint32_t &numOfElements ) -> vk::Format
+    {
+        if (numOfElements == 1) return vk::Format::eR64Uint;
+        if (numOfElements == 2) return vk::Format::eR64G64Uint;
+        if (numOfElements == 3) return vk::Format::eR64G64B64Uint;
+        if (numOfElements == 4) return vk::Format::eR64G64B64A64Uint;
+        return vk::Format::eUndefined;
+    };
+
+    auto make32Float = [ ]( const uint32_t &numOfElements ) -> vk::Format
+    {
+        if (numOfElements == 1) return vk::Format::eR32Sfloat;
+        if (numOfElements == 2) return vk::Format::eR32G32Sfloat;
+        if (numOfElements == 3) return vk::Format::eR32G32B32Sfloat;
+        if (numOfElements == 4) return vk::Format::eR32G32B32A32Sfloat;
+        return vk::Format::eUndefined;
+    };
+
+    auto make64Float = [ ]( const uint32_t &numOfElements ) -> vk::Format
+    {
+        if (numOfElements == 1) return vk::Format::eR64Sfloat;
+        if (numOfElements == 2) return vk::Format::eR64G64Sfloat;
+        if (numOfElements == 3) return vk::Format::eR64G64B64Sfloat;
+        if (numOfElements == 4) return vk::Format::eR64G64B64A64Sfloat;
+        return vk::Format::eUndefined;
+    };
 
     switch ( type.basetype )
     {
         default:
-            not_supported( );
-            break;
-        case spirv_cross::SPIRType::Void:
-            break;
-        case spirv_cross::SPIRType::Boolean:
             break;
         case spirv_cross::SPIRType::Short:
         case spirv_cross::SPIRType::UShort:
         case spirv_cross::SPIRType::Int:
-        makeFormat( 32, Sint );
+            format = make32Int( type.vecsize );
             size = sizeof( int32_t );
             break;
         case spirv_cross::SPIRType::Int64:
-        makeFormat( 32, Sint );
+            format = make32Int( type.vecsize );
             size = sizeof( int64_t );
             break;
         case spirv_cross::SPIRType::UInt:
-        makeFormat( 32, Uint );
+            format = make32UInt( type.vecsize );
             size = sizeof( uint32_t );
             break;
         case spirv_cross::SPIRType::UInt64:
-        makeFormat( 64, Uint );
+            format = make64UInt( type.vecsize );
             size = sizeof( uint64_t );
             break;
         case spirv_cross::SPIRType::Float:
-        makeFormat( 32, Sfloat );
+            format = make32Float( type.vecsize );
             size = sizeof( float );
             break;
         case spirv_cross::SPIRType::Double:
-        makeFormat( 64, Sfloat );
-            size = sizeof( double ); // todo test
-            break;
-        case spirv_cross::SPIRType::Struct:
-            break;
-        case spirv_cross::SPIRType::Image:
-            break;
-        case spirv_cross::SPIRType::SampledImage:
-            break;
-        case spirv_cross::SPIRType::Sampler:
-            break;
-        case spirv_cross::SPIRType::AccelerationStructure:
-            break;
-        case spirv_cross::SPIRType::RayQuery:
-            break;
-        case spirv_cross::SPIRType::ControlPointArray:
+            format = make64Float( type.vecsize );
+            size = sizeof( double );
             break;
     }
 
-#undef makeFormat_1
-#undef makeFormat_2
-#undef makeFormat_3
-#undef makeFormat_4
-#undef makeFormat
-#undef mfc
-#undef not_supported
 
     return GLSLType { format, size * type.vecsize };
 }

@@ -9,26 +9,34 @@ AssetManager::AssetManager( )
     const std::string &litCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube );
     geometryMap[ litCubePath ] = { };
     MeshGeometry &litCube = geometryMap[ litCubePath ];
-    litCube.vertices = litCubePrimitive.getVertices( );
-    litCube.vertexCount = litCubePrimitive.getVertexCount( );
+    SubMeshGeometry &litCubeSubMesh = litCube.subGeometries.emplace_back( );
+    litCubeSubMesh.dataRaw = litCubePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    litCubeSubMesh.vertexCount = litCubePrimitive.getVertexCount( );
+//    memcpy( &litCubeSubMesh.dataRaw[ 0 ], litCubePrimitive.getData( ).data( ), litCubeSubMesh.dataRaw.size() );
 
     const std::string &plainCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
     geometryMap[ plainCubePath ] = { };
     MeshGeometry &plainCube = geometryMap[ plainCubePath ];
-    plainCube.vertices = plainCubePrimitive.getVertices( );
-    plainCube.vertexCount = plainCubePrimitive.getVertexCount( );
+    SubMeshGeometry &plainCubeSubMesh = plainCube.subGeometries.emplace_back( );
+    plainCubeSubMesh.dataRaw = plainCubePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainCubeSubMesh.vertexCount = plainCubePrimitive.getVertexCount( );
+//    memcpy( &plainCubeSubMesh.dataRaw[ 0 ], plainCubePrimitive.getData( ).data( ), plainCubeSubMesh.dataRaw.size() );
 
     const std::string &plainSquarePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
     geometryMap[ plainSquarePath ] = { };
     MeshGeometry &plainSquare = geometryMap[ plainSquarePath ];
-    plainSquare.vertices = plainSquarePrimitive.getVertices( );
-    plainSquare.vertexCount = plainSquarePrimitive.getVertexCount( );
+    SubMeshGeometry &plainSquareSubMesh = plainSquare.subGeometries.emplace_back( );
+    plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainSquareSubMesh.vertexCount = plainSquarePrimitive.getVertexCount( );
+//    memcpy( &plainSquareSubMesh.dataRaw[ 0 ], plainSquarePrimitive.getData( ).data( ), plainSquareSubMesh.dataRaw.size() );
 
     const std::string &plainTrianglePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle );
     geometryMap[ plainTrianglePath ] = { };
     MeshGeometry &plainTriangle = geometryMap[ plainTrianglePath ];
-    plainTriangle.vertices = plainTrianglePrimitive.getVertices( );
-    plainTriangle.vertexCount = plainTrianglePrimitive.getVertexCount( );
+    SubMeshGeometry &plainTriangleSubMesh = plainTriangle.subGeometries.emplace_back( );
+    plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainTriangleSubMesh.vertexCount = plainTrianglePrimitive.getVertexCount( );
+//    memcpy( &plainTriangleSubMesh.dataRaw[ 0 ], plainTrianglePrimitive.getData( ).data( ), plainTriangleSubMesh.dataRaw.size() );
 }
 
 std::shared_ptr< ECS::IGameEntity > AssetManager::createEntity( const std::string &meshPath )
@@ -64,30 +72,35 @@ void AssetManager::loadImage( const std::string &path )
 
 void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &path )
 {
-    const aiScene *scene = importer.ReadFile( path,
-                                              aiProcess_Triangulate |
-                                              aiProcess_FlipUVs |
-                                              aiProcess_GenSmoothNormals |
-                                              aiProcess_JoinIdenticalVertices );
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
 
-    if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode )
+    SceneContext context { };
+    bool res = loader.LoadASCIIFromFile( &context.model, &err, &warn, path );
+
+    if ( !res )
     {
         std::stringstream ss;
-        ss << "ERROR::ASSIMP::" << importer.GetErrorString( );
+        ss << "ERROR::ASSIMP::" << err;
         throw std::runtime_error( ss.str( ) );
     }
 
-    SceneContext context { };
-    context.scene = scene;
-
-    if ( scene->mRootNode->mNumChildren > 0 || scene->mRootNode->mNumMeshes > 0 )
+    for ( const tinygltf::Scene &scene: context.model.scenes )
     {
-        onEachNode( context, rootEntity, path, scene, scene->mRootNode );
+        // Attach the initial tree structure to the root node because gltf doesn't do it by default
+        for ( int node: scene.nodes )
+        {
+            std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
+            rootEntity->addChild( child );
+
+            onEachScene( context, child, path, context.model, node );
+        }
     }
-
-    for ( int animationIndex = 0; animationIndex < scene->mNumAnimations; ++animationIndex )
+/*
+    for ( int animationIndex = 0; animationIndex < sceneAssimp->mNumAnimations; ++animationIndex )
     {
-        auto anim = scene->mAnimations[ animationIndex ];
+        auto anim = sceneAssimp->mAnimations[ animationIndex ];
 
         auto animName = std::string( anim->mName.data );
 
@@ -123,68 +136,103 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
                 animData.boneTransformations.push_back( modelMatrix );
             }
         }
-    }
+    }*/
 }
 
-void AssetManager::onEachNode( const SceneContext &context,
-                               const std::shared_ptr< ECS::IGameEntity > &currentEntity,
-                               const std::string &currentRootPath,
-                               const aiScene *scene,
-                               const aiNode *pNode )
+void AssetManager::onEachScene( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const tinygltf::Model &model, const int& currentNode )
 {
-    for ( unsigned int i = 0; i < pNode->mNumChildren; ++i )
+    for ( int nodeIdx : model.nodes[ currentNode ].children )
     {
-        if ( pNode->mChildren[ i ]->mNumChildren > 0 || pNode->mChildren[ i ]->mNumMeshes > 0 )
+        tinygltf::Node node = model.nodes[ nodeIdx ];
+
+        if ( !node.children.empty() )
         {
             std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
             currentEntity->addChild( child );
 
-            onEachNode( context, child, currentRootPath, scene, pNode->mChildren[ i ] );
+            onEachScene( context, child, currentRootPath, model, nodeIdx );
         }
+
     }
 
-    for ( unsigned int m = 0; m < pNode->mNumMeshes; m++ )
+    tinygltf::Node node = model.nodes[ currentNode ];
+
+    if ( node.mesh == -1 )
     {
-        const aiMesh *mesh = scene->mMeshes[ pNode->mMeshes[ m ] ];
-
-        std::ostringstream keyBuilder;
-        keyBuilder << currentRootPath << "#" << mesh->mName.C_Str( );
-
-        currentEntity->createComponent< ECS::CMaterial >( );
-
-        // Todo implement:
-        // child->getComponent< ECS::CMaterial >()->textures.emplace_back( defaultTexture );
-
-        currentEntity->createComponent< ECS::CMesh >( );
-        currentEntity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
-        geometryMap[ keyBuilder.str( ) ] = { };
-
-        onEachMesh( context, currentEntity->getComponent< ECS::CMesh >( ), mesh );
+        return;
     }
+
+    tinygltf::Mesh mesh = model.meshes[ node.mesh ];
+
+    std::ostringstream keyBuilder;
+    keyBuilder << currentRootPath << "#" << mesh.name;
+
+    currentEntity->createComponent< ECS::CMaterial >( );
+
+    // Todo implement:
+    // child->getComponent< ECS::CMaterial >()->textures.emplace_back( defaultTexture );
+
+    currentEntity->createComponent< ECS::CMesh >( );
+    currentEntity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
+    geometryMap[ keyBuilder.str( ) ] = { };
+
+    onEachMesh( context, currentEntity->getComponent< ECS::CMesh >( ), model, node.mesh );
 }
 
-void AssetManager::onEachMesh( const SceneContext &context, const std::shared_ptr< ECS::CMesh > &meshComponent, const aiMesh *mesh )
+void AssetManager::onEachMesh( const SceneContext &context, const std::shared_ptr< ECS::CMesh > &meshComponent, const tinygltf::Model& model, const int& meshIdx )
 {
     MeshGeometry &geometry = geometryMap[ meshComponent->path ];
 
-    geometry.vertexCount = mesh->mNumVertices * 3;
+    tinygltf::Mesh mesh = model.meshes[ meshIdx ];
 
-    fillGeometryBoneData( context, geometry, mesh, nullptr );
-    fillGeometryVertexData( context, geometry, mesh, nullptr );
-
-    for ( unsigned int f = 0; f < mesh->mNumFaces; f++ )
+    auto tryGetAttribute = [ ]( const tinygltf::Primitive& primitive, const std::string & attribute ) -> int
     {
-        const aiFace &face = mesh->mFaces[ f ];
+        auto attributeSearch = primitive.attributes.find( attribute );
 
-        for ( unsigned int j = 0; j < face.mNumIndices; j++ )
+        if ( attributeSearch != primitive.attributes.end() )
         {
-            geometry.indices.push_back( face.mIndices[ j ] );
+            return attributeSearch->second;
         }
+
+        // todo support morph targets
+
+        return -1;
+    };
+
+    for ( const tinygltf::Primitive& primitive : mesh.primitives )
+    {
+        SubMeshGeometry & subMeshGeometry = geometry.subGeometries.emplace_back( );
+
+        tinygltf::Accessor positionAccessor = model.accessors[ primitive.indices ];
+        tinygltf::BufferView bufferView = model.bufferViews[ positionAccessor.bufferView ];
+        tinygltf::Buffer buffer = model.buffers[ bufferView.buffer ];
+
+        copyAccessorToVector(
+                subMeshGeometry.vertices, model, tryGetAttribute( primitive, "POSITION" )
+        );
+
+        copyAccessorToVector(
+                subMeshGeometry.normals, model, tryGetAttribute( primitive, "NORMAL" )
+        );
+
+        copyAccessorToVector(
+                subMeshGeometry.textureCoordinates, model, tryGetAttribute( primitive, "TEXCOORD_0" )
+        );
+
+        copyAccessorToVector(
+                subMeshGeometry.indices, model, primitive.indices
+        );
+
+        subMeshGeometry.vertexCount = subMeshGeometry.vertices.size( );
+        subMeshGeometry.drawMode =  primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
+
+        packSubGeometry( subMeshGeometry );
     }
 
-    geometry.hasIndices = !geometry.indices.empty( );
+    int x = 1;
 }
 
+/*
 void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *mesh, const aiAnimMesh *animMesh )
 {
     aiVector3D *vertices = mesh == nullptr ? animMesh->mVertices : mesh->mVertices;
@@ -211,7 +259,7 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
         geometry.vertices.push_back( normal.y );
         geometry.vertices.push_back( normal.z );
 
-/*        if ( colors != nullptr )
+*//*        if ( colors != nullptr )
         {
             auto vecColor = colors[ i ];
             if ( vecColor != nullptr )
@@ -221,7 +269,7 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
                 geometry.colors.push_back( vecColor->b );
                 geometry.colors.push_back( vecColor->a );
             }
-        }*/
+        }*//*
 
         auto *coordinates = mesh == nullptr ? animMesh->mTextureCoords : mesh->mTextureCoords;
 
@@ -246,9 +294,32 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
             geometry.vertices.push_back( geometry.boneWeights[ i + 3 ] );
         }
     }
+}*/
+
+void AssetManager::packSubGeometry( SubMeshGeometry &geometry )
+{
+    for ( int i = 0, texIdx = 0; i < geometry.vertexCount; i += 3, texIdx += 2 )
+    {
+        geometry.dataRaw.push_back( geometry.vertices[ i ] );
+        geometry.dataRaw.push_back( geometry.vertices[ i + 1 ] );
+        geometry.dataRaw.push_back( geometry.vertices[ i + 2 ] );
+
+        if ( !geometry.normals.empty() )
+        {
+            geometry.dataRaw.push_back( geometry.normals[ i ] );
+            geometry.dataRaw.push_back( geometry.normals[ i + 1 ] );
+            geometry.dataRaw.push_back( geometry.normals[ i + 2 ] );
+        }
+
+        if ( !geometry.textureCoordinates.empty() )
+        {
+            geometry.dataRaw.push_back( geometry.textureCoordinates[ texIdx ] );
+            geometry.dataRaw.push_back( geometry.textureCoordinates[ texIdx + 1 ] );
+        }
+    }
 }
 
-void AssetManager::fillGeometryBoneData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *pMesh, void *pVoid )
+/*void AssetManager::fillGeometryBoneData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *pMesh, void *pVoid )
 {
     FUNCTION_BREAK( pMesh->mNumBones == 0 )
 
@@ -275,7 +346,7 @@ void AssetManager::fillGeometryBoneData( const SceneContext &context, MeshGeomet
             }
         }
     }
-}
+}*/
 
 const MeshGeometry &AssetManager::getMeshGeometry( const std::string &path )
 {
@@ -302,17 +373,17 @@ std::shared_ptr< SamplerDataAttachment > AssetManager::getImage( const std::stri
     return find->second;
 }
 
-glm::mat4 AssetManager::aiMatToGLMMat( const aiMatrix4x4 &aiMat )
+/*glm::mat4 AssetManager::aiMatToGLMMat( const aiMatrix4x4 &aiMat )
 {
     glm::mat4 mat;
 
-    /*0: */ mat[ 0 ][ 0 ] = aiMat[ 0 ][ 0 ]; /*1:*/ mat[ 0 ][ 0 ] = aiMat[ 0 ][ 1 ]; /*2:*/ mat[ 0 ][ 2 ] = aiMat[ 0 ][ 2 ];/*3:*/ mat[ 0 ][ 0 ] = aiMat[ 0 ][ 3 ];
-    /*0: */ mat[ 1 ][ 0 ] = aiMat[ 1 ][ 0 ]; /*1:*/ mat[ 1 ][ 0 ] = aiMat[ 1 ][ 1 ]; /*2:*/ mat[ 1 ][ 2 ] = aiMat[ 1 ][ 2 ];/*3:*/ mat[ 1 ][ 0 ] = aiMat[ 1 ][ 3 ];
-    /*0: */ mat[ 2 ][ 0 ] = aiMat[ 2 ][ 0 ]; /*1:*/ mat[ 2 ][ 0 ] = aiMat[ 2 ][ 1 ]; /*2:*/ mat[ 2 ][ 2 ] = aiMat[ 2 ][ 2 ];/*3:*/ mat[ 2 ][ 0 ] = aiMat[ 2 ][ 3 ];
-    /*0: */ mat[ 3 ][ 0 ] = aiMat[ 3 ][ 0 ]; /*1:*/ mat[ 3 ][ 0 ] = aiMat[ 3 ][ 1 ]; /*2:*/ mat[ 3 ][ 2 ] = aiMat[ 3 ][ 2 ];/*3:*/ mat[ 3 ][ 0 ] = aiMat[ 3 ][ 3 ];
+    *//*0: *//* mat[ 0 ][ 0 ] = aiMat[ 0 ][ 0 ]; *//*1:*//* mat[ 0 ][ 0 ] = aiMat[ 0 ][ 1 ]; *//*2:*//* mat[ 0 ][ 2 ] = aiMat[ 0 ][ 2 ];*//*3:*//* mat[ 0 ][ 0 ] = aiMat[ 0 ][ 3 ];
+    *//*0: *//* mat[ 1 ][ 0 ] = aiMat[ 1 ][ 0 ]; *//*1:*//* mat[ 1 ][ 0 ] = aiMat[ 1 ][ 1 ]; *//*2:*//* mat[ 1 ][ 2 ] = aiMat[ 1 ][ 2 ];*//*3:*//* mat[ 1 ][ 0 ] = aiMat[ 1 ][ 3 ];
+    *//*0: *//* mat[ 2 ][ 0 ] = aiMat[ 2 ][ 0 ]; *//*1:*//* mat[ 2 ][ 0 ] = aiMat[ 2 ][ 1 ]; *//*2:*//* mat[ 2 ][ 2 ] = aiMat[ 2 ][ 2 ];*//*3:*//* mat[ 2 ][ 0 ] = aiMat[ 2 ][ 3 ];
+    *//*0: *//* mat[ 3 ][ 0 ] = aiMat[ 3 ][ 0 ]; *//*1:*//* mat[ 3 ][ 0 ] = aiMat[ 3 ][ 1 ]; *//*2:*//* mat[ 3 ][ 2 ] = aiMat[ 3 ][ 2 ];*//*3:*//* mat[ 3 ][ 0 ] = aiMat[ 3 ][ 3 ];
 
     return mat;
-}
+}*/
 
 AssetManager::~AssetManager( )
 {

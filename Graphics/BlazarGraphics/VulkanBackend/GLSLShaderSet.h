@@ -150,7 +150,7 @@ private:
     void createVertexInput( const uint32_t &offset, const GLSLType &type, const uint32_t &location );
 
     void createDescriptorSetBinding( const spirv_cross::Compiler &compiler, const DescriptorBindingCreateInfo &bindingCreateInfo );
-    GLSLType spvToGLSLType( const spirv_cross::SPIRType &type );
+    static GLSLType spvToGLSLType( const spirv_cross::SPIRType &type );
     SpvDecoration getDecoration( const spirv_cross::Compiler &compiler, const spirv_cross::Resource &resource );
     void updateDecoration( const DescriptorBindingCreateInfo &bindingCreateInfo, const SpvDecoration &decoration, const DescriptorSet &descriptorSet );
 };

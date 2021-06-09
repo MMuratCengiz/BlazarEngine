@@ -1,7 +1,5 @@
 #include "GlobalResourceTable.h"
 
-#include <utility>
-
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 /*
@@ -57,9 +55,12 @@ void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity 
 
     FUNCTION_BREAK( geometryIndex == entityGeometryMap.end( ) );
 
-    auto &geometryData = geometryList[ geometryIndex->second ];
+    for ( int idx: geometryIndex->second )
+    {
+        auto &geometryData = geometryList[ idx ];
 
-    cleanGeometryData( geometryData );
+        cleanGeometryData( geometryData );
+    }
 }
 
 void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity )
@@ -67,19 +68,24 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
     FUNCTION_BREAK( !entity->hasComponent< ECS::CMesh >( ) )
     FUNCTION_BREAK( entity->hasComponent< ECS::CCubeMap >( ) )
 
-    geometryList.emplace_back( std::move( createGeometryData( entity ) ) );
+    const std::vector< GeometryData > &entityGeometries = createGeometryData( entity );
 
-    entityGeometryMap[ entity->getUID( ) ] = geometryList.size( ) - 1;
+    geometryList.insert( geometryList.end(), entityGeometries.begin(), entityGeometries.end() );
+
+    entityGeometryMap[ entity->getUID( ) ] = { };
+
+    for ( unsigned int i = geometryList.size() - 1; i >= geometryList.size() - entityGeometries.size( ); --i )
+    {
+        entityGeometryMap[ entity->getUID( ) ].push_back( i );
+    }
 }
 
-GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &outputGeometry )
+std::vector< GeometryData > GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &outputGeometry )
 {
     auto transformComponent = entity->getComponent< ECS::CTransform >( );
     auto meshComponent = entity->getComponent< ECS::CMesh >( );
     auto materialComponent = entity->getComponent< ECS::CMaterial >( );
     auto tessellationComponent = entity->getComponent< ECS::CTessellation >( );
-
-    MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
 
     std::string parentBoundingName = StaticVars::getInputName( StaticVars::Input::GeometryData );
 
@@ -98,18 +104,34 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
         parentBoundingName = "ScreenOversizedTriangle";
     }
 
+    MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
+
+    std::vector< GeometryData > result;
+
+    for ( SubMeshGeometry & subMeshGeometry : geometry.subGeometries )
+    {
+        result.push_back( std::move( createGeometryData( entity, transformComponent, parentBoundingName, subMeshGeometry ) )) ;
+    }
+
+    return std::move( result );
+}
+
+GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::shared_ptr< ECS::CTransform > &transformComponent, const std::string &parentBoundingName,
+                                                      SubMeshGeometry &subMeshGeometry )
+{
     GeometryData data { };
+
     /*
-     * Create vertex data:
-     */
+    * Create vertex data:
+    */
     auto vertices = createResource( ResourceType::VertexData, ResourceLoadStrategy::LoadOnce );
 
     vertices->identifier = { "VertexData" };
 
     std::shared_ptr< VertexData > vertexData = std::make_shared< VertexData >( );
-    vertexData->vertexCount = geometry.vertexCount;
-    vertexData->content = geometry.vertices.data( );
-    vertexData->size = geometry.vertices.size( ) * sizeof( float );
+    vertexData->vertexCount = subMeshGeometry.vertexCount;
+    vertexData->content = subMeshGeometry.dataRaw.data( );
+    vertexData->size = subMeshGeometry.dataRaw.size( ) * sizeof( float );
 
     vertices->dataAttachment = std::move( vertexData );
     vertices->bindStrategy = ResourceBindStrategy::BindPerObject;
@@ -121,15 +143,15 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
     /*
      * Create index data:
      */
-    if ( geometry.hasIndices )
+    if ( !subMeshGeometry.indices.empty() )
     {
         auto indices = createResource( ResourceType::IndexData, ResourceLoadStrategy::LoadOnce );
         indices->identifier = { "IndexData" };
         indices->bindStrategy = ResourceBindStrategy::BindPerObject;
         std::shared_ptr< IndexData > indexData = std::make_shared< IndexData >( );
-        indexData->indexCount = geometry.indices.size( );
-        indexData->content = geometry.indices.data( );
-        indexData->size = geometry.indices.size( ) * sizeof( uint32_t );
+        indexData->indexCount = subMeshGeometry.indices.size( );
+        indexData->content = subMeshGeometry.indices.data( );
+        indexData->size = subMeshGeometry.indices.size( ) * sizeof( uint32_t );
         indices->dataAttachment = std::move( indexData );
         indices->allocate( );
 
@@ -188,7 +210,7 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
     data.modelTransformPtr = transformComponent;
     data.referenceEntity = entity;
 
-    return std::move( data );
+    return data;
 }
 
 void GlobalResourceTable::createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities )
@@ -431,13 +453,14 @@ std::vector< GeometryData > GlobalResourceTable::getOutputGeometryList( const st
 
     if ( find == outputGeometryMap.end( ) )
     {
+        // Todo kind of a hack, see if it can't be fixed
         auto ptr = std::make_shared< ECS::DynamicGameEntity >( );
         ptr->createComponent< ECS::CMesh >( );
         ptr->getComponent< ECS::CMesh >( )->path = outputGeometry;
 
         const auto &assetGeometry = assetManager->getMeshGeometry( outputGeometry );
 
-        outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ), outputGeometry );
+        outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ), outputGeometry )[ 0 ];
 
         geometryData.emplace_back( outputGeometryMap[ outputGeometry ] );
     }

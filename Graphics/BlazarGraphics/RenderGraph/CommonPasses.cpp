@@ -97,7 +97,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 
     pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer.spv" );
     pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
-    pipelineRequest.cullMode = ECS::CullMode::BackFace;
+    pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
     PipelineRequest &heightmapTessellationPipeline = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
@@ -106,7 +106,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     heightmapTessellationPipeline.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
     heightmapTessellationPipeline.shaderPaths[ ShaderType::TessellationControl ] = PATH( "/Shaders/SPIRV/tesscontrol/height_map.spv" );
     heightmapTessellationPipeline.shaderPaths[ ShaderType::TessellationEval ] = PATH( "/Shaders/SPIRV/tesseval/height_map.spv" );
-    heightmapTessellationPipeline.cullMode = ECS::CullMode::BackFace;
+    heightmapTessellationPipeline.cullMode = ECS::CullMode::None;
     heightmapTessellationPipeline.depthCompareOp = CompareOp::Less;
 
     PipelineRequest &stencilTestEnabled = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
@@ -121,7 +121,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 
     outlinedPipeline.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer_outlined.spv" );
     outlinedPipeline.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer_outlined.spv" );
-    outlinedPipeline.cullMode = ECS::CullMode::FrontFace;
+    outlinedPipeline.cullMode = ECS::CullMode::None;
     outlinedPipeline.depthCompareOp = CompareOp::Less;
     outlinedPipeline.enableDepthTest = false;
 
@@ -165,7 +165,7 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
 
     pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/quad_position.spv" );
     pipelineRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/lighting_pass.spv" );
-    pipelineRequest.cullMode = ECS::CullMode::FrontFace;
+    pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
     lightingPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
@@ -205,7 +205,7 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     PipelineRequest &pipelineRequest = shadowMapPass->pipelineRequests.emplace_back( );
 
     pipelineRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/shadowMap.spv" );
-    pipelineRequest.cullMode = ECS::CullMode::FrontFace;
+    pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::LessOrEqual;
 
     shadowMapPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )

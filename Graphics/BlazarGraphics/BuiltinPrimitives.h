@@ -17,78 +17,69 @@ enum class PrimitiveType
     PlainCube
 };
 
-struct PrimitiveData
-{
-    std::vector< float > vertices;
-    uint32_t vertexCount;
-
-    std::vector< float > indices;
-    uint32_t indexCount;
-};
-
 class LitCubePrimitive
 {
-    std::vector< float > vertices;
+    std::vector< float > data;
 public:
     LitCubePrimitive( )
     {
         // Left Cube, Triangle 1
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
         // Left Cube, Triangle 2
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Back Cube, Triangle 1
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, } );
         // Back Cube, Triangle 2
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Bottom Cube, Triangle 1
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
         // Bottom Cube, Triangle 2
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, } );
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Top Cube, Triangle 1
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
         // Top Cube, Triangle 2
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, } );
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Right Cube, Triangle 1
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
         // Right Cube, Triangle 2
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // Front Cube, Triangle 1
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, } );
         // Front Cube, Triangle 2
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f } );
 
         if ( SHOULD_FLIP_Y )
         {
-            FLIP_Y( vertices, 1, 8 )
+            FLIP_Y( data, 1, 8 )
         }
     }
 
@@ -97,58 +88,58 @@ public:
         return 36;
     }
 
-    [[nodiscard]] const std::vector< float > &getVertices( ) const
+    [[nodiscard]] const std::vector< float > &getData( ) const
     {
-        return vertices;
+        return data;
     }
 };
 
 class PlainCubePrimitive
 {
-    std::vector< float > vertices;
+    std::vector< float > data;
 public:
     PlainCubePrimitive( )
     {
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, -1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 1.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
 
         if ( SHOULD_FLIP_Y )
         {
-            FLIP_Y( vertices, 1, 8 )
+            FLIP_Y( data, 1, 8 )
         }
     }
 
@@ -157,29 +148,29 @@ public:
         return 36;
     }
 
-    [[nodiscard]] const std::vector< float > &getVertices( ) const
+    [[nodiscard]] const std::vector< float > &getData( ) const
     {
-        return vertices;
+        return data;
     }
 };
 
 class PlainSquarePrimitive
 {
-    std::vector< float > vertices;
+    std::vector< float > data;
 public:
     PlainSquarePrimitive( )
     {
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 0.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 0.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 0.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 0.0f } );
 
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, 1.0f, 0.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 0.0f } );
+        data.insert( data.end( ), { 1.0f, 1.0f, 0.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 0.0f } );
 
         if ( SHOULD_FLIP_Y )
         {
-            FLIP_Y( vertices, 1, 8 )
+            FLIP_Y( data, 1, 8 )
         }
     }
 
@@ -188,25 +179,25 @@ public:
         return 6;
     }
 
-    [[nodiscard]] const std::vector< float > &getVertices( ) const
+    [[nodiscard]] const std::vector< float > &getData( ) const
     {
-        return vertices;
+        return data;
     }
 };
 
 class PlainTrianglePrimitive
 {
-    std::vector< float > vertices;
+    std::vector< float > data;
 public:
     PlainTrianglePrimitive( )
     {
-        vertices.insert( vertices.end( ), { -1.0f, -1.0f, 0.0f } );
-        vertices.insert( vertices.end( ), { -1.0f, 1.0f, 0.0f } );
-        vertices.insert( vertices.end( ), { 1.0f, -1.0f, 0.0f } );
+        data.insert( data.end( ), { -1.0f, -1.0f, 0.0f } );
+        data.insert( data.end( ), { -1.0f, 1.0f, 0.0f } );
+        data.insert( data.end( ), { 1.0f, -1.0f, 0.0f } );
 
         if ( SHOULD_FLIP_Y )
         {
-            FLIP_Y( vertices, 1, 8 )
+            FLIP_Y( data, 1, 8 )
         }
     }
 
@@ -215,9 +206,9 @@ public:
         return 3;
     }
 
-    [[nodiscard]] const std::vector< float > &getVertices( ) const
+    [[nodiscard]] const std::vector< float > &getData( ) const
     {
-        return vertices;
+        return data;
     }
 };
 

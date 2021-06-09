@@ -457,10 +457,10 @@ void VulkanDevice::createImageFormat( )
         }
     }
 
-    auto surfaceFormat = vk::SurfaceFormatKHR { vk::Format::eB8G8R8A8Srgb, vk::ColorSpaceKHR::eSrgbNonlinear };
+    auto surfaceFormat = vk::SurfaceFormatKHR { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
     for ( auto format: surfaceFormats )
     {
-        if ( format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear )
+        if ( format.format == vk::Format::eB8G8R8A8Unorm /*&& format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear*/ )
         {
             surfaceFormat = format;
         }

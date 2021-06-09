@@ -12,11 +12,12 @@ class SampleCar1 : public BlazarEngine::ECS::IGameEntity
 public:
     explicit SampleCar1( Scene::World * world )
     {
-        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_1.fbx" ) );
+        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_1.gltf" ) );
 
         for ( auto& child: meshEntities->getChildren( ) )
         {
             child->getComponent< BlazarEngine::ECS::CMaterial >( )->shininess = 1.0f;
+            child->getComponent< BlazarEngine::ECS::CMesh >( )->cullMode = BlazarEngine::ECS::CullMode::None;
             auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
             texInfo.path = "/assets/textures/Car Texture 1.png";
         }

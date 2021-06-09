@@ -53,7 +53,7 @@ private:
     std::vector< std::unordered_map< std::string, bool > > resourcesUpdatedThisFrame;
 
     std::vector< GeometryData > geometryList;
-    std::unordered_map< uint64_t, uint32_t > entityGeometryMap;
+    std::unordered_map< uint64_t, std::vector< uint32_t > > entityGeometryMap;
     std::unordered_map< std::string, GeometryData > outputGeometryMap;
 
     std::shared_ptr< ShaderResource > globalModelResourcePlaceholder;
@@ -85,10 +85,13 @@ private:
                                                       const ResourcePersistStrategy &persistStrategy = ResourcePersistStrategy::StoreOnDeviceMemory,
                                                       const ResourceShaderStage &shaderStage = ResourceShaderStage::Vertex );
 
-    GeometryData createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &outputGeometry = "" );
+    std::vector< GeometryData > createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &outputGeometry = "" );
     void createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity );
     void createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities );
     static void cleanGeometryData( GeometryData &geometryData );
+
+    GeometryData
+    createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::shared_ptr< ECS::CTransform > &transformComponent, const std::string &parentBoundingName, SubMeshGeometry &subMeshGeometry );
 };
 
 END_NAMESPACES
