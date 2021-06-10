@@ -165,7 +165,7 @@ void AssetManager::onEachScene( const SceneContext &context, const std::shared_p
     tinygltf::Mesh mesh = model.meshes[ node.mesh ];
 
     std::ostringstream keyBuilder;
-    keyBuilder << currentRootPath << "#" << mesh.name;
+    keyBuilder << currentRootPath << "#" << node.name;
 
     currentEntity->createComponent< ECS::CMaterial >( );
 
@@ -207,23 +207,23 @@ void AssetManager::onEachMesh( const SceneContext &context, const std::shared_pt
         tinygltf::BufferView bufferView = model.bufferViews[ positionAccessor.bufferView ];
         tinygltf::Buffer buffer = model.buffers[ bufferView.buffer ];
 
-        copyAccessorToVector(
+        copyAccessorToVectorTransformed(
                 subMeshGeometry.vertices, model, tryGetAttribute( primitive, "POSITION" )
         );
 
-        copyAccessorToVector(
+        copyAccessorToVectorTransformed(
                 subMeshGeometry.normals, model, tryGetAttribute( primitive, "NORMAL" )
         );
 
-        copyAccessorToVector(
+        copyAccessorToVectorTransformed(
                 subMeshGeometry.textureCoordinates, model, tryGetAttribute( primitive, "TEXCOORD_0" )
         );
 
-        copyAccessorToVector(
+        copyAccessorToVectorTransformed(
                 subMeshGeometry.indices, model, primitive.indices
         );
 
-        subMeshGeometry.vertexCount = subMeshGeometry.vertices.size( );
+        subMeshGeometry.vertexCount = positionAccessor.count;
         subMeshGeometry.drawMode =  primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
 
         packSubGeometry( subMeshGeometry );
@@ -298,7 +298,7 @@ void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeom
 
 void AssetManager::packSubGeometry( SubMeshGeometry &geometry )
 {
-    for ( int i = 0, texIdx = 0; i < geometry.vertexCount; i += 3, texIdx += 2 )
+    for ( int i = 0, texIdx = 0; i < geometry.vertexCount * 3; i += 3, texIdx += 2 )
     {
         geometry.dataRaw.push_back( geometry.vertices[ i ] );
         geometry.dataRaw.push_back( geometry.vertices[ i + 1 ] );
