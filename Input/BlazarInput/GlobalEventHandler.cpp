@@ -3,6 +3,7 @@
 //
 
 #include "GlobalEventHandler.h"
+#include <vector>
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 

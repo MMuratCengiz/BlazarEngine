@@ -39,169 +39,36 @@ private:
 public:
     World( ) = default;
 
-    void init( const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title )
-    {
-        window = std::make_unique< Window >( windowWidth, windowHeight, title );
-        physicsWorld = std::make_unique< Physics::PhysicsWorld >( Physics::PhysicsWorldConfiguration { } );
-        transformSystem = std::make_unique< Physics::PhysicsTransformSystem >( physicsWorld.get( ) );
+    void init( const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title );
 
-        renderDevice = std::make_unique< Graphics::VulkanDevice >( );
-        renderDevice->createDevice( window->getRenderWindow( ) );
-        renderDevice->listDevices( )[ 0 ].select( );
+    void registerSystem( std::unique_ptr< ECS::ISystem > system );
 
-        Input::GlobalEventHandler::Instance( ).initWindowEvents( window->getWindow( ) );
+    void setScene( std::shared_ptr< Scene > scene );
 
-        eventHandler = std::make_unique< Input::EventHandler >( window->getWindow( ) );
-        actionMap = std::make_unique< Input::ActionMap >( eventHandler.get( ) );
-        assetManager = std::make_unique< Graphics::AssetManager >( );
+    void run( const std::shared_ptr< IPlayable > &game );
 
-        auto graphSystem = std::make_unique< Graphics::GraphSystem >( renderDevice.get( ), assetManager.get( ) );
-        registerSystem( std::move( graphSystem ) );
-    }
-
-    void registerSystem( std::unique_ptr< ECS::ISystem > system )
-    {
-        systems.push_back( std::move( system ) );
-    }
-
-    void setScene( std::shared_ptr< Scene > scene )
-    {
-        if ( currentScene != nullptr )
-        {
-            for ( const auto &entity: currentScene->getEntities( ) )
-            {
-                for ( auto &system: systems )
-                {
-                    system->removeEntity( entity );
-                }
-            }
-        }
-
-        currentScene = std::move( scene );
-
-        // * attach game state entity
-
-        auto gameState = std::make_shared< ECS::DynamicGameEntity >( );
-        gameState->createComponent< ECS::CGameState >( );
-
-        auto gameStateComponent = gameState->getComponent< ECS::CGameState >( );
-        gameStateComponent->surfaceWidth = window->getRenderWindow( )->getWidth( );
-        gameStateComponent->surfaceHeight = window->getRenderWindow( )->getHeight( );
-
-        Input::GlobalEventHandler::Instance().subscribeToEvent(
-                Input::EventType::WindowResized, [ = ]( const Input::EventType& eventType, std::shared_ptr< Input::IEventParameters > parameters )
-                {
-                    auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
-
-                    gameStateComponent->surfaceWidth  = windowResizeParameters->width;
-                    gameStateComponent->surfaceHeight = windowResizeParameters->height;
-                });
-
-        currentScene->addEntity( std::move( gameState ) );
-
-        for ( const auto &entity: currentScene->getEntities( ) )
-        {
-            for ( auto &system: systems )
-            {
-                system->addEntity( entity );
-            }
-
-            physicsWorld->addOrUpdateEntity( entity );
-        }
-    }
-
-    void run( const std::shared_ptr< IPlayable > &game )
-    {
-        game->init( );
-
-        GLFWwindow *glfwWindow = window->getWindow( );
-        FPSCounter fpsCounter = FPSCounter::Instance( );
-
-        while ( !glfwWindowShouldClose( glfwWindow ) )
-        {
-            Core::Time::tick( );
-            fpsCounter.tick( );
-            physicsWorld->tick( );
-
-            for ( auto &system: systems )
-            {
-                system->frameStart( currentScene->getComponentTable( ) );
-            }
-
-            if ( glfwGetKey( glfwWindow, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
-            {
-                glfwSetWindowShouldClose( glfwWindow, GL_TRUE );
-            }
-
-            int width, height;
-            glfwGetFramebufferSize( glfwWindow, &width, &height );
-
-            if ( width > 0 && height > 0 )
-            {
-                for ( auto &entity: currentScene->getEntities( ) )
-                {
-                    for ( auto &system: systems )
-                    {
-                        system->entityTick( entity );
-                    }
-                }
-            }
-
-            glfwSwapBuffers( glfwWindow );
-            glfwPollEvents( );
-
-            eventHandler->pollEvents( );
-
-            auto tickParams = Input::GlobalEventHandler::createTickParameters( glfwWindow );
-            Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::Tick, tickParams );
-
-            for ( auto &system: systems )
-            {
-                system->frameEnd( currentScene->getComponentTable( ) );
-            }
-        }
-
-        renderDevice->beforeDelete( );
-    }
-
-    const std::unique_ptr< Graphics::AssetManager > &getAssetManager( )
+    inline const std::unique_ptr< Graphics::AssetManager > &getAssetManager( )
     {
         return assetManager;
     }
 
-    const std::unique_ptr< Input::ActionMap > &getActionMap( )
+    inline const std::unique_ptr< Input::ActionMap > &getActionMap( )
     {
         return actionMap;
     }
 
-    const std::unique_ptr< Physics::PhysicsTransformSystem > &getTransformSystem( )
+    inline const std::unique_ptr< Physics::PhysicsTransformSystem > &getTransformSystem( )
     {
         return transformSystem;
     }
 
     // todo remove later
-    GLFWwindow *getGLFWwindow( )
+    inline GLFWwindow *getGLFWwindow( )
     {
         return window->getWindow( );
     }
 
-    ~World( )
-    {
-        Input::GlobalEventHandler::Instance( ).cleanup( );
-
-        renderDevice->beforeDelete( );
-
-        transformSystem.reset( );
-        physicsWorld.reset( );
-
-        for ( auto &system: systems )
-        {
-            system->cleanup( );
-        }
-
-        systems.clear( );
-        renderDevice.reset( );
-    }
+    ~World( );
 };
 
 END_NAMESPACES

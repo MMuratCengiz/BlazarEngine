@@ -3,8 +3,11 @@
 #endif
 
 #define GLFW_INCLUDE_VULKAN
+#ifdef __APPLE_CC__
+#elif
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_EXPOSE_NATIVE_WGL
+#endif
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 

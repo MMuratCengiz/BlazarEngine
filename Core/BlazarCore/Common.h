@@ -10,7 +10,11 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
 #include <stdlib.h>
+
+#ifndef __APPLE_CC__
 #include <malloc.h>
+#endif
+
 #include <string>
 #include <iostream>
 #include <sstream>

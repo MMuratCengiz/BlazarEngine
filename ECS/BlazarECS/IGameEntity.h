@@ -6,6 +6,8 @@
 #include "IComponent.h"
 #include "CTransform.h"
 #include <mutex>
+#include <vector>
+#include <unordered_map>
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 

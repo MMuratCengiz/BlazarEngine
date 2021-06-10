@@ -1,5 +1,6 @@
 #include <fstream>
 #include "Utilities.h"
+#include <vector>
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
 

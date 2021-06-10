@@ -3,6 +3,8 @@
 //
 
 #include "ActionMap.h"
+#include <unordered_map>
+#include <vector>
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 

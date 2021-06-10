@@ -6,7 +6,7 @@ SET(BlazarSceneSources
         BlazarScene/FPSCounter.h
         BlazarScene/IPlayable.h
         BlazarScene/Window.h
-        )
+        BlazarScene/World.cpp)
 
 ADD_LIBRARY(BlazarScene ${BlazarSceneSources})
 
