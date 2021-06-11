@@ -4,10 +4,11 @@
 
 #define GLFW_INCLUDE_VULKAN
 #ifdef __APPLE_CC__
-#elif
+#else
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_EXPOSE_NATIVE_WGL
 #endif
+
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <unordered_map>
