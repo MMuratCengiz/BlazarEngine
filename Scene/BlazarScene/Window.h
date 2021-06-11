@@ -68,6 +68,8 @@ public:
 
 #ifdef WIN32
         renderWindow->setPlatformSpecific( GetModuleHandle( nullptr ), glfwGetWin32Window( window ) );
+#else
+        renderWindow->setPlatformSpecific( window );
 #endif
     }
 

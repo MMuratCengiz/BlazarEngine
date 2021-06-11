@@ -5,6 +5,8 @@
 
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <GLFW/glfw3.h>
 #endif
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
@@ -15,6 +17,8 @@ private:
 #ifdef WIN32
     HINSTANCE hInstance;
     HWND hWindow;
+#else
+    GLFWwindow * window;
 #endif
     uint32_t width;
     uint32_t height;
@@ -66,6 +70,16 @@ public:
     const HWND getHWindow( ) const
     {
         return hWindow;
+    }
+#else
+    inline void setPlatformSpecific( GLFWwindow * window )
+    {
+        this->window = window;
+    }
+
+    inline GLFWwindow * getWindow()
+    {
+        return window;
     }
 #endif
 };

@@ -353,6 +353,10 @@ void VulkanDevice::createSurface( )
     createWindowSurface( instance, &surfaceCreateInfo, nullptr, &surface );
 #endif
 
+#if __APPLE_CC__
+    glfwCreateWindowSurface( context->instance, context->window->getWindow(), nullptr, &surface);
+#endif
+
     context->surface = vk::SurfaceKHR( surface );
 }
 
