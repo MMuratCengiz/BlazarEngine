@@ -26,6 +26,10 @@ std::shared_ptr< ShaderResource > VulkanResourceProvider::createResource( const 
         case ResourceType::CubeMap:
             createCubeMapAllocator( resource );
             break;
+        case ResourceType::PushConstant:
+            break;
+        case ResourceType::DepthImage:
+            break;
     }
 
     return resource;

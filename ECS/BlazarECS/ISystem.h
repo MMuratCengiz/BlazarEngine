@@ -19,6 +19,7 @@ public:
     virtual void frameEnd( const std::shared_ptr< ComponentTable >& componentTable ) = 0;
     // Necessary due to some circular dependencies within systems
     virtual void cleanup( ) = 0;
+    virtual ~ISystem() = default;
 };
 
 END_NAMESPACES

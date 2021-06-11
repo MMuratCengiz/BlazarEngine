@@ -1,4 +1,5 @@
 #include "FpsCamera.h"
+#include <vector>
 
 namespace Sample
 {
