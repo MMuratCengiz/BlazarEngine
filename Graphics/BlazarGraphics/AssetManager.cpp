@@ -1,6 +1,7 @@
 #include "AssetManager.h"
 #include "GraphicsException.h"
 #include <glm/gtx/quaternion.hpp>
+#include <boost/format.hpp>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -10,7 +11,7 @@ AssetManager::AssetManager( )
     geometryMap[ litCubePath ] = { };
     MeshGeometry &litCube = geometryMap[ litCubePath ];
     SubMeshGeometry &litCubeSubMesh = litCube.subGeometries.emplace_back( );
-    litCubeSubMesh.dataRaw = litCubePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    litCubeSubMesh.dataRaw = litCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     litCubeSubMesh.vertexCount = litCubePrimitive.getVertexCount( );
 //    memcpy( &litCubeSubMesh.dataRaw[ 0 ], litCubePrimitive.getData( ).data( ), litCubeSubMesh.dataRaw.size() );
 
@@ -18,7 +19,7 @@ AssetManager::AssetManager( )
     geometryMap[ plainCubePath ] = { };
     MeshGeometry &plainCube = geometryMap[ plainCubePath ];
     SubMeshGeometry &plainCubeSubMesh = plainCube.subGeometries.emplace_back( );
-    plainCubeSubMesh.dataRaw = plainCubePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainCubeSubMesh.dataRaw = plainCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainCubeSubMesh.vertexCount = plainCubePrimitive.getVertexCount( );
 //    memcpy( &plainCubeSubMesh.dataRaw[ 0 ], plainCubePrimitive.getData( ).data( ), plainCubeSubMesh.dataRaw.size() );
 
@@ -26,7 +27,7 @@ AssetManager::AssetManager( )
     geometryMap[ plainSquarePath ] = { };
     MeshGeometry &plainSquare = geometryMap[ plainSquarePath ];
     SubMeshGeometry &plainSquareSubMesh = plainSquare.subGeometries.emplace_back( );
-    plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainSquareSubMesh.vertexCount = plainSquarePrimitive.getVertexCount( );
 //    memcpy( &plainSquareSubMesh.dataRaw[ 0 ], plainSquarePrimitive.getData( ).data( ), plainSquareSubMesh.dataRaw.size() );
 
@@ -34,7 +35,7 @@ AssetManager::AssetManager( )
     geometryMap[ plainTrianglePath ] = { };
     MeshGeometry &plainTriangle = geometryMap[ plainTrianglePath ];
     SubMeshGeometry &plainTriangleSubMesh = plainTriangle.subGeometries.emplace_back( );
-    plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData(); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainTriangleSubMesh.vertexCount = plainTrianglePrimitive.getVertexCount( );
 //    memcpy( &plainTriangleSubMesh.dataRaw[ 0 ], plainTrianglePrimitive.getData( ).data( ), plainTriangleSubMesh.dataRaw.size() );
 }
@@ -94,65 +95,23 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
             std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
             rootEntity->addChild( child );
 
-            onEachScene( context, child, path, context.model, node );
+            onEachNode( context, child, path, node );
         }
     }
-/*
-    for ( int animationIndex = 0; animationIndex < sceneAssimp->mNumAnimations; ++animationIndex )
-    {
-        auto anim = sceneAssimp->mAnimations[ animationIndex ];
-
-        auto animName = std::string( anim->mName.data );
-
-        for ( int channelIndex = 0; channelIndex < anim->mNumChannels; ++channelIndex )
-        {
-            aiNodeAnim *animNode = anim->mChannels[ channelIndex ];
-
-            MeshGeometry &geometry = geometryMap[ std::string( animNode->mNodeName.data ) ];
-
-            geometry.animations[ animName ] = { };
-            AnimationData &animData = geometry.animations[ animName ];
-            animData.duration = anim->mDuration;
-            animData.ticksPerSeconds = anim->mTicksPerSecond;
-
-            for ( int transformationIndex = 0; transformationIndex < animNode->mNumPositionKeys; ++transformationIndex )
-            {
-                auto &animTransformation = animData.boneTransformations.emplace_back( );
-
-                auto aiTranslation = animNode->mPositionKeys[ transformationIndex ];
-                auto aiRotation = animNode->mRotationKeys[ transformationIndex ];
-                auto aiScale = animNode->mScalingKeys[ transformationIndex ];
-
-                glm::vec3 translation( aiTranslation.mValue.x, aiTranslation.mValue.y, aiTranslation.mValue.z );
-                glm::quat rotation( aiRotation.mValue.x, aiRotation.mValue.y, aiRotation.mValue.z, aiRotation.mValue.w );
-                glm::vec3 scale( aiScale.mValue.x, aiScale.mValue.y, aiScale.mValue.z );
-
-                glm::mat4 modelMatrix { 1 };
-
-                modelMatrix = glm::translate( modelMatrix, translation );
-                modelMatrix = glm::scale( modelMatrix, scale );
-                modelMatrix *= glm::mat4_cast( rotation );
-
-                animData.boneTransformations.push_back( modelMatrix );
-            }
-        }
-    }*/
 }
 
-void AssetManager::onEachScene( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const tinygltf::Model &model, const int& currentNode )
+void AssetManager::onEachNode( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode )
 {
+    const tinygltf::Model &model = context.model;
+
     for ( int nodeIdx : model.nodes[ currentNode ].children )
     {
         tinygltf::Node node = model.nodes[ nodeIdx ];
 
-        if ( !node.children.empty() )
-        {
-            std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
-            currentEntity->addChild( child );
+        std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
+        currentEntity->addChild( child );
 
-            onEachScene( context, child, currentRootPath, model, nodeIdx );
-        }
-
+        onEachNode( context, child, currentRootPath, nodeIdx );
     }
 
     tinygltf::Node node = model.nodes[ currentNode ];
@@ -162,191 +121,162 @@ void AssetManager::onEachScene( const SceneContext &context, const std::shared_p
         return;
     }
 
-    tinygltf::Mesh mesh = model.meshes[ node.mesh ];
-
     std::ostringstream keyBuilder;
     keyBuilder << currentRootPath << "#" << node.name;
 
     currentEntity->createComponent< ECS::CMaterial >( );
 
-    // Todo implement:
-    // child->getComponent< ECS::CMaterial >()->textures.emplace_back( defaultTexture );
-
     currentEntity->createComponent< ECS::CMesh >( );
     currentEntity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
-    geometryMap[ keyBuilder.str( ) ] = { };
 
-    onEachMesh( context, currentEntity->getComponent< ECS::CMesh >( ), model, node.mesh );
+    MeshContext meshContext = { };
+
+    meshContext.geometry = geometryMap[ keyBuilder.str( ) ] = { };
+    meshContext.currentEntity = currentEntity;
+
+    onEachMesh( context, meshContext, node.mesh );
+
+    onEachSkin( context, meshContext, node.skin );
 }
 
-void AssetManager::onEachMesh( const SceneContext &context, const std::shared_ptr< ECS::CMesh > &meshComponent, const tinygltf::Model& model, const int& meshIdx )
+void AssetManager::onEachMesh( const SceneContext &context, MeshContext meshContext, const int &meshIdx )
 {
-    MeshGeometry &geometry = geometryMap[ meshComponent->path ];
+    const tinygltf::Model &model = context.model;
+
+    MeshGeometry &geometry = meshContext.geometry;
 
     tinygltf::Mesh mesh = model.meshes[ meshIdx ];
 
-    auto tryGetAttribute = [ ]( const tinygltf::Primitive& primitive, const std::string & attribute ) -> int
+    for ( const tinygltf::Primitive &primitive : mesh.primitives )
     {
-        auto attributeSearch = primitive.attributes.find( attribute );
-
-        if ( attributeSearch != primitive.attributes.end() )
-        {
-            return attributeSearch->second;
-        }
-
-        // todo support morph targets
-
-        return -1;
-    };
-
-    for ( const tinygltf::Primitive& primitive : mesh.primitives )
-    {
-        SubMeshGeometry & subMeshGeometry = geometry.subGeometries.emplace_back( );
+        SubMeshGeometry &subMeshGeometry = geometry.subGeometries.emplace_back( );
 
         tinygltf::Accessor positionAccessor = model.accessors[ primitive.indices ];
         tinygltf::BufferView bufferView = model.bufferViews[ positionAccessor.bufferView ];
         tinygltf::Buffer buffer = model.buffers[ bufferView.buffer ];
 
         copyAccessorToVectorTransformed(
-                subMeshGeometry.vertices, model, tryGetAttribute( primitive, "POSITION" )
+                subMeshGeometry.vertices, model, tryGetPrimitiveAttribute( primitive, "POSITION" )
         );
 
         copyAccessorToVectorTransformed(
-                subMeshGeometry.normals, model, tryGetAttribute( primitive, "NORMAL" )
+                subMeshGeometry.normals, model, tryGetPrimitiveAttribute( primitive, "NORMAL" )
         );
 
         copyAccessorToVectorTransformed(
-                subMeshGeometry.textureCoordinates, model, tryGetAttribute( primitive, "TEXCOORD_0" )
+                subMeshGeometry.textureCoordinates, model, tryGetPrimitiveAttribute( primitive, "TEXCOORD_0" )
         );
 
         copyAccessorToVectorTransformed(
                 subMeshGeometry.indices, model, primitive.indices
         );
 
+        copyAccessorToVectorTransformed(
+                subMeshGeometry.boneIndices, model, tryGetPrimitiveAttribute( primitive, "JOINTS_0" )
+        );
+
+        copyAccessorToVectorTransformed(
+                subMeshGeometry.boneWeights, model, tryGetPrimitiveAttribute( primitive, "WEIGHTS_0" )
+        );
+
         subMeshGeometry.vertexCount = positionAccessor.count;
-        subMeshGeometry.drawMode =  primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
+        subMeshGeometry.drawMode = primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
 
         packSubGeometry( subMeshGeometry );
     }
-
-    int x = 1;
 }
 
-/*
-void AssetManager::fillGeometryVertexData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *mesh, const aiAnimMesh *animMesh )
+void AssetManager::onEachSkin( const SceneContext &context, MeshContext meshContext, const int &skinIdx )
 {
-    aiVector3D *vertices = mesh == nullptr ? animMesh->mVertices : mesh->mVertices;
-    aiVector3D *normals = mesh == nullptr ? animMesh->mNormals : mesh->mNormals;
+    const tinygltf::Model &model = context.model;
 
-    uint32_t numVertices = mesh == nullptr ? animMesh->mNumVertices : mesh->mNumVertices;
+    tinygltf::Skin skin = model.skins[ skinIdx ];
 
-    geometry.hasColors = mesh != nullptr && mesh->mMaterialIndex == 0;
-    geometry.hasBoneData = !geometry.boneIndices.empty( );
+    std::vector< float > inverseBindMatricesFlat;
 
-    glm::vec3 currentNormal;
+    copyAccessorToVectorTransformed( inverseBindMatricesFlat, context.model, skin.inverseBindMatrices );
 
-    for ( uint32_t i = 0; i < numVertices; ++i )
+    std::vector< glm::mat4 > inverseBindMatrices;
+
+    for ( int i = 0; !skin.joints.empty(); ++i )
     {
-        const auto &vec = vertices[ i ];
-
-        geometry.vertices.push_back( vec.x );
-        geometry.vertices.push_back( vec.y );
-        geometry.vertices.push_back( vec.z );
-
-        const auto &normal = normals[ i ];
-
-        geometry.vertices.push_back( normal.x );
-        geometry.vertices.push_back( normal.y );
-        geometry.vertices.push_back( normal.z );
-
-*//*        if ( colors != nullptr )
-        {
-            auto vecColor = colors[ i ];
-            if ( vecColor != nullptr )
-            {
-                geometry.colors.push_back( vecColor->r );
-                geometry.colors.push_back( vecColor->g );
-                geometry.colors.push_back( vecColor->b );
-                geometry.colors.push_back( vecColor->a );
-            }
-        }*//*
-
-        auto *coordinates = mesh == nullptr ? animMesh->mTextureCoords : mesh->mTextureCoords;
-
-        if ( coordinates[ 0 ] )
-        {
-            const aiVector3D &textureCoordinates = coordinates[ 0 ][ i ];
-
-            geometry.vertices.push_back( textureCoordinates.x );
-            geometry.vertices.push_back( textureCoordinates.y );
-        }
-
-        if ( !geometry.boneIndices.empty( ) )
-        {
-            geometry.vertices.push_back( geometry.boneIndices[ i ] );
-            geometry.vertices.push_back( geometry.boneIndices[ i + 1 ] );
-            geometry.vertices.push_back( geometry.boneIndices[ i + 2 ] );
-            geometry.vertices.push_back( geometry.boneIndices[ i + 3 ] );
-
-            geometry.vertices.push_back( geometry.boneWeights[ i ] );
-            geometry.vertices.push_back( geometry.boneWeights[ i + 1 ] );
-            geometry.vertices.push_back( geometry.boneWeights[ i + 2 ] );
-            geometry.vertices.push_back( geometry.boneWeights[ i + 3 ] );
-        }
+        inverseBindMatrices.push_back( flatMatToGLMMat( inverseBindMatricesFlat, i * 16 ) );
     }
-}*/
+
+
+    for ( int jointIdx: skin.joints )
+    {
+        onEachJoint( context, meshContext, -1, jointIdx );
+    }
+}
+
+void AssetManager::onEachJoint( const SceneContext &context, MeshContext meshContext, const std::vector< glm::mat4 >& inverseBindMatrices, const int &parentIdx, const int &jointIdx )
+{
+    const tinygltf::Model &model = context.model;
+
+    MeshGeometry &geometry = meshContext.geometry;
+
+    tinygltf::Node joint = model.nodes[ jointIdx ];
+
+    MeshJoint meshJoint = { };
+    meshJoint.translation = glm::vec3( joint.translation[ 0 ], joint.translation[ 1 ], joint.translation[ 2 ] );
+    meshJoint.rotation = glm::vec3( joint.rotation[ 0 ], joint.rotation[ 1 ], joint.rotation[ 2 ] );
+    meshJoint.scale = glm::vec3( joint.scale[ 0 ], joint.scale[ 1 ], joint.scale[ 2 ] );
+    meshJoint.inverseBindMatrix = inverseBindMatrices[ jointIdx ];
+
+    if ( parentIdx == -1 )
+    {
+        geometry.jointTree.addNode( jointIdx, meshJoint );
+    } else
+    {
+        geometry.jointTree.addNode( geometry.jointTree.findNode( parentIdx ), jointIdx, meshJoint );
+    }
+
+    for ( int childIdx: joint.children )
+    {
+        onEachJoint( context, meshContext, inverseBindMatrices, jointIdx, childIdx );
+    }
+}
 
 void AssetManager::packSubGeometry( SubMeshGeometry &geometry )
 {
-    for ( int i = 0, texIdx = 0; i < geometry.vertexCount * 3; i += 3, texIdx += 2 )
+
+    for ( int i = 0, texIdx = 0, boneIdx = 0; i < geometry.vertexCount * 3; i += 3, texIdx += 2, boneIdx += 4 )
     {
         geometry.dataRaw.push_back( geometry.vertices[ i ] );
         geometry.dataRaw.push_back( geometry.vertices[ i + 1 ] );
         geometry.dataRaw.push_back( geometry.vertices[ i + 2 ] );
 
-        if ( !geometry.normals.empty() )
+        if ( !geometry.normals.empty( ) )
         {
             geometry.dataRaw.push_back( geometry.normals[ i ] );
             geometry.dataRaw.push_back( geometry.normals[ i + 1 ] );
             geometry.dataRaw.push_back( geometry.normals[ i + 2 ] );
         }
 
-        if ( !geometry.textureCoordinates.empty() )
+        if ( !geometry.textureCoordinates.empty( ) )
         {
             geometry.dataRaw.push_back( geometry.textureCoordinates[ texIdx ] );
             geometry.dataRaw.push_back( geometry.textureCoordinates[ texIdx + 1 ] );
         }
-    }
-}
 
-/*void AssetManager::fillGeometryBoneData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *pMesh, void *pVoid )
-{
-    FUNCTION_BREAK( pMesh->mNumBones == 0 )
-
-    geometry.boneIndices.resize( pMesh->mNumVertices * SUPPORTED_BONE_COUNT, -1 );
-    geometry.boneWeights.resize( pMesh->mNumVertices * SUPPORTED_BONE_COUNT, -1 );
-
-    for ( int i = 0; i < pMesh->mNumBones; ++i )
-    {
-        const aiBone *bone = pMesh->mBones[ i ];
-
-        geometry.boneOffsetMatrices.push_back( aiMatToGLMMat( bone->mOffsetMatrix ) );
-
-        for ( int j = 0; j < bone->mNumWeights; ++j )
+        if ( !geometry.boneIndices.empty( ) )
         {
-            auto weight = bone->mWeights[ j ];
+            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx ] );
+            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx + 1 ] );
+            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx + 2 ] );
+            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx + 3 ] );
+        }
 
-            for ( uint32_t offset = weight.mVertexId; offset < weight.mVertexId + 4; ++offset )
-            {
-                if ( geometry.boneIndices[ offset ] == -1 )
-                {
-                    geometry.boneIndices[ offset ] = i;
-                    geometry.boneWeights[ offset ] = weight.mWeight;
-                }
-            }
+        if ( !geometry.boneWeights.empty( ) )
+        {
+            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx ] );
+            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx + 1 ] );
+            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx + 2 ] );
+            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx + 3 ] );
         }
     }
-}*/
+}
 
 const MeshGeometry &AssetManager::getMeshGeometry( const std::string &path )
 {
@@ -373,17 +303,37 @@ std::shared_ptr< SamplerDataAttachment > AssetManager::getImage( const std::stri
     return find->second;
 }
 
-/*glm::mat4 AssetManager::aiMatToGLMMat( const aiMatrix4x4 &aiMat )
+int AssetManager::tryGetPrimitiveAttribute( const tinygltf::Primitive &primitive, const std::string &attribute )
+{
+    auto attributeSearch = primitive.attributes.find( attribute );
+
+    if ( attributeSearch != primitive.attributes.end( ) )
+    {
+        return attributeSearch->second;
+    }
+
+    return -1;
+}
+
+glm::mat4 AssetManager::flatMatToGLMMat( const std::vector< float > &matFlat, int offset )
 {
     glm::mat4 mat;
 
-    *//*0: *//* mat[ 0 ][ 0 ] = aiMat[ 0 ][ 0 ]; *//*1:*//* mat[ 0 ][ 0 ] = aiMat[ 0 ][ 1 ]; *//*2:*//* mat[ 0 ][ 2 ] = aiMat[ 0 ][ 2 ];*//*3:*//* mat[ 0 ][ 0 ] = aiMat[ 0 ][ 3 ];
-    *//*0: *//* mat[ 1 ][ 0 ] = aiMat[ 1 ][ 0 ]; *//*1:*//* mat[ 1 ][ 0 ] = aiMat[ 1 ][ 1 ]; *//*2:*//* mat[ 1 ][ 2 ] = aiMat[ 1 ][ 2 ];*//*3:*//* mat[ 1 ][ 0 ] = aiMat[ 1 ][ 3 ];
-    *//*0: *//* mat[ 2 ][ 0 ] = aiMat[ 2 ][ 0 ]; *//*1:*//* mat[ 2 ][ 0 ] = aiMat[ 2 ][ 1 ]; *//*2:*//* mat[ 2 ][ 2 ] = aiMat[ 2 ][ 2 ];*//*3:*//* mat[ 2 ][ 0 ] = aiMat[ 2 ][ 3 ];
-    *//*0: *//* mat[ 3 ][ 0 ] = aiMat[ 3 ][ 0 ]; *//*1:*//* mat[ 3 ][ 0 ] = aiMat[ 3 ][ 1 ]; *//*2:*//* mat[ 3 ][ 2 ] = aiMat[ 3 ][ 2 ];*//*3:*//* mat[ 3 ][ 0 ] = aiMat[ 3 ][ 3 ];
+    int column = 0;
+    int row = 0;
 
+    for ( int i = 0; i < 0 + 16; ++i )
+    {
+        mat[ column ][ row ] = matFlat[ offset + i ];
+
+        if ( ++row == 4 )
+        {
+            column++;
+            row = 0;
+        }
+    }
     return mat;
-}*/
+}
 
 AssetManager::~AssetManager( )
 {

@@ -8,7 +8,7 @@ SET(BlazarCoreSources
         BlazarCore/Utilities.h
         BlazarCore/Utilities.cpp
         BlazarCore/Time.cpp
-        )
+        BlazarCore/SimpleTree.h)
 
 ADD_LIBRARY(BlazarCore ${BlazarCoreSources})
 

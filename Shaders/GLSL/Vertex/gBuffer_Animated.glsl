@@ -18,9 +18,9 @@ layout(set = 1, binding = 0) uniform InstanceData
 
 layout(set = 4, binding = 0) uniform BoneTransformations
 {
-    mat4 boneTransformation[ 100 ];
-    uint transformationCount;
-} instanceData;
+    mat4 data[ 100 ];
+    uint size;
+} boneTransformations;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;

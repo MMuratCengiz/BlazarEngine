@@ -1,4 +1,5 @@
 
+#include <BlazarECS/CAnimState.h>
 #include "CommonPasses.h"
 #include "StaticVars.h"
 
@@ -10,7 +11,8 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 {
     auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
     gBufferPass->pipelineInputs.resize( 4 );
-    for ( int i = 0; i < 4; ++i )
+
+    for ( int i = 0; i < 5; ++i )
     {
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
@@ -31,6 +33,11 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
         {
             gBufferPass->pipelineInputs[ i ].push_back( "OutlineScale" );
             gBufferPass->pipelineInputs[ i ].push_back( "OutlineColor" );
+        }
+
+        if ( i == 4 )
+        {
+            gBufferPass->pipelineInputs[ i ].push_back( "BoneTransformations" );
         }
     }
 
@@ -69,6 +76,11 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     gBufferPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
     {
         int pipeline = entity->hasComponent< ECS::CTessellation >( ) ? 1 : 0;
+
+        if ( entity->hasComponent< ECS::CAnimState >( ) )
+        {
+            RETURN_SINGLE_PIPELINE( 4 )
+        }
 
         if ( entity->hasComponent< ECS::COutlined >( ) )
         {

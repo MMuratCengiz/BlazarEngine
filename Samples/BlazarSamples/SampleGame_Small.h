@@ -38,7 +38,6 @@ class SampleGame_Small : public Scene::IPlayable
     std::shared_ptr< ECS::DynamicGameEntity > cameraComponent;
     std::shared_ptr< SampleFloor > floor;
     std::shared_ptr< SampleCubeMap > sky;
-    std::shared_ptr< SampleCar1 > car1;
     Input::ActionCallback inputCallback;
 public:
     inline explicit SampleGame_Small( Scene::World *world ) : world( world )

@@ -6,6 +6,7 @@
 #include "BuiltinPrimitives.h"
 #include "IResourceProvider.h"
 #include <tiny_gltf.h>
+#include <BlazarCore/SimpleTree.h>
 
 #define SUPPORTED_BONE_COUNT 4
 
@@ -18,11 +19,36 @@ enum PrimitiveDrawMode
     Triangle
 };
 
+enum ChannelTransformType
+{
+    Translation,
+    Rotation,
+    Scale,
+    Weights // Not yet implemented
+};
+
+struct AnimationChannel
+{
+    std::vector< float > keyFrames;
+    std::vector< float > transform;
+    ChannelTransformType transformType;
+};
+
 struct AnimationData
 {
+    std::vector< AnimationChannel > channels;
+
     double ticksPerSeconds;
     double duration;
     std::vector< glm::mat4 > boneTransformations;
+};
+
+struct MeshJoint
+{
+    glm::mat4 inverseBindMatrix;
+    glm::vec3 translation;
+    glm::vec3 rotation;
+    glm::vec3 scale;
 };
 
 struct SubMeshGeometry
@@ -37,6 +63,8 @@ struct SubMeshGeometry
     std::vector< float > colors;
     std::vector< float > tangents;
     std::vector< float > textureCoordinates;
+    std::vector< int > boneIndices;
+    std::vector< float > boneWeights;
 
     std::vector< float > dataRaw;
 };
@@ -46,8 +74,8 @@ struct MeshGeometry
     std::vector< SubMeshGeometry > subGeometries;
 
     // Internal Data
-    std::vector< int > boneIndices;
-    std::vector< float > boneWeights;
+
+    Core::SimpleTree< MeshJoint >  jointTree;
 
     std::vector< glm::mat4 > boneOffsetMatrices;
     std::unordered_map< std::string, AnimationData > animations;
@@ -56,6 +84,12 @@ struct MeshGeometry
 struct SceneContext
 {
     tinygltf::Model model;
+};
+
+struct MeshContext
+{
+    MeshGeometry geometry;
+    std::shared_ptr< ECS::IGameEntity > currentEntity;
 };
 
 class AssetManager
@@ -85,9 +119,15 @@ private:
 
     void loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &path );
 
-    void onEachScene( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const tinygltf::Model &model, const int &currentNode );
+    void onEachNode( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode );
 
-    void onEachMesh( const SceneContext &context, const std::shared_ptr< ECS::CMesh > &meshComponent, const tinygltf::Model &model, const int &mesh );
+    void onEachMesh( const SceneContext &sceneContext, MeshContext meshContext, const int &meshIdx );
+
+    void onEachSkin( const SceneContext &sceneContext, MeshContext meshContext, const int &skinIdx );
+
+    void onEachJoint( const SceneContext &sceneContext, MeshContext meshContext, const std::vector< glm::mat4 >& inverseBindMatrices, const int& parentIdx, const int &jointIdx );
+
+    static int tryGetPrimitiveAttribute( const tinygltf::Primitive& primitive, const std::string & attribute );
 
     template< typename SourceType, typename BufferType = SourceType >
     void copyAccessorToVector( std::vector< SourceType > &targetData, const tinygltf::Model &model, int accessorIdx )
@@ -132,6 +172,11 @@ private:
     template< typename SourceType >
     void copyAccessorToVectorTransformed( std::vector< SourceType > &targetData, const tinygltf::Model &model, int accessorIdx )
     {
+        if ( accessorIdx < 0 )
+        {
+            return;
+        }
+
         tinygltf::Accessor positionAccessor = model.accessors[ accessorIdx ];
 
         switch ( positionAccessor.componentType )
@@ -157,9 +202,8 @@ private:
         }
     }
 
-/*    static void fillGeometryVertexData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *mesh, const aiAnimMesh *animMesh );
+    static glm::mat4 flatMatToGLMMat( const std::vector< float > &matFlat, int offset );
 
-    static void fillGeometryBoneData( const SceneContext &context, MeshGeometry &geometry, const aiMesh *pMesh, void *pVoid );*/
     static void packSubGeometry( SubMeshGeometry &geometry );
 };
 

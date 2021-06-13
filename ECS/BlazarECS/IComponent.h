@@ -29,4 +29,6 @@ typedef std::shared_ptr< IComponent > pComponent;
 
 #define BLAZAR_COMPONENT( ClassType ) ClassType( ) : IComponent( typeid( ClassType ) ) { } ~ClassType( ) override = default;
 
+#define BLAZAR_COMPONENT_CUSTOM_DESTRUCTOR( ClassType ) ClassType( ) : IComponent( typeid( ClassType ) ) { }
+
 END_NAMESPACES

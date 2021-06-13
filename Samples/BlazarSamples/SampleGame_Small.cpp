@@ -1,3 +1,4 @@
+#include <BlazarECS/CMaterial.h>
 #include "SampleGame_Small.h"
 
 namespace Sample
@@ -26,15 +27,17 @@ void SampleGame_Small::init( )
 
     floor = std::make_shared< SampleFloor >( );
     sky = std::make_shared< SampleCubeMap >( );
-    car1 = std::make_shared< SampleCar1 >( world );
+
+    animDummy = world->getAssetManager()->createEntity( PATH( "/assets/models/fox.gltf" ) );
+    animDummy->createComponent< ECS::CMaterial >( );
+    animDummy->getComponent< ECS::CMaterial >( )->textures.push_back( ECS::Material::TextureInfo { PATH( "/assets/textures/fox.png" ) } );
 
     initialScene = std::make_shared< Scene::Scene >( );
     initialScene->addEntity( sceneLights );
     initialScene->addEntity( cameraComponent );
     initialScene->addEntity( floor );
     initialScene->addEntity( sky );
-    initialScene->addEntity( car1 );
-//        initialScene->addEntity( animDummy );
+    initialScene->addEntity( animDummy );
     world->setScene( initialScene );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )

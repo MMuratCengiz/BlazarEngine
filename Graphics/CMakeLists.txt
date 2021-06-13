@@ -49,7 +49,7 @@ SET(BlazarGraphicsSources
         BlazarGraphics/VulkanBackend/GLSLShaderSet.h
         BlazarGraphics/VulkanBackend/GLSLShaderSet.cpp
         BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.cpp
-        BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h BlazarGraphics/RenderGraph/ResourceBinder.cpp BlazarGraphics/RenderGraph/ResourceBinder.h)
+        BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h BlazarGraphics/RenderGraph/ResourceBinder.cpp BlazarGraphics/RenderGraph/ResourceBinder.h BlazarGraphics/AnimationStateSystem.cpp BlazarGraphics/AnimationStateSystem.h)
 
 ADD_LIBRARY(BlazarGraphics ${BlazarGraphicsSources})
 

@@ -19,3 +19,4 @@
 #include <BlazarECS/ComponentTable.h>
 #include <BlazarECS/CGameState.h>
 #include <BlazarECS/COutlined.h>
+#include <BlazarECS/CAnimState.h>
