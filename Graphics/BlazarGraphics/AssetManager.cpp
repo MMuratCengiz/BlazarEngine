@@ -13,7 +13,6 @@ AssetManager::AssetManager( )
     SubMeshGeometry &litCubeSubMesh = litCube.subGeometries.emplace_back( );
     litCubeSubMesh.dataRaw = litCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     litCubeSubMesh.vertexCount = litCubePrimitive.getVertexCount( );
-//    memcpy( &litCubeSubMesh.dataRaw[ 0 ], litCubePrimitive.getData( ).data( ), litCubeSubMesh.dataRaw.size() );
 
     const std::string &plainCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
     geometryMap[ plainCubePath ] = { };
@@ -21,7 +20,6 @@ AssetManager::AssetManager( )
     SubMeshGeometry &plainCubeSubMesh = plainCube.subGeometries.emplace_back( );
     plainCubeSubMesh.dataRaw = plainCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainCubeSubMesh.vertexCount = plainCubePrimitive.getVertexCount( );
-//    memcpy( &plainCubeSubMesh.dataRaw[ 0 ], plainCubePrimitive.getData( ).data( ), plainCubeSubMesh.dataRaw.size() );
 
     const std::string &plainSquarePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
     geometryMap[ plainSquarePath ] = { };
@@ -29,7 +27,6 @@ AssetManager::AssetManager( )
     SubMeshGeometry &plainSquareSubMesh = plainSquare.subGeometries.emplace_back( );
     plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainSquareSubMesh.vertexCount = plainSquarePrimitive.getVertexCount( );
-//    memcpy( &plainSquareSubMesh.dataRaw[ 0 ], plainSquarePrimitive.getData( ).data( ), plainSquareSubMesh.dataRaw.size() );
 
     const std::string &plainTrianglePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle );
     geometryMap[ plainTrianglePath ] = { };
@@ -37,7 +34,6 @@ AssetManager::AssetManager( )
     SubMeshGeometry &plainTriangleSubMesh = plainTriangle.subGeometries.emplace_back( );
     plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainTriangleSubMesh.vertexCount = plainTrianglePrimitive.getVertexCount( );
-//    memcpy( &plainTriangleSubMesh.dataRaw[ 0 ], plainTrianglePrimitive.getData( ).data( ), plainTriangleSubMesh.dataRaw.size() );
 }
 
 std::shared_ptr< ECS::IGameEntity > AssetManager::createEntity( const std::string &meshPath )
@@ -87,6 +83,8 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
         throw std::runtime_error( ss.str( ) );
     }
 
+    generateAnimationData( context );
+
     for ( const tinygltf::Scene &scene: context.model.scenes )
     {
         // Attach the initial tree structure to the root node because gltf doesn't do it by default
@@ -98,6 +96,43 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
             onEachNode( context, child, path, node );
         }
     }
+}
+
+void AssetManager::generateAnimationData( SceneContext &context )
+{
+    const tinygltf::Model &model = context.model;
+
+    for ( const tinygltf::Animation &animation: model.animations )
+    {
+        AnimationData animationData = { };
+
+        for ( const tinygltf::AnimationChannel &channel: animation.channels )
+        {
+            AnimationChannel animationChannel = { };
+
+            animationChannel.targetJoint = channel.target_node;
+            
+            const tinygltf::AnimationSampler &sampler = animation.samplers[ channel.sampler ];
+
+            std::string targetPath;
+
+            std::transform( channel.target_path.begin( ), channel.target_path.end( ), targetPath.begin( ), [ ]( unsigned char c ) { return std::tolower( c ); } );
+
+            animationChannel.transformType =
+                    targetPath == "translation" ? ChannelTransformType::Translation :
+                    targetPath == "rotation" ? ChannelTransformType::Rotation :
+                    targetPath == "scale" ? ChannelTransformType::Scale :
+                    ChannelTransformType::Weights;
+
+            copyAccessorToVectorTransformed( animationChannel.keyFrames, model, sampler.input );
+            copyAccessorToVectorTransformed( animationChannel.transform, model, sampler.output );
+
+            animationData.channels.push_back( std::move( animationChannel ) );
+        }
+
+        context.animations[ animation.name ] = std::move( animationData );
+    }
+
 }
 
 void AssetManager::onEachNode( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode )
@@ -198,19 +233,18 @@ void AssetManager::onEachSkin( const SceneContext &context, MeshContext meshCont
 
     std::vector< glm::mat4 > inverseBindMatrices;
 
-    for ( int i = 0; !skin.joints.empty(); ++i )
+    for ( int i = 0; !skin.joints.empty( ); ++i )
     {
         inverseBindMatrices.push_back( flatMatToGLMMat( inverseBindMatricesFlat, i * 16 ) );
     }
 
-
     for ( int jointIdx: skin.joints )
     {
-        onEachJoint( context, meshContext, -1, jointIdx );
+        onEachJoint( context, meshContext, inverseBindMatrices, -1, jointIdx );
     }
 }
 
-void AssetManager::onEachJoint( const SceneContext &context, MeshContext meshContext, const std::vector< glm::mat4 >& inverseBindMatrices, const int &parentIdx, const int &jointIdx )
+void AssetManager::onEachJoint( const SceneContext &context, MeshContext meshContext, const std::vector< glm::mat4 > &inverseBindMatrices, const int &parentIdx, const int &jointIdx )
 {
     const tinygltf::Model &model = context.model;
 
@@ -240,7 +274,6 @@ void AssetManager::onEachJoint( const SceneContext &context, MeshContext meshCon
 
 void AssetManager::packSubGeometry( SubMeshGeometry &geometry )
 {
-
     for ( int i = 0, texIdx = 0, boneIdx = 0; i < geometry.vertexCount * 3; i += 3, texIdx += 2, boneIdx += 4 )
     {
         geometry.dataRaw.push_back( geometry.vertices[ i ] );

@@ -29,6 +29,8 @@ enum ChannelTransformType
 
 struct AnimationChannel
 {
+    int targetJoint;
+
     std::vector< float > keyFrames;
     std::vector< float > transform;
     ChannelTransformType transformType;
@@ -84,6 +86,8 @@ struct MeshGeometry
 struct SceneContext
 {
     tinygltf::Model model;
+
+    std::unordered_map< std::string, AnimationData > animations;
 };
 
 struct MeshContext
@@ -118,6 +122,8 @@ private:
     void loadImage( const std::string &path );
 
     void loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &path );
+
+    void generateAnimationData( SceneContext &sceneContext );
 
     void onEachNode( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode );
 
