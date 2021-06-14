@@ -10,7 +10,7 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
 {
     auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
-    gBufferPass->pipelineInputs.resize( 4 );
+    gBufferPass->pipelineInputs.resize( 5 );
 
     for ( int i = 0; i < 5; ++i )
     {
@@ -142,6 +142,13 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     outlinedPipeline.stencilTestStateFront.failOp = StencilOp::Keep;
     outlinedPipeline.stencilTestStateFront.depthFailOp = StencilOp::Keep;
     outlinedPipeline.stencilTestStateFront.passOp = StencilOp::Replace;
+
+    PipelineRequest &animatedGBufferRequest = gBufferPass->pipelineRequests.emplace_back( PipelineRequest { } );
+
+    animatedGBufferRequest.shaderPaths[ ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/gBuffer_Animated.spv" );
+    animatedGBufferRequest.shaderPaths[ ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/gBuffer.spv" );
+    animatedGBufferRequest.cullMode = ECS::CullMode::None;
+    animatedGBufferRequest.depthCompareOp = CompareOp::Less;
 
     return gBufferPass;
 }

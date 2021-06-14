@@ -12,6 +12,7 @@
 #include "SampleCar2.h"
 #include "SampleCubeMap.h"
 #include "SampleCrate.h"
+#include "SampleAnimatedFox.h"
 #include "SampleSmallCrate.h"
 #include "FpsCamera.h"
 #include "SampleMovingCrate.h"
@@ -32,10 +33,9 @@ class SampleGame : public Scene::IPlayable
     std::shared_ptr< ECS::IGameEntity > cuteBoat;
     std::shared_ptr< ECS::IGameEntity > tree1;
     std::shared_ptr< ECS::IGameEntity > tree2;
-    std::shared_ptr< ECS::IGameEntity > animDummy;
     std::shared_ptr< ECS::IGameEntity > rocks;
-
     std::shared_ptr< Scene::Scene > initialScene;
+
     std::shared_ptr< FpsCamera > camera;
     std::shared_ptr< ECS::DynamicGameEntity > sceneLights;
     std::shared_ptr< ECS::DynamicGameEntity > cameraComponent;
@@ -45,6 +45,7 @@ class SampleGame : public Scene::IPlayable
     std::shared_ptr< SampleCubeMap > sky;
     std::shared_ptr< SampleCrate > crate;
     std::shared_ptr< SampleSmallCrate > smallCrate;
+    std::shared_ptr< SampleAnimatedFox > animDummy;
     Input::ActionCallback inputCallback;
 public:
     inline explicit SampleGame( Scene::World *world ) : world( world )

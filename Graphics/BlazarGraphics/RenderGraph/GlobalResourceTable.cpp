@@ -24,6 +24,17 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice *renderDevice, AssetMana
     globalNormalModelResourcePlaceholder->dataAttachment->content = malloc( 4 * 4 * sizeof( float ) );
     globalNormalModelResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
 
+    globalBoneTransformationsResourcePlaceholder = createResource( );
+    globalBoneTransformationsResourcePlaceholder->type = ResourceType::Uniform;
+    globalBoneTransformationsResourcePlaceholder->identifier = { "BoneTransformations" };
+    globalBoneTransformationsResourcePlaceholder->dataAttachment = std::make_shared< IDataAttachment >( );
+    globalBoneTransformationsResourcePlaceholder->dataAttachment->size = sizeof( BoneTransformations );
+    globalBoneTransformationsResourcePlaceholder->dataAttachment->content = malloc( sizeof( BoneTransformations ) );
+    globalBoneTransformationsResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
+    auto boneTransformations = BoneTransformations { };
+    memcpy( globalBoneTransformationsResourcePlaceholder->dataAttachment->content, &boneTransformations, globalBoneTransformationsResourcePlaceholder->dataAttachment->size );
+    globalBoneTransformationsResourcePlaceholder->allocate( );
+
     frameResources.resize( renderDevice->getFrameCount( ) );
     resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ) );
 
@@ -104,7 +115,7 @@ std::vector< GeometryData > GlobalResourceTable::createGeometryData( const std::
         parentBoundingName = "ScreenOversizedTriangle";
     }
 
-    MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->path );
+    MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->geometryRefIdx, meshComponent->path );
 
     std::vector< GeometryData > result;
 
@@ -243,6 +254,10 @@ void GlobalResourceTable::setActiveGeometryModel( const GeometryData &data )
 
     auto normalMat = DataAttachmentFormatter::formatNormalMatrix( data.modelTransformPtr, data.referenceEntity );
     memcpy( globalNormalModelResourcePlaceholder->dataAttachment->content, &normalMat, globalModelResourcePlaceholder->dataAttachment->size );
+
+    auto boneTransformations = DataAttachmentFormatter::formatBoneTransformations( data.referenceEntity );
+    memcpy( globalBoneTransformationsResourcePlaceholder->dataAttachment->content, &boneTransformations, globalBoneTransformationsResourcePlaceholder->dataAttachment->size );
+    globalBoneTransformationsResourcePlaceholder->update( );
 }
 
 void GlobalResourceTable::allocateResource( const std::string &resourceName, const uint32_t &frameIndex )
@@ -250,9 +265,10 @@ void GlobalResourceTable::allocateResource( const std::string &resourceName, con
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::GeometryData ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
     FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
+    FUNCTION_BREAK( resourceName == "BoneTransformations" )
 
     auto bindType = resourceBinder->getResourceBindType( resourceName );
-    FUNCTION_BREAK( bindType == ResourceBindType::PerEntityTexture || bindType == ResourceBindType::PerEntityUniform )
+    FUNCTION_BREAK( bindType == ResourceBindType::PerEntityTexture || bindType == ResourceBindType::PerEntityUniform  )
 
     auto resourceUpdatedThisFrame = resourcesUpdatedThisFrame[ frameIndex ].find( resourceName );
 
@@ -406,6 +422,11 @@ std::shared_ptr< ShaderResource > GlobalResourceTable::getResource( const std::s
         return globalNormalModelResourcePlaceholder;
     }
 
+    if ( resourceName == "BoneTransformations" )
+    {
+        return globalBoneTransformationsResourcePlaceholder;
+    }
+
     auto findIt = frameResources[ frameIndex ].find( resourceName );
 
     if ( findIt == frameResources[ frameIndex ].end( ) )
@@ -458,7 +479,7 @@ std::vector< GeometryData > GlobalResourceTable::getOutputGeometryList( const st
         ptr->createComponent< ECS::CMesh >( );
         ptr->getComponent< ECS::CMesh >( )->path = outputGeometry;
 
-        const auto &assetGeometry = assetManager->getMeshGeometry( outputGeometry );
+        const auto &assetGeometry = assetManager->getMeshGeometry( ptr->getComponent< ECS::CMesh >( )->geometryRefIdx, ptr->getComponent< ECS::CMesh >( )->path );
 
         outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ), outputGeometry )[ 0 ];
 
@@ -501,9 +522,11 @@ GlobalResourceTable::~GlobalResourceTable( )
     {
         cleanGeometryData( geometry.second );
     }
-
+    
+    globalBoneTransformationsResourcePlaceholder->deallocate( );
     free( globalModelResourcePlaceholder->dataAttachment->content );
     free( globalNormalModelResourcePlaceholder->dataAttachment->content );
+    free( globalBoneTransformationsResourcePlaceholder->dataAttachment->content );
 }
 
 END_NAMESPACES

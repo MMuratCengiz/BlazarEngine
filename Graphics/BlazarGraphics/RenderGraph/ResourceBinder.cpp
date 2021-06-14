@@ -54,24 +54,6 @@ ResourceBinder::ResourceBinder( )
     END_RESOURCE_DEFINITION( )
 
     START_RESOURCE_DEFINITION( )
-            RESOURCE_NAME( "BoneTransformations" )
-            RESOURCE_BIND_TYPE( ResourceBindType::PerEntityUniform )
-            RESOURCE_TYPE( ResourceType::Uniform )
-            FUNC( [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> UniformAttachmentContent
-                  {
-                      auto animState = entity->getComponent< ECS::CAnimState >( );
-
-                      if ( animState == nullptr )
-                      {
-                          ATTACH_EMPTY( )
-                      }
-
-                      auto data = DataAttachmentFormatter::formatBoneTransformations( animState, entity );
-                      ATTACH_DATA( data, glm::vec4 )
-                  } )
-    END_RESOURCE_DEFINITION( )
-
-    START_RESOURCE_DEFINITION( )
             RESOURCE_NAME( "OutlineScale" )
             RESOURCE_BIND_TYPE( ResourceBindType::PerEntityUniform )
             RESOURCE_TYPE( ResourceType::Uniform )

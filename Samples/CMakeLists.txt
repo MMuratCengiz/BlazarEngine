@@ -3,6 +3,8 @@ INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
 SET(BlazarSamplesSources
         BlazarSamples/FpsCamera.h
         BlazarSamples/FpsCamera.cpp
+        BlazarSamples/SampleAnimatedFox.h
+        BlazarSamples/SampleAnimatedFox.cpp
         BlazarSamples/SampleCrate.h
         BlazarSamples/SampleSetupInputBindings.h
         BlazarSamples/SampleSmallCrate.h
@@ -14,7 +16,7 @@ SET(BlazarSamplesSources
         BlazarSamples/SampleCar1.h
         BlazarSamples/SampleCar2.h
         BlazarSamples/SampleCubeMap.h
-        BlazarSamples/SampleMovingCrate.h)
+        BlazarSamples/SampleMovingCrate.h BlazarSamples/SampleAnimatedFox.cpp)
 
 ADD_LIBRARY(BlazarSamples ${BlazarSamplesSources})
 

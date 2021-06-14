@@ -7,30 +7,31 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 AssetManager::AssetManager( )
 {
+    geometryTable.resize( 4 );
     const std::string &litCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube );
-    geometryMap[ litCubePath ] = { };
-    MeshGeometry &litCube = geometryMap[ litCubePath ];
+    geometryTable[ 0 ] = { };
+    MeshGeometry &litCube = geometryTable[ 0 ];
     SubMeshGeometry &litCubeSubMesh = litCube.subGeometries.emplace_back( );
     litCubeSubMesh.dataRaw = litCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     litCubeSubMesh.vertexCount = litCubePrimitive.getVertexCount( );
 
     const std::string &plainCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
-    geometryMap[ plainCubePath ] = { };
-    MeshGeometry &plainCube = geometryMap[ plainCubePath ];
+    geometryTable[ 1 ] = { };
+    MeshGeometry &plainCube = geometryTable[ 1 ];
     SubMeshGeometry &plainCubeSubMesh = plainCube.subGeometries.emplace_back( );
     plainCubeSubMesh.dataRaw = plainCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainCubeSubMesh.vertexCount = plainCubePrimitive.getVertexCount( );
 
     const std::string &plainSquarePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
-    geometryMap[ plainSquarePath ] = { };
-    MeshGeometry &plainSquare = geometryMap[ plainSquarePath ];
+    geometryTable[ 2 ] = { };
+    MeshGeometry &plainSquare = geometryTable[ 2 ];
     SubMeshGeometry &plainSquareSubMesh = plainSquare.subGeometries.emplace_back( );
     plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainSquareSubMesh.vertexCount = plainSquarePrimitive.getVertexCount( );
 
     const std::string &plainTrianglePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle );
-    geometryMap[ plainTrianglePath ] = { };
-    MeshGeometry &plainTriangle = geometryMap[ plainTrianglePath ];
+    geometryTable[ 3 ] = { };
+    MeshGeometry &plainTriangle = geometryTable[ 3 ];
     SubMeshGeometry &plainTriangleSubMesh = plainTriangle.subGeometries.emplace_back( );
     plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
     plainTriangleSubMesh.vertexCount = plainTrianglePrimitive.getVertexCount( );
@@ -74,6 +75,8 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
     std::string warn;
 
     SceneContext context { };
+    context.rootEntity = rootEntity;
+
     bool res = loader.LoadASCIIFromFile( &context.model, &err, &warn, path );
 
     if ( !res )
@@ -108,31 +111,45 @@ void AssetManager::generateAnimationData( SceneContext &context )
 
         for ( const tinygltf::AnimationChannel &channel: animation.channels )
         {
-            AnimationChannel animationChannel = { };
-
-            animationChannel.targetJoint = channel.target_node;
-            
-            const tinygltf::AnimationSampler &sampler = animation.samplers[ channel.sampler ];
-
-            std::string targetPath;
-
-            std::transform( channel.target_path.begin( ), channel.target_path.end( ), targetPath.begin( ), [ ]( unsigned char c ) { return std::tolower( c ); } );
-
-            animationChannel.transformType =
-                    targetPath == "translation" ? ChannelTransformType::Translation :
-                    targetPath == "rotation" ? ChannelTransformType::Rotation :
-                    targetPath == "scale" ? ChannelTransformType::Scale :
-                    ChannelTransformType::Weights;
-
-            copyAccessorToVectorTransformed( animationChannel.keyFrames, model, sampler.input );
-            copyAccessorToVectorTransformed( animationChannel.transform, model, sampler.output );
-
-            animationData.channels.push_back( std::move( animationChannel ) );
+            onEachChannel( model, animation, animationData, channel );
         }
 
         context.animations[ animation.name ] = std::move( animationData );
     }
 
+}
+
+void AssetManager::onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel )
+{
+    AnimationChannel animationChannel = { };
+
+    animationChannel.targetJoint = channel.target_node;
+
+    const tinygltf::AnimationSampler &sampler = animation.samplers[ channel.sampler ];
+
+    std::string targetPath;
+    std::string interpolationType;
+
+    std::transform( channel.target_path.begin( ), channel.target_path.end( ), targetPath.begin( ), [ ]( unsigned char c )
+    { return tolower( c ); } );
+    std::transform( sampler.interpolation.begin( ), sampler.interpolation.end( ), interpolationType.begin( ), [ ]( unsigned char c )
+    { return tolower( c ); } );
+
+    animationChannel.transformType =
+            targetPath == "translation" ? Translation :
+            targetPath == "rotation" ? Rotation :
+            targetPath == "scale" ? Scale :
+            Weights;
+
+    animationChannel.interpolationType =
+            interpolationType == "linear" ? Linear :
+            interpolationType == "step" ? Step :
+            CubicSpline;
+
+    copyAccessorToVectorTransformed( animationChannel.keyFrames, model, sampler.input );
+    copyAccessorToVectorTransformed( animationChannel.transform, model, sampler.output );
+
+    animationData.channels.push_back( std::move( animationChannel ) );
 }
 
 void AssetManager::onEachNode( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode )
@@ -143,10 +160,17 @@ void AssetManager::onEachNode( const SceneContext &context, const std::shared_pt
     {
         tinygltf::Node node = model.nodes[ nodeIdx ];
 
-        std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
-        currentEntity->addChild( child );
+        if ( node.mesh != -1 )
+        {
+            std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
 
-        onEachNode( context, child, currentRootPath, nodeIdx );
+            currentEntity->addChild( child );
+            onEachNode( context, child, currentRootPath, nodeIdx );
+        }
+        else
+        {
+            onEachNode( context, currentEntity, currentRootPath, nodeIdx );
+        }
     }
 
     tinygltf::Node node = model.nodes[ currentNode ];
@@ -162,12 +186,21 @@ void AssetManager::onEachNode( const SceneContext &context, const std::shared_pt
     currentEntity->createComponent< ECS::CMaterial >( );
 
     currentEntity->createComponent< ECS::CMesh >( );
-    currentEntity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
+
+    if ( !context.model.animations.empty( ) )
+    {
+        auto animState = currentEntity->createComponent< ECS::CAnimState >( );
+        animState->mesh = currentEntity->getComponent< ECS::CMesh >( );
+    }
 
     MeshContext meshContext = { };
+    geometryTable.push_back( { } );
 
-    meshContext.geometry = geometryMap[ keyBuilder.str( ) ] = { };
-    meshContext.currentEntity = currentEntity;
+    meshContext.geometryIdx = geometryTable.size( ) - 1;
+    meshContext.entity = currentEntity;
+
+    currentEntity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
+    currentEntity->getComponent< ECS::CMesh >( )->geometryRefIdx = meshContext.geometryIdx;
 
     onEachMesh( context, meshContext, node.mesh );
 
@@ -178,7 +211,7 @@ void AssetManager::onEachMesh( const SceneContext &context, MeshContext meshCont
 {
     const tinygltf::Model &model = context.model;
 
-    MeshGeometry &geometry = meshContext.geometry;
+    MeshGeometry &geometry = geometryTable[ meshContext.geometryIdx ];
 
     tinygltf::Mesh mesh = model.meshes[ meshIdx ];
 
@@ -214,9 +247,10 @@ void AssetManager::onEachMesh( const SceneContext &context, MeshContext meshCont
                 subMeshGeometry.boneWeights, model, tryGetPrimitiveAttribute( primitive, "WEIGHTS_0" )
         );
 
-        subMeshGeometry.vertexCount = positionAccessor.count;
+        subMeshGeometry.vertexCount = subMeshGeometry.vertices.size() / 3;
         subMeshGeometry.drawMode = primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
 
+        int normalSize = subMeshGeometry.normals.size();
         packSubGeometry( subMeshGeometry );
     }
 }
@@ -233,14 +267,10 @@ void AssetManager::onEachSkin( const SceneContext &context, MeshContext meshCont
 
     std::vector< glm::mat4 > inverseBindMatrices;
 
-    for ( int i = 0; !skin.joints.empty( ); ++i )
+    for ( int i = 0; i < skin.joints.size( ); ++i )
     {
         inverseBindMatrices.push_back( flatMatToGLMMat( inverseBindMatricesFlat, i * 16 ) );
-    }
-
-    for ( int jointIdx: skin.joints )
-    {
-        onEachJoint( context, meshContext, inverseBindMatrices, -1, jointIdx );
+        onEachJoint( context, meshContext, inverseBindMatrices, -1, skin.joints[ i ] );
     }
 }
 
@@ -248,14 +278,23 @@ void AssetManager::onEachJoint( const SceneContext &context, MeshContext meshCon
 {
     const tinygltf::Model &model = context.model;
 
-    MeshGeometry &geometry = meshContext.geometry;
+    MeshGeometry &geometry = geometryTable[ meshContext.geometryIdx ];
 
     tinygltf::Node joint = model.nodes[ jointIdx ];
 
     MeshJoint meshJoint = { };
-    meshJoint.translation = glm::vec3( joint.translation[ 0 ], joint.translation[ 1 ], joint.translation[ 2 ] );
-    meshJoint.rotation = glm::vec3( joint.rotation[ 0 ], joint.rotation[ 1 ], joint.rotation[ 2 ] );
-    meshJoint.scale = glm::vec3( joint.scale[ 0 ], joint.scale[ 1 ], joint.scale[ 2 ] );
+
+    if ( !joint.translation.empty( ) )
+    {
+        meshJoint.baseTransform.translation = glm::vec3( joint.translation[ 0 ], joint.translation[ 1 ], joint.translation[ 2 ] );
+    } else if ( !joint.rotation.empty( ) )
+    {
+        meshJoint.baseTransform.rotation = glm::quat( glm::vec3( joint.rotation[ 0 ], joint.rotation[ 1 ], joint.rotation[ 2 ] ) );
+    } else if ( !joint.scale.empty( ) )
+    {
+        meshJoint.baseTransform.scale = glm::vec3( joint.scale[ 0 ], joint.scale[ 1 ], joint.scale[ 2 ] );
+    }
+
     meshJoint.inverseBindMatrix = inverseBindMatrices[ jointIdx ];
 
     if ( parentIdx == -1 )
@@ -274,53 +313,43 @@ void AssetManager::onEachJoint( const SceneContext &context, MeshContext meshCon
 
 void AssetManager::packSubGeometry( SubMeshGeometry &geometry )
 {
+    auto pushToDataRaw = [ & ]( const std::vector< float > &source, const int &offset, const int &count ) -> void
+    {
+        if ( source.empty( ) )
+        {
+            return;
+        }
+
+        for ( int i = 0; i < count; ++i )
+        {
+            geometry.dataRaw.push_back( ( float ) source[ offset + i ] );
+        }
+    };
+
     for ( int i = 0, texIdx = 0, boneIdx = 0; i < geometry.vertexCount * 3; i += 3, texIdx += 2, boneIdx += 4 )
     {
-        geometry.dataRaw.push_back( geometry.vertices[ i ] );
-        geometry.dataRaw.push_back( geometry.vertices[ i + 1 ] );
-        geometry.dataRaw.push_back( geometry.vertices[ i + 2 ] );
-
-        if ( !geometry.normals.empty( ) )
-        {
-            geometry.dataRaw.push_back( geometry.normals[ i ] );
-            geometry.dataRaw.push_back( geometry.normals[ i + 1 ] );
-            geometry.dataRaw.push_back( geometry.normals[ i + 2 ] );
-        }
-
-        if ( !geometry.textureCoordinates.empty( ) )
-        {
-            geometry.dataRaw.push_back( geometry.textureCoordinates[ texIdx ] );
-            geometry.dataRaw.push_back( geometry.textureCoordinates[ texIdx + 1 ] );
-        }
-
-        if ( !geometry.boneIndices.empty( ) )
-        {
-            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx ] );
-            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx + 1 ] );
-            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx + 2 ] );
-            geometry.dataRaw.push_back( ( float ) geometry.boneIndices[ boneIdx + 3 ] );
-        }
-
-        if ( !geometry.boneWeights.empty( ) )
-        {
-            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx ] );
-            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx + 1 ] );
-            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx + 2 ] );
-            geometry.dataRaw.push_back( geometry.boneWeights[ boneIdx + 3 ] );
-        }
+        pushToDataRaw( geometry.vertices, i, 3 );
+        pushToDataRaw( geometry.normals, i, 3 );
+        pushToDataRaw( geometry.textureCoordinates, texIdx, 2 );
+        pushToDataRaw( geometry.boneIndices, boneIdx, 4 );
+        pushToDataRaw( geometry.boneWeights, boneIdx, 4 );
     }
 }
 
-const MeshGeometry &AssetManager::getMeshGeometry( const std::string &path )
+MeshGeometry &AssetManager::getMeshGeometry( const int &geometryIdx, const std::string& builtinPrimitive )
 {
-    auto find = geometryMap.find( path );
+    int idx = geometryIdx;
 
-    if ( find == geometryMap.end( ) )
+    if ( idx == -1 )
     {
-        throw GraphicsException { "AssetManager", "Could not find geometry!" };
+        idx = findBuiltinPrimitiveIdx( builtinPrimitive );
+        if ( idx == -1 )
+        {
+            throw GraphicsException { "AssetManager", "Could not find geometry!" };
+        }
     }
 
-    return find->second;
+    return geometryTable[ idx ];
 }
 
 std::shared_ptr< SamplerDataAttachment > AssetManager::getImage( const std::string &path )
@@ -348,6 +377,31 @@ int AssetManager::tryGetPrimitiveAttribute( const tinygltf::Primitive &primitive
     return -1;
 }
 
+int AssetManager::findBuiltinPrimitiveIdx( const std::string &primitiveName ) const
+{
+    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube ) )
+    {
+        return 0;
+    }
+
+    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube ) )
+    {
+        return 1;
+    }
+
+    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare ) )
+    {
+        return 2;
+    }
+
+    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle ) )
+    {
+        return 3;
+    }
+
+    return -1;
+}
+
 glm::mat4 AssetManager::flatMatToGLMMat( const std::vector< float > &matFlat, int offset )
 {
     glm::mat4 mat;
@@ -365,6 +419,7 @@ glm::mat4 AssetManager::flatMatToGLMMat( const std::vector< float > &matFlat, in
             row = 0;
         }
     }
+
     return mat;
 }
 
@@ -375,6 +430,10 @@ AssetManager::~AssetManager( )
         stbi_image_free( imagePairs.second->content );
     }
 
+    for ( auto geometry: geometryTable )
+    {
+        geometry.jointTree.freeNode( geometry.jointTree.getRoot( ) );
+    }
 }
 
 END_NAMESPACES

@@ -106,7 +106,7 @@ public:
     static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity );
     static glm::mat4 formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity );
     static InstanceData formatInstances( const std::shared_ptr< ECS::CInstances > &instances, const std::shared_ptr< ECS::IGameEntity > &entity );
-    static BoneTransformations formatBoneTransformations( const std::shared_ptr< ECS::CAnimState > &animState, const std::shared_ptr< ECS::IGameEntity >& entity );
+    static BoneTransformations formatBoneTransformations( const std::shared_ptr< ECS::IGameEntity >& entity );
     static Resolution formatResolution( const uint32_t& width, const uint32_t& height );
 };
 

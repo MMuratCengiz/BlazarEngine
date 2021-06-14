@@ -5,6 +5,8 @@
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
+#define ANIM_STATE_ANY -1
+
 enum NodeType
 {
     Begin,
@@ -22,6 +24,7 @@ struct CAnimFlowNode
 
     std::unordered_map< int, CAnimFlowNode * > transitions;
 
+    float currentPlayTime = 0.0;
     ~CAnimFlowNode()
     {
         for ( auto transition: transitions )
@@ -38,6 +41,11 @@ struct CAnimState : IComponent
     std::vector< glm::mat4 > boneTransformations;
 
     CAnimFlowNode * beginNode = new CAnimFlowNode { NodeType::Begin, "", { } };
+
+    CAnimFlowNode * currentNode = beginNode;
+
+    int state = 0;
+    int previousState = 0;
 
     ~CAnimState() override
     {

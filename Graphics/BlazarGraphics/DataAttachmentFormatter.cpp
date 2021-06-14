@@ -172,9 +172,16 @@ Resolution DataAttachmentFormatter::formatResolution( const uint32_t& width, con
     return Resolution{ width, height };
 }
 
-BoneTransformations DataAttachmentFormatter::formatBoneTransformations( const std::shared_ptr< ECS::CAnimState > &animState, const std::shared_ptr< ECS::IGameEntity > &entity )
+BoneTransformations DataAttachmentFormatter::formatBoneTransformations( const std::shared_ptr< ECS::IGameEntity > &entity )
 {
     BoneTransformations boneTransformations = { };
+
+    auto animState = entity->getComponent< ECS::CAnimState >();
+
+    if ( animState == nullptr )
+    {
+        return boneTransformations;
+    }
 
     for ( int i = 0; i < animState->boneTransformations.size( ); ++i )
     {

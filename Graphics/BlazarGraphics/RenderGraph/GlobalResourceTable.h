@@ -58,6 +58,7 @@ private:
 
     std::shared_ptr< ShaderResource > globalModelResourcePlaceholder;
     std::shared_ptr< ShaderResource > globalNormalModelResourcePlaceholder;
+    std::shared_ptr< ShaderResource > globalBoneTransformationsResourcePlaceholder;
 public:
     explicit GlobalResourceTable( IRenderDevice *renderDevice, AssetManager *assetManager );
 

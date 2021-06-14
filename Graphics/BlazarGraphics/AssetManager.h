@@ -19,6 +19,13 @@ enum PrimitiveDrawMode
     Triangle
 };
 
+enum JointInterpolationType
+{
+    Linear,
+    Step,
+    CubicSpline
+};
+
 enum ChannelTransformType
 {
     Translation,
@@ -34,23 +41,27 @@ struct AnimationChannel
     std::vector< float > keyFrames;
     std::vector< float > transform;
     ChannelTransformType transformType;
+    JointInterpolationType interpolationType;
 };
 
 struct AnimationData
 {
     std::vector< AnimationChannel > channels;
+};
 
-    double ticksPerSeconds;
-    double duration;
-    std::vector< glm::mat4 > boneTransformations;
+struct JointTransform
+{
+    glm::vec3 translation;
+    glm::quat rotation;
+    glm::vec3 scale;
 };
 
 struct MeshJoint
 {
     glm::mat4 inverseBindMatrix;
-    glm::vec3 translation;
-    glm::vec3 rotation;
-    glm::vec3 scale;
+
+    JointTransform baseTransform = { };
+    JointTransform keyFrameTransform = { };
 };
 
 struct SubMeshGeometry
@@ -65,7 +76,7 @@ struct SubMeshGeometry
     std::vector< float > colors;
     std::vector< float > tangents;
     std::vector< float > textureCoordinates;
-    std::vector< int > boneIndices;
+    std::vector< float > boneIndices;
     std::vector< float > boneWeights;
 
     std::vector< float > dataRaw;
@@ -77,9 +88,8 @@ struct MeshGeometry
 
     // Internal Data
 
-    Core::SimpleTree< MeshJoint >  jointTree;
+    Core::SimpleTree< MeshJoint >  jointTree = { };
 
-    std::vector< glm::mat4 > boneOffsetMatrices;
     std::unordered_map< std::string, AnimationData > animations;
 };
 
@@ -88,18 +98,20 @@ struct SceneContext
     tinygltf::Model model;
 
     std::unordered_map< std::string, AnimationData > animations;
+    std::shared_ptr< ECS::IGameEntity > rootEntity;
 };
 
 struct MeshContext
 {
-    MeshGeometry geometry;
-    std::shared_ptr< ECS::IGameEntity > currentEntity;
+    int geometryIdx;
+    std::shared_ptr< ECS::IGameEntity > entity;
 };
 
 class AssetManager
 {
 private:
-    std::unordered_map< std::string, MeshGeometry > geometryMap;
+    // todo instead of having a map, use access by index by storing the index data in the component
+    std::vector< MeshGeometry > geometryTable;
     std::unordered_map< std::string, std::shared_ptr< SamplerDataAttachment > > imageMap;
 
     LitCubePrimitive litCubePrimitive { };
@@ -112,9 +124,11 @@ public:
 
     std::shared_ptr< ECS::IGameEntity > createEntity( const std::string &meshPath );
 
-    const MeshGeometry &getMeshGeometry( const std::string &path );
+    MeshGeometry &getMeshGeometry( const int &geometryIdx, const std::string& builtinPrimitive );
 
     std::shared_ptr< SamplerDataAttachment > getImage( const std::string &path );
+
+    int findBuiltinPrimitiveIdx( const std::string& primitiveName ) const;
 
     ~AssetManager( );
 
@@ -211,6 +225,8 @@ private:
     static glm::mat4 flatMatToGLMMat( const std::vector< float > &matFlat, int offset );
 
     static void packSubGeometry( SubMeshGeometry &geometry );
+
+    void onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel );
 };
 
 END_NAMESPACES

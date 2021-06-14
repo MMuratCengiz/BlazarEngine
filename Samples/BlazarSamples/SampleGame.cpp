@@ -34,8 +34,7 @@ void SampleGame::init( )
     sky = std::make_shared< SampleCubeMap >( );
     crate = std::make_shared< SampleCrate >( );
     smallCrate = std::make_shared< SampleSmallCrate >( );
-
-    animDummy = world->getAssetManager( )->createEntity( PATH( "/assets/models/fox.gltf" ) );
+    animDummy = std::make_shared< SampleAnimatedFox >( world );
 
     rocks = std::make_shared< ECS::DynamicGameEntity >( );
 
@@ -112,7 +111,7 @@ void SampleGame::init( )
     initialScene->addEntity( rocks );
     initialScene->addEntity( smallCrate );
     initialScene->addEntity( sky );
-//        initialScene->addEntity( animDummy );
+    initialScene->addEntity( animDummy );
     world->setScene( initialScene );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )

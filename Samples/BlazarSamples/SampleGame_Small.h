@@ -13,6 +13,7 @@
 #include "SampleCubeMap.h"
 #include "SampleCrate.h"
 #include "SampleSmallCrate.h"
+#include "SampleAnimatedFox.h"
 #include "FpsCamera.h"
 #include "SampleMovingCrate.h"
 #include "boost/random.hpp"
@@ -29,7 +30,7 @@ class SampleGame_Small : public Scene::IPlayable
 {
     Scene::World *world;
 
-    std::shared_ptr< ECS::IGameEntity > animDummy;
+    std::shared_ptr< SampleAnimatedFox > animDummy;
     std::shared_ptr< ECS::IGameEntity > rocks;
 
     std::shared_ptr< Scene::Scene > initialScene;

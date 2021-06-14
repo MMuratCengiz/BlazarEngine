@@ -17,6 +17,7 @@ struct CMesh : public IComponent
 {
 public:
     std::string path;
+    int geometryRefIdx = -1;
     CullMode cullMode = CullMode::BackFace;
     BLAZAR_COMPONENT( CMesh )
 };

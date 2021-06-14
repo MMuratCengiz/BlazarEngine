@@ -18,150 +18,152 @@
 #include <iostream>
 #include "World.h"
 
-NAMESPACES(ENGINE_NAMESPACE, Scene)
+NAMESPACES( ENGINE_NAMESPACE, Scene )
 
-void World::init(const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title)
+void World::init( const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title )
 {
-    window = std::make_unique<Window>(windowWidth, windowHeight, title);
-    physicsWorld = std::make_unique<Physics::PhysicsWorld>(Physics::PhysicsWorldConfiguration{});
-    transformSystem = std::make_unique<Physics::PhysicsTransformSystem>(physicsWorld.get());
+    window = std::make_unique< Window >( windowWidth, windowHeight, title );
+    physicsWorld = std::make_unique< Physics::PhysicsWorld >( Physics::PhysicsWorldConfiguration { } );
+    transformSystem = std::make_unique< Physics::PhysicsTransformSystem >( physicsWorld.get( ) );
 
-    renderDevice = std::make_unique<Graphics::VulkanDevice>();
-    renderDevice->createDevice(window->getRenderWindow());
-    renderDevice->listDevices()[0].select();
+    renderDevice = std::make_unique< Graphics::VulkanDevice >( );
+    renderDevice->createDevice( window->getRenderWindow( ) );
+    renderDevice->listDevices( )[ 0 ].select( );
 
-    Input::GlobalEventHandler::Instance().initWindowEvents(window->getWindow());
+    Input::GlobalEventHandler::Instance( ).initWindowEvents( window->getWindow( ) );
 
-    eventHandler = std::make_unique<Input::EventHandler>(window->getWindow());
-    actionMap = std::make_unique<Input::ActionMap>(eventHandler.get());
-    assetManager = std::make_unique<Graphics::AssetManager>();
+    eventHandler = std::make_unique< Input::EventHandler >( window->getWindow( ) );
+    actionMap = std::make_unique< Input::ActionMap >( eventHandler.get( ) );
+    assetManager = std::make_unique< Graphics::AssetManager >( );
+    animationStateSystem = std::make_unique< Graphics::AnimationStateSystem >( assetManager.get( ) );
 
-    auto graphSystem = std::make_unique<Graphics::GraphSystem>(renderDevice.get(), assetManager.get());
-    registerSystem(std::move(graphSystem));
+    auto graphSystem = std::make_unique< Graphics::GraphSystem >( renderDevice.get( ), assetManager.get( ) );
+    registerSystem( std::move( graphSystem ) );
+    registerSystem( std::move( animationStateSystem ) );
 }
 
-void World::registerSystem(std::unique_ptr<ECS::ISystem> system)
+void World::registerSystem( std::unique_ptr< ECS::ISystem > system )
 {
-    systems.push_back(std::move(system));
+    systems.push_back( std::move( system ) );
 }
 
-void World::setScene(std::shared_ptr<Scene> scene)
+void World::setScene( std::shared_ptr< Scene > scene )
 {
-    if (currentScene != nullptr)
+    if ( currentScene != nullptr )
     {
-        for (const auto &entity: currentScene->getEntities())
+        for ( const auto &entity: currentScene->getEntities( ) )
         {
-            for (auto &system: systems)
+            for ( auto &system: systems )
             {
-                system->removeEntity(entity);
+                system->removeEntity( entity );
             }
         }
     }
 
-    currentScene = std::move(scene);
+    currentScene = std::move( scene );
 
     // * attach game state entity
 
-    auto gameState = std::make_shared<ECS::DynamicGameEntity>();
-    gameState->createComponent<ECS::CGameState>();
+    auto gameState = std::make_shared< ECS::DynamicGameEntity >( );
+    gameState->createComponent< ECS::CGameState >( );
 
-    auto gameStateComponent = gameState->getComponent<ECS::CGameState>();
-    gameStateComponent->surfaceWidth = window->getRenderWindow()->getWidth();
-    gameStateComponent->surfaceHeight = window->getRenderWindow()->getHeight();
+    auto gameStateComponent = gameState->getComponent< ECS::CGameState >( );
+    gameStateComponent->surfaceWidth = window->getRenderWindow( )->getWidth( );
+    gameStateComponent->surfaceHeight = window->getRenderWindow( )->getHeight( );
 
-    Input::GlobalEventHandler::Instance().subscribeToEvent(
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent(
             Input::EventType::WindowResized,
-            [=](const Input::EventType &eventType, std::shared_ptr<Input::IEventParameters> parameters)
+            [ = ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > parameters )
             {
-                auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters(parameters);
+                auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
 
                 gameStateComponent->surfaceWidth = windowResizeParameters->width;
                 gameStateComponent->surfaceHeight = windowResizeParameters->height;
-            });
+            } );
 
-    currentScene->addEntity(std::move(gameState));
+    currentScene->addEntity( std::move( gameState ) );
 
-    for (const auto &entity: currentScene->getEntities())
+    for ( const auto &entity: currentScene->getEntities( ) )
     {
-        for (auto &system: systems)
+        for ( auto &system: systems )
         {
-            system->addEntity(entity);
+            system->addEntity( entity );
         }
 
-        physicsWorld->addOrUpdateEntity(entity);
+        physicsWorld->addOrUpdateEntity( entity );
     }
 }
 
-void World::run(const std::shared_ptr<IPlayable> &game)
+void World::run( const std::shared_ptr< IPlayable > &game )
 {
-    game->init();
+    game->init( );
 
-    GLFWwindow *glfwWindow = window->getWindow();
-    FPSCounter fpsCounter = FPSCounter::Instance();
+    GLFWwindow *glfwWindow = window->getWindow( );
+    FPSCounter fpsCounter = FPSCounter::Instance( );
 
-    while (!glfwWindowShouldClose(glfwWindow))
+    while ( !glfwWindowShouldClose( glfwWindow ) )
     {
-        Core::Time::tick();
-        fpsCounter.tick();
-        physicsWorld->tick();
+        Core::Time::tick( );
+        fpsCounter.tick( );
+        physicsWorld->tick( );
 
-        for (auto &system: systems)
+        for ( auto &system: systems )
         {
-            system->frameStart(currentScene->getComponentTable());
+            system->frameStart( currentScene->getComponentTable( ) );
         }
 
-        if (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        if ( glfwGetKey( glfwWindow, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
         {
-            glfwSetWindowShouldClose(glfwWindow, GL_TRUE);
+            glfwSetWindowShouldClose( glfwWindow, GL_TRUE );
         }
 
         int width, height;
-        glfwGetFramebufferSize(glfwWindow, &width, &height);
+        glfwGetFramebufferSize( glfwWindow, &width, &height );
 
-        if (width > 0 && height > 0)
+        if ( width > 0 && height > 0 )
         {
-            for (auto &entity: currentScene->getEntities())
+            for ( auto &entity: currentScene->getEntities( ) )
             {
-                for (auto &system: systems)
+                for ( auto &system: systems )
                 {
-                    system->entityTick(entity);
+                    system->entityTick( entity );
                 }
             }
         }
 
-        glfwSwapBuffers(glfwWindow);
-        glfwPollEvents();
+        glfwSwapBuffers( glfwWindow );
+        glfwPollEvents( );
 
-        eventHandler->pollEvents();
+        eventHandler->pollEvents( );
 
-        auto tickParams = Input::GlobalEventHandler::createTickParameters(glfwWindow);
-        Input::GlobalEventHandler::Instance().triggerEvent(Input::EventType::Tick, tickParams);
+        auto tickParams = Input::GlobalEventHandler::createTickParameters( glfwWindow );
+        Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::Tick, tickParams );
 
-        for (auto &system: systems)
+        for ( auto &system: systems )
         {
-            system->frameEnd(currentScene->getComponentTable());
+            system->frameEnd( currentScene->getComponentTable( ) );
         }
     }
 
-    renderDevice->beforeDelete();
+    renderDevice->beforeDelete( );
 }
 
-World::~World()
+World::~World( )
 {
-    Input::GlobalEventHandler::Instance().cleanup();
+    Input::GlobalEventHandler::Instance( ).cleanup( );
 
-    renderDevice->beforeDelete();
+    renderDevice->beforeDelete( );
 
-    transformSystem.reset();
-    physicsWorld.reset();
+    transformSystem.reset( );
+    physicsWorld.reset( );
 
-    for (auto &system: systems)
+    for ( auto &system: systems )
     {
-        system->cleanup();
+        system->cleanup( );
     }
 
-    systems.clear();
-    renderDevice.reset();
+    systems.clear( );
+    renderDevice.reset( );
 }
 
 END_NAMESPACES

@@ -28,14 +28,12 @@ void SampleGame_Small::init( )
     floor = std::make_shared< SampleFloor >( );
     sky = std::make_shared< SampleCubeMap >( );
 
-    animDummy = world->getAssetManager()->createEntity( PATH( "/assets/models/fox.gltf" ) );
-    animDummy->createComponent< ECS::CMaterial >( );
-    animDummy->getComponent< ECS::CMaterial >( )->textures.push_back( ECS::Material::TextureInfo { PATH( "/assets/textures/fox.png" ) } );
+    animDummy = std::make_shared< SampleAnimatedFox >( world );
 
     initialScene = std::make_shared< Scene::Scene >( );
     initialScene->addEntity( sceneLights );
     initialScene->addEntity( cameraComponent );
-    initialScene->addEntity( floor );
+//    initialScene->addEntity( floor );
     initialScene->addEntity( sky );
     initialScene->addEntity( animDummy );
     world->setScene( initialScene );

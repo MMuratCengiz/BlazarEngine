@@ -40,7 +40,13 @@ void main() {
         model = instanceData.model[ gl_InstanceIndex - 1 ];
     }
 
-    outPosition = model * vec4(inPosition, 1.0f);
+    mat4 jointMatrix =
+        ( boneTransformations.data[ int(boneIds.x) ] * boneWeights.x ) +
+        ( boneTransformations.data[ int(boneIds.y) ] * boneWeights.y ) +
+        ( boneTransformations.data[ int(boneIds.z) ] * boneWeights.z ) +
+        ( boneTransformations.data[ int(boneIds.w) ] * boneWeights.w );
+
+    outPosition = model * jointMatrix * vec4(inPosition, 1.0f);
 
     gl_Position = viewProjection.proj * viewProjection.view * outPosition;
 

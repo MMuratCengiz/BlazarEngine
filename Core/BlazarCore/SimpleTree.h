@@ -44,11 +44,6 @@ public:
         root = new TNode { };
     }
 
-    ~SimpleTree()
-    {
-        freeNode( root );
-    };
-
     void freeNode( TNode * node )
     {
         for ( auto child: node->children )
@@ -59,7 +54,7 @@ public:
         delete node;
     }
 
-    inline const TNode * getRoot() const
+    inline TNode * getRoot() const
     {
         return root;
     }
@@ -120,11 +115,21 @@ public:
         return nullptr;
     }
 
-    inline std::vector< TNode * > flattenTree( )
+    inline std::vector< TNode * > flattenTree( bool skipRoot = false )
     {
         std::vector< TNode * > result;
 
-        flattenTree( result, root );
+        if ( !skipRoot )
+        {
+            flattenTree( result, root );
+        }
+        else
+        {
+            for ( TNode * child: root->children )
+            {
+                flattenTree( result, child );
+            }
+        }
 
         return result;
     }
