@@ -1,12 +1,14 @@
 #pragma once
 
 #include <BlazarCore/Common.h>
+#include <BlazarCore/Utilities.h>
 #include <BlazarECS/ECS.h>
 
 #include "BuiltinPrimitives.h"
 #include "IResourceProvider.h"
 #include <tiny_gltf.h>
 #include <BlazarCore/SimpleTree.h>
+#include "boost/algorithm/string/case_conv.hpp"
 
 #define SUPPORTED_BONE_COUNT 4
 
@@ -49,19 +51,18 @@ struct AnimationData
     std::vector< AnimationChannel > channels;
 };
 
-struct JointTransform
+struct MeshNode
 {
+    glm::mat4 transform;
+    glm::mat4 animTransform;
+
     glm::vec3 translation;
     glm::quat rotation;
     glm::vec3 scale;
-};
 
-struct MeshJoint
-{
+    // for joints only
+    int boneTransformAccessIdx;
     glm::mat4 inverseBindMatrix;
-
-    JointTransform baseTransform = { };
-    JointTransform keyFrameTransform = { };
 };
 
 struct SubMeshGeometry
@@ -84,13 +85,18 @@ struct SubMeshGeometry
 
 struct MeshGeometry
 {
+    int meshNodeIdx;
+
     std::vector< SubMeshGeometry > subGeometries;
 
     // Internal Data
 
-    Core::SimpleTree< MeshJoint >  jointTree = { };
+    std::vector< int > joints = { };
+    Core::SimpleTree< MeshNode > nodeTree = { };
 
     std::unordered_map< std::string, AnimationData > animations;
+
+    tinygltf::Model model;
 };
 
 struct SceneContext
@@ -99,11 +105,18 @@ struct SceneContext
 
     std::unordered_map< std::string, AnimationData > animations;
     std::shared_ptr< ECS::IGameEntity > rootEntity;
+    Core::SimpleTree< MeshNode > nodeTree = { };
+};
+
+struct NodeContext
+{
+    glm::mat4 globalTransform;
 };
 
 struct MeshContext
 {
     int geometryIdx;
+    int meshNodeIdx;
     std::shared_ptr< ECS::IGameEntity > entity;
 };
 
@@ -139,13 +152,13 @@ private:
 
     void generateAnimationData( SceneContext &sceneContext );
 
-    void onEachNode( const SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode );
+    void onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode );
 
-    void onEachMesh( const SceneContext &sceneContext, MeshContext meshContext, const int &meshIdx );
+    void onEachMesh( SceneContext &sceneContext, MeshContext meshContext, const int &meshIdx );
 
-    void onEachSkin( const SceneContext &sceneContext, MeshContext meshContext, const int &skinIdx );
+    void onEachSkin( SceneContext &sceneContext, MeshContext meshContext, const int &skinIdx );
 
-    void onEachJoint( const SceneContext &sceneContext, MeshContext meshContext, const std::vector< glm::mat4 >& inverseBindMatrices, const int& parentIdx, const int &jointIdx );
+    void addNode( SceneContext &sceneContext, int parent, int nodeId );
 
     static int tryGetPrimitiveAttribute( const tinygltf::Primitive& primitive, const std::string & attribute );
 
@@ -227,6 +240,8 @@ private:
     static void packSubGeometry( SubMeshGeometry &geometry );
 
     void onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel );
+
+    glm::mat4 getNodeTransform( const tinygltf::Node &node );
 };
 
 END_NAMESPACES

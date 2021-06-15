@@ -1,6 +1,7 @@
 #include <fstream>
 #include "Utilities.h"
 #include <vector>
+#include <glm/gtx/quaternion.hpp>
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
 
@@ -85,6 +86,17 @@ std::vector< char > Utilities::readFile( const std::string &filename )
     file.close( );
 
     return contents;
+}
+
+glm::mat4 Utilities::getTRSMatrix(  const glm::vec3& t, const glm::quat& r, const glm::vec3& s )
+{
+    glm::mat4 identity { 1 };
+
+    auto tMat = glm::translate( identity, t );
+    auto rMat = glm::toMat4( r );
+    auto sMat = glm::scale( identity, s );
+
+    return tMat * rMat * sMat;
 }
 
 END_NAMESPACES

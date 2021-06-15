@@ -85,11 +85,6 @@ EnvironmentLights DataAttachmentFormatter::formatLightingEnvironment( const std:
 
 glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity )
 {
-    glm::mat4 modelMatrix { 1 };
-
-    modelMatrix = glm::translate( modelMatrix, transform->position );
-    modelMatrix = glm::scale( modelMatrix, transform->scale );
-
     glm::vec3 radiansRotation = transform->rotation.euler;
 
     if ( transform->rotation.rotationUnit == ECS::RotationUnit::Degrees )
@@ -101,10 +96,9 @@ glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS
         );
     }
 
-    glm::qua qRotation { radiansRotation };
-    modelMatrix *= glm::mat4_cast( qRotation );
+    glm::quat qRotation { radiansRotation };
 
-    return modelMatrix;
+    return Core::Utilities::getTRSMatrix( transform->position, qRotation, transform->scale );
 }
 
 glm::mat4 DataAttachmentFormatter::formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity )

@@ -4,6 +4,7 @@
 #include <BlazarECS/ECS.h>
 #include "IResourceProvider.h"
 #include <array>
+#include <BlazarCore/Utilities.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 

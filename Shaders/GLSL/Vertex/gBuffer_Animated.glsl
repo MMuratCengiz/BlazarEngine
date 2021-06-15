@@ -41,10 +41,10 @@ void main() {
     }
 
     mat4 jointMatrix =
-        ( boneTransformations.data[ int(boneIds.x) ] * boneWeights.x ) +
-        ( boneTransformations.data[ int(boneIds.y) ] * boneWeights.y ) +
-        ( boneTransformations.data[ int(boneIds.z) ] * boneWeights.z ) +
-        ( boneTransformations.data[ int(boneIds.w) ] * boneWeights.w );
+        ( boneWeights.x * boneTransformations.data[ int(boneIds.x) ] ) +
+        ( boneWeights.y * boneTransformations.data[ int(boneIds.y) ] ) +
+        ( boneWeights.z * boneTransformations.data[ int(boneIds.z) ] ) +
+        ( boneWeights.w * boneTransformations.data[ int(boneIds.w) ] );
 
     outPosition = model * jointMatrix * vec4(inPosition, 1.0f);
 

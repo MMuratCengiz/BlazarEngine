@@ -33,7 +33,7 @@ void SampleGame_Small::init( )
     initialScene = std::make_shared< Scene::Scene >( );
     initialScene->addEntity( sceneLights );
     initialScene->addEntity( cameraComponent );
-//    initialScene->addEntity( floor );
+    initialScene->addEntity( floor );
     initialScene->addEntity( sky );
     initialScene->addEntity( animDummy );
     world->setScene( initialScene );

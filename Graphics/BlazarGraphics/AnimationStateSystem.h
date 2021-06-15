@@ -1,17 +1,11 @@
 #pragma once
 
 #include <BlazarCore/Common.h>
+#include <BlazarCore/Utilities.h>
 #include <BlazarECS/ECS.h>
 #include "AssetManager.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
-
-struct JointTransformAction
-{
-    ChannelTransformType transformType;
-    glm::vec3 transform;
-    int targetJoint;
-};
 
 class AnimationStateSystem : public ECS::ISystem
 {
@@ -34,11 +28,15 @@ private:
 
     void playAnim( const std::shared_ptr< ECS::CAnimState > &sharedPtr );
 
-    void setStepInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, MeshJoint &joint ) const;
+    void setStepInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, MeshNode &joint ) const;
 
-    void setLinearInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, const glm::vec3 &transform_1, const glm::quat &interpolationValue, MeshJoint &joint ) const;
+    void setLinearInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, const glm::vec3 &transform_1, const glm::quat &interpolationValue, MeshNode &joint ) const;
 
-    glm::mat4 getJointTransformMat( Core::TreeNode< MeshJoint >* node );
+    void setBoneTransforms( const std::shared_ptr< ECS::CAnimState > &anim, MeshGeometry& geometry, Core::TreeNode< MeshNode, int > *node );
+
+    glm::mat4 getGlobalTransform( MeshGeometry& geometry, const int& nodeIdx );
+
+    glm::mat4 getJointTransform( MeshGeometry& geometry, const int& jointIdx );
 };
 
 END_NAMESPACES

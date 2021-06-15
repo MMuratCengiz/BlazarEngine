@@ -1,4 +1,5 @@
 SET(CORE_BOOST_LIBS
+        algorithm
         predef
         system
         ratio

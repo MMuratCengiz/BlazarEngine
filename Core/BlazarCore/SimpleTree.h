@@ -38,6 +38,8 @@ private:
     typedef TreeNode< T, IdT > TNode;
 
     TNode * root;
+    unsigned int totalNodes = 0;
+    IdT largestIndex = 0;
 public:
     SimpleTree()
     {
@@ -63,6 +65,10 @@ public:
     {
         root->id = id;
         root->data = data;
+        // Todo maybe be more clear if root is considered a node or not
+        totalNodes++;
+
+        largestIndex = std::max( id, largestIndex );
     }
 
     inline void addNode( const IdT& id, const T& data )
@@ -73,6 +79,8 @@ public:
         child->parent = root;
 
         root->children.push_back( std::move( child ) );
+        totalNodes++;
+        largestIndex = std::max( id, largestIndex );
     }
 
     inline void addNode( TNode * parent, const IdT& id, const T& data )
@@ -83,6 +91,8 @@ public:
         child->parent = parent;
 
         parent->children.push_back( std::move( child ) );
+        totalNodes++;
+        largestIndex = std::max( id, largestIndex );
     }
 
     inline TNode * findNode( const IdT& id )
@@ -142,6 +152,40 @@ public:
         {
             flattenTree( data, child );
         }
+    }
+
+    inline void moveNodeToParent( const IdT& id, const IdT& parentId )
+    {
+        auto parent = findNode( parentId );
+        auto node = findNode( id );
+
+        if ( node->parent != root && node->parent != nullptr )
+        {
+            int i = 0;
+
+            for ( ; i < parent->children.size( ); ++i )
+            {
+                if ( parent->children[ i ]->id == id )
+                {
+                    break;
+                }
+            }
+
+            parent->children.erase( parent->children.begin() + i );
+        }
+
+        parent->children.push_back( node );
+        node->parent = parent;
+    }
+
+    [[nodiscard]] const unsigned int & size( ) const
+    {
+        return totalNodes;
+    }
+
+    [[nodiscard]] const IdT & getLargestIndex( ) const
+    {
+        return largestIndex;
     }
 };
 

@@ -2,6 +2,7 @@
 // Created by Murat on 6/12/2021.
 //
 
+#define GLM_FORCE_RADIANS
 #include <glm/gtx/quaternion.hpp>
 #include "AnimationStateSystem.h"
 
@@ -56,82 +57,109 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
         {
             keyFrame_1 = channel.keyFrames[ 0 ];
             transform_1 = glm::vec3( channel.transform[ 0 ], channel.transform[ 1 ], channel.transform[ 2 ] );
-        } else
+        }
+        else
         {
             keyFrame_1 = channel.keyFrames[ frame + 1 ];
             transform_1 = glm::vec3( channel.transform[ frame + 3 ], channel.transform[ frame + 4 ], channel.transform[ frame + 5 ] );
         }
 
-        auto meshJointNode = geometry.jointTree.findNode( channel.targetJoint );
+        auto meshJointNode = geometry.nodeTree.findNode( channel.targetJoint );
 
         if ( meshJointNode != nullptr )
         {
             auto interpolationValue = glm::vec3( ( currentNode->currentPlayTime - keyFrame_0 ) / ( keyFrame_1 - keyFrame_0 ) );
 
-            MeshJoint &joint = meshJointNode->data;
+            MeshNode &joint = meshJointNode->data;
 
             if ( channel.interpolationType == JointInterpolationType::Step )
             {
                 setStepInterpolation( channel, transform_0, joint );
-            } else if ( channel.interpolationType == JointInterpolationType::Linear )
+            }
+            else if ( channel.interpolationType == JointInterpolationType::Linear )
             {
                 setLinearInterpolation( channel, transform_0, transform_1, interpolationValue, joint );
             }
+
+            meshJointNode->data.transform = Core::Utilities::getTRSMatrix( joint.translation, joint.rotation, joint.scale );
         }
     }
 
-    for ( auto node: geometry.jointTree.flattenTree( true ) )
-    {
-        if ( anim->boneTransformations.size() <= node->id )
-        {
-            anim->boneTransformations.resize( node->id + 1 );
-        }
+    anim->boneTransformations.resize( geometry.nodeTree.size( ) );
 
-        anim->boneTransformations[ node->id ] = getJointTransformMat( node ) * node->data.inverseBindMatrix;
+    for ( int i = 0; i < geometry.joints.size( ); ++i )
+    {
+        setBoneTransforms( anim, geometry, geometry.nodeTree.findNode( geometry.joints[ i ] ) );
     }
 }
 
-glm::mat4 AnimationStateSystem::getJointTransformMat( Core::TreeNode< MeshJoint > * node )
+void AnimationStateSystem::setBoneTransforms( const std::shared_ptr< ECS::CAnimState > &anim, MeshGeometry &geometry, Core::TreeNode< MeshNode, int > *node )
 {
-    if ( node == nullptr )
+    auto globalTransform = getGlobalTransform( geometry, node->id );
+    auto meshGlobalTransform = getGlobalTransform( geometry, geometry.meshNodeIdx );
+    auto inverseGlobalTransform = glm::inverse( meshGlobalTransform );
+
+    anim->boneTransformations[ node->data.boneTransformAccessIdx ] = inverseGlobalTransform * globalTransform * node->data.inverseBindMatrix;
+
+    for ( auto child: node->children )
+    {
+        setBoneTransforms( anim, geometry, child );
+    }
+}
+
+glm::mat4 AnimationStateSystem::getGlobalTransform( MeshGeometry& geometry, const int& nodeIdx )
+{
+    Core::TreeNode< MeshNode, int > *pNode = geometry.nodeTree.findNode( nodeIdx );
+
+    if ( pNode == geometry.nodeTree.getRoot( ) || pNode == nullptr )
     {
         return glm::mat4( 1.0f );
     }
 
-    JointTransform &jointTransform = node->data.keyFrameTransform;
-
-    glm::mat4 translationMatrix = glm::translate( glm::mat4( 1.0f ), jointTransform.translation );
-    glm::mat4 rotationMatrix = glm::toMat4( jointTransform.rotation );
-    glm::mat4 scaleMatrix = glm::scale( glm::mat4( 1.0f ), jointTransform.scale );
-
-    return getJointTransformMat( node->parent ) * translationMatrix * rotationMatrix * scaleMatrix;
+    return getGlobalTransform( geometry, pNode->parent->id ) * pNode->data.transform;
 }
 
-void AnimationStateSystem::setLinearInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, const glm::vec3 &transform_1, const glm::quat &interpolationValue, MeshJoint &joint ) const
+glm::mat4 AnimationStateSystem::getJointTransform( MeshGeometry& geometry, const int& jointIdx )
+{
+    Core::TreeNode< MeshNode, int > *pNode = geometry.nodeTree.findNode( jointIdx );
+
+    if ( pNode == geometry.nodeTree.getRoot( ) || pNode == nullptr )
+    {
+        return glm::mat4( 1.0f );
+    }
+
+    return getGlobalTransform( geometry, pNode->parent->id ) * pNode->data.animTransform * pNode->data.transform;
+}
+
+void AnimationStateSystem::setLinearInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, const glm::vec3 &transform_1, const glm::quat &interpolationValue, MeshNode &joint ) const
 {
     if ( channel.transformType == Rotation )
     {
-        joint.keyFrameTransform.rotation = glm::slerp( glm::quat( transform_0 ), glm::quat( transform_1 ), interpolationValue.x );
-    } else if ( channel.transformType == Scale )
+        joint.rotation = glm::normalize( glm::slerp( glm::quat( transform_0 ), glm::quat( transform_1 ), interpolationValue.x ) );
+    }
+    else if ( channel.transformType == Scale )
     {
-        joint.keyFrameTransform.scale = transform_0 + interpolationValue * ( transform_1 - transform_0 );
-    } else if ( channel.transformType == Translation )
+        joint.scale = glm::mix( glm::vec4( transform_0, 0.0f ), glm::vec4( transform_1, 0.0f ), interpolationValue.x );
+    }
+    else if ( channel.transformType == Translation )
     {
-        joint.keyFrameTransform.translation = transform_0 + interpolationValue * ( transform_1 - transform_0 );
+        joint.translation = glm::mix( glm::vec4( transform_0, 0.0f ), glm::vec4( transform_1, 0.0f ), interpolationValue.x );
     }
 }
 
-void AnimationStateSystem::setStepInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, MeshJoint &joint ) const
+void AnimationStateSystem::setStepInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, MeshNode &joint ) const
 {
     if ( channel.transformType == Rotation )
     {
-        joint.keyFrameTransform.rotation = glm::quat( transform_0 );
-    } else if ( channel.transformType == Scale )
+        joint.rotation = glm::quat( transform_0 );
+    }
+    else if ( channel.transformType == Scale )
     {
-        joint.keyFrameTransform.scale = transform_0;
-    } else if ( channel.transformType == Translation )
+        joint.scale = transform_0;
+    }
+    else if ( channel.transformType == Translation )
     {
-        joint.keyFrameTransform.translation = transform_0;
+        joint.translation = transform_0;
     }
 }
 
