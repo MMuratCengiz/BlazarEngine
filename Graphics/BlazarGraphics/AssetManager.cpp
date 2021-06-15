@@ -145,8 +145,31 @@ void AssetManager::onEachChannel( const tinygltf::Model &model, const tinygltf::
             interpolationType == "step" ? Step :
             CubicSpline;
 
+    std::vector< float > transformFlat;
+
     copyAccessorToVectorTransformed( animationChannel.keyFrames, model, sampler.input );
-    copyAccessorToVectorTransformed( animationChannel.transform, model, sampler.output );
+    copyAccessorToVectorTransformed( transformFlat, model, sampler.output );
+
+    tinygltf::Accessor accessor = model.accessors[ sampler.output ];
+
+    for ( int i = 0; i < animationChannel.keyFrames.size( ); ++i )
+    {
+        switch ( accessor.type )
+        {
+            case TINYGLTF_TYPE_VEC3:
+            {
+                glm::vec3 data = glm::make_vec3( transformFlat.data( ) + ( i * 3 ) );
+                animationChannel.transform.emplace_back( data, 0.0f );
+                break;
+            }
+            case TINYGLTF_TYPE_VEC4:
+            {
+                glm::vec4 data = glm::make_vec4( transformFlat.data( ) + ( i * 4 ) );
+                animationChannel.transform.push_back( data );
+                break;
+            }
+        }
+    }
 
     animationData.channels.push_back( std::move( animationChannel ) );
 }
@@ -274,13 +297,12 @@ void AssetManager::onEachSkin( SceneContext &context, MeshContext meshContext, c
 
     geometry.joints = skin.joints;
 
-    for ( int i = 0; i < skin.joints.size( ); i++)
+    for ( int i = 0; i < skin.joints.size( ); i++ )
     {
         int joint = skin.joints[ i ];
 
         auto jointNode = geometry.nodeTree.findNode( joint );
         jointNode->data.inverseBindMatrix = flatMatToGLMMat( inverseBindMatricesFlat, i * 16 );
-        jointNode->data.boneTransformAccessIdx = i;
     }
 }
 
@@ -382,68 +404,48 @@ glm::mat4 AssetManager::flatMatToGLMMat( const std::vector< float > &matFlat, in
 
 void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 {
-    tinygltf::Node node = sceneContext.model.nodes [ nodeId ];
+    tinygltf::Node node = sceneContext.model.nodes[ nodeId ];
 
     auto nodeTreeRef = sceneContext.nodeTree.findNode( nodeId );
 
-    if ( nodeTreeRef == nullptr )
+    if ( nodeTreeRef == nullptr || parent == -1 )
     {
         MeshNode meshNode = { };
-        meshNode.transform = getNodeTransform( node );
+        meshNode.transform = glm::mat4(1.0f);
+        meshNode.translation = glm::vec3( 0.0f );
+        meshNode.scale = glm::vec3( 1.0f );
+        meshNode.rotation = glm::mat4( 1.0f );
 
         if ( !node.translation.empty( ) )
         {
             meshNode.translation = glm::vec3( node.translation[ 0 ], node.translation[ 1 ], node.translation[ 2 ] );
         }
+
         if ( !node.rotation.empty( ) )
         {
-            meshNode.rotation = glm::quat( node.rotation[ 0 ], node.rotation[ 1 ], node.rotation[ 2 ], node.rotation[ 3 ] );
+            meshNode.rotation = glm::mat4( glm::quat( node.rotation[ 0 ], node.rotation[ 1 ], node.rotation[ 2 ], node.rotation[ 3 ] ) );
         }
+
         if ( !node.scale.empty( ) )
         {
             meshNode.scale = glm::vec3( node.scale[ 0 ], node.scale[ 1 ], node.scale[ 2 ] );
         }
 
+        if ( !node.matrix.empty( ) )
+        {
+            meshNode.transform = glm::make_mat4( node.matrix.data( ) );
+            meshNode.isMatSet = true;
+        }
+
         if ( parent == -1 )
         {
-            sceneContext.nodeTree.addNode( nodeId, meshNode );
+            sceneContext.nodeTree.setRootData( nodeId, meshNode );
         }
         else
         {
             sceneContext.nodeTree.addNode( sceneContext.nodeTree.findNode( parent ), nodeId, meshNode );
         }
     }
-}
-
-glm::mat4 AssetManager::getNodeTransform( const tinygltf::Node &node )
-{
-    if ( !node.matrix.empty( ) )
-    {
-        return glm::make_mat4( node.matrix.data( ) );
-    }
-
-    glm::vec3 translation;
-
-    if ( !node.translation.empty( ) )
-    {
-        translation = glm::vec3( node.translation[ 0 ], node.translation[ 1 ], node.translation[ 2 ] );
-    }
-
-    glm::quat rotation;
-
-    if ( !node.rotation.empty( ) )
-    {
-        rotation = glm::quat( node.rotation[ 0 ], node.rotation[ 1 ], node.rotation[ 2 ], node.rotation[ 3 ] );
-    }
-
-    glm::vec3 scale;
-
-    if ( !node.scale.empty( ) )
-    {
-        scale = glm::vec3( node.scale[ 0 ], node.scale[ 1 ], node.scale[ 2 ] );
-    }
-
-    return Core::Utilities::getTRSMatrix( translation, glm::quat( rotation ), scale );
 }
 
 AssetManager::~AssetManager( )

@@ -41,7 +41,8 @@ struct AnimationChannel
     int targetJoint;
 
     std::vector< float > keyFrames;
-    std::vector< float > transform;
+    std::vector< glm::vec4 > transform;
+
     ChannelTransformType transformType;
     JointInterpolationType interpolationType;
 };
@@ -53,16 +54,40 @@ struct AnimationData
 
 struct MeshNode
 {
+    glm::mat4 animMat;
     glm::mat4 transform;
-    glm::mat4 animTransform;
-
     glm::vec3 translation;
-    glm::quat rotation;
+    glm::mat4 rotation;
     glm::vec3 scale;
 
-    // for joints only
-    int boneTransformAccessIdx;
+    glm::vec3 animTranslation = glm::vec3( 0.0f );
+    glm::mat4 animRotation = glm::mat4( 1.0f );
+    glm::vec3 animScale = glm::vec3( 1.0f );
+
     glm::mat4 inverseBindMatrix;
+
+    bool isMatSet = false;
+
+    [[nodiscard]] glm::mat4 getTransform( ) const
+    {
+        if ( isMatSet )
+        {
+            return transform;
+        }
+
+        return
+                glm::translate( glm::mat4( 1.0f ), translation ) *
+                glm::mat4( rotation ) *
+                glm::scale( glm::mat4( 1.0f ), scale );
+    }
+
+    [[nodiscard]] glm::mat4 getAnimTransform( ) const
+    {
+        return
+                glm::translate( glm::mat4( 1.0f ), animTranslation ) *
+                glm::mat4( animRotation ) *
+                glm::scale( glm::mat4( 1.0f ), animScale );
+    }
 };
 
 struct SubMeshGeometry
@@ -137,11 +162,11 @@ public:
 
     std::shared_ptr< ECS::IGameEntity > createEntity( const std::string &meshPath );
 
-    MeshGeometry &getMeshGeometry( const int &geometryIdx, const std::string& builtinPrimitive );
+    MeshGeometry &getMeshGeometry( const int &geometryIdx, const std::string &builtinPrimitive );
 
     std::shared_ptr< SamplerDataAttachment > getImage( const std::string &path );
 
-    int findBuiltinPrimitiveIdx( const std::string& primitiveName ) const;
+    int findBuiltinPrimitiveIdx( const std::string &primitiveName ) const;
 
     ~AssetManager( );
 
@@ -160,7 +185,7 @@ private:
 
     void addNode( SceneContext &sceneContext, int parent, int nodeId );
 
-    static int tryGetPrimitiveAttribute( const tinygltf::Primitive& primitive, const std::string & attribute );
+    static int tryGetPrimitiveAttribute( const tinygltf::Primitive &primitive, const std::string &attribute );
 
     template< typename SourceType, typename BufferType = SourceType >
     void copyAccessorToVector( std::vector< SourceType > &targetData, const tinygltf::Model &model, int accessorIdx )
@@ -196,7 +221,8 @@ private:
         {
             std::transform( result.begin( ), result.end( ), std::back_inserter( targetData ), [ ]( BufferType b )
             { return ( SourceType ) b; } );
-        } else
+        }
+        else
         {
             targetData.insert( targetData.end( ), result.begin( ), result.end( ) );
         }
@@ -240,8 +266,6 @@ private:
     static void packSubGeometry( SubMeshGeometry &geometry );
 
     void onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel );
-
-    glm::mat4 getNodeTransform( const tinygltf::Node &node );
 };
 
 END_NAMESPACES

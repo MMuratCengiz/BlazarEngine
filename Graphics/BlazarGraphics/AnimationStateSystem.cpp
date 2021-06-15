@@ -3,6 +3,7 @@
 //
 
 #define GLM_FORCE_RADIANS
+
 #include <glm/gtx/quaternion.hpp>
 #include "AnimationStateSystem.h"
 
@@ -30,16 +31,18 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
 {
     auto currentNode = anim->currentNode;
 
-    currentNode->currentPlayTime += ( float ) Core::Time::getDeltaTime( );
-
     MeshGeometry &geometry = assetManager->getMeshGeometry( anim->mesh->geometryRefIdx, "" );
 
     AnimationData &animation = geometry.animations[ currentNode->animName ];
+
+    currentNode->currentPlayTime += ( float ) Core::Time::getDeltaTime( );
 
     for ( auto channel : animation.channels )
     {
         int frame = 0;
         for ( ; currentNode->currentPlayTime >= channel.keyFrames[ frame ] && frame < channel.keyFrames.size( ); frame++ );
+
+        currentNode->lastPlayedNode = frame;
 
         if ( frame == channel.keyFrames.size( ) )
         {
@@ -50,27 +53,28 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
         float keyFrame_0 = channel.keyFrames[ frame ];
         float keyFrame_1;
 
-        glm::vec3 transform_0 = glm::vec3( channel.transform[ frame ], channel.transform[ frame + 1 ], channel.transform[ frame + 2 ] );
-        glm::vec3 transform_1;
+        glm::vec4 transform_0 = channel.transform[ frame ];
+        glm::vec4 transform_1;
 
         if ( frame + 1 == channel.keyFrames.size( ) )
         {
             keyFrame_1 = channel.keyFrames[ 0 ];
-            transform_1 = glm::vec3( channel.transform[ 0 ], channel.transform[ 1 ], channel.transform[ 2 ] );
+            transform_1 = channel.transform[ 0 ];
         }
         else
         {
             keyFrame_1 = channel.keyFrames[ frame + 1 ];
-            transform_1 = glm::vec3( channel.transform[ frame + 3 ], channel.transform[ frame + 4 ], channel.transform[ frame + 5 ] );
+            transform_1 = channel.transform[ frame + 1 ];
         }
 
         auto meshJointNode = geometry.nodeTree.findNode( channel.targetJoint );
 
         if ( meshJointNode != nullptr )
         {
-            auto interpolationValue = glm::vec3( ( currentNode->currentPlayTime - keyFrame_0 ) / ( keyFrame_1 - keyFrame_0 ) );
+            auto interpolationValue = std::max( 0.0f, ( currentNode->currentPlayTime - keyFrame_0 ) / ( keyFrame_1 - keyFrame_0 ) );
 
             MeshNode &joint = meshJointNode->data;
+            joint.isMatSet = false;
 
             if ( channel.interpolationType == JointInterpolationType::Step )
             {
@@ -80,86 +84,72 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
             {
                 setLinearInterpolation( channel, transform_0, transform_1, interpolationValue, joint );
             }
-
-            meshJointNode->data.transform = Core::Utilities::getTRSMatrix( joint.translation, joint.rotation, joint.scale );
         }
     }
 
-    anim->boneTransformations.resize( geometry.nodeTree.size( ) );
+    anim->boneTransformations.resize( geometry.nodeTree.size( ), glm::mat4( 1.0f ) );
+
+    auto meshGlobalTransform = getGlobalTransform( geometry, geometry.nodeTree.findNode( geometry.meshNodeIdx ) );
+    auto inverseMeshTransform = glm::inverse( meshGlobalTransform );
 
     for ( int i = 0; i < geometry.joints.size( ); ++i )
     {
-        setBoneTransforms( anim, geometry, geometry.nodeTree.findNode( geometry.joints[ i ] ) );
+        anim->boneTransformations[ i ] =
+                getBoneTransform( anim, geometry, geometry.nodeTree.findNode( geometry.joints[ i ] ), inverseMeshTransform );
     }
 }
 
-void AnimationStateSystem::setBoneTransforms( const std::shared_ptr< ECS::CAnimState > &anim, MeshGeometry &geometry, Core::TreeNode< MeshNode, int > *node )
+glm::mat4 AnimationStateSystem::getBoneTransform( const std::shared_ptr< ECS::CAnimState > &anim, MeshGeometry &geometry, Core::TreeNode< MeshNode, int > *node, const glm::mat4 &inverseMeshTransform )
 {
-    auto globalTransform = getGlobalTransform( geometry, node->id );
-    auto meshGlobalTransform = getGlobalTransform( geometry, geometry.meshNodeIdx );
-    auto inverseGlobalTransform = glm::inverse( meshGlobalTransform );
+    auto boneSpace = node->data.getTransform() * node->data.inverseBindMatrix;
+    auto animData = node->data.getAnimTransform( ) * boneSpace;
 
-    anim->boneTransformations[ node->data.boneTransformAccessIdx ] = inverseGlobalTransform * globalTransform * node->data.inverseBindMatrix;
+    auto jointMatrix = getGlobalTransform( geometry, node->parent ) * animData;
 
-    for ( auto child: node->children )
-    {
-        setBoneTransforms( anim, geometry, child );
-    }
+    return /*inverseMeshTransform * */jointMatrix;
 }
 
-glm::mat4 AnimationStateSystem::getGlobalTransform( MeshGeometry& geometry, const int& nodeIdx )
+glm::mat4 AnimationStateSystem::getGlobalTransform( MeshGeometry &geometry, Core::TreeNode< MeshNode, int > *node )
 {
-    Core::TreeNode< MeshNode, int > *pNode = geometry.nodeTree.findNode( nodeIdx );
-
-    if ( pNode == geometry.nodeTree.getRoot( ) || pNode == nullptr )
+    if ( node == nullptr || node == geometry.nodeTree.getRoot( ) )
     {
         return glm::mat4( 1.0f );
     }
 
-    return getGlobalTransform( geometry, pNode->parent->id ) * pNode->data.transform;
+    return getGlobalTransform( geometry, node->parent ) * node->data.getTransform( );
 }
 
-glm::mat4 AnimationStateSystem::getJointTransform( MeshGeometry& geometry, const int& jointIdx )
-{
-    Core::TreeNode< MeshNode, int > *pNode = geometry.nodeTree.findNode( jointIdx );
-
-    if ( pNode == geometry.nodeTree.getRoot( ) || pNode == nullptr )
-    {
-        return glm::mat4( 1.0f );
-    }
-
-    return getGlobalTransform( geometry, pNode->parent->id ) * pNode->data.animTransform * pNode->data.transform;
-}
-
-void AnimationStateSystem::setLinearInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, const glm::vec3 &transform_1, const glm::quat &interpolationValue, MeshNode &joint ) const
+void AnimationStateSystem::setLinearInterpolation( const AnimationChannel &channel, const glm::vec4 &transform_0, const glm::vec4 &transform_1, const float &interpolationValue, MeshNode &joint ) const
 {
     if ( channel.transformType == Rotation )
     {
-        joint.rotation = glm::normalize( glm::slerp( glm::quat( transform_0 ), glm::quat( transform_1 ), interpolationValue.x ) );
+        auto rotation = glm::normalize( glm::slerp( Core::Utilities::vecToQuat( transform_0 ), Core::Utilities::vecToQuat( transform_1 ), interpolationValue ) );
+        joint.rotation = glm::mat4( rotation );
     }
     else if ( channel.transformType == Scale )
     {
-        joint.scale = glm::mix( glm::vec4( transform_0, 0.0f ), glm::vec4( transform_1, 0.0f ), interpolationValue.x );
+        joint.scale = glm::vec3( glm::mix( transform_0, transform_1, interpolationValue ) );
     }
     else if ( channel.transformType == Translation )
     {
-        joint.translation = glm::mix( glm::vec4( transform_0, 0.0f ), glm::vec4( transform_1, 0.0f ), interpolationValue.x );
+        joint.translation = glm::vec3( glm::mix( transform_0, transform_1, interpolationValue ) );
     }
 }
 
-void AnimationStateSystem::setStepInterpolation( const AnimationChannel &channel, const glm::vec3 &transform_0, MeshNode &joint ) const
+void AnimationStateSystem::setStepInterpolation( const AnimationChannel &channel, const glm::vec4 &transform_0, MeshNode &joint ) const
 {
     if ( channel.transformType == Rotation )
     {
-        joint.rotation = glm::quat( transform_0 );
+        auto rotation = glm::quat( transform_0 );
+        joint.animRotation = glm::mat4( rotation );
     }
     else if ( channel.transformType == Scale )
     {
-        joint.scale = transform_0;
+        joint.animScale = glm::vec3( transform_0 );
     }
     else if ( channel.transformType == Translation )
     {
-        joint.translation = transform_0;
+        joint.animTranslation = glm::vec3( transform_0 );
     }
 }
 

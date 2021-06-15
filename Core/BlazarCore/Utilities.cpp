@@ -99,5 +99,15 @@ glm::mat4 Utilities::getTRSMatrix(  const glm::vec3& t, const glm::quat& r, cons
     return tMat * rMat * sMat;
 }
 
+glm::quat Utilities::vecToQuat( const glm::vec4 &vec )
+{
+    return glm::quat(
+            vec.x,
+            vec.y,
+            vec.z,
+            vec.w
+            );
+}
+
 END_NAMESPACES
 

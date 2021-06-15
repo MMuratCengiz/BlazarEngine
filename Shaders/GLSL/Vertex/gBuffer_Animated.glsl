@@ -12,13 +12,13 @@ layout(push_constant) uniform PushConstants {
 
 layout(set = 1, binding = 0) uniform InstanceData
 {
-    mat4 model[ 100 ];
+    mat4 model[100];
     uint instanceCount;
 } instanceData;
 
 layout(set = 4, binding = 0) uniform BoneTransformations
 {
-    mat4 data[ 100 ];
+    mat4 data[100];
     uint size;
 } boneTransformations;
 
@@ -35,16 +35,21 @@ layout (location = 2) out vec2 outTextureCoor;
 void main() {
     mat4 model = pushConstants.ModelMatrix;
 
-    if ( instanceData.instanceCount > 0 && gl_InstanceIndex > 0 )
+    if (instanceData.instanceCount > 0 && gl_InstanceIndex > 0)
     {
-        model = instanceData.model[ gl_InstanceIndex - 1 ];
+        model = instanceData.model[gl_InstanceIndex - 1];
     }
 
-    mat4 jointMatrix =
-        ( boneWeights.x * boneTransformations.data[ int(boneIds.x) ] ) +
-        ( boneWeights.y * boneTransformations.data[ int(boneIds.y) ] ) +
-        ( boneWeights.z * boneTransformations.data[ int(boneIds.z) ] ) +
-        ( boneWeights.w * boneTransformations.data[ int(boneIds.w) ] );
+    mat4 jointMatrix = mat4(0.0);
+
+    if (boneTransformations.size > 0)
+    {
+        jointMatrix =
+            (boneWeights.x * boneTransformations.data[int(boneIds.x)]) +
+            (boneWeights.y * boneTransformations.data[int(boneIds.y)]) +
+            (boneWeights.z * boneTransformations.data[int(boneIds.z)]) +
+            (boneWeights.w * boneTransformations.data[int(boneIds.w)]);
+    }
 
     outPosition = model * jointMatrix * vec4(inPosition, 1.0f);
 
