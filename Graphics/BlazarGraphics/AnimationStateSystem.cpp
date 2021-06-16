@@ -74,7 +74,6 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
             auto interpolationValue = std::max( 0.0f, ( currentNode->currentPlayTime - keyFrame_0 ) / ( keyFrame_1 - keyFrame_0 ) );
 
             MeshNode &joint = meshJointNode->data;
-            joint.isMatSet = false;
 
             if ( channel.interpolationType == JointInterpolationType::Step )
             {
@@ -101,17 +100,16 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
 
 glm::mat4 AnimationStateSystem::getBoneTransform( const std::shared_ptr< ECS::CAnimState > &anim, MeshGeometry &geometry, Core::TreeNode< MeshNode, int > *node, const glm::mat4 &inverseMeshTransform )
 {
-    auto boneSpace = node->data.getTransform() * node->data.inverseBindMatrix;
-    auto animData = node->data.getAnimTransform( ) * boneSpace;
+    auto inverseWorldMatrix = glm::inverse( getGlobalTransform( geometry, node->parent ) );
+    auto globalTransform = getGlobalTransform( geometry, node );
 
-    auto jointMatrix = getGlobalTransform( geometry, node->parent ) * animData;
-
-    return /*inverseMeshTransform * */jointMatrix;
+    auto jointMatrix = globalTransform * node->data.inverseBindMatrix;
+    return /*inverseWorldMatrix * */jointMatrix;
 }
 
 glm::mat4 AnimationStateSystem::getGlobalTransform( MeshGeometry &geometry, Core::TreeNode< MeshNode, int > *node )
 {
-    if ( node == nullptr || node == geometry.nodeTree.getRoot( ) )
+    if ( node == nullptr /*|| node == geometry.nodeTree.getRoot( ) */)
     {
         return glm::mat4( 1.0f );
     }
@@ -123,8 +121,7 @@ void AnimationStateSystem::setLinearInterpolation( const AnimationChannel &chann
 {
     if ( channel.transformType == Rotation )
     {
-        auto rotation = glm::normalize( glm::slerp( Core::Utilities::vecToQuat( transform_0 ), Core::Utilities::vecToQuat( transform_1 ), interpolationValue ) );
-        joint.rotation = glm::mat4( rotation );
+        joint.rotation = glm::normalize( glm::slerp( Core::Utilities::vecToQuat( transform_0 ), Core::Utilities::vecToQuat( transform_1 ), interpolationValue ) );
     }
     else if ( channel.transformType == Scale )
     {
@@ -141,15 +138,15 @@ void AnimationStateSystem::setStepInterpolation( const AnimationChannel &channel
     if ( channel.transformType == Rotation )
     {
         auto rotation = glm::quat( transform_0 );
-        joint.animRotation = glm::mat4( rotation );
+        joint.rotation = glm::mat4( rotation );
     }
     else if ( channel.transformType == Scale )
     {
-        joint.animScale = glm::vec3( transform_0 );
+        joint.scale = glm::vec3( transform_0 );
     }
     else if ( channel.transformType == Translation )
     {
-        joint.animTranslation = glm::vec3( transform_0 );
+        joint.translation = glm::vec3( transform_0 );
     }
 }
 

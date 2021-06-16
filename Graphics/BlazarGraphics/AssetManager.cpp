@@ -1,6 +1,7 @@
 #include "AssetManager.h"
 #include "GraphicsException.h"
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <boost/format.hpp>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
@@ -291,6 +292,8 @@ void AssetManager::onEachSkin( SceneContext &context, MeshContext meshContext, c
 
     std::vector< float > inverseBindMatricesFlat;
 
+    std::vector< glm::mat4 > ibmT;
+
     copyAccessorToVectorTransformed( inverseBindMatricesFlat, context.model, skin.inverseBindMatrices );
 
     MeshGeometry &geometry = geometryTable[ meshContext.geometryIdx ];
@@ -408,44 +411,52 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 
     auto nodeTreeRef = sceneContext.nodeTree.findNode( nodeId );
 
-    if ( nodeTreeRef == nullptr || parent == -1 )
+    if ( nodeTreeRef == nullptr && parent == -1 )
     {
-        MeshNode meshNode = { };
-        meshNode.transform = glm::mat4(1.0f);
-        meshNode.translation = glm::vec3( 0.0f );
-        meshNode.scale = glm::vec3( 1.0f );
-        meshNode.rotation = glm::mat4( 1.0f );
-
-        if ( !node.translation.empty( ) )
-        {
-            meshNode.translation = glm::vec3( node.translation[ 0 ], node.translation[ 1 ], node.translation[ 2 ] );
-        }
-
-        if ( !node.rotation.empty( ) )
-        {
-            meshNode.rotation = glm::mat4( glm::quat( node.rotation[ 0 ], node.rotation[ 1 ], node.rotation[ 2 ], node.rotation[ 3 ] ) );
-        }
-
-        if ( !node.scale.empty( ) )
-        {
-            meshNode.scale = glm::vec3( node.scale[ 0 ], node.scale[ 1 ], node.scale[ 2 ] );
-        }
-
-        if ( !node.matrix.empty( ) )
-        {
-            meshNode.transform = glm::make_mat4( node.matrix.data( ) );
-            meshNode.isMatSet = true;
-        }
-
-        if ( parent == -1 )
-        {
-            sceneContext.nodeTree.setRootData( nodeId, meshNode );
-        }
-        else
-        {
-            sceneContext.nodeTree.addNode( sceneContext.nodeTree.findNode( parent ), nodeId, meshNode );
-        }
+        return;
     }
+
+    MeshNode meshNode = { };
+    meshNode.translation = glm::vec3( 0.0f );
+    meshNode.scale = glm::vec3( 1.0f );
+    meshNode.rotation = glm::quat( glm::mat4( 1.0f ) );
+
+    glm::mat4 t = meshNode.getTransform();
+
+    if ( !node.translation.empty( ) )
+    {
+        meshNode.translation = glm::vec3( node.translation[ 0 ], node.translation[ 1 ], node.translation[ 2 ] );
+    }
+
+    if ( !node.rotation.empty( ) )
+    {
+        meshNode.rotation = glm::quat( node.rotation[ 0 ], node.rotation[ 1 ], node.rotation[ 2 ], node.rotation[ 3 ] );
+        meshNode.rotation = glm::normalize( meshNode.rotation );
+    }
+
+    if ( !node.scale.empty( ) )
+    {
+        meshNode.scale = glm::vec3( node.scale[ 0 ], node.scale[ 1 ], node.scale[ 2 ] );
+    }
+
+    if ( !node.matrix.empty( ) )
+    {
+        glm::mat4 transform = glm::make_mat4( node.matrix.data( ) );
+
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose( transform, meshNode.scale, meshNode.rotation, meshNode.translation, skew, perspective );
+    }
+
+    if ( parent == -1 )
+    {
+        sceneContext.nodeTree.setRootData( nodeId, meshNode );
+    }
+    else
+    {
+        sceneContext.nodeTree.addNode( sceneContext.nodeTree.findNode( parent ), nodeId, meshNode );
+    }
+
 }
 
 AssetManager::~AssetManager( )

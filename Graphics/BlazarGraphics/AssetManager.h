@@ -54,39 +54,17 @@ struct AnimationData
 
 struct MeshNode
 {
-    glm::mat4 animMat;
-    glm::mat4 transform;
     glm::vec3 translation;
-    glm::mat4 rotation;
+    glm::quat rotation;
     glm::vec3 scale;
-
-    glm::vec3 animTranslation = glm::vec3( 0.0f );
-    glm::mat4 animRotation = glm::mat4( 1.0f );
-    glm::vec3 animScale = glm::vec3( 1.0f );
-
     glm::mat4 inverseBindMatrix;
-
-    bool isMatSet = false;
 
     [[nodiscard]] glm::mat4 getTransform( ) const
     {
-        if ( isMatSet )
-        {
-            return transform;
-        }
-
         return
                 glm::translate( glm::mat4( 1.0f ), translation ) *
                 glm::mat4( rotation ) *
                 glm::scale( glm::mat4( 1.0f ), scale );
-    }
-
-    [[nodiscard]] glm::mat4 getAnimTransform( ) const
-    {
-        return
-                glm::translate( glm::mat4( 1.0f ), animTranslation ) *
-                glm::mat4( animRotation ) *
-                glm::scale( glm::mat4( 1.0f ), animScale );
     }
 };
 
