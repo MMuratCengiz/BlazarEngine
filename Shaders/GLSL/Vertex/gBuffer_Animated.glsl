@@ -40,7 +40,7 @@ void main() {
         model = instanceData.model[gl_InstanceIndex - 1];
     }
 
-    mat4 jointMatrix = mat4(0.0);
+    mat4 jointMatrix = mat4(1.0);
 
     if (boneTransformations.size > 0)
     {
@@ -49,6 +49,11 @@ void main() {
             (boneWeights.y * boneTransformations.data[int(boneIds.y)]) +
             (boneWeights.z * boneTransformations.data[int(boneIds.z)]) +
             (boneWeights.w * boneTransformations.data[int(boneIds.w)]);
+
+        if ( jointMatrix == mat4(0) )
+        {
+            jointMatrix = mat4(1);
+        }
     }
 
     outPosition = model * jointMatrix * vec4(inPosition, 1.0f);

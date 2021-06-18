@@ -48,6 +48,11 @@ public:
 
     void freeNode( TNode * node )
     {
+        if ( ! node )
+        {
+            return;
+        }
+
         for ( auto child: node->children )
         {
             freeNode( child );

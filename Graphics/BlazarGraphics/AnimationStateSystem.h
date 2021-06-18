@@ -32,9 +32,7 @@ private:
 
     void setLinearInterpolation( const AnimationChannel &channel, const glm::vec4 &transform_0, const glm::vec4 &transform_1, const float &interpolationValue, MeshNode &joint ) const;
 
-    glm::mat4 getBoneTransform( const std::shared_ptr< ECS::CAnimState > &anim, MeshGeometry& geometry, Core::TreeNode< MeshNode, int > *node, const glm::mat4& inverseMeshTransform );
-
-    glm::mat4 getGlobalTransform( MeshGeometry& geometry, Core::TreeNode< MeshNode, int > *node );
+    glm::mat4 getBoneTransform( MeshGeometry& geometry, Core::TreeNode< MeshNode, int > *meshNode, Core::TreeNode< MeshNode, int > *node );
 };
 
 END_NAMESPACES

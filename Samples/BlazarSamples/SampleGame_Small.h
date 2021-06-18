@@ -30,6 +30,8 @@ class SampleGame_Small : public Scene::IPlayable
 {
     Scene::World *world;
 
+    std::shared_ptr< SampleCar1 > car1;
+    std::shared_ptr< SampleCar2 > car2;
     std::shared_ptr< SampleAnimatedFox > animDummy;
     std::shared_ptr< ECS::IGameEntity > rocks;
 

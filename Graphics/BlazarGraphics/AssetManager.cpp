@@ -89,16 +89,31 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
 
     generateAnimationData( context );
 
+    MeshNode rootNode = { };
+    rootNode.rotation = glm::quat( glm::mat4( 1.0f ) );
+    rootNode.translation = glm::vec3( 0.0f );
+    rootNode.scale = glm::vec3( 1.0f );
+
+    context.nodeTree.setRootData( 0, rootNode );
+
     for ( const tinygltf::Scene &scene: context.model.scenes )
     {
+        context.multiMeshNodes = context.model.meshes.size( ) > 1;
+
         // Attach the initial tree structure to the root node because gltf doesn't do it by default
         for ( int node: scene.nodes )
         {
-            std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
-            rootEntity->addChild( child );
+            onEachNode( context, rootEntity, path, -1, node );
+        }
+    }
 
-            addNode( context, -1, node );
-            onEachNode( context, child, path, node );
+    for ( auto node: context.nodeTree.flattenTree( true ) )
+    {
+        tinygltf::Node tNode = context.model.nodes[ node->id ];
+
+        if ( tNode.mesh != -1 )
+        {
+            onEachMesh( context, path, node );
         }
     }
 }
@@ -118,7 +133,6 @@ void AssetManager::generateAnimationData( SceneContext &context )
 
         context.animations[ animation.name ] = std::move( animationData );
     }
-
 }
 
 void AssetManager::onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel )
@@ -175,67 +189,81 @@ void AssetManager::onEachChannel( const tinygltf::Model &model, const tinygltf::
     animationData.channels.push_back( std::move( animationChannel ) );
 }
 
-void AssetManager::onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode )
+void AssetManager::onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &currentRootPath, const int &parentNode, const int &currentNode )
 {
+    addNode( context, parentNode, currentNode );
+
     const tinygltf::Model &model = context.model;
+    tinygltf::Node node = model.nodes[ currentNode ];
 
-    for ( int nodeIdx : model.nodes[ currentNode ].children )
+    auto entity = rootEntity;
+
+    if ( node.mesh != -1 )
     {
-        tinygltf::Node node = model.nodes[ nodeIdx ];
-
-        addNode( context, currentNode, nodeIdx );
-
-        if ( node.mesh != -1 )
+        if ( context.multiMeshNodes )
         {
             std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
 
-            currentEntity->addChild( child );
-            onEachNode( context, child, currentRootPath, nodeIdx );
+            entity->addChild( child );
+            auto children = rootEntity->getChildren( );
+            entity = children[ children.size( ) - 1 ];
         }
-        else
+
+        std::ostringstream keyBuilder;
+        keyBuilder << currentRootPath << "#" << node.name;
+
+        geometryTable.push_back( { } );
+
+        MeshContext meshContext = { };
+
+        meshContext.geometryIdx = geometryTable.size( ) - 1;
+        meshContext.meshNodeIdx = currentNode;
+
+        entity->createComponent< ECS::CMaterial >( );
+        entity->createComponent< ECS::CMesh >( );
+        entity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
+        entity->getComponent< ECS::CMesh >( )->geometryRefIdx = geometryTable.size( ) - 1;;
+
+        if ( !context.model.animations.empty( ) )
         {
-            onEachNode( context, currentEntity, currentRootPath, nodeIdx );
+            auto animState = entity->createComponent< ECS::CAnimState >( );
+            animState->mesh = entity->getComponent< ECS::CMesh >( );
+
+            animState->boneTransformations.resize( model.skins[ node.skin ].joints.size( ), glm::mat4( 1.0f ) );
         }
+
+        context.meshContextMap[ node.mesh ] = meshContext;
     }
 
-    tinygltf::Node node = model.nodes[ currentNode ];
-
-    if ( node.mesh == -1 )
+    for ( int nodeIdx : model.nodes[ currentNode ].children )
     {
-        return;
+        onEachNode( context, entity, currentRootPath, currentNode, nodeIdx );
     }
-
-    std::ostringstream keyBuilder;
-    keyBuilder << currentRootPath << "#" << node.name;
-
-    currentEntity->createComponent< ECS::CMaterial >( );
-
-    currentEntity->createComponent< ECS::CMesh >( );
-
-    if ( !context.model.animations.empty( ) )
-    {
-        auto animState = currentEntity->createComponent< ECS::CAnimState >( );
-        animState->mesh = currentEntity->getComponent< ECS::CMesh >( );
-    }
-
-    MeshContext meshContext = { };
-    geometryTable.push_back( { } );
-
-    meshContext.geometryIdx = geometryTable.size( ) - 1;
-    meshContext.meshNodeIdx = currentNode;
-    meshContext.entity = currentEntity;
-
-    currentEntity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
-    currentEntity->getComponent< ECS::CMesh >( )->geometryRefIdx = meshContext.geometryIdx;
-
-    onEachMesh( context, meshContext, node.mesh );
-
-    onEachSkin( context, meshContext, node.skin );
 }
 
-void AssetManager::onEachMesh( SceneContext &context, MeshContext meshContext, const int &meshIdx )
+void AssetManager::onEachMesh( SceneContext &context, const std::string &currentRootPath, Core::TreeNode< MeshNode > *treeNode )
 {
     const tinygltf::Model &model = context.model;
+
+    tinygltf::Node node = model.nodes[ treeNode->id ];
+
+    generateMeshData( context, node.mesh );
+
+    MeshContext meshContext = context.meshContextMap[  node.mesh ];
+
+    MeshGeometry &geometry = geometryTable[ meshContext.geometryIdx ];
+
+    if ( node.skin >= 0 )
+    {
+        onEachSkin( context, node.mesh, node.skin );
+    }
+}
+
+void AssetManager::generateMeshData( SceneContext &context, const int &meshIdx )
+{
+    const tinygltf::Model &model = context.model;
+
+    MeshContext meshContext = context.meshContextMap[ meshIdx ];
 
     MeshGeometry &geometry = geometryTable[ meshContext.geometryIdx ];
 
@@ -248,10 +276,6 @@ void AssetManager::onEachMesh( SceneContext &context, MeshContext meshContext, c
     for ( const tinygltf::Primitive &primitive : mesh.primitives )
     {
         SubMeshGeometry &subMeshGeometry = geometry.subGeometries.emplace_back( );
-
-        tinygltf::Accessor positionAccessor = model.accessors[ primitive.indices ];
-        tinygltf::BufferView bufferView = model.bufferViews[ positionAccessor.bufferView ];
-        tinygltf::Buffer buffer = model.buffers[ bufferView.buffer ];
 
         copyAccessorToVectorTransformed(
                 subMeshGeometry.vertices, model, tryGetPrimitiveAttribute( primitive, "POSITION" )
@@ -277,6 +301,10 @@ void AssetManager::onEachMesh( SceneContext &context, MeshContext meshContext, c
                 subMeshGeometry.boneWeights, model, tryGetPrimitiveAttribute( primitive, "WEIGHTS_0" )
         );
 
+        generateNormals( subMeshGeometry );
+
+        int size = subMeshGeometry.boneIndices.size( );
+
         subMeshGeometry.vertexCount = subMeshGeometry.vertices.size( ) / 3;
         subMeshGeometry.drawMode = primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
 
@@ -284,8 +312,47 @@ void AssetManager::onEachMesh( SceneContext &context, MeshContext meshContext, c
     }
 }
 
-void AssetManager::onEachSkin( SceneContext &context, MeshContext meshContext, const int &skinIdx )
+void AssetManager::generateNormals( SubMeshGeometry &subMeshGeometry ) const
 {
+    if ( subMeshGeometry.normals.empty( ) && subMeshGeometry.indices.empty( ) )
+    {
+        for ( int i = 0; i < subMeshGeometry.vertices.size( ) / 9; i++ )
+        {
+            glm::vec3 A = glm::make_vec3( &subMeshGeometry.vertices[ i ] );
+            glm::vec3 B = glm::make_vec3( &subMeshGeometry.vertices[ i + 3 ] );
+            glm::vec3 C = glm::make_vec3( &subMeshGeometry.vertices[ i + 6 ] );
+
+            glm::vec3 normal = glm::normalize( glm::cross( B - A, C - A ) );
+
+            for ( int j = 0; j < 9; ++ j )
+            {
+                subMeshGeometry.normals.push_back( normal[ j % 3 ] );
+            }
+        }
+    }
+
+    if ( subMeshGeometry.normals.empty( ) && !subMeshGeometry.indices.empty( ) )
+    {
+        for ( int i = 0; i < subMeshGeometry.indices.size( ) / 3; i++ )
+        {
+            glm::vec3 A = glm::make_vec3( &subMeshGeometry.vertices[ subMeshGeometry.indices[ i ] ] );
+            glm::vec3 B = glm::make_vec3( &subMeshGeometry.vertices[ subMeshGeometry.indices[ i + 1 ] ] );
+            glm::vec3 C = glm::make_vec3( &subMeshGeometry.vertices[ subMeshGeometry.indices[ i + 2 ] ] );
+
+            glm::vec3 normal = glm::normalize( glm::cross( B - A, C - A ) );
+
+            for ( int j = 0; j < 9; ++ j )
+            {
+                subMeshGeometry.normals.push_back( normal[ j % 3 ] );
+            }
+        }
+    }
+}
+
+void AssetManager::onEachSkin( SceneContext &context, const int &meshIdx, const int &skinIdx )
+{
+    MeshContext meshContext = context.meshContextMap[ meshIdx ];
+
     const tinygltf::Model &model = context.model;
 
     tinygltf::Skin skin = model.skins[ skinIdx ];
@@ -409,11 +476,10 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 {
     tinygltf::Node node = sceneContext.model.nodes[ nodeId ];
 
-    auto nodeTreeRef = sceneContext.nodeTree.findNode( nodeId );
 
-    if ( nodeTreeRef == nullptr && parent == -1 )
+    if ( nodeId == 3 )
     {
-        return;
+        int i = 1;
     }
 
     MeshNode meshNode = { };
@@ -421,22 +487,22 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
     meshNode.scale = glm::vec3( 1.0f );
     meshNode.rotation = glm::quat( glm::mat4( 1.0f ) );
 
-    glm::mat4 t = meshNode.getTransform();
+    glm::mat4 t = meshNode.getTransform( );
 
     if ( !node.translation.empty( ) )
     {
-        meshNode.translation = glm::vec3( node.translation[ 0 ], node.translation[ 1 ], node.translation[ 2 ] );
+        meshNode.translation = glm::make_vec3( &node.translation[ 0 ] );
     }
 
     if ( !node.rotation.empty( ) )
     {
-        meshNode.rotation = glm::quat( node.rotation[ 0 ], node.rotation[ 1 ], node.rotation[ 2 ], node.rotation[ 3 ] );
+        meshNode.rotation = glm::make_quat( &node.rotation[0] );
         meshNode.rotation = glm::normalize( meshNode.rotation );
     }
 
     if ( !node.scale.empty( ) )
     {
-        meshNode.scale = glm::vec3( node.scale[ 0 ], node.scale[ 1 ], node.scale[ 2 ] );
+        meshNode.scale = glm::make_vec3( &node.scale[ 0 ] );
     }
 
     if ( !node.matrix.empty( ) )
@@ -450,7 +516,7 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 
     if ( parent == -1 )
     {
-        sceneContext.nodeTree.setRootData( nodeId, meshNode );
+        sceneContext.nodeTree.addNode( nodeId, meshNode );
     }
     else
     {

@@ -24,9 +24,9 @@ struct CAnimFlowNode
 
     std::unordered_map< int, CAnimFlowNode * > transitions;
 
-    float currentPlayTime = 0.0;
+    double currentPlayTime = 0.0;
 
-    int lastPlayedNode = -1;
+    int lastPlayedFrame = -1;
 
     ~CAnimFlowNode()
     {

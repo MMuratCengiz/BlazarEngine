@@ -1,5 +1,6 @@
 #include <iostream>
 #include <BlazarScene/World.h>
+#include <BlazarSamples/SampleGame.h>
 #include <BlazarSamples/SampleGame_Small.h>
 
 using namespace BlazarEngine;

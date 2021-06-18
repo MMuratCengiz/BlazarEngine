@@ -54,17 +54,19 @@ struct AnimationData
 
 struct MeshNode
 {
-    glm::vec3 translation;
-    glm::quat rotation;
-    glm::vec3 scale;
-    glm::mat4 inverseBindMatrix;
+    glm::vec3 translation = glm::vec3( 0.0f );
+    glm::quat rotation = glm::quat( glm::mat4( 1.0f ) );
+    glm::vec3 scale = glm::vec3( 1.0f );
+    glm::mat4 inverseBindMatrix = glm::mat4( 1.0f );
+    glm::mat4 globalTransform = glm::mat4( 1.0f );
+    glm::mat4 inverseGlobalTransform = glm::mat4( 1.0f );
 
     [[nodiscard]] glm::mat4 getTransform( ) const
     {
-        return
-                glm::translate( glm::mat4( 1.0f ), translation ) *
-                glm::mat4( rotation ) *
-                glm::scale( glm::mat4( 1.0f ), scale );
+        auto T = glm::translate( glm::mat4( 1.0f ), translation );
+        auto R = T * glm::mat4( rotation );
+        auto S = glm::scale( R, scale );
+        return S;
     }
 };
 
@@ -74,6 +76,7 @@ struct SubMeshGeometry
 
     uint32_t vertexCount;
     std::vector< unsigned int > indices;
+    std::vector< unsigned int > joints;
 
     std::vector< float > vertices;
     std::vector< float > normals;
@@ -100,6 +103,34 @@ struct MeshGeometry
     std::unordered_map< std::string, AnimationData > animations;
 
     tinygltf::Model model;
+
+    void updateWorldTransforms( Core::TreeNode< MeshNode > *parent, Core::TreeNode< MeshNode > *node )
+    {
+        node->data.globalTransform = node->data.getTransform( );
+
+        if ( parent != nullptr )
+        {
+            node->data.globalTransform = parent->data.globalTransform * node->data.getTransform( );
+        }
+
+        node->data.inverseGlobalTransform = glm::inverse( node->data.globalTransform );
+
+        for ( auto child: node->children )
+        {
+            updateWorldTransforms( node, child );
+        }
+    }
+
+    void updateWorldTransforms( )
+    {
+        updateWorldTransforms( nullptr, nodeTree.getRoot( ) );
+    }
+};
+
+struct MeshContext
+{
+    int geometryIdx;
+    int meshNodeIdx;
 };
 
 struct SceneContext
@@ -108,19 +139,11 @@ struct SceneContext
 
     std::unordered_map< std::string, AnimationData > animations;
     std::shared_ptr< ECS::IGameEntity > rootEntity;
+
     Core::SimpleTree< MeshNode > nodeTree = { };
-};
 
-struct NodeContext
-{
-    glm::mat4 globalTransform;
-};
-
-struct MeshContext
-{
-    int geometryIdx;
-    int meshNodeIdx;
-    std::shared_ptr< ECS::IGameEntity > entity;
+    std::unordered_map< int, MeshContext > meshContextMap;
+    bool multiMeshNodes;
 };
 
 class AssetManager
@@ -155,11 +178,13 @@ private:
 
     void generateAnimationData( SceneContext &sceneContext );
 
-    void onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &currentEntity, const std::string &currentRootPath, const int &currentNode );
+    void onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &currentRootPath, const int &parentNode, const int &currentNode );
 
-    void onEachMesh( SceneContext &sceneContext, MeshContext meshContext, const int &meshIdx );
+    void onEachMesh( SceneContext &context, const std::string &currentRootPath, Core::TreeNode< MeshNode > *currentNode );
 
-    void onEachSkin( SceneContext &sceneContext, MeshContext meshContext, const int &skinIdx );
+    void generateMeshData( SceneContext &context, const int &currentNode );
+
+    void onEachSkin( SceneContext &sceneContext, const int &meshIdx, const int &skinIdx );
 
     void addNode( SceneContext &sceneContext, int parent, int nodeId );
 
@@ -183,7 +208,7 @@ private:
 
         unsigned int stride = std::max( bufferView.byteStride, numOfComponents * componentSize );
 
-        bool dataClumped = numOfComponents == 1 && bufferView.byteStride == 0;
+        bool dataClumped = bufferView.byteStride == 0;
         if ( dataClumped )
         {
             // Data clumped
@@ -198,7 +223,7 @@ private:
         if ( typeid( SourceType ) != typeid( BufferType ) )
         {
             std::transform( result.begin( ), result.end( ), std::back_inserter( targetData ), [ ]( BufferType b )
-            { return ( SourceType ) b; } );
+            { return static_cast< SourceType >( b ); } );
         }
         else
         {
@@ -244,6 +269,8 @@ private:
     static void packSubGeometry( SubMeshGeometry &geometry );
 
     void onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel );
+
+    void generateNormals( SubMeshGeometry &subMeshGeometry ) const;
 };
 
 END_NAMESPACES

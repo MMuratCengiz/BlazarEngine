@@ -101,12 +101,8 @@ glm::mat4 Utilities::getTRSMatrix(  const glm::vec3& t, const glm::quat& r, cons
 
 glm::quat Utilities::vecToQuat( const glm::vec4 &vec )
 {
-    return glm::quat(
-            vec.x,
-            vec.y,
-            vec.z,
-            vec.w
-            );
+    auto res = glm::make_quat( glm::value_ptr( vec ) );
+    return res;
 }
 
 END_NAMESPACES
