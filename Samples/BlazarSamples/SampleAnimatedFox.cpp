@@ -28,7 +28,7 @@ void SampleAnimatedFox::iterChildren( const std::shared_ptr< ECS::IGameEntity >&
 
     auto animState = entity->getComponent< ECS::CAnimState >( );
 
-    if ( animState != nullptr )
+    if ( animState == nullptr )
     {
         return;
     }
