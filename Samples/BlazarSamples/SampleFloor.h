@@ -23,7 +23,7 @@ public:
 
         auto material = createComponent< ECS::CMaterial >( );
         auto &texInfo = material->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/Stone_Base_Color.tga";
+        texInfo.path = PATH( "/assets/textures/Stone_Base_Color.tga" );
 
 //        material->heightMap.path = "/assets/textures/Stone_Height.tga";
 

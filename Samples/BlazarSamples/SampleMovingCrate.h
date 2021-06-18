@@ -28,7 +28,7 @@ public:
 
         auto texture = createComponent< ECS::CMaterial >( );
         auto &texInfo = texture->textures.emplace_back( ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/container.jpg";
+        texInfo.path = PATH( "/assets/textures/container.jpg" );
 
         auto transform = createComponent< ECS::CTransform >( );
         transform->position = glm::vec3( 2.0f, 10.0f, 2.0f );

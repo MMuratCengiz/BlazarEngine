@@ -20,27 +20,27 @@ public:
 
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Right,
-                "/assets/cubemaps/greensky/right.png" } );
+        PATH( "/assets/cubemaps/greensky/right.png" } ) );
 
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Left,
-                "/assets/cubemaps/greensky/left.png" } );
+        PATH( "/assets/cubemaps/greensky/left.png" } ) );
 
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Front,
-                "/assets/cubemaps/greensky/front.png" } );
+        PATH( "/assets/cubemaps/greensky/front.png" } ) );
 
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Back,
-                "/assets/cubemaps/greensky/back.png" } );
+        PATH( "/assets/cubemaps/greensky/back.png" } ) );
 
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Top,
-                "/assets/cubemaps/greensky/top.png" } );
+        PATH( "/assets/cubemaps/greensky/top.png" } ) );
 
         cubeMap->texturePaths.push_back( ECS::CubeMapSidePath {
                 ECS::CubeMapSide::Bottom,
-                "/assets/cubemaps/greensky/bottom.png" } );
+        PATH( "/assets/cubemaps/greensky/bottom.png" } ) );
 
         cubeMap->sort( );
     }

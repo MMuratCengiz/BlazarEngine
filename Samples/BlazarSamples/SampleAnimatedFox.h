@@ -10,6 +10,7 @@ namespace Sample
 
 class SampleAnimatedFox : public BlazarEngine::ECS::IGameEntity
 {
+    BlazarEngine::Scene::World *world;
 public:
     explicit SampleAnimatedFox( BlazarEngine::Scene::World * world );
 

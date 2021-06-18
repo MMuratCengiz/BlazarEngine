@@ -17,6 +17,10 @@ public:
     static std::vector< char > readFile( const std::string &filename );
     static glm::mat4 getTRSMatrix( const glm::vec3& t, const glm::quat& r, const glm::vec3& s );
     static glm::quat vecToQuat( const glm::vec4& vec );
+    static std::string getFileDirectory( const std::string& file, bool includeFinalSep = true );
+    static std::string getFilename( const std::string& file );
+    static std::string combineDirectories( const std::string& directory, const std::string& file );
+    static bool doesFileExist( const std::string& file );
 };
 
 END_NAMESPACES

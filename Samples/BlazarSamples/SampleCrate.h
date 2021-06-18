@@ -20,7 +20,7 @@ public:
 
         auto texture = createComponent< ECS::CMaterial >( );
         auto &texInfo = texture->textures.emplace_back( ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/container.jpg";
+        texInfo.path = PATH( "/assets/textures/container.jpg" );
 
         auto transform = createComponent< ECS::CTransform >( );
         transform->position = glm::vec3( 0.0f, 200.0f, -2.8f );

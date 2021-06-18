@@ -49,7 +49,7 @@ void SampleGame::init( )
                 auto child = world->getAssetManager( )->createEntity( PATH( "/assets/models/Rocks/" ) + std::string( ent->d_name ) );
 
                 auto &texInfo = child->getChildren( )[ 0 ]->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-                texInfo.path = "/assets/textures/Rocks/Colorsheet Rock Grey.png";
+                texInfo.path = PATH( "/assets/textures/Rocks/Colorsheet Rock Grey.png" );
 
                 BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( child.get( ), glm::vec3( randomRange( ), 0.10, randomRange( ) ) );
 
@@ -65,7 +65,7 @@ void SampleGame::init( )
     for ( auto &child: tree1->getChildren( ) )
     {
         auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/Colorsheet Tree Normal.png";
+        texInfo.path = PATH( "/assets/textures/Colorsheet Tree Normal.png" );
     }
 
     tree2 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type3 04.gltf" ) );
@@ -73,7 +73,7 @@ void SampleGame::init( )
     for ( auto &child: tree2->getChildren( ) )
     {
         auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
-        texInfo.path = "/assets/textures/Colorsheet Tree Normal.png";
+        texInfo.path = PATH( "/assets/textures/Colorsheet Tree Normal.png" );
     }
 
     BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( tree1.get( ), glm::vec3( 4.0f, 0.10f, 2.0f ) );

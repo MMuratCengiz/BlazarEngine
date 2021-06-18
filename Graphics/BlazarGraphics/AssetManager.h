@@ -144,6 +144,8 @@ struct SceneContext
 
     std::unordered_map< int, MeshContext > meshContextMap;
     bool multiMeshNodes;
+
+    std::string gltfModelDirectory;
 };
 
 class AssetManager
@@ -271,6 +273,8 @@ private:
     void onEachChannel( const tinygltf::Model &model, const tinygltf::Animation &animation, AnimationData &animationData, const tinygltf::AnimationChannel &channel );
 
     void generateNormals( SubMeshGeometry &subMeshGeometry ) const;
+
+    void attachMaterialData( SceneContext &context, std::shared_ptr< ECS::IGameEntity > sharedPtr, int mesh );
 };
 
 END_NAMESPACES

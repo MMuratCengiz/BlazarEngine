@@ -51,8 +51,7 @@ void AssetManager::loadImage( const std::string &path )
 {
     int width, height, channels;
 
-    auto filename = PATH( path );
-    stbi_uc *contents = stbi_load( filename.c_str( ), &width, &height, &channels, STBI_rgb_alpha );
+    stbi_uc *contents = stbi_load( path.c_str( ), &width, &height, &channels, STBI_rgb_alpha );
 
     if ( contents == nullptr )
     {
@@ -77,6 +76,7 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
 
     SceneContext context { };
     context.rootEntity = rootEntity;
+    context.gltfModelDirectory = Core::Utilities::getFileDirectory( path );
 
     bool res = loader.LoadASCIIFromFile( &context.model, &err, &warn, path );
 
@@ -224,6 +224,8 @@ void AssetManager::onEachNode( SceneContext &context, const std::shared_ptr< ECS
         entity->getComponent< ECS::CMesh >( )->path = keyBuilder.str( );
         entity->getComponent< ECS::CMesh >( )->geometryRefIdx = geometryTable.size( ) - 1;;
 
+        attachMaterialData( context, entity, node.mesh );
+
         if ( !context.model.animations.empty( ) )
         {
             auto animState = entity->createComponent< ECS::CAnimState >( );
@@ -249,7 +251,7 @@ void AssetManager::onEachMesh( SceneContext &context, const std::string &current
 
     generateMeshData( context, node.mesh );
 
-    MeshContext meshContext = context.meshContextMap[  node.mesh ];
+    MeshContext meshContext = context.meshContextMap[ node.mesh ];
 
     MeshGeometry &geometry = geometryTable[ meshContext.geometryIdx ];
 
@@ -303,8 +305,6 @@ void AssetManager::generateMeshData( SceneContext &context, const int &meshIdx )
 
         generateNormals( subMeshGeometry );
 
-        int size = subMeshGeometry.boneIndices.size( );
-
         subMeshGeometry.vertexCount = subMeshGeometry.vertices.size( ) / 3;
         subMeshGeometry.drawMode = primitive.mode == 0 ? PrimitiveDrawMode::Point : PrimitiveDrawMode::Triangle;
 
@@ -316,7 +316,7 @@ void AssetManager::generateNormals( SubMeshGeometry &subMeshGeometry ) const
 {
     if ( subMeshGeometry.normals.empty( ) && subMeshGeometry.indices.empty( ) )
     {
-        for ( int i = 0; i < subMeshGeometry.vertices.size( ) / 9; i++ )
+        for ( int i = 0; i < subMeshGeometry.vertices.size( ); i += 9 )
         {
             glm::vec3 A = glm::make_vec3( &subMeshGeometry.vertices[ i ] );
             glm::vec3 B = glm::make_vec3( &subMeshGeometry.vertices[ i + 3 ] );
@@ -324,7 +324,7 @@ void AssetManager::generateNormals( SubMeshGeometry &subMeshGeometry ) const
 
             glm::vec3 normal = glm::normalize( glm::cross( B - A, C - A ) );
 
-            for ( int j = 0; j < 9; ++ j )
+            for ( int j = 0; j < 9; ++j )
             {
                 subMeshGeometry.normals.push_back( normal[ j % 3 ] );
             }
@@ -333,7 +333,7 @@ void AssetManager::generateNormals( SubMeshGeometry &subMeshGeometry ) const
 
     if ( subMeshGeometry.normals.empty( ) && !subMeshGeometry.indices.empty( ) )
     {
-        for ( int i = 0; i < subMeshGeometry.indices.size( ) / 3; i++ )
+        for ( int i = 0; i < subMeshGeometry.indices.size( ); i += 3 )
         {
             glm::vec3 A = glm::make_vec3( &subMeshGeometry.vertices[ subMeshGeometry.indices[ i ] ] );
             glm::vec3 B = glm::make_vec3( &subMeshGeometry.vertices[ subMeshGeometry.indices[ i + 1 ] ] );
@@ -341,7 +341,7 @@ void AssetManager::generateNormals( SubMeshGeometry &subMeshGeometry ) const
 
             glm::vec3 normal = glm::normalize( glm::cross( B - A, C - A ) );
 
-            for ( int j = 0; j < 9; ++ j )
+            for ( int j = 0; j < 9; ++j )
             {
                 subMeshGeometry.normals.push_back( normal[ j % 3 ] );
             }
@@ -496,7 +496,7 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 
     if ( !node.rotation.empty( ) )
     {
-        meshNode.rotation = glm::make_quat( &node.rotation[0] );
+        meshNode.rotation = glm::make_quat( &node.rotation[ 0 ] );
         meshNode.rotation = glm::normalize( meshNode.rotation );
     }
 
@@ -523,6 +523,37 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
         sceneContext.nodeTree.addNode( sceneContext.nodeTree.findNode( parent ), nodeId, meshNode );
     }
 
+}
+
+void AssetManager::attachMaterialData( SceneContext &context, std::shared_ptr< ECS::IGameEntity > entity, int mesh )
+{
+    tinygltf::Mesh meshNode = context.model.meshes[ mesh ];
+
+    if ( meshNode.primitives.empty( ) )
+    {
+        return;
+    }
+
+    tinygltf::Material material = context.model.materials[ meshNode.primitives[ 0 ].material ];
+
+    auto baseColorFactor = material.values.find( "baseColorTexture" );
+
+    if ( baseColorFactor == material.values.end( ) )
+    {
+        return;
+    }
+
+    auto elements = baseColorFactor->second.json_double_value;
+
+    auto image = elements.find( "index" );
+
+    if ( image == elements.end( ) )
+    {
+        return;
+    }
+
+    tinygltf::Image img = context.model.images[ ( int ) image->second ];
+    entity->getComponent< ECS::CMaterial >( )->textures.push_back( ECS::Material::TextureInfo { context.gltfModelDirectory + img.uri } );
 }
 
 AssetManager::~AssetManager( )
