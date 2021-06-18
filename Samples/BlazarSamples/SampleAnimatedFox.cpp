@@ -46,9 +46,10 @@ void SampleAnimatedFox::iterChildren( const std::shared_ptr< ECS::IGameEntity >&
     attack->animName = "SwordAndShieldSlash";
 
     animState->currentNode->transitions[ 1 ] = surveyTransition;
-    animState->currentNode->transitions[ 2 ] = swordAndShieldJump;
-    animState->currentNode->transitions[ 3 ] = run;
-    animState->currentNode->transitions[ 4 ] = attack;
+    surveyTransition->transitions[ 2 ] = swordAndShieldJump;
+    swordAndShieldJump->transitions[ 3 ] = run;
+    run->transitions[ 4 ] = attack;
+    attack->transitions[ 1 ] = surveyTransition;
     animState->state = 1;
 
     Input::ActionBinding animChange { };
@@ -60,11 +61,8 @@ void SampleAnimatedFox::iterChildren( const std::shared_ptr< ECS::IGameEntity >&
 
     auto changeAnim = [ = ]( const std::string &actionName )
     {
-        auto animState = entity->getComponent< ECS::CAnimState >( )->state++;
-        if ( entity->getComponent< ECS::CAnimState >( )->state > 4 )
-        {
-            entity->getComponent< ECS::CAnimState >( )->state = 1;
-        }
+        entity->getComponent< ECS::CAnimState >( )->state
+            = entity->getComponent< ECS::CAnimState >( )->currentNode->transitions.begin()->first;
     };
 
     world->getActionMap( )->subscribeToAction( "ChangeAnim", changeAnim );
