@@ -95,6 +95,11 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
     SceneContext context { };
     context.rootEntity = rootEntity;
     context.gltfModelDirectory = Core::Utilities::getFileDirectory( path );
+    context.nodeTree = std::shared_ptr< Core::SimpleTree< MeshNode > >( new Core::SimpleTree< MeshNode > { }, [=]( Core::SimpleTree< MeshNode > * p )
+    {
+        p->freeNode( p->getRoot( ) );
+        delete p;
+    } );
 
     bool res = loader.LoadASCIIFromFile( &context.model, &err, &warn, path );
 
@@ -112,7 +117,7 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
     rootNode.translation = glm::vec3( 0.0f );
     rootNode.scale = glm::vec3( 1.0f );
 
-    context.nodeTree.setRootData( 0, rootNode );
+    context.nodeTree->setRootData( 0, rootNode );
 
     for ( const tinygltf::Scene &scene: context.model.scenes )
     {
@@ -125,7 +130,7 @@ void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEnt
         }
     }
 
-    for ( auto node: context.nodeTree.flattenTree( true ) )
+    for ( auto node: context.nodeTree->flattenTree( true ) )
     {
         tinygltf::Node tNode = context.model.nodes[ node->id ];
 
@@ -389,7 +394,7 @@ void AssetManager::onEachSkin( SceneContext &context, const int &meshIdx, const 
     {
         int joint = skin.joints[ i ];
 
-        auto jointNode = geometry.nodeTree.findNode( joint );
+        auto jointNode = geometry.nodeTree->findNode( joint );
         jointNode->data.inverseBindMatrix = flatMatToGLMMat( inverseBindMatricesFlat, i * 16 );
     }
 }
@@ -494,7 +499,6 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 {
     tinygltf::Node node = sceneContext.model.nodes[ nodeId ];
 
-
     if ( nodeId == 3 )
     {
         int i = 1;
@@ -534,11 +538,11 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
 
     if ( parent == -1 )
     {
-        sceneContext.nodeTree.addNode( nodeId, meshNode );
+        sceneContext.nodeTree->addNode( nodeId, meshNode );
     }
     else
     {
-        sceneContext.nodeTree.addNode( sceneContext.nodeTree.findNode( parent ), nodeId, meshNode );
+        sceneContext.nodeTree->addNode( sceneContext.nodeTree->findNode( parent ), nodeId, meshNode );
     }
 
 }
@@ -579,11 +583,6 @@ AssetManager::~AssetManager( )
     for ( auto &imagePairs: imageMap )
     {
         stbi_image_free( imagePairs.second->content );
-    }
-
-    for ( auto geometry: geometryTable )
-    {
-        geometry.nodeTree.freeNode( geometry.nodeTree.getRoot( ) );
     }
 }
 

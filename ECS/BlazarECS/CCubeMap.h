@@ -18,6 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <algorithm>
+#include <vector>
 #include <BlazarCore/Common.h>
 #include "IComponent.h"
 

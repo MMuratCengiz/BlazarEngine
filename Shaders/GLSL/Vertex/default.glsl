@@ -24,5 +24,4 @@ void main() {
 
     transitTexture1Coor = textureCoor;
     transitNormal = normalize(vec3( inNormal.x, inNormal.y, inNormal.z ) );
-//    transitNormal = mat3(transpose(inverse(pushConstants.model))) * transitNormal;
 }

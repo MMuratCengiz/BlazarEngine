@@ -116,7 +116,7 @@ struct MeshGeometry
     // Internal Data
 
     std::vector< int > joints = { };
-    Core::SimpleTree< MeshNode > nodeTree = { };
+    std::shared_ptr< Core::SimpleTree< MeshNode > > nodeTree = nullptr;
 
     std::unordered_map< std::string, AnimationData > animations;
 
@@ -141,7 +141,7 @@ struct MeshGeometry
 
     void updateWorldTransforms( )
     {
-        updateWorldTransforms( nullptr, nodeTree.getRoot( ) );
+        updateWorldTransforms( nullptr, nodeTree->getRoot( ) );
     }
 };
 
@@ -158,7 +158,7 @@ struct SceneContext
     std::unordered_map< std::string, AnimationData > animations;
     std::shared_ptr< ECS::IGameEntity > rootEntity;
 
-    Core::SimpleTree< MeshNode > nodeTree = { };
+    std::shared_ptr< Core::SimpleTree< MeshNode > > nodeTree;
 
     std::unordered_map< int, MeshContext > meshContextMap;
     bool multiMeshNodes;

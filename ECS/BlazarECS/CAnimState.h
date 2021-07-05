@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include <BlazarCore/Common.h>
+
+#include <utility>
 #include "CMesh.h"
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
@@ -46,8 +48,25 @@ struct CAnimFlowNode
 
     int lastPlayedFrame = -1;
 
-    ~CAnimFlowNode()
+    CAnimFlowNode(  ) = default;
+    
+    CAnimFlowNode( const NodeType &nodeType, std::string animName ) : nodeType( nodeType ), animName( std::move( animName ) )
     {
+        transitions = { };
+    }
+
+private:
+    bool deleted = false;
+
+public:
+    ~CAnimFlowNode( )
+    {
+        if ( deleted )
+        {
+            return;
+        }
+        deleted = true;
+
         for ( auto transition: transitions )
         {
             delete transition.second;
@@ -61,19 +80,19 @@ struct CAnimState : IComponent
 
     std::vector< glm::mat4 > boneTransformations;
 
-    CAnimFlowNode * beginNode = new CAnimFlowNode { NodeType::Begin, "", { } };
+    CAnimFlowNode * beginNode = new CAnimFlowNode { NodeType::Begin, "" };
 
     CAnimFlowNode * currentNode = beginNode;
 
     int state = 0;
     int previousState = 0;
 
-    ~CAnimState() override
+    ~CAnimState( ) override
     {
         delete beginNode;
     }
 
-    BLAZAR_COMPONENT_CUSTOM_DESTRUCTOR(CAnimState)
+    BLAZAR_COMPONENT_CUSTOM_DESTRUCTOR( CAnimState )
 };
 
 END_NAMESPACES

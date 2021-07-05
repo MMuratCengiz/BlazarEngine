@@ -66,7 +66,7 @@ public:
 
     void freeNode( TNode * node )
     {
-        if ( ! node )
+        if ( node == nullptr )
         {
             return;
         }
@@ -77,6 +77,7 @@ public:
         }
 
         delete node;
+        node = nullptr;
     }
 
     inline TNode * getRoot() const
@@ -209,6 +210,16 @@ public:
     [[nodiscard]] const IdT & getLargestIndex( ) const
     {
         return largestIndex;
+    }
+};
+
+template< typename T >
+struct TreeDeleter
+{
+    void operator ()( T * p)
+    {
+        p->freeNode( p->getRoot( ) );
+        delete p;
     }
 };
 

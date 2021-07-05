@@ -56,6 +56,14 @@ void SampleGame::init( )
 
     rocks = std::make_shared< ECS::DynamicGameEntity >( );
 
+    boost::filesystem::path apk_path(PATH( "/assets/models/Rocks/" ));
+    boost::filesystem::recursive_directory_iterator end;
+
+    for (boost::filesystem::recursive_directory_iterator i(apk_path); i != end; ++i)
+    {
+        const boost::filesystem::path cp = (*i);
+    }
+    /*
     DIR *dir;
     struct dirent *ent;
     if ( ( dir = opendir( std::string( PATH( "/assets/models/Rocks/" ) ).c_str( ) ) ) != nullptr )
@@ -76,7 +84,7 @@ void SampleGame::init( )
         }
 
         closedir( dir );
-    }
+    }*/
 
     tree1 = world->getAssetManager( )->createEntity( PATH( "/assets/models/Tree Type1 04.gltf" ) );
 

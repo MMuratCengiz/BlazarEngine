@@ -1,15 +1,15 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/EXPRESSION_BRACES/@EntryValue">INSIDE</s:String>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/LINKAGE_SPECIFICATION_BRACES/@EntryValue">END_OF_LINE</s:String>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/ANONYMOUS_METHOD_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/CASE_BLOCK_BRACES/@EntryValue">END_OF_LINE</s:String>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/INVOCABLE_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/NAMESPACE_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/OTHER_BRACES/@EntryValue">END_OF_LINE</s:String>
-	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/PLACE_CATCH_ON_NEW_LINE/@EntryValue">False</s:Boolean>
-	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/PLACE_ELSE_ON_NEW_LINE/@EntryValue">False</s:Boolean>
-	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/PLACE_WHILE_ON_NEW_LINE/@EntryValue">False</s:Boolean>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/REQUIRES_EXPRESSION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SPACE_AFTER_CAST_EXPRESSION_PARENTHESES/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SPACE_BETWEEN_CLOSING_ANGLE_BRACKETS_IN_TEMPLATE_ARGS/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SPACE_WITHIN_CAST_EXPRESSION_PARENTHESES/@EntryValue">True</s:Boolean>
@@ -19,5 +19,5 @@
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SPACE_WITHIN_EMPTY_TEMPLATE_PARAMS/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SPACE_WITHIN_TEMPLATE_ARGS/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/SPACE_WITHIN_TEMPLATE_PARAMS/@EntryValue">True</s:Boolean>
-	<s:String x:Key="/Default/CodeStyle/CodeFormatting/CppFormatting/TYPE_DECLARATION_BRACES/@EntryValue">END_OF_LINE</s:String>
+	
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EFeature_002EServices_002ECpp_002ECodeStyle_002ESettingsUpgrade_002EFunctionReturnStyleSettingsUpgrader/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

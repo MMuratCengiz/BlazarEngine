@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #define GLM_FORCE_RADIANS
 
-#include <glm/gtx/quaternion.hpp>
 #include "AnimationStateSystem.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
@@ -97,7 +96,7 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
             transform_1 = channel.transform[ frame + 1 ];
         }
 
-        auto meshJointNode = geometry.nodeTree.findNode( channel.targetJoint );
+        auto meshJointNode = geometry.nodeTree->findNode( channel.targetJoint );
 
         if ( meshJointNode != nullptr )
         {
@@ -118,14 +117,14 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
 
     geometry.updateWorldTransforms( );
 
-    auto meshNode = geometry.nodeTree.findNode( geometry.meshNodeIdx );
+    auto meshNode = geometry.nodeTree->findNode( geometry.meshNodeIdx );
 
     anim->boneTransformations.clear( );
     anim->boneTransformations.resize( geometry.joints.size( ), glm::mat4( 1.0f ) );
 
     for ( int i = 0; i < geometry.joints.size( ); ++i )
     {
-        anim->boneTransformations[ i ] = getBoneTransform( geometry, meshNode, geometry.nodeTree.findNode( geometry.joints[ i ] ) );
+        anim->boneTransformations[ i ] = getBoneTransform( geometry, meshNode, geometry.nodeTree->findNode( geometry.joints[ i ] ) );
     }
 }
 

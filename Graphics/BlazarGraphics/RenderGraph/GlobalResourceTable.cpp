@@ -521,7 +521,10 @@ GlobalResourceTable::~GlobalResourceTable( )
             if ( resourceWrapper.isAllocated && resourceWrapper.ref->loadStrategy == ResourceLoadStrategy::LoadPerFrame )
             {
                 resourceWrapper.ref->deallocate( );
-                free( resourceWrapper.ref->dataAttachment->content );
+                if ( !resourceWrapper.ref->dataAttachment->autoFree && resourceWrapper.ref->dataAttachment->size != 0 )
+                {
+                    free( resourceWrapper.ref->dataAttachment->content );
+                }
                 it = frameResources[ frameIndex ].erase( it );
             }
             else
@@ -540,7 +543,7 @@ GlobalResourceTable::~GlobalResourceTable( )
     {
         cleanGeometryData( geometry.second );
     }
-    
+
     globalBoneTransformationsResourcePlaceholder->deallocate( );
     free( globalModelResourcePlaceholder->dataAttachment->content );
     free( globalNormalModelResourcePlaceholder->dataAttachment->content );

@@ -37,7 +37,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "boost/random.hpp"
 #include "boost/generator_iterator.hpp"
 #include <iostream>
+#include <boost/filesystem.hpp>
+
+#ifdef __APPLE__
 #include <dirent.h>
+#endif
 
 using namespace BlazarEngine;
 

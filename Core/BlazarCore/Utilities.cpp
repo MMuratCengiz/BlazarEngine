@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include "Utilities.h"
 #include <vector>
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <io.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
@@ -107,15 +107,13 @@ std::vector< char > Utilities::readFile( const std::string &filename )
     return contents;
 }
 
-glm::mat4 Utilities::getTRSMatrix( const glm::vec3 &t, const glm::quat &r, const glm::vec3 &s )
+glm::mat4 Utilities::getTRSMatrix(const glm::vec3& t, const glm::quat& r, const glm::vec3& s)
 {
-    glm::mat4 identity { 1 };
+    auto T = glm::translate( glm::mat4( 1.0f ), t );
+    auto R = T * glm::mat4_cast( r );
+    auto S = glm::scale( R, s );
 
-    auto tMat = glm::translate( identity, t );
-    auto rMat = glm::toMat4( r );
-    auto sMat = glm::scale( identity, s );
-
-    return tMat * rMat * sMat;
+    return S;
 }
 
 glm::quat Utilities::vecToQuat( const glm::vec4 &vec )
@@ -171,7 +169,11 @@ std::string Utilities::combineDirectories( const std::string &directory, const s
 
 bool Utilities::doesFileExist( const std::string &file )
 {
+#ifdef WIN32
+    return _access(file.c_str(), 0) != -1;
+#else
     return access( file.c_str(), F_OK ) != -1;
+#endif
 }
 
 END_NAMESPACES

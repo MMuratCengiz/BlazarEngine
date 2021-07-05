@@ -1,3 +1,5 @@
+SET(CMAKE_CXX_STANDARD 17)
+
 SET(Libs
         external/loaders/stb_image.h
         external/vma/vk_mem_alloc.h

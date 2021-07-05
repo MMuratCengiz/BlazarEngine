@@ -14,6 +14,7 @@ Custom Game Engine developed in C++ and Vulkan, it is still work in progress, th
 - Tessellation and Height maps.
 - Directional/Ambient/Spot lights.
 - SMAA.
+- Animations
 
 
 ### The Engine itself currently also integrates the Bullet3 Physics engine.
@@ -21,7 +22,6 @@ Custom Game Engine developed in C++ and Vulkan, it is still work in progress, th
 
 ## Todo:
 
-- Animations.
 - Physically based rendering.
 - Scripting integration.
 

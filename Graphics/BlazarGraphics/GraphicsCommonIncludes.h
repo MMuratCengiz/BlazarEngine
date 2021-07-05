@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #ifdef WIN32
+#define NOMINMAX
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
 
