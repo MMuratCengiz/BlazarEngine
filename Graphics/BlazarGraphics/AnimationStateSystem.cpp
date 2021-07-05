@@ -190,8 +190,8 @@ void AnimationStateSystem::handleAnimStateChange( const std::shared_ptr< ECS::CA
     anim->currentNode->currentPlayTime = 0.0;
 
     anim->previousState = anim->state;
-    // todo
-    anim->currentNode = anim->currentNode->transitions[ anim->state ];
+
+    anim->currentNode = anim->nodes[ anim->currentNode->transitions[ anim->state ] ];
 }
 
 void AnimationStateSystem::entityTick( const std::shared_ptr< ECS::IGameEntity > &entity )

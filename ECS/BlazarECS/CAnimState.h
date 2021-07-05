@@ -34,43 +34,25 @@ enum NodeType
     End
 };
 
-struct CAnimFlowNode;
-
 struct CAnimFlowNode
 {
+    int id;
+
     NodeType nodeType = NodeType::FlowNode;
 
     std::string animName;
 
-    std::unordered_map< int, CAnimFlowNode * > transitions;
+    std::unordered_map< int, int > transitions;
 
     double currentPlayTime = 0.0;
 
     int lastPlayedFrame = -1;
 
-    CAnimFlowNode(  ) = default;
-    
-    CAnimFlowNode( const NodeType &nodeType, std::string animName ) : nodeType( nodeType ), animName( std::move( animName ) )
+    explicit CAnimFlowNode( const int& id ) : id( id ) { };
+
+    CAnimFlowNode( const NodeType &nodeType, std::string animName, const int& id ) : nodeType( nodeType ), animName( std::move( animName ) ), id( id )
     {
         transitions = { };
-    }
-
-private:
-    bool deleted = false;
-
-public:
-    ~CAnimFlowNode( )
-    {
-        if ( deleted )
-        {
-            return;
-        }
-        deleted = true;
-
-        for ( auto transition: transitions )
-        {
-            delete transition.second;
-        }
     }
 };
 
@@ -80,16 +62,31 @@ struct CAnimState : IComponent
 
     std::vector< glm::mat4 > boneTransformations;
 
-    CAnimFlowNode * beginNode = new CAnimFlowNode { NodeType::Begin, "" };
+    CAnimFlowNode * beginNode = new CAnimFlowNode { NodeType::Begin, "", 0 };
 
     CAnimFlowNode * currentNode = beginNode;
+
+    std::vector< CAnimFlowNode * > nodes { 1, beginNode };
 
     int state = 0;
     int previousState = 0;
 
+    inline void addNode( CAnimFlowNode * node )
+    {
+        if ( nodes.size() < node->id )
+        {
+            nodes.resize( node->id );
+        }
+
+        nodes.push_back( node );
+    }
+
     ~CAnimState( ) override
     {
-        delete beginNode;
+        for ( CAnimFlowNode * node: nodes )
+        {
+            delete node;
+        }
     }
 
     BLAZAR_COMPONENT_CUSTOM_DESTRUCTOR( CAnimState )

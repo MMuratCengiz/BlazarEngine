@@ -51,23 +51,28 @@ void SampleAnimatedFox::iterChildren( const std::shared_ptr< ECS::IGameEntity >&
         return;
     }
 
-    auto * swordAndShieldJump = new ECS::CAnimFlowNode { };
+    auto * swordAndShieldJump = new ECS::CAnimFlowNode { 1 };
     swordAndShieldJump->animName = "SwordAndShieldJump";
 
-    auto * surveyTransition = new ECS::CAnimFlowNode { };
+    auto * surveyTransition = new ECS::CAnimFlowNode { 2 };
     surveyTransition->animName = "Idle";
 
-    auto * run = new ECS::CAnimFlowNode { };
+    auto * run = new ECS::CAnimFlowNode { 3 };
     run->animName = "SwordAndShieldRun";
 
-    auto * attack = new ECS::CAnimFlowNode { };
+    auto * attack = new ECS::CAnimFlowNode { 4 };
     attack->animName = "SwordAndShieldSlash";
 
-    animState->currentNode->transitions[ 1 ] = surveyTransition;
-    surveyTransition->transitions[ 2 ] = swordAndShieldJump;
-    swordAndShieldJump->transitions[ 3 ] = run;
-    run->transitions[ 4 ] = attack;
-    attack->transitions[ 1 ] = surveyTransition;
+    animState->addNode( swordAndShieldJump );
+    animState->addNode( surveyTransition );
+    animState->addNode( run );
+    animState->addNode( attack );
+
+    animState->currentNode->transitions[ 1 ] = surveyTransition->id;
+    surveyTransition->transitions[ 2 ] = swordAndShieldJump->id;
+    swordAndShieldJump->transitions[ 3 ] = run->id;
+    run->transitions[ 4 ] = attack->id;
+    attack->transitions[ 1 ] = surveyTransition->id;
     animState->state = 1;
 
     Input::ActionBinding animChange { };
