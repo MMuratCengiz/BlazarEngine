@@ -15,7 +15,7 @@ SET(BlazarCoreSources
 ADD_LIBRARY(BlazarCore ${BlazarCoreSources})
 
 SET(INCLUDE_BOOST_TARGET BlazarCore)
-SET(REQUESTED_BOOST_LIBS thread format atomic log)
+SET(REQUESTED_BOOST_LIBS format atomic log)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
 

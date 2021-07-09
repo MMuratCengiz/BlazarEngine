@@ -207,10 +207,8 @@ void GlobalResourceTable::attachUniformAttachment( const IShaderUniform* content
 		{
 			resource->dataAttachment = std::make_shared< IDataAttachment >( );
 		}
-		else if ( !resource->dataAttachment->autoFree )
-		{
-			free( resource->dataAttachment->content );
-		}
+
+	    free( resource->dataAttachment->content );
 
 		const auto* pUniform = dynamic_cast< const StructShaderUniform* >( content );
 

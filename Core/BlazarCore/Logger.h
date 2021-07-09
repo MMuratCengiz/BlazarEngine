@@ -1,22 +1,16 @@
 #pragma once
 
 #include "Common.h"
-#include <boost/log/common.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/shared_ptr.hpp>
-#include <iostream>
+#include <fstream>
+#include <queue>
+#include <thread>
+#include <boost/format.hpp>
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
 
-using namespace boost::log;
-
 enum class LoggerType
 {
-    Text,
-	Debug,
+	File,
 	Console
 };
 
@@ -31,31 +25,44 @@ enum class Verbosity : int
 class Logger
 {
 private:
+
+#ifdef DEBUG
+	const Verbosity globalVerbosity = Verbosity::Debug;
+#elif 
+	const Verbosity globalVerbosity = Verbosity::Critical;
+#endif
+
+	const std::string verbosityStrMap[ 4 ] = { "Critical", "Warning", "Information", "Debug" };
+
 	LoggerType loggerType;
 
-	typedef sinks::asynchronous_sink<sinks::text_ostream_backend> TextSink;
-	typedef sinks::asynchronous_sink<sinks::basic_debug_output_backend< char > > DebugSink;
+	std::fstream logStream;
+	std::priority_queue< std::string > messageQueue;
+	std::thread listener;
 
-	Logger( const LoggerType& loggerType );
+	bool running = true;
+
+    explicit Logger( const LoggerType& loggerType );
 public:
-	static Logger & get( )
+	static Logger& get( )
 	{
 		static Logger instance(
 #ifdef DEBUG
-			LoggerType::Console // Todo Debug later
+			LoggerType::Console
 #elif 
-			LoggerType::Text
+			LoggerType::File
 #endif		
 		);
 
 		return instance;
 	}
 
-	void log( const Verbosity& verbosity, const std::string& message );
+	void log( const Verbosity& verbosity, const std::string& component, const std::string& message );
+	~Logger( );
 private:
-	void textLog( const Verbosity& verbosity, const std::string& message );
-	void debugLog( const Verbosity& verbosity, const std::string& message );
-	void consoleLog( const Verbosity& verbosity, const std::string& message ) const;
+	void fileLog( const std::string& message );
+	void consoleLog( const std::string& message ) const;
+	void logListener( );
 };
 
 END_NAMESPACES

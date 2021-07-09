@@ -1,52 +1,65 @@
 #include "Logger.h"
 
-NAMESPACES( ENGINE_NAMESPACE, Core )
+#include <fstream>
 
-using namespace boost::log;
+NAMESPACES( ENGINE_NAMESPACE, Core )
 
 Logger::Logger( const LoggerType& loggerType ) : loggerType( loggerType )
 {
-    switch ( loggerType )
+    if ( loggerType == LoggerType::File )
     {
-    case LoggerType::Text:
-        break;
-    case LoggerType::Debug:
-        break;
-    case LoggerType::Console:
-        boost::parameter::keyword<keywords::tag::format>::get( ) = "%Timestamp% %Message%";
-        break;
+        logStream.open( "./log.txt", std::fstream::out | std::fstream::trunc ); // todo read from settings or something
     }
 }
 
-void Logger::log( const Verbosity& verbosity, const std::string& message )
+void Logger::log( const Verbosity& verbosity, const std::string& component, const std::string& message )
 {
+    FUNCTION_BREAK ( verbosity > globalVerbosity )
+
+    const auto formattedMessage = boost::format("[%1%][%2%]: %3%") % component % verbosityStrMap[ static_cast< int >( verbosity ) ] % message;
+
     switch ( loggerType )
     {
-        case LoggerType::Text:
-            textLog( verbosity, message );
-            break;
-        case LoggerType::Debug:
-            debugLog( verbosity, message );
+        case LoggerType::File:
+            fileLog( formattedMessage.str(  ) );
             break;
         case LoggerType::Console:
-            consoleLog( verbosity, message );
+            consoleLog( formattedMessage.str(  ) );
             break;
     }
 }
 
-void Logger::textLog( const Verbosity& verbosity, const std::string& message )
+void Logger::fileLog( const std::string& message )
 {
-    
+    messageQueue.push( message );
 }
 
-void Logger::debugLog( const Verbosity& verbosity, const std::string& message )
+void Logger::consoleLog( const std::string& message ) const
 {
-    
+    std::cout << message << std::endl;
 }
 
-void Logger::consoleLog( const Verbosity& verbosity, const std::string& message ) const
+void Logger::logListener( )
 {
-    BOOST_LOG_TRIVIAL( info ) << message;
+    while ( running )
+    {
+        while ( ! messageQueue.empty(  ) )
+        {
+            std::string messageToLog = messageQueue.top(  );
+            logStream << messageToLog;
+            messageQueue.pop( );
+        }
+    }
+}
+
+Logger::~Logger( )
+{
+    try
+    {
+        logStream.close( );
+    } catch ( const std::exception & ) { }
+
+    running = false;
 }
 
 END_NAMESPACES

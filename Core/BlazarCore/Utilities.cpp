@@ -109,17 +109,18 @@ std::vector< char > Utilities::readFile( const std::string &filename )
 
 glm::mat4 Utilities::getTRSMatrix(const glm::vec3& t, const glm::quat& r, const glm::vec3& s)
 {
-    auto T = glm::translate( glm::mat4( 1.0f ), t );
-    auto R = T * glm::mat4_cast( r );
-    auto S = glm::scale( R, s );
+    glm::mat4 modelMatrix { 1 };
 
-    return S;
+    modelMatrix = glm::translate( modelMatrix, t );
+    modelMatrix = glm::scale( modelMatrix, s );
+    modelMatrix *= glm::mat4_cast( r );
+
+    return modelMatrix;
 }
 
 glm::quat Utilities::vecToQuat( const glm::vec4 &vec )
 {
-    auto res = glm::make_quat( glm::value_ptr( vec ) );
-    return res;
+    return glm::make_quat( glm::value_ptr( vec ) );
 }
 
 std::string Utilities::getFileDirectory( const std::string &file, bool includeFinalSep )

@@ -29,226 +29,226 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 enum class PrimitiveType
 {
-    LitCube,
-    PlainSquare,
-    PlainTriangle,
-    PlainCube
+	LitCube,
+	PlainSquare,
+	PlainTriangle,
+	PlainCube
 };
 
 class LitCubePrimitive
 {
-    std::vector< float > data;
+	std::vector< float > data;
 public:
-    LitCubePrimitive( )
-    {
-        // Left Cube, Triangle 1
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
-        // Left Cube, Triangle 2
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        // Back Cube, Triangle 1
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, } );
-        // Back Cube, Triangle 2
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, } );
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        // Bottom Cube, Triangle 1
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
-        // Bottom Cube, Triangle 2
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, } );
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        // Top Cube, Triangle 1
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
-        // Top Cube, Triangle 2
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, } );
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        // Right Cube, Triangle 1
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
-        // Right Cube, Triangle 2
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        // Front Cube, Triangle 1
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, } );
-        // Front Cube, Triangle 2
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f } );
+	LitCubePrimitive( )
+	{
+		// Left Cube, Triangle 1
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f,   1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		// Left Cube, Triangle 2
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f,   1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		// Back Cube, Triangle 1
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f,    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, -1.0f,   1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, } );
+		// Back Cube, Triangle 2
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f,   1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, } );
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		// Bottom Cube, Triangle 1
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, -1.0f,  1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f,   1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		// Bottom Cube, Triangle 2
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f,   1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f,  1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+		////////////////////////////////////////////////////////////////////////////////////////////////
+		// Top Cube, Triangle 1
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f,   1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		// Top Cube, Triangle 2                                                  
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f,   1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+		//////////////////////////////////////////////// ////////////////////////////////////////////////
+		// Right Cube, Triangle 1                        
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f,   1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f,   1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+		// Right Cube, Triangle 2                        
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f,   1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f,   1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, } );
+		//////////////////////////////////////////////// ////////////////////////////////////////////////
+		// Front Cube, Triangle 1                        
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f,   1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f,  1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, } );
+		// Front Cube, Triangle 2                       
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f,  1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f,   1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f } );
 
-        if ( SHOULD_FLIP_Y )
-        {
-            FLIP_Y( data, 1, 8 )
-        }
-    }
+		if ( SHOULD_FLIP_Y )
+		{
+			FLIP_Y( data, 1, 8 )
+		}
+	}
 
-    uint32_t getVertexCount( )
-    {
-        return 36;
-    }
+	uint32_t getVertexCount( )
+	{
+		return 36;
+	}
 
-    [[nodiscard]] const std::vector< float > &getData( ) const
-    {
-        return data;
-    }
+	[[nodiscard]] const std::vector< float >& getData( ) const
+	{
+		return data;
+	}
 };
 
 class PlainCubePrimitive
 {
-    std::vector< float > data;
+	std::vector< float > data;
 public:
-    PlainCubePrimitive( )
-    {
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, -1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, -1.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
-        data.insert( data.end( ), { -1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 1.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 1.0f } );
+	PlainCubePrimitive( )
+	{
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f  , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, -1.0f , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f  , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f    , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f    , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f    , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, -1.0f  , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, -1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f  , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f    , 1.0f } );
+		data.insert( data.end( ), { -1.0f, -1.0f, 1.0f  , 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 1.0f   , 1.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 1.0f    , 1.0f } );
 
-        if ( SHOULD_FLIP_Y )
-        {
-            FLIP_Y( data, 1, 8 )
-        }
-    }
+		if ( SHOULD_FLIP_Y )
+		{
+			FLIP_Y( data, 1, 8 )
+		}
+	}
 
-    uint32_t getVertexCount( )
-    {
-        return 36;
-    }
+	uint32_t getVertexCount( )
+	{
+		return 36;
+	}
 
-    [[nodiscard]] const std::vector< float > &getData( ) const
-    {
-        return data;
-    }
+	[[nodiscard]] const std::vector< float >& getData( ) const
+	{
+		return data;
+	}
 };
 
 class PlainSquarePrimitive
 {
-    std::vector< float > data;
+	std::vector< float > data;
 public:
-    PlainSquarePrimitive( )
-    {
-        data.insert( data.end( ), { -1.0f, -1.0f, 0.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 0.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 0.0f } );
+	PlainSquarePrimitive( )
+	{
+		data.insert( data.end( ), { -1.0f, -1.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f, } );
+													 
+		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 0.0f, 1.0f, } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f, } );
 
-        data.insert( data.end( ), { 1.0f, -1.0f, 0.0f } );
-        data.insert( data.end( ), { 1.0f, 1.0f, 0.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 0.0f } );
+		if ( SHOULD_FLIP_Y )
+		{
+			FLIP_Y( data, 1, 8 )
+		}
+	}
 
-        if ( SHOULD_FLIP_Y )
-        {
-            FLIP_Y( data, 1, 8 )
-        }
-    }
+	uint32_t getVertexCount( )
+	{
+		return 6;
+	}
 
-    uint32_t getVertexCount( )
-    {
-        return 6;
-    }
-
-    [[nodiscard]] const std::vector< float > &getData( ) const
-    {
-        return data;
-    }
+	[[nodiscard]] const std::vector< float >& getData( ) const
+	{
+		return data;
+	}
 };
 
 class PlainTrianglePrimitive
 {
-    std::vector< float > data;
+	std::vector< float > data;
 public:
-    PlainTrianglePrimitive( )
-    {
-        data.insert( data.end( ), { -1.0f, -1.0f, 0.0f } );
-        data.insert( data.end( ), { -1.0f, 1.0f, 0.0f } );
-        data.insert( data.end( ), { 1.0f, -1.0f, 0.0f } );
+	PlainTrianglePrimitive( )
+	{
+		data.insert( data.end( ), { -1.0f, -1.0f, 0.0f, 1.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f } );
 
-        if ( SHOULD_FLIP_Y )
-        {
-            FLIP_Y( data, 1, 8 )
-        }
-    }
+		if ( SHOULD_FLIP_Y )
+		{
+			FLIP_Y( data, 1, 8 )
+		}
+	}
 
-    uint32_t getVertexCount( )
-    {
-        return 3;
-    }
+	uint32_t getVertexCount( )
+	{
+		return 3;
+	}
 
-    [[nodiscard]] const std::vector< float > &getData( ) const
-    {
-        return data;
-    }
+	[[nodiscard]] const std::vector< float >& getData( ) const
+	{
+		return data;
+	}
 };
 
 class BuiltinPrimitives
 {
 public:
-    static std::string getPrimitivePath( PrimitiveType type )
-    {
-        switch ( type )
-        {
-            case PrimitiveType::LitCube:
-                return "BuiltinPrimitives/LightedCube";
-            case PrimitiveType::PlainCube:
-                return "BuiltinPrimitives/PlainCube";
-            case PrimitiveType::PlainSquare:
-                return "BuiltinPrimitives/PlainSquare";
-            case PrimitiveType::PlainTriangle:
-                return "BuiltinPrimitives/PlainTriangle";
-        }
+	static std::string getPrimitivePath( PrimitiveType type )
+	{
+		switch ( type )
+		{
+		case PrimitiveType::LitCube:
+			return "BuiltinPrimitives/LightedCube";
+		case PrimitiveType::PlainCube:
+			return "BuiltinPrimitives/PlainCube";
+		case PrimitiveType::PlainSquare:
+			return "BuiltinPrimitives/PlainSquare";
+		case PrimitiveType::PlainTriangle:
+			return "BuiltinPrimitives/PlainTriangle";
+		}
 
-        return "";
-    }
+		return "";
+	}
 };
 
 END_NAMESPACES

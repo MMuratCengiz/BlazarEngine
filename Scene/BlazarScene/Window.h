@@ -49,7 +49,7 @@ public:
             const char *errorBuffer = new char[1024];
             glfwGetError( &errorBuffer );
 
-            Core::Logger::get( ).log( Core::Verbosity::Critical, errorBuffer );
+            Core::Logger::get( ).log( Core::Verbosity::Critical, "Window", errorBuffer );
         }
 
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
@@ -64,7 +64,7 @@ public:
         {
             const char *errorBuffer = new char[1024];
             glfwGetError( &errorBuffer );
-            Core::Logger::get( ).log( Core::Verbosity::Critical, errorBuffer );
+            Core::Logger::get( ).log( Core::Verbosity::Critical, "Window", errorBuffer );
         }
 
         glfwMakeContextCurrent( window );

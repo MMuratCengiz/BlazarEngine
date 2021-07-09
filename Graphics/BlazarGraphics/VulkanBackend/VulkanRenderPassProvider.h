@@ -23,7 +23,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "VulkanUtilities.h"
 #include "VulkanPipelineProvider.h"
 #include "VulkanResourceProvider.h"
-#include <boost/thread.hpp>
 #include "../IRenderPassProvider.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )

@@ -17,7 +17,7 @@ layout(set = 5, binding = 0) uniform OutlineColor {
 } outlineColor;
 
 layout (location = 0) in vec4 inPosition;
-layout (location = 1) in vec3 inNormal;
+layout (location = 1) in vec4 inNormal;
 layout (location = 2) in vec2 inTextureCoor;
 
 layout (location = 0) out vec4 gBuffer_Position;
@@ -27,7 +27,7 @@ layout (location = 3) out vec4 gBuffer_Material;
 
 void main() {
     gBuffer_Position = inPosition;
-    gBuffer_Normal = vec4( inNormal, 0.0f );
+    gBuffer_Normal = inNormal;
     gBuffer_Albedo = outlineColor.rgba;
     gBuffer_Material = vec4( mat.shininess );
 }

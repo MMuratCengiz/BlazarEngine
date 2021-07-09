@@ -12,10 +12,7 @@ FUNCTION(add_shader SHADER_TYPE SHADER_NAME)
     EXECUTE_PROCESS(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE})
 ENDFUNCTION()
 
-ADD_SHADER(vertex default)
-ADD_SHADER(fragment default)
 ADD_SHADER(vertex cube_position)
-
 ADD_SHADER(fragment skybox_default)
 ADD_SHADER(fragment present_pass)
 ADD_SHADER(fragment lighting_pass)
@@ -24,6 +21,7 @@ ADD_SHADER(vertex gBuffer)
 ADD_SHADER(vertex gBuffer_outlined)
 ADD_SHADER(vertex gBuffer_Animated)
 ADD_SHADER(vertex tessellated_proxy)
+
 ADD_SHADER(fragment gBuffer)
 ADD_SHADER(fragment gBuffer_outlined)
 ADD_SHADER(vertex shadowMap)
@@ -54,7 +52,6 @@ ADD_DEFINITIONS(-DDEBUG)
 ADD_DEFINITIONS(-DG_VERBOSITY=3)
 ADD_DEFINITIONS(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
 ADD_DEFINITIONS(-DGTEST_LANG_CXX11=1)
-SET(ENV{_NO_DEBUG_HEAP} 1)
 
 FIND_PACKAGE(Vulkan REQUIRED)
 
@@ -114,7 +111,7 @@ INCLUDE_DIRECTORIES(
 )
 ############################################################################################################################################
 
-ADD_EXECUTABLE(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Shaders} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
+ADD_EXECUTABLE(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine

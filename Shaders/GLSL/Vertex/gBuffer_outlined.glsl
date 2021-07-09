@@ -20,12 +20,12 @@ layout(set = 4, binding = 0) uniform OutlineScale {
     vec4 dim;
 } outlineScale;
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inNormal;
+layout(location = 0) in vec4 inPosition;
+layout(location = 1) in vec4 inNormal;
 layout(location = 2) in vec2 inTextureCoor;
 
 layout (location = 0) out vec4 outPosition;
-layout (location = 1) out vec3 outNormal;
+layout (location = 1) out vec4 outNormal;
 layout (location = 2) out vec2 outTextureCoor;
 
 void main() {
@@ -40,10 +40,10 @@ void main() {
         model = instanceData.model[ gl_InstanceIndex - 1 ];
     }
 
-    outPosition = model * vec4(inPosition, 1.0f);
+    outPosition = model * inPosition;
 
     gl_Position = viewProjection.proj * viewProjection.view * outPosition;
 
     outTextureCoor = inTextureCoor;
-    outNormal = normalize(mat3(pushConstants.NormalModelMatrix) * inNormal);
+    outNormal = vec4(normalize(mat3(pushConstants.NormalModelMatrix) * vec3(inNormal)), 0.0f);
 }

@@ -26,7 +26,6 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 RenderGraph::RenderGraph( IRenderDevice* renderDevice, AssetManager* assetManager ) : renderDevice( renderDevice ), assetManager( assetManager )
 {
 	globalResourceTable = std::make_unique< GlobalResourceTable >( this->renderDevice, this->assetManager );
-//	boost::asio::io_service::work work( frameService );
 }
 
 void RenderGraph::addPass( std::shared_ptr< Pass > pass )
@@ -105,12 +104,7 @@ void RenderGraph::buildGraph( )
 	{
 		frameLocks.push_back( std::make_unique< std::mutex >( ) );
 
-/*	    frameThreads.create_thread(
-            [ fs = &frameService ]
-            {
-                fs->run( );
-            }
-        );*/
+		// todo support threading
 	}
 }
 
@@ -256,14 +250,11 @@ void RenderGraph::execute( )
 	globalResourceTable->allocateAllPerFrameResources( frameIndex );
 
 	frameLocks[ frameIndex ]->lock(  );
-
-	// frameService.post([&]( )
-	// {
-	    for ( auto& pass : passes )
-	    {
-		    executePass( pass );
-	    }
-	// });
+	
+	for ( auto& pass : passes )
+	{
+		executePass( pass );
+	}
 
 	frameLocks[ frameIndex ]->unlock(  );
 

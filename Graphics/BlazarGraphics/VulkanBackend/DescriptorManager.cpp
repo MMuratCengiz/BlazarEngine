@@ -347,7 +347,8 @@ std::vector< vk::DescriptorSet > DescriptorManager::getOrderedSets( const uint32
             {
                 auto logEntry = boost::format( "Note, the shader input with name: %1% has no matching parameter a null value is being passed." ) % uniformName;
 
-                Core::Logger::get( ).log( Core::Verbosity::Debug, logEntry.str( ).c_str( ) );
+                Core::Logger::get( ).log( Core::Verbosity::Debug, "AssetManager", logEntry.str( ).c_str( ) );
+
                 updateTexture( frame, uniformName, emptyImage, objectIndex );
                 objects = textureSetMaps[ uniformName ];
             }

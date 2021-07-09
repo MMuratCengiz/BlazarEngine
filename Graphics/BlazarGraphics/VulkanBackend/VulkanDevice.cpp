@@ -44,15 +44,17 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
             break;
     }
 
-    Core::Logger::get( ).log( Core::Verbosity::Information, pCallbackData->pMessage );
+    Core::Logger::get( ).log( Core::Verbosity::Information, "VulkanDevice", pCallbackData->pMessage );
 
     return VK_FALSE;
 }
 
 void VulkanDevice::loadExtensionFunctions( )
 {
-    vk::DynamicLoader dl;
-    auto vkGetInstanceProcAddr = dl.getProcAddress< PFN_vkGetInstanceProcAddr >( "vkGetInstanceProcAddr" );
+    const vk::DynamicLoader dl;
+
+    const auto vkGetInstanceProcAddr = dl.getProcAddress< PFN_vkGetInstanceProcAddr >( "vkGetInstanceProcAddr" );
+
     VULKAN_HPP_DEFAULT_DISPATCHER.init( vkGetInstanceProcAddr );
 }
 
@@ -94,12 +96,12 @@ void VulkanDevice::createDevice( RenderWindow *window )
     vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo = getDebugUtilsCreateInfo( );
 
 #if DEBUG
-    createInfo.pNext = ( vk::DebugUtilsMessengerCreateInfoEXT * ) &debugUtilsCreateInfo;
+    createInfo.pNext = static_cast< vk::DebugUtilsMessengerCreateInfoEXT* >( &debugUtilsCreateInfo );
 
     if ( supportedLayers.find( "VK_LAYER_KHRONOS_validation" ) == supportedLayers.end( ) )
     {
         createInfo.enabledLayerCount = 0;
-        Core::Logger::get( ).log( Core::Verbosity::Information, "Layer: VK_LAYER_KHRONOS_validation not found." );
+        Core::Logger::get( ).log( Core::Verbosity::Information, "VulkanDevice", "Layer: VK_LAYER_KHRONOS_validation not found." );
     }
     else
     {
@@ -115,8 +117,6 @@ void VulkanDevice::createDevice( RenderWindow *window )
 
     initSupportedExtensions( );
     initDebugMessages( debugUtilsCreateInfo );
-
-    // TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "All vk:: components initialized successfully." )
 
     createSurface( );
 }

@@ -17,8 +17,8 @@ layout(set = 1, binding = 0) uniform InstanceData
     uint instanceCount;
 } instanceData;
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inNormal;
+layout(location = 0) in vec4 inPosition;
+layout(location = 1) in vec4 inNormal;
 layout(location = 2) in vec2 inTextureCoor;
 
 void main() {
@@ -29,5 +29,5 @@ void main() {
         model = instanceData.model[ gl_InstanceIndex - 1 ];
     }
 
-    gl_Position = lvpm.casters[ 0 ] * model * vec4( inPosition, 1.0f );
+    gl_Position = lvpm.casters[ 0 ] * model * inPosition;
 }
