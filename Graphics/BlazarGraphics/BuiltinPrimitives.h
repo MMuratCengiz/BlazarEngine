@@ -29,7 +29,7 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 enum class PrimitiveType
 {
-    LightedCube,
+    LitCube,
     PlainSquare,
     PlainTriangle,
     PlainCube
@@ -237,7 +237,7 @@ public:
     {
         switch ( type )
         {
-            case PrimitiveType::LightedCube:
+            case PrimitiveType::LitCube:
                 return "BuiltinPrimitives/LightedCube";
             case PrimitiveType::PlainCube:
                 return "BuiltinPrimitives/PlainCube";

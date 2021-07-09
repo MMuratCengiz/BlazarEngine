@@ -25,26 +25,26 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
                                                      const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
                                                      void *pUserData )
 {
-    int verbosity;
+    Core::Verbosity verbosity;
 
     switch ( messageSeverity )
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            verbosity = VERBOSITY_LOW;
+            verbosity = Core::Verbosity::Debug;
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            verbosity = VERBOSITY_INFORMATION;
+            verbosity = Core::Verbosity::Information;
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            verbosity = VERBOSITY_HIGH;
+            verbosity = Core::Verbosity::Warning;
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            verbosity = VERBOSITY_CRITICAL;
+            verbosity = Core::Verbosity::Critical;
             break;
     }
 
-    TRACE( "RenderDeviceVulkan", verbosity, pCallbackData->pMessage )
+    Core::Logger::get( ).log( Core::Verbosity::Information, pCallbackData->pMessage );
 
     return VK_FALSE;
 }
@@ -99,7 +99,7 @@ void VulkanDevice::createDevice( RenderWindow *window )
     if ( supportedLayers.find( "VK_LAYER_KHRONOS_validation" ) == supportedLayers.end( ) )
     {
         createInfo.enabledLayerCount = 0;
-        TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "Layer: VK_LAYER_KHRONOS_validation not found." )
+        Core::Logger::get( ).log( Core::Verbosity::Information, "Layer: VK_LAYER_KHRONOS_validation not found." );
     }
     else
     {
@@ -116,7 +116,7 @@ void VulkanDevice::createDevice( RenderWindow *window )
     initSupportedExtensions( );
     initDebugMessages( debugUtilsCreateInfo );
 
-    TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "All vk:: components initialized successfully." )
+    // TRACE( COMPONENT_VKAPI, VERBOSITY_INFORMATION, "All vk:: components initialized successfully." )
 
     createSurface( );
 }
@@ -177,7 +177,6 @@ void VulkanDevice::initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT
     if ( createDebugUtils == nullptr ||
          createDebugUtils( instance, &createInfoCast, nullptr, &debugMessenger ) != VK_SUCCESS )
     {
-        TRACE( COMPONENT_VKAPI, VERBOSITY_HIGH, "Failed to create Vk debugger." )
         throw GraphicsException( "RenderDevice", "Failed to initialize debugger!" );
     }
 }
@@ -470,10 +469,10 @@ void VulkanDevice::createImageFormat( )
     auto surfaceFormats = context->physicalDevice.getSurfaceFormatsKHR( context->surface );
     auto presentModes = context->physicalDevice.getSurfacePresentModesKHR( context->surface );
 
-    auto presentMode = vk::PresentModeKHR::eFifo;
+    auto presentMode = vk::PresentModeKHR::eImmediate;
     for ( auto mode: presentModes )
     {
-        if ( mode == vk::PresentModeKHR::eMailbox )
+        if ( mode == vk::PresentModeKHR::eImmediate )
         {
             presentMode = mode;
         }

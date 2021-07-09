@@ -16,8 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #ifdef WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
 

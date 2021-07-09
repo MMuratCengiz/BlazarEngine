@@ -30,16 +30,16 @@ namespace Sample
 class SampleFloor : public ECS::IGameEntity
 {
 public:
-    SampleFloor( )
+    explicit SampleFloor( Scene::World * world )
     {
-        auto mesh = createComponent< ECS::CMesh >( );
-        mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LightedCube );
+        world->getAssetManager( )->createEntity( this, Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LitCube ) );
+
 /*
         auto tessellation = createComponent< ECS::CTessellation >( );
         getComponent< ECS::CTessellation >( )->innerLevel = 100.0f;
         getComponent< ECS::CTessellation >( )->outerLevel = 100.0f;*/
 
-        auto material = createComponent< ECS::CMaterial >( );
+        auto material = getComponent< ECS::CMaterial >( );
         auto &texInfo = material->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = PATH( "/assets/textures/Stone_Base_Color.tga" );
 

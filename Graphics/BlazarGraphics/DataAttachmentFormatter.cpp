@@ -130,6 +130,11 @@ glm::mat4 DataAttachmentFormatter::formatNormalMatrix( const std::shared_ptr< EC
 
 Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform > &transform )
 {
+    if ( material == nullptr )
+    {
+        return { };
+    }
+
     glm::vec4 textureScale;
 
     textureScale.x = material->textureScaleOptions.scaleX ? transform->scale.x : 1.0f;
@@ -149,33 +154,34 @@ Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr
 
 Tessellation DataAttachmentFormatter::formatTessellationComponent( const std::shared_ptr< ECS::CTessellation > &tessellation )
 {
+    if ( tessellation == nullptr )
+    {
+        return { };
+    }
+
     return { tessellation->innerLevel, tessellation->outerLevel };
 }
 
 InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< ECS::CInstances > &instances, const std::shared_ptr< ECS::IGameEntity > &entity )
 {
-    std::array< glm::mat4, 100 > result { };
+    InstanceData instanceData = { };
+    instanceData.instanceCount = 0;
 
     if ( instances == nullptr )
     {
-        return
-                {
-                    result,
-                    0
-                };
+        return instanceData;
     }
 
-    uint32_t i;
-    for ( i = 0; i < instances->transforms.size( ); ++i )
+    uint32_t i = 0;
+
+    for ( ; i < instances->transforms.size( ); ++i )
     {
-        result[ i ] = formatModelMatrix( instances->transforms[ i ], entity );
+        instanceData.instances[ i ] = formatModelMatrix( instances->transforms[ i ], entity );
     }
+   
+    instanceData.instanceCount = i;
 
-    return
-            {
-                result,
-                i
-            };
+    return instanceData;
 }
 
 Resolution DataAttachmentFormatter::formatResolution( const uint32_t& width, const uint32_t& height )
@@ -202,6 +208,140 @@ BoneTransformations DataAttachmentFormatter::formatBoneTransformations( const st
     boneTransformations.size = animState->boneTransformations.size( );
 
     return boneTransformations;
+}
+
+LightViewProjectionMatrices DataAttachmentFormatter::formatLightViewProjectionMatrices( const std::shared_ptr< ECS::ComponentTable > &table )
+{
+    const auto directionalLights = table->getComponents< ECS::CDirectionalLight >( );
+
+    LightViewProjectionMatrices result = { };
+
+    uint32_t i = 0;
+
+    for ( const auto &light: directionalLights )
+    {
+        glm::mat4 lightProjection = glm::ortho( -100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 50.0f );
+
+        lightProjection = VK_CORRECTION_MATRIX * lightProjection;
+
+        glm::vec3 pos = glm::normalize( -light->direction ) * 30.0f;
+        glm::vec3 front = glm::vec3( 0, 0, 0 );
+
+        glm::mat4 lightView = glm::lookAt( pos, front, glm::vec3( 0.0f, 1.0f, 0.0f ) );
+
+        result.data[ i ] = lightProjection * lightView;
+
+        if ( i++ == 3 )
+        {
+            break;
+        }
+    }
+
+    result.count = i;
+    return result;
+}
+
+WorldContext DataAttachmentFormatter::formatWorldContext( const std::shared_ptr< ECS::ComponentTable > &table )
+{
+    auto cameras = table->getComponents< ECS::CCamera >( );
+
+    auto activeCamera = cameras[ 0 ];
+
+    int i = 0;
+    while ( !activeCamera->isActive )
+    {
+        ASSERT_M( i < cameras.size( ), "You must have a single active camera." );
+        activeCamera = cameras[ ++i ];
+    }
+
+    WorldContext data { };
+    data.cameraPosition = glm::vec4( activeCamera->position, 1.0f );
+    return data;
+}
+
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getSkyBoxTextures( const std::shared_ptr< ECS::ComponentTable > &table )
+{
+    std::vector< ECS::Material::TextureInfo > result;
+
+    for ( const auto& cubeMap : table->getComponents< ECS::CCubeMap >( ) )
+    {
+        for ( const auto& texture: cubeMap->texturePaths )
+        {
+            result.push_back( ECS::Material::TextureInfo { texture.path } );
+        }
+    }
+
+    return result;
+}
+
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getSearchTex( )
+{
+    std::vector< ECS::Material::TextureInfo > result;
+
+    auto &searchTextInfo = result.emplace_back( ECS::Material::TextureInfo { } );
+
+    searchTextInfo.U = ECS::Material::AddressMode::ClampToEdge;
+    searchTextInfo.V = ECS::Material::AddressMode::ClampToEdge;
+    searchTextInfo.W = ECS::Material::AddressMode::ClampToEdge;
+
+    searchTextInfo.isInMemory = true;
+    searchTextInfo.inMemoryTexture = { };
+    searchTextInfo.inMemoryTexture.contents = searchTexBytes;
+    searchTextInfo.inMemoryTexture.width = SEARCHTEX_WIDTH;
+    searchTextInfo.inMemoryTexture.height = SEARCHTEX_HEIGHT;
+    searchTextInfo.inMemoryTexture.channels = 4;
+    searchTextInfo.inMemoryTexture.format = ECS::Material::ImageFormat::R8Unorm;
+
+    return result;
+}
+
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getAreaTex( )
+{
+    std::vector< ECS::Material::TextureInfo > result;
+
+    auto &areaTexInfo = result.emplace_back( ECS::Material::TextureInfo { } );
+
+    areaTexInfo.U = ECS::Material::AddressMode::ClampToEdge;
+    areaTexInfo.V = ECS::Material::AddressMode::ClampToEdge;
+    areaTexInfo.W = ECS::Material::AddressMode::ClampToEdge;
+
+    areaTexInfo.isInMemory = true;
+    areaTexInfo.inMemoryTexture = { };
+    areaTexInfo.inMemoryTexture.contents = areaTexBytes;
+    areaTexInfo.inMemoryTexture.width = AREATEX_WIDTH;
+    areaTexInfo.inMemoryTexture.height = AREATEX_HEIGHT;
+    areaTexInfo.inMemoryTexture.channels = 4;
+    areaTexInfo.inMemoryTexture.format = ECS::Material::ImageFormat::R8G8Unorm;
+
+    return result;
+}
+
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getHeightMap( const std::shared_ptr< ECS::IGameEntity > &entity )
+{
+    std::vector< ECS::Material::TextureInfo > result;
+
+    const std::shared_ptr< ECS::CMaterial > material = entity->getComponent< ECS::CMaterial >( );
+
+    if ( material != nullptr && !material->heightMap.path.empty( ) )
+    {
+        result.push_back( material->heightMap );
+    }
+
+    return result;
+}
+
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getTexture1( const std::shared_ptr< ECS::IGameEntity > &entity )
+{
+    std::vector< ECS::Material::TextureInfo > result;
+
+    const std::shared_ptr< ECS::CMaterial > material = entity->getComponent< ECS::CMaterial >( );
+
+    if ( material != nullptr && !material->textures[ 0 ].path.empty( ) )
+    {
+        result.push_back( material->textures[ 0 ] );
+    }
+
+    return result;
 }
 
 END_NAMESPACES

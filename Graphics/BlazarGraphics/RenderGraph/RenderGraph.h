@@ -22,25 +22,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "Pass.h"
 #include "GlobalResourceTable.h"
 #include "../IRenderDevice.h"
+#include <BlazarCore/Logger.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
-
 
 struct PassWrapper
 {
     std::vector< std::string > dependencies;
-    std::vector< std::vector< std::string > > adaptedInputs;
     std::vector< std::shared_ptr< IResourceLock > > executeLocks;
 
     std::vector< std::shared_ptr< IPipeline > > pipelines;
     std::shared_ptr< IRenderPass > renderPass;
     std::vector< std::shared_ptr< IRenderTarget > > renderTargets;
+
     std::vector< std::string > pipelineInputsFlat;
     std::vector< std::unordered_map< std::string, bool > > pipelineInputsMap;
 
+    bool inputsBuilt = false;
+    std::vector< std::vector< std::string > > passDependentInputs;
+    std::vector< std::vector< int > > loadOnceInputs;
+    std::vector< std::vector< int > > perGeometryInputs;
+    std::vector< std::vector< int > > perEntityInputs;
+    std::vector< std::vector< int > > perFrameInputs;
+    std::vector< int > perEntityInputsFlattened;
+
     std::shared_ptr< Pass > ref;
-    std::string inputGeometry;
-    bool usesGeometryData = false;
 };
 
 class RenderGraph
@@ -54,13 +60,16 @@ private:
     std::unordered_map< std::string, uint32_t > passMap;
     std::unordered_map< std::string, std::string > pipelineInputOutputDependencies;
 
+    std::vector< std::unique_ptr< std::mutex > > frameLocks;
+    std::vector< std::vector< int > > entitiesUpdatedThisFrame;
+
     bool redrawFrame = false;
     uint32_t frameIndex = 0;
 public:
     explicit RenderGraph( IRenderDevice* renderDevice, AssetManager* assetManager );
-    void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
+    void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) const;
+    void updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) const;
+    void removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) const;
 
     void addPass( std::shared_ptr< Pass > pass );
     void buildGraph( );
@@ -68,12 +77,15 @@ public:
     void prepare( const std::shared_ptr< ECS::ComponentTable >& componentTable );
     void execute( );
 
-    inline const ResourceBinder* getResourceBinder( ) {  return globalResourceTable->getResourceBinder( ); }
+    const ShaderUniformBinder* getResourceBinder( ) const {  return globalResourceTable->getResourceBinder( ); }
     ~RenderGraph( );
 private:
     void preparePass( PassWrapper &pass );
     void executePass( const PassWrapper &pass );
-    void bindAdaptedInputs( const PassWrapper &pass, std::shared_ptr< IRenderPass > &renderPass, int pipelineIndex, const bool& bindPerFrame );
+    void bindDependentInputs( const PassWrapper &pass, std::shared_ptr< IRenderPass > &renderPass, int pipelineIndex );
+
+    void prepareInputs( PassWrapper &pass ) const;
+    void drawEntity( const PassWrapper& pass, const std::shared_ptr<IRenderPass>& renderPass, const EntityWrapper& wrapper ) const;
 };
 
 END_NAMESPACES

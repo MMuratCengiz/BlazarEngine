@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "VulkanContext.h"
 #include "VulkanPipelineProvider.h"
 #include "VulkanRenderPassProvider.h"
+#include <BlazarCore/Logger.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 

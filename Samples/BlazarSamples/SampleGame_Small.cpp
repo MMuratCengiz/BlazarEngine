@@ -43,8 +43,8 @@ void SampleGame_Small::init( )
     cameraComponent->getComponent< ECS::CCamera >( )->position = glm::vec3( -0.6f, 1.0f, 5.4f );
     camera = std::make_shared< FpsCamera >( cameraComponent->getComponent< ECS::CCamera >( ) );
 
-    floor = std::make_shared< SampleFloor >( );
-    sky = std::make_shared< SampleCubeMap >( );
+    floor = std::make_shared< SampleFloor >( world );
+    sky = std::make_shared< SampleCubeMap >( world );
 
     animDummy = std::make_shared< SampleAnimatedFox >( world );
 

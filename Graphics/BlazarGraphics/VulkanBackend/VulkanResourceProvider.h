@@ -31,6 +31,8 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 struct VulkanBufferWrapper
 {
     std::pair< vk::Buffer, vma::Allocation > buffer;
+    bool keepMemoryMapped;
+    void * mappedMemory;
 };
 
 class VulkanResourceLock : public IResourceLock

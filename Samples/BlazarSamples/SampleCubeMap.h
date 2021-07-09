@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <BlazarECS/ECS.h>
 #include <BlazarGraphics/BuiltinPrimitives.h>
+#include <BlazarScene/World.h>
 
 using namespace BlazarEngine;
 
@@ -29,10 +30,9 @@ namespace Sample
 class SampleCubeMap : public ECS::IGameEntity
 {
 public:
-    SampleCubeMap( )
+    SampleCubeMap( Scene::World * world )
     {
-        auto mesh = createComponent< ECS::CMesh >( );
-        mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::PlainCube );
+        world->getAssetManager( )->createEntity( this, Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::PlainCube ) );
 
         auto cubeMap = createComponent< ECS::CCubeMap >( );
 

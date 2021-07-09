@@ -72,7 +72,6 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
                 imageResource->type = type;
                 imageResource->identifier = { outputImage.outputResourceName };
                 imageResource->apiSpecificBuffer = new VulkanTextureWrapper; // todo clean
-                imageResource->bindStrategy = ResourceBindStrategy::BindPerFrame;
                 imageResource->prepareForUsage = [ = ]( const ResourceUsage &usage )
                 { };
 
@@ -590,22 +589,22 @@ vk::PipelineBindPoint VulkanRenderPass::getBoundPipelineBindPoint( ) const
 
 void VulkanRenderPass::bindPerFrame( std::shared_ptr< ShaderResource > resource )
 {
-    if ( resource->type == ResourceType::Uniform && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
+    if ( resource->type == ResourceType::Uniform )
     {
         boundPipeline->descriptorManager->updateUniform(
                 frameIndex,
                 resource->identifier.name,
-                ( ( VulkanBufferWrapper * ) resource->apiSpecificBuffer )->buffer,
+                static_cast< VulkanBufferWrapper* >( resource->apiSpecificBuffer )->buffer,
                 0, // Global resource object index doesn't matter
                 resource->identifier.deviation
         );
     }
-    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::DepthImage || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerFrame )
+    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::DepthImage || resource->type == ResourceType::CubeMap )
     {
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
                 resource->identifier.getKey( ),
-                *( ( VulkanTextureWrapper * ) resource->apiSpecificBuffer ),
+                *static_cast< VulkanTextureWrapper* >( resource->apiSpecificBuffer ),
                 0 // Global resource object index doesn't matter
         );
     }
@@ -617,9 +616,9 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
     {
         vertexDataAttachment = std::dynamic_pointer_cast< VertexData >( resource->dataAttachment );
 
-        auto bufferWrapper = reinterpret_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
+        const auto bufferWrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
 
-        vk::DeviceSize offset = 0;
+        const vk::DeviceSize offset = 0;
 
         bindVertexBuffer = [ = ]( )
         {
@@ -635,9 +634,9 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
     {
         indexDataAttachment = std::dynamic_pointer_cast< IndexData >( resource->dataAttachment );
 
-        auto bufferWrapper = reinterpret_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
+        const auto bufferWrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
 
-        vk::DeviceSize offset = 0;
+        const vk::DeviceSize offset = 0;
 
         bindIndexBuffer = [ = ]( )
         {
@@ -656,22 +655,22 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
                 resource->dataAttachment->content
         );
     }
-    else if ( resource->type == ResourceType::Uniform && resource->bindStrategy == ResourceBindStrategy::BindPerObject )
+    else if ( resource->type == ResourceType::Uniform )
     {
         boundPipeline->descriptorManager->updateUniform(
                 frameIndex,
                 resource->identifier.name,
-                ( ( VulkanBufferWrapper * ) resource->apiSpecificBuffer )->buffer,
+                static_cast< VulkanBufferWrapper* >( resource->apiSpecificBuffer )->buffer,
                 boundPipeline->descriptorManager->getObjectCount( ),
                 resource->identifier.deviation
         );
     }
-    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::DepthImage || resource->type == ResourceType::CubeMap && resource->bindStrategy == ResourceBindStrategy::BindPerObject )
+    else if ( resource->type == ResourceType::Sampler2D || resource->type == ResourceType::DepthImage || resource->type == ResourceType::CubeMap )
     {
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
                 resource->identifier.getKey( ),
-                *( ( VulkanTextureWrapper * ) resource->apiSpecificBuffer ),
+                *static_cast< VulkanTextureWrapper* >( resource->apiSpecificBuffer ),
                 boundPipeline->descriptorManager->getObjectCount( )
         );
     }
@@ -835,12 +834,9 @@ void VulkanRenderPass::presentPassToSwapChain( )
     presentInfo.pImageIndices = &swapChainIndex;
     presentInfo.pResults = nullptr;
 
-    auto presentResult = context->queues[ QueueType::Presentation ].presentKHR( presentInfo );
-
-    if ( presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR )
+    if ( const auto presentResult = context->queues[ QueueType::Presentation ].presentKHR( presentInfo ); presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR )
     {
         Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
-        return;
     }
     else if ( presentResult != vk::Result::eSuccess )
     {
@@ -855,7 +851,7 @@ void VulkanRenderPass::updateViewport( const uint32_t &width, const uint32_t &he
     viewport.x = renderArea.x;
     viewport.y = renderArea.y;
     viewport.width = width;
-    viewport.height = ( ( float ) height );
+    viewport.height = static_cast< float >( height );
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 

@@ -51,12 +51,6 @@ enum class ResourceLoadStrategy
     LoadOnUpdate
 };
 
-enum class ResourceBindStrategy
-{
-    BindPerFrame,
-    BindPerObject
-};
-
 enum class ResourceLockType
 {
     Fence,
@@ -196,7 +190,6 @@ struct ShaderResource
     ResourceIdentifier identifier;
     ResourceType type;
     ResourceLoadStrategy loadStrategy;
-    ResourceBindStrategy bindStrategy = ResourceBindStrategy::BindPerFrame;
     ResourcePersistStrategy persistStrategy;
     ResourceShaderStage shaderStage;
 

@@ -77,7 +77,7 @@ DescriptorManager::DescriptorManager( VulkanContext * context, std::shared_ptr< 
         {
             auto &parent = pushConstantParents[ pushConstantDetail.stage ].emplace_back( );
 
-            parent.data = ( char * ) malloc( pushConstantDetail.size );
+            parent.data = static_cast< char* >( malloc( pushConstantDetail.size ) );
             parent.totalSize = pushConstantDetail.size;
             parent.stage = pushConstantDetail.stage;
 
@@ -115,8 +115,6 @@ void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName,
     uint32_t swapChainImageCount = context->swapChainImages.size( );
 
     std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount * descriptorPoolSize, layout };
-
-    int freeIndex = -1;
 
     DescriptorPool & pool = findFreeDescriptorPool( false, layoutsPtr.size( ) );
 
@@ -348,7 +346,8 @@ std::vector< vk::DescriptorSet > DescriptorManager::getOrderedSets( const uint32
             if ( objects.empty( ) || frameUpdatedTextures[ frame ].find( uniformName ) == frameUpdatedTextures[ frame ].end( ) )
             {
                 auto logEntry = boost::format( "Note, the shader input with name: %1% has no matching parameter a null value is being passed." ) % uniformName;
-                TRACE( "DescriptorManager", VERBOSITY_LOW, logEntry.str( ).c_str( ) )
+
+                Core::Logger::get( ).log( Core::Verbosity::Debug, logEntry.str( ).c_str( ) );
                 updateTexture( frame, uniformName, emptyImage, objectIndex );
                 objects = textureSetMaps[ uniformName ];
             }

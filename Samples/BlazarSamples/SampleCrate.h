@@ -34,7 +34,7 @@ public:
     SampleCrate( )
     {
         auto mesh = createComponent< ECS::CMesh >( );
-        mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LightedCube );
+        mesh->path = Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LitCube );
 
         auto texture = createComponent< ECS::CMaterial >( );
         auto &texInfo = texture->textures.emplace_back( ECS::Material::TextureInfo { } );

@@ -28,11 +28,12 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
 {
     auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
+    gBufferPass->inputGeometry = InputGeometry::Model;
+
     gBufferPass->pipelineInputs.resize( 5 );
 
     for ( int i = 0; i < 5; ++i )
     {
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
         gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) );
@@ -174,6 +175,8 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderDevice )
 {
     auto lightingPass = std::make_shared< Pass >( "lightingPass" );
+    lightingPass->inputGeometry = InputGeometry::Quad;
+
     lightingPass->pipelineInputs.resize( 1 );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
@@ -181,7 +184,6 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Material" );
     lightingPass->pipelineInputs[ 0 ].push_back( "WorldContext" );
     lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
     lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
     lightingPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
 
@@ -216,8 +218,9 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
 std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *renderDevice )
 {
     auto shadowMapPass = std::make_shared< Pass >( "shadowMap" );
+    shadowMapPass->inputGeometry = InputGeometry::Model;
+
     shadowMapPass->pipelineInputs.resize( 1 );
-    shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::GeometryData ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( "InstanceData" );
     shadowMapPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
@@ -256,10 +259,11 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
 std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDevice )
 {
     auto skyboxPass = std::make_shared< Pass >( "skyBoxPass" );
+    skyboxPass->inputGeometry = InputGeometry::Cube;
+
     skyboxPass->pipelineInputs.resize( 1 );
     skyboxPass->pipelineInputs[ 0 ].push_back( "ViewProjection" );
     skyboxPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
-    skyboxPass->pipelineInputs[ 0 ].push_back( "ScreenCube" );
 
     auto &presentImage = skyboxPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "skyBoxTex";
@@ -292,10 +296,11 @@ std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
 std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderDevice )
 {
     auto smaaEdgePass = std::make_shared< Pass >( "smaaEdgePass" );
+    smaaEdgePass->inputGeometry = InputGeometry::OverSizedTriangle;
+
     smaaEdgePass->pipelineInputs.resize( 1 );
     smaaEdgePass->pipelineInputs[ 0 ].push_back( "Resolution" );
     smaaEdgePass->pipelineInputs[ 0 ].push_back( "litScene" );
-    smaaEdgePass->pipelineInputs[ 0 ].push_back( "ScreenOversizedTriangle" );
 
     auto &edgesTex = smaaEdgePass->outputs.emplace_back( OutputImage { } );
     edgesTex.outputResourceName = "edgesTex";
@@ -328,12 +333,13 @@ std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderD
 std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *renderDevice )
 {
     auto smaaBlendWeightPass = std::make_shared< Pass >( "smaaBlendWeightPass" );
+    smaaBlendWeightPass->inputGeometry = InputGeometry::OverSizedTriangle;
+
     smaaBlendWeightPass->pipelineInputs.resize( 1 );
     smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "Resolution" );
     smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "edgesTex" );
     smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "areaTex" );
     smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "searchTex" );
-    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "ScreenOversizedTriangle" );
 
     auto &blendTex = smaaBlendWeightPass->outputs.emplace_back( OutputImage { } );
     blendTex.outputResourceName = "blendTex";
@@ -366,11 +372,12 @@ std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *
 std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *renderDevice )
 {
     auto smaaNeighborPass = std::make_shared< Pass >( "smaaNeighborPass" );
+    smaaNeighborPass->inputGeometry = InputGeometry::OverSizedTriangle;
+
     smaaNeighborPass->pipelineInputs.resize( 1 );
     smaaNeighborPass->pipelineInputs[ 0 ].push_back( "Resolution" );
     smaaNeighborPass->pipelineInputs[ 0 ].push_back( "litScene" );
     smaaNeighborPass->pipelineInputs[ 0 ].push_back( "blendTex" );
-    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "ScreenOversizedTriangle" );
 
     auto &aliasedImage = smaaNeighborPass->outputs.emplace_back( OutputImage { } );
     aliasedImage.outputResourceName = "aliasedImage";
@@ -403,10 +410,11 @@ std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *ren
 std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDevice )
 {
     auto presentPass = std::make_shared< Pass >( "presentPass" );
+    presentPass->inputGeometry = InputGeometry::Quad;
+
     presentPass->pipelineInputs.resize( 1 );
-    presentPass->pipelineInputs[ 0 ].push_back( "aliasedImage" );
+    presentPass->pipelineInputs[ 0 ].push_back( "litScene" );
     presentPass->pipelineInputs[ 0 ].push_back( "skyBoxTex" );
-    presentPass->pipelineInputs[ 0 ].push_back( "ScreenQuad" );
 
     auto &presentImage = presentPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "presentImage";

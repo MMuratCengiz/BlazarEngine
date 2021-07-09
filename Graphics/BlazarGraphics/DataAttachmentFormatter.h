@@ -23,6 +23,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "IResourceProvider.h"
 #include <array>
 #include <BlazarCore/Utilities.h>
+#include "RenderGraph/AreaTex.h"
+#include "RenderGraph/SearchTex.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -91,6 +93,12 @@ struct EnvironmentLights
     alignas( 16 ) SpotLight spotLights[MAX_ALLOWED_LIGHTS] { };
 };
 
+struct LightViewProjectionMatrices
+{
+    glm::mat4 data[ 3 ];
+    int count;
+};
+
 struct ViewProjection
 {
     glm::mat4 view;
@@ -99,7 +107,7 @@ struct ViewProjection
 
 struct InstanceData
 {
-    std::array< glm::mat4, 100 > instances;
+    glm::mat4 instances[ 100 ];
     uint32_t instanceCount;
 };
 
@@ -115,6 +123,11 @@ struct BoneTransformations
     unsigned int size;
 };
 
+struct WorldContext
+{
+    glm::vec4 cameraPosition;
+};
+
 class DataAttachmentFormatter
 {
 public:
@@ -122,11 +135,18 @@ public:
     static Tessellation formatTessellationComponent( const std::shared_ptr< ECS::CTessellation > &tessellation );
     static ViewProjection formatCamera( const std::shared_ptr< ECS::ComponentTable > &components );
     static EnvironmentLights formatLightingEnvironment( const std::shared_ptr< ECS::ComponentTable > &components );
+    static LightViewProjectionMatrices formatLightViewProjectionMatrices( const std::shared_ptr< ECS::ComponentTable > &components );
+    static WorldContext formatWorldContext( const std::shared_ptr< ECS::ComponentTable > &components );
     static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity );
     static glm::mat4 formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity );
     static InstanceData formatInstances( const std::shared_ptr< ECS::CInstances > &instances, const std::shared_ptr< ECS::IGameEntity > &entity );
     static BoneTransformations formatBoneTransformations( const std::shared_ptr< ECS::IGameEntity >& entity );
     static Resolution formatResolution( const uint32_t& width, const uint32_t& height );
+    static std::vector< ECS::Material::TextureInfo > getSkyBoxTextures( const std::shared_ptr< ECS::ComponentTable > &components );
+    static std::vector< ECS::Material::TextureInfo > getSearchTex( );
+    static std::vector< ECS::Material::TextureInfo > getAreaTex( );
+    static std::vector< ECS::Material::TextureInfo > getHeightMap( const std::shared_ptr< ECS::IGameEntity > &entity );
+    static std::vector< ECS::Material::TextureInfo > getTexture1( const std::shared_ptr< ECS::IGameEntity > &entity );
 };
 
 END_NAMESPACES

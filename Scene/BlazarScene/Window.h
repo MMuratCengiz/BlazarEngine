@@ -32,6 +32,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <functional>
 #include <iostream>
 #include <chrono>
+#include <BlazarCore/Logger.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Scene )
 
@@ -47,7 +48,8 @@ public:
         {
             const char *errorBuffer = new char[1024];
             glfwGetError( &errorBuffer );
-            TRACE( "Graphics", VERBOSITY_CRITICAL, errorBuffer );
+
+            Core::Logger::get( ).log( Core::Verbosity::Critical, errorBuffer );
         }
 
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
@@ -62,7 +64,7 @@ public:
         {
             const char *errorBuffer = new char[1024];
             glfwGetError( &errorBuffer );
-            TRACE( COMPONENT_GRAPHICS, VERBOSITY_CRITICAL, errorBuffer );
+            Core::Logger::get( ).log( Core::Verbosity::Critical, errorBuffer );
         }
 
         glfwMakeContextCurrent( window );

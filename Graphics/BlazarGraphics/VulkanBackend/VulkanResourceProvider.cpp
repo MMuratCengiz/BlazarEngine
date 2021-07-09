@@ -59,7 +59,9 @@ void VulkanResourceProvider::createBufferAllocator( const std::shared_ptr< Shade
     {
         std::pair< vk::Buffer, vma::Allocation > stagingBuffer;
 
-        uint64_t size = resource->dataAttachment->size;
+        FUNCTION_BREAK( resource->dataAttachment == nullptr )
+
+        const uint64_t size = resource->dataAttachment->size;
         const void *content = resource->dataAttachment->content;
 
         if ( resource->loadStrategy == ResourceLoadStrategy::LoadOnce || resource->loadStrategy == ResourceLoadStrategy::LoadOnUpdate )
@@ -68,6 +70,7 @@ void VulkanResourceProvider::createBufferAllocator( const std::shared_ptr< Shade
         }
 
         vk::BufferCreateInfo bufferCreateInfo;
+
         if ( resource->type == ResourceType::Uniform )
         {
             bufferCreateInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer;
@@ -80,7 +83,6 @@ void VulkanResourceProvider::createBufferAllocator( const std::shared_ptr< Shade
         {
             bufferCreateInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer;
         }
-
 
         bufferCreateInfo.size = size;
         bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
@@ -102,10 +104,13 @@ void VulkanResourceProvider::createBufferAllocator( const std::shared_ptr< Shade
         }
 
         resource->apiSpecificBuffer = new VulkanBufferWrapper {
-                this->context->vma.createBuffer( bufferCreateInfo, allocationInfo )
+                this->context->vma.createBuffer( bufferCreateInfo, allocationInfo ),
+                resource->loadStrategy == ResourceLoadStrategy::LoadPerFrame,
+                nullptr
         };
 
-        auto &buffer = reinterpret_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer )->buffer;
+        VulkanBufferWrapper * wrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
+        auto &buffer = wrapper->buffer;
 
         if ( resource->loadStrategy == ResourceLoadStrategy::LoadOnce || resource->loadStrategy == ResourceLoadStrategy::LoadOnUpdate )
         {
@@ -119,19 +124,26 @@ void VulkanResourceProvider::createBufferAllocator( const std::shared_ptr< Shade
         }
         else
         {
-            auto deviceMemory = this->context->vma.mapMemory( buffer.second );
+            wrapper->mappedMemory = this->context->vma.mapMemory( buffer.second );
 
-            memcpy( deviceMemory, content, size );
-
-            this->context->vma.unmapMemory( buffer.second );
+            memcpy( wrapper->mappedMemory, content, size );
         }
     };
 
     resource->update = [ = ]( )
     {
-        auto &buffer = reinterpret_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer )->buffer;
+        auto *pWrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
 
-        auto deviceMemory = this->context->vma.mapMemory( buffer.second );
+        if ( pWrapper->keepMemoryMapped )
+        {
+            memcpy( pWrapper->mappedMemory, resource->dataAttachment->content, resource->dataAttachment->size );
+
+            return;
+        }
+
+        auto &buffer = pWrapper->buffer;
+
+        const auto deviceMemory = this->context->vma.mapMemory( buffer.second );
 
         memcpy( deviceMemory, resource->dataAttachment->content, resource->dataAttachment->size );
 
@@ -140,7 +152,12 @@ void VulkanResourceProvider::createBufferAllocator( const std::shared_ptr< Shade
 
     resource->deallocate = [ = ]( )
     {
-        auto *pWrapper = reinterpret_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
+        auto *pWrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
+        
+        if ( pWrapper->keepMemoryMapped )
+        {
+            this->context->vma.unmapMemory( pWrapper->buffer.second );
+        }
 
         auto &buffer = pWrapper->buffer;
 
@@ -155,6 +172,8 @@ void VulkanResourceProvider::createSampler2DAllocator( const std::shared_ptr< Sh
     resource->allocate = [ = ]( )
     {
         resource->apiSpecificBuffer = new VulkanTextureWrapper { };
+
+        FUNCTION_BREAK( resource->dataAttachment == nullptr )
 
         TextureLoadArguments loadArguments { };
         loadArguments.context = context;
@@ -204,6 +223,8 @@ void VulkanResourceProvider::createCubeMapAllocator( const std::shared_ptr< Shad
     resource->allocate = [ = ]( )
     {
         resource->apiSpecificBuffer = new VulkanTextureWrapper { };
+
+        FUNCTION_BREAK( resource->dataAttachment == nullptr )
 
         CubeMapLoadArguments loadArguments { context };
         loadArguments.commandExecutor = commandExecutor;

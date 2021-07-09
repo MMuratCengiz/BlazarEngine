@@ -23,14 +23,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <utility>
 #include "../IPipelineProvider.h"
 #include "../IResourceProvider.h"
-#include "GlobalResourceTable.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
+
+enum class InputGeometry
+{
+    Model,
+    Quad,
+    Cube,
+    OverSizedTriangle
+};
 
 struct Pass
 {
     const std::string name;
 
+    InputGeometry inputGeometry;
     std::vector< PipelineRequest > pipelineRequests;
     RenderPassRequest renderPassRequest;
 

@@ -20,20 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace Sample
 {
-
 void SampleGame::init( )
 {
     boost::mt19937 rng;
     boost::uniform_real< > range( -28.0f, 28.0f );
-    boost::variate_generator< boost::mt19937, boost::uniform_real< >> randomRange( rng, range );
+    boost::variate_generator< boost::mt19937, boost::uniform_real< > > randomRange( rng, range );
 
     sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
     sceneLights->createComponent< ECS::CAmbientLight >( );
     sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec3( 0.25f, 0.25f, 0.22f );
     sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.005f;
 
-    glm::vec3 pos = glm::vec3( 1, 1, 1 );
-    glm::vec3 front = glm::vec3( 0.0, 0.0, 0.0 );
+    auto pos = glm::vec3( 1, 1, 1 );
+    auto front = glm::vec3( 0.0, 0.0, 0.0 );
 
     sceneLights->createComponent< ECS::CDirectionalLight >( );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec3( 1.0, 1.0f, 0.99f );
@@ -46,20 +45,20 @@ void SampleGame::init( )
     cameraComponent->getComponent< ECS::CCamera >( )->position = glm::vec3( -0.6f, 1.0f, 5.4f );
     camera = std::make_shared< FpsCamera >( cameraComponent->getComponent< ECS::CCamera >( ) );
 
-    floor = std::make_shared< SampleFloor >( );
+    floor = std::make_shared< SampleFloor >( world );
     car1 = std::make_shared< SampleCar1 >( world );
     car2 = std::make_shared< SampleCar2 >( world );
-    sky = std::make_shared< SampleCubeMap >( );
+    sky = std::make_shared< SampleCubeMap >( world );
     crate = std::make_shared< SampleCrate >( );
     smallCrate = std::make_shared< SampleSmallCrate >( );
     animDummy = std::make_shared< SampleAnimatedFox >( world );
 
     rocks = std::make_shared< ECS::DynamicGameEntity >( );
 
-    boost::filesystem::path apk_path(PATH( "/assets/models/Rocks/" ));
+    boost::filesystem::path apk_path( PATH( "/assets/models/Rocks/" ) );
     boost::filesystem::recursive_directory_iterator end;
 
-    for (boost::filesystem::recursive_directory_iterator i(apk_path); i != end; ++i)
+    for ( boost::filesystem::recursive_directory_iterator i( apk_path ); i != end; ++i )
     {
         const boost::filesystem::path cp = (*i);
     }
@@ -90,7 +89,7 @@ void SampleGame::init( )
 
     for ( auto &child: tree1->getChildren( ) )
     {
-        auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+        auto & texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = PATH( "/assets/textures/Colorsheet Tree Normal.png" );
     }
 
@@ -98,7 +97,7 @@ void SampleGame::init( )
 
     for ( auto &child: tree2->getChildren( ) )
     {
-        auto &texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
+        auto & texInfo = child->getComponent< BlazarEngine::ECS::CMaterial >( )->textures.emplace_back( BlazarEngine::ECS::Material::TextureInfo { } );
         texInfo.path = PATH( "/assets/textures/Colorsheet Tree Normal.png" );
     }
 
@@ -142,8 +141,7 @@ void SampleGame::init( )
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )
     {
-        auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
-        if ( windowParams->width > 0 && windowParams->height > 0 )
+        if ( const auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters ); windowParams->width > 0 && windowParams->height > 0 )
         {
             camera->updateAspectRatio( windowParams->width, windowParams->height );
         }
@@ -197,7 +195,5 @@ void SampleGame::update( )
 
 void SampleGame::dispose( )
 {
-
 }
-
 }

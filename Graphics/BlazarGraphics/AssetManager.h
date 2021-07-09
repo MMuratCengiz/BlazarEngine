@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <tiny_gltf.h>
 #include <BlazarCore/SimpleTree.h>
 #include "boost/algorithm/string/case_conv.hpp"
+#include <BlazarCore/Logger.h>
 
 #define SUPPORTED_BONE_COUNT 4
 
@@ -156,7 +157,7 @@ struct SceneContext
     tinygltf::Model model;
 
     std::unordered_map< std::string, AnimationData > animations;
-    std::shared_ptr< ECS::IGameEntity > rootEntity;
+    ECS::IGameEntity * rootEntity;
 
     std::shared_ptr< Core::SimpleTree< MeshNode > > nodeTree;
 
@@ -169,7 +170,11 @@ struct SceneContext
 class AssetManager
 {
 private:
-    // todo instead of having a map, use access by index by storing the index data in the component
+    const int LIT_CUBE_GEOMETRY_IDX = 0;
+    const int PLAIN_CUBE_GEOMETRY_IDX = 1;
+    const int PLAIN_SQUARE_GEOMETRY_IDX = 2;
+    const int PLAIN_TRIANGLE_GEOMETRY_IDX = 3;
+
     std::vector< MeshGeometry > geometryTable;
     std::unordered_map< std::string, std::shared_ptr< SamplerDataAttachment > > imageMap;
 
@@ -182,23 +187,23 @@ public:
     AssetManager( );
 
     std::shared_ptr< ECS::IGameEntity > createEntity( const std::string &meshPath );
+    void createEntity( ECS::IGameEntity * attachToEntity, const std::string &meshPath );
 
-    MeshGeometry &getMeshGeometry( const int &geometryIdx, const std::string &builtinPrimitive );
+    MeshGeometry &getMeshGeometry( const int &geometryIdx );
+    MeshGeometry &getPrimitive( const PrimitiveType& primitive );
 
     std::shared_ptr< SamplerDataAttachment > getImage( const std::string &path );
-
-    int findBuiltinPrimitiveIdx( const std::string &primitiveName ) const;
 
     ~AssetManager( );
 
 private:
     void loadImage( const std::string &path );
 
-    void loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &path );
+    void loadModel( ECS::IGameEntity * rootEntity, const std::string &path );
 
     void generateAnimationData( SceneContext &sceneContext );
 
-    void onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &currentRootPath, const int &parentNode, const int &currentNode );
+    void onEachNode( SceneContext &context, ECS::IGameEntity * entity, const std::string &currentRootPath, const int &parentNode, const int &currentNode );
 
     void onEachMesh( SceneContext &context, const std::string &currentRootPath, Core::TreeNode< MeshNode > *currentNode );
 
@@ -292,7 +297,7 @@ private:
 
     void generateNormals( SubMeshGeometry &subMeshGeometry ) const;
 
-    void attachMaterialData( SceneContext &context, std::shared_ptr< ECS::IGameEntity > sharedPtr, int mesh );
+    void attachMaterialData( SceneContext &context, ECS::IGameEntity * sharedPtr, int mesh );
 };
 
 END_NAMESPACES

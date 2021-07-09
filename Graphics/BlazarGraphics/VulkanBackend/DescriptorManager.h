@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "VulkanSamplerAllocator.h"
 #include "../GraphicsException.h"
 #include <boost/format.hpp>
+#include <BlazarCore/Logger.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 

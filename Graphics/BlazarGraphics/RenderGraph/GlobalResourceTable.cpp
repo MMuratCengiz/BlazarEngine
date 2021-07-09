@@ -20,534 +20,498 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-/*
- * TODO clean up all these mallocs
- */
-
-GlobalResourceTable::GlobalResourceTable( IRenderDevice *renderDevice, AssetManager *assetManager ) : renderDevice( renderDevice ), assetManager( assetManager )
+GlobalResourceTable::GlobalResourceTable( IRenderDevice* renderDevice, AssetManager* assetManager ) : renderDevice( renderDevice ), assetManager( assetManager )
 {
-    globalModelResourcePlaceholder = createResource( );
-    globalModelResourcePlaceholder->type = ResourceType::PushConstant;
-    globalModelResourcePlaceholder->identifier = { StaticVars::getInputName( StaticVars::Input::ModelMatrix ) };
-    globalModelResourcePlaceholder->dataAttachment = std::make_shared< IDataAttachment >( );
-    globalModelResourcePlaceholder->dataAttachment->size = 4 * 4 * sizeof( float );
-    globalModelResourcePlaceholder->dataAttachment->content = malloc( 4 * 4 * sizeof( float ) );
-    globalModelResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
+	frameResources.resize( renderDevice->getFrameCount( ) );
 
-    globalNormalModelResourcePlaceholder = createResource( );
-    globalNormalModelResourcePlaceholder->type = ResourceType::PushConstant;
-    globalNormalModelResourcePlaceholder->identifier = { StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) };
-    globalNormalModelResourcePlaceholder->dataAttachment = std::make_shared< IDataAttachment >( );
-    globalNormalModelResourcePlaceholder->dataAttachment->size = 4 * 4 * sizeof( float );
-    globalNormalModelResourcePlaceholder->dataAttachment->content = malloc( 4 * 4 * sizeof( float ) );
-    globalNormalModelResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
+	std::shared_ptr< ECS::IGameEntity > dummy = std::make_shared< ECS::DynamicGameEntity >( );
 
-    globalBoneTransformationsResourcePlaceholder = createResource( );
-    globalBoneTransformationsResourcePlaceholder->type = ResourceType::Uniform;
-    globalBoneTransformationsResourcePlaceholder->identifier = { "BoneTransformations" };
-    globalBoneTransformationsResourcePlaceholder->dataAttachment = std::make_shared< IDataAttachment >( );
-    globalBoneTransformationsResourcePlaceholder->dataAttachment->size = sizeof( BoneTransformations );
-    globalBoneTransformationsResourcePlaceholder->dataAttachment->content = malloc( sizeof( BoneTransformations ) );
-    globalBoneTransformationsResourcePlaceholder->bindStrategy = ResourceBindStrategy::BindPerObject;
-    auto boneTransformations = BoneTransformations { };
-    memcpy( globalBoneTransformationsResourcePlaceholder->dataAttachment->content, &boneTransformations, globalBoneTransformationsResourcePlaceholder->dataAttachment->size );
-    globalBoneTransformationsResourcePlaceholder->allocate( );
+	resourceBinder = std::make_unique< ShaderUniformBinder >( );
 
-    frameResources.resize( renderDevice->getFrameCount( ) );
-    resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ) );
+	auto createPrimitiveEntityWrapper = [ = ]( const PrimitiveType& type )
+	{
+		auto primitive = assetManager->getPrimitive( type );
+		SubMeshGeometry& subGeometry = primitive.subGeometries[ 0 ];
 
-    resourceBinder = std::make_unique< ResourceBinder >( );
+		EntityWrapper entityWrapper = { };
+		entityWrapper.entity = dummy;
+		entityWrapper.geometryRef = assetManager->getPrimitive( type );
+		entityWrapper.subGeometries.push_back( createGeometryData( dummy, subGeometry ) );
+
+		return entityWrapper;
+	};
+
+	quadGeometryList.push_back( std::move( createPrimitiveEntityWrapper( PrimitiveType::PlainSquare ) ) );
+	cubeGeometryList.push_back( std::move( createPrimitiveEntityWrapper( PrimitiveType::PlainCube ) ) );
+	triangleGeometryList.push_back( std::move( createPrimitiveEntityWrapper( PrimitiveType::PlainTriangle ) ) );
 }
 
-void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable > &componentTable, const uint32_t &frameIndex )
+void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable >& componentTable, const uint32_t& frameIndex )
 {
-    currentComponentTable = componentTable;
-    resourcesUpdatedThisFrame.clear( );
-    resourcesUpdatedThisFrame.resize( renderDevice->getFrameCount( ), { } );
+	currentComponentTable = componentTable;
 }
 
-void GlobalResourceTable::addEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GlobalResourceTable::resetFrame( const int& frameIdx )
 {
-    createGeometry( entity );
-    createGeometryList( entity->getChildren( ) );
+    // std::fill( frameUpdatedResources[ frameIdx ].begin(  ), frameUpdatedResources[ frameIdx ].end( ), false );    
 }
 
-void GlobalResourceTable::updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GlobalResourceTable::addEntity( const std::shared_ptr< ECS::IGameEntity >& entity )
 {
-    removeEntity( entity );
-    addEntity( entity );
+	createGeometry( entity );
+	createGeometryList( entity->getChildren( ) );
 }
 
-void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GlobalResourceTable::updateEntity( const std::shared_ptr< ECS::IGameEntity >& entity )
 {
-    auto geometryIndex = entityGeometryMap.find( entity->getUID( ) );
-
-    FUNCTION_BREAK( geometryIndex == entityGeometryMap.end( ) );
-
-    for ( int idx: geometryIndex->second )
-    {
-        auto &geometryData = geometryList[ idx ];
-
-        cleanGeometryData( geometryData );
-    }
+	removeEntity( entity );
+	addEntity( entity );
 }
 
-void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity >& entity )
 {
-    FUNCTION_BREAK( !entity->hasComponent< ECS::CMesh >( ) )
-    FUNCTION_BREAK( entity->hasComponent< ECS::CCubeMap >( ) )
+	FUNCTION_BREAK( entity->getUID( ) >= entityGeometryMap.size( ) );
 
-    const std::vector< GeometryData > &entityGeometries = createGeometryData( entity );
+	for ( int idx : entityGeometryMap[ entity->getUID( ) ] )
+	{
+		auto& geometryData = geometryList[ idx ];
 
-    geometryList.insert( geometryList.end(), entityGeometries.begin(), entityGeometries.end() );
-
-    entityGeometryMap[ entity->getUID( ) ] = { };
-
-    for ( uint32_t i = geometryList.size() - entityGeometries.size( ); i < geometryList.size( ); ++i )
-    {
-        entityGeometryMap[ entity->getUID( ) ].push_back( i );
-    }
+		for ( auto& subGeometry : geometryData.subGeometries )
+		{
+			cleanGeometryData( subGeometry );
+		}
+	}
 }
 
-std::vector< GeometryData > GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::string &outputGeometry )
+void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntity >& entity )
 {
-    auto transformComponent = entity->getComponent< ECS::CTransform >( );
-    auto meshComponent = entity->getComponent< ECS::CMesh >( );
-    auto materialComponent = entity->getComponent< ECS::CMaterial >( );
-    auto tessellationComponent = entity->getComponent< ECS::CTessellation >( );
+	FUNCTION_BREAK( !entity->hasComponent< ECS::CMesh >( ) );
+	FUNCTION_BREAK( entity->hasComponent< ECS::CCubeMap >( ) );
 
-    std::string parentBoundingName = StaticVars::getInputName( StaticVars::Input::GeometryData );
+	const auto& entityGeometries = createGeometryData( entity );
 
-    if ( outputGeometry == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube ) )
-    {
-        parentBoundingName = "ScreenCube";
-    }
+	geometryList.push_back( entityGeometries );
 
-    if ( outputGeometry == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare ) )
-    {
-        parentBoundingName = "ScreenQuad";
-    }
+	if ( entity->getUID( ) >= entityGeometryMap.size( ) )
+	{
+		entityGeometryMap.resize( entity->getUID( ) + 1 );
+	}
 
-    if ( outputGeometry == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle ) )
-    {
-        parentBoundingName = "ScreenOversizedTriangle";
-    }
+	entityGeometryMap[ entity->getUID( ) ] = { };
 
-    MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->geometryRefIdx, meshComponent->path );
-
-    std::vector< GeometryData > result;
-
-    for ( SubMeshGeometry & subMeshGeometry : geometry.subGeometries )
-    {
-        result.push_back( std::move( createGeometryData( entity, transformComponent, parentBoundingName, subMeshGeometry ) )) ;
-    }
-
-    return std::move( result );
+	for ( uint32_t i = geometryList.size( ) - entityGeometries.subGeometries.size( ); i < geometryList.size( ); ++i )
+	{
+		entityGeometryMap[ entity->getUID( ) ].push_back( i );
+	}
 }
 
-GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, const std::shared_ptr< ECS::CTransform > &transformComponent, const std::string &parentBoundingName,
-                                                      SubMeshGeometry &subMeshGeometry )
+EntityWrapper GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity >& entity )
 {
-    GeometryData data { };
+	auto transformComponent = entity->getComponent< ECS::CTransform >( );
+	const auto meshComponent = entity->getComponent< ECS::CMesh >( );
+	auto materialComponent = entity->getComponent< ECS::CMaterial >( );
+	auto tessellationComponent = entity->getComponent< ECS::CTessellation >( );
 
-    /*
-    * Create vertex data:
-    */
-    auto vertices = createResource( ResourceType::VertexData, ResourceLoadStrategy::LoadOnce );
+	std::string parentBoundingName = StaticVars::getInputName( StaticVars::Input::GeometryData );
 
-    vertices->identifier = { "VertexData" };
+	MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->geometryRefIdx );
 
-    std::shared_ptr< VertexData > vertexData = std::make_shared< VertexData >( );
-    vertexData->vertexCount = subMeshGeometry.vertexCount;
-    vertexData->content = subMeshGeometry.dataRaw.data( );
-    vertexData->size = subMeshGeometry.dataRaw.size( ) * sizeof( float );
+	EntityWrapper result = { };
+	result.entity = entity;
 
-    vertices->dataAttachment = std::move( vertexData );
-    vertices->bindStrategy = ResourceBindStrategy::BindPerObject;
-    vertices->allocate( );
+	for ( SubMeshGeometry& subMeshGeometry : geometry.subGeometries )
+	{
+		result.subGeometries.push_back( std::move( createGeometryData( entity, subMeshGeometry ) ) );
+	}
 
-    data.resources.push_back( { true, parentBoundingName, std::move( vertices ) } );
-    // ---
+	result.geometryRef = std::move( geometry );
 
-    /*
-     * Create index data:
-     */
-    if ( !subMeshGeometry.indices.empty() )
-    {
-        auto indices = createResource( ResourceType::IndexData, ResourceLoadStrategy::LoadOnce );
-        indices->identifier = { "IndexData" };
-        indices->bindStrategy = ResourceBindStrategy::BindPerObject;
-        std::shared_ptr< IndexData > indexData = std::make_shared< IndexData >( );
-        indexData->indexCount = subMeshGeometry.indices.size( );
-        indexData->content = subMeshGeometry.indices.data( );
-        indexData->size = subMeshGeometry.indices.size( ) * sizeof( uint32_t );
-        indices->dataAttachment = std::move( indexData );
-        indices->allocate( );
-
-        data.resources.push_back( { true, parentBoundingName, std::move( indices ) } );
-    }
-
-    for ( const std::string &resourceName: resourceBinder->getAllPerEntityBinders( ) )
-    {
-        // Todo load once is not respected here
-        auto resource = createResource( resourceBinder->getResourceType( resourceName ) );
-
-        resource->identifier = { resourceName };
-        resource->bindStrategy = ResourceBindStrategy::BindPerObject;
-
-        bool validResource = true;
-
-        if ( resource->type == ResourceType::Uniform )
-        {
-            auto binder = resourceBinder->getResourcePerEntityUniformBinder( resourceName );
-
-            auto content = binder( entity );
-
-            validResource = content.size != 0;
-
-            if ( validResource )
-            {
-                resource->dataAttachment = std::make_shared< IDataAttachment >( );
-                resource->dataAttachment->size = content.size;
-                resource->dataAttachment->content = content.data;
-            }
-        }
-        else if ( resource->type == ResourceType::Sampler2D )
-        {
-            auto binder = resourceBinder->getResourcePerEntityTextureBinder( resourceName );
-
-            auto content = binder( entity );
-
-            validResource = !content.textures.empty( );
-
-            if ( validResource )
-            {
-                auto textureData = getSamplerDataAttachment( content.textures[ 0 ] );
-
-                textureData->textureInfo = content.textures[ 0 ];
-                resource->dataAttachment = std::move( textureData );
-            }
-        }
-
-        if ( validResource )
-        {
-            resource->allocate( );
-            data.resources.push_back( { true, resourceName, std::move( resource ) } );
-        }
-    }
-
-    data.modelTransformPtr = transformComponent;
-    data.referenceEntity = entity;
-
-    return data;
+	return std::move( result );
 }
 
-void GlobalResourceTable::createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities )
+GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity >& entity, SubMeshGeometry& subMeshGeometry )
 {
-    for ( const auto &entity: entities )
-    {
-        createGeometry( entity );
-        createGeometryList( entity->getChildren( ) );
-    }
+	GeometryData data{ };
+	data.subMeshGeometry = subMeshGeometry;
+
+	/*
+	* Create vertex data:
+	*/
+	auto vertices = createResource( ResourceType::VertexData, ResourceLoadStrategy::LoadOnce );
+
+	vertices->identifier = { "VertexData" };
+
+	std::shared_ptr< VertexData > vertexData = std::make_shared< VertexData >( );
+	vertexData->vertexCount = subMeshGeometry.vertexCount;
+	vertexData->content = subMeshGeometry.dataRaw.data( );
+	vertexData->size = subMeshGeometry.dataRaw.size( ) * sizeof( float );
+
+	vertices->dataAttachment = std::move( vertexData );
+	vertices->allocate( );
+
+	data.resources.push_back( { true, std::move( vertices ) } );
+	// ---
+
+	/*
+	 * Create index data:
+	 */
+	if ( !subMeshGeometry.indices.empty( ) )
+	{
+		auto indices = createResource( ResourceType::IndexData, ResourceLoadStrategy::LoadOnce );
+		indices->identifier = { "IndexData" };
+		std::shared_ptr< IndexData > indexData = std::make_shared< IndexData >( );
+		indexData->indexCount = subMeshGeometry.indices.size( );
+		indexData->content = subMeshGeometry.indices.data( );
+		indexData->size = subMeshGeometry.indices.size( ) * sizeof( uint32_t );
+		indices->dataAttachment = std::move( indexData );
+		indices->allocate( );
+
+		data.resources.push_back( { true, std::move( indices ) } );
+	}
+
+	for ( const auto& loadOnceBinder : resourceBinder->getAllLoadOnceAllocators( ) )
+	{
+		const auto uContent = loadOnceBinder.perEntityUniformBinder( entity );
+		const auto content = uContent.get( );
+
+		auto resource = createResource( content->resourceType );
+		resource->identifier = { loadOnceBinder.refUniform };
+
+		attachAllAttachments( content, resource );
+
+		resource->allocate( );
+
+		if ( data.boundResources.size( ) <= loadOnceBinder.refIdx )
+		{
+			data.boundResources.resize( loadOnceBinder.refIdx + 1 );
+		}
+
+		data.boundResources[ loadOnceBinder.refIdx ] = { true, resource };
+	}
+
+	return data;
 }
 
-std::shared_ptr< ShaderResource > GlobalResourceTable::createResource( const ResourceType &type,
-                                                                       const ResourceLoadStrategy &loadStrategy,
-                                                                       const ResourcePersistStrategy &persistStrategy,
-                                                                       const ResourceShaderStage &shaderStage )
+void GlobalResourceTable::attachAllAttachments( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource )
 {
-    ShaderResourceRequest shaderResourceRequest { };
-    shaderResourceRequest.type = type;
-    shaderResourceRequest.loadStrategy = loadStrategy;
-    shaderResourceRequest.persistStrategy = persistStrategy;
-    shaderResourceRequest.shaderStage = shaderStage;
-
-    return renderDevice->getResourceProvider( )->createResource( shaderResourceRequest );
+	attachUniformAttachment( content, resource );
+	attachCubeMapAttachment( content, resource );
+	attachSamplerAttachment( content, resource );
 }
 
-void GlobalResourceTable::setActiveGeometryModel( const GeometryData &data )
+void GlobalResourceTable::attachUniformAttachment( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource ) const
 {
-    auto modelMat = DataAttachmentFormatter::formatModelMatrix( data.modelTransformPtr, data.referenceEntity );
-    memcpy( globalModelResourcePlaceholder->dataAttachment->content, &modelMat, globalModelResourcePlaceholder->dataAttachment->size );
+	if ( content->resourceType == ResourceType::Uniform || content->resourceType == ResourceType::PushConstant )
+	{
+		if ( resource->dataAttachment == nullptr )
+		{
+			resource->dataAttachment = std::make_shared< IDataAttachment >( );
+		}
+		else if ( !resource->dataAttachment->autoFree )
+		{
+			free( resource->dataAttachment->content );
+		}
 
-    auto normalMat = DataAttachmentFormatter::formatNormalMatrix( data.modelTransformPtr, data.referenceEntity );
-    memcpy( globalNormalModelResourcePlaceholder->dataAttachment->content, &normalMat, globalModelResourcePlaceholder->dataAttachment->size );
+		const auto* pUniform = dynamic_cast< const StructShaderUniform* >( content );
 
-    auto boneTransformations = DataAttachmentFormatter::formatBoneTransformations( data.referenceEntity );
-    memcpy( globalBoneTransformationsResourcePlaceholder->dataAttachment->content, &boneTransformations, globalBoneTransformationsResourcePlaceholder->dataAttachment->size );
-    globalBoneTransformationsResourcePlaceholder->update( );
+		resource->dataAttachment->size = pUniform->size;
+		resource->dataAttachment->content = pUniform->data;
+	}
 }
 
-void GlobalResourceTable::allocateResource( const std::string &resourceName, const uint32_t &frameIndex )
+void GlobalResourceTable::attachCubeMapAttachment( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource ) const
 {
-    FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::GeometryData ) )
-    FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
-    FUNCTION_BREAK( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
-    FUNCTION_BREAK( resourceName == "BoneTransformations" )
+	if ( content->resourceType == ResourceType::CubeMap )
+	{
+		std::shared_ptr< CubeMapDataAttachment > cubeMapAttachment = std::make_shared< CubeMapDataAttachment >( );
 
-    auto bindType = resourceBinder->getResourceBindType( resourceName );
-    FUNCTION_BREAK( bindType == ResourceBindType::PerEntityTexture || bindType == ResourceBindType::PerEntityUniform  )
+		const auto* pUniform = dynamic_cast< const SamplerShaderUniform* >( content );
 
-    auto resourceUpdatedThisFrame = resourcesUpdatedThisFrame[ frameIndex ].find( resourceName );
+		for ( const auto& texture : pUniform->textures )
+		{
+			cubeMapAttachment->images.push_back( assetManager->getImage( texture.path ) );
+		}
 
-    FUNCTION_BREAK ( resourceUpdatedThisFrame != resourcesUpdatedThisFrame[ frameIndex ].end( ) )
-
-    resourcesUpdatedThisFrame[ frameIndex ][ resourceName ] = true;
-
-    auto find = frameResources[ frameIndex ].find( resourceName );
-
-    if ( find == frameResources[ frameIndex ].end( ) )
-    {
-        frameResources[ frameIndex ][ resourceName ] = { };
-        find = frameResources[ frameIndex ].find( resourceName );
-    }
-
-    auto &wrapper = find->second;
-
-    bool wrapperAllocatedThisFrame = !wrapper.isAllocated;
-
-    ResourceType resourceType = resourceBinder->getResourceType( resourceName );
-
-    if ( wrapperAllocatedThisFrame )
-    {
-        wrapper.isAllocated = true;
-        wrapper.ref = createResource( resourceType );
-        wrapper.ref->identifier = { resourceName };
-        wrapper.ref->type = resourceType;
-    }
-    else
-    {
-        FUNCTION_BREAK( wrapper.ref->loadStrategy == ResourceLoadStrategy::LoadOnce )
-    }
-
-    if ( wrapperAllocatedThisFrame )
-    {
-        if ( wrapper.ref->type == ResourceType::Uniform )
-        {
-            wrapper.ref->dataAttachment = std::make_shared< IDataAttachment >( );
-        }
-        if ( wrapper.ref->type == ResourceType::CubeMap )
-        {
-            wrapper.ref->dataAttachment = std::make_shared< CubeMapDataAttachment >( );
-        }
-        if ( wrapper.ref->type == ResourceType::Sampler2D )
-        {
-            wrapper.ref->dataAttachment = std::make_shared< SamplerDataAttachment >( );
-        }
-    }
-
-    if ( wrapper.ref->type == ResourceType::Uniform )
-    {
-        wrapper.ref->dataAttachment = std::make_shared< IDataAttachment >( );
-        std::shared_ptr< IDataAttachment > &dataAttachment = wrapper.ref->dataAttachment;
-
-        free( dataAttachment->content );
-
-        // Per entity
-        auto binder = resourceBinder->getResourcePerFrameUniformBinder( resourceName );
-        auto content = binder( currentComponentTable );
-
-        dataAttachment->size = content.size;
-        dataAttachment->content = content.data;
-    }
-
-    if ( wrapper.ref->type == ResourceType::CubeMap )
-    {
-        std::shared_ptr< CubeMapDataAttachment > cubeMapAttachment = std::make_shared< CubeMapDataAttachment >( );
-
-        auto binder = resourceBinder->getResourcePerFrameTextureBinder( resourceName );
-        auto content = binder( currentComponentTable );
-
-        for ( const auto &texture: content.textures )
-        {
-            cubeMapAttachment->images.push_back( assetManager->getImage( texture.path ) );
-        }
-
-        wrapper.ref->dataAttachment = std::move( cubeMapAttachment );
-    }
-
-    if ( wrapper.ref->type == ResourceType::Sampler2D )
-    {
-        std::shared_ptr< SamplerDataAttachment > samplerAttachment;
-
-        auto binder = resourceBinder->getResourcePerFrameTextureBinder( resourceName );
-        auto content = binder( currentComponentTable );
-
-        for ( const auto &texture: content.textures )
-        {
-            samplerAttachment = getSamplerDataAttachment( texture );
-        }
-
-        wrapper.ref->dataAttachment = std::move( samplerAttachment );
-    }
-
-    if ( wrapperAllocatedThisFrame )
-    {
-        wrapper.ref->allocate( );
-    }
-    else
-    {
-        wrapper.ref->update( );
-    }
+		resource->dataAttachment = std::move( cubeMapAttachment );
+	}
 }
 
-std::shared_ptr< SamplerDataAttachment > GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo &texture )
+
+void GlobalResourceTable::attachSamplerAttachment( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource )
 {
-    std::shared_ptr< SamplerDataAttachment > samplerAttachment;
+	if ( content->resourceType == ResourceType::Sampler2D )
+	{
+		const auto* pUniform = dynamic_cast< const SamplerShaderUniform* >( content );
 
-    if ( texture.isInMemory )
-    {
-        samplerAttachment = std::make_shared< SamplerDataAttachment >( );
-        samplerAttachment->content = texture.inMemoryTexture.contents;
-        samplerAttachment->width = texture.inMemoryTexture.width;
-        samplerAttachment->height = texture.inMemoryTexture.height;
-        samplerAttachment->channels = texture.inMemoryTexture.channels;
+		auto samplerAttachment = pUniform->textures.empty( ) ? nullptr : getSamplerDataAttachment( pUniform->textures[ 0 ] );
 
-        switch ( texture.inMemoryTexture.format )
-        {
-            case ECS::Material::ImageFormat::R8G8B8A8Unorm:
-                samplerAttachment->format = ResourceImageFormat::R8G8B8A8Unorm;
-                break;
-            case ECS::Material::ImageFormat::R8G8B8Unorm:
-                samplerAttachment->format = ResourceImageFormat::R8G8B8Unorm;
-                break;
-            case ECS::Material::ImageFormat::R8G8Unorm:
-                samplerAttachment->format = ResourceImageFormat::R8G8Unorm;
-                break;
-            case ECS::Material::ImageFormat::R8Unorm:
-                samplerAttachment->format = ResourceImageFormat::R8Unorm;
-                break;
-        }
-    }
-    else
-    {
-        samplerAttachment = assetManager->getImage( texture.path );
-        samplerAttachment->textureInfo = texture;
-    }
-
-    return samplerAttachment;
+		resource->dataAttachment = std::move( samplerAttachment );
+	}
 }
 
-std::shared_ptr< ShaderResource > GlobalResourceTable::getResource( const std::string &resourceName, const uint32_t &frameIndex )
+void GlobalResourceTable::createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > >& entities )
 {
-    if ( resourceName == StaticVars::getInputName( StaticVars::Input::ModelMatrix ) )
-    {
-        return globalModelResourcePlaceholder;
-    }
-
-    if ( resourceName == StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) )
-    {
-        return globalNormalModelResourcePlaceholder;
-    }
-
-    if ( resourceName == "BoneTransformations" )
-    {
-        return globalBoneTransformationsResourcePlaceholder;
-    }
-
-    auto findIt = frameResources[ frameIndex ].find( resourceName );
-
-    if ( findIt == frameResources[ frameIndex ].end( ) )
-    {
-        return nullptr;
-    }
-
-    if ( !findIt->second.isAllocated )
-    {
-        findIt->second.ref->allocate( );
-    }
-
-    return findIt->second.ref;
+	for ( const auto& entity : entities )
+	{
+		createGeometry( entity );
+		createGeometryList( entity->getChildren( ) );
+	}
 }
 
-void GlobalResourceTable::prepareResource( const std::string &resourceName, const ResourceUsage &usage, const uint32_t &frameIndex )
+std::shared_ptr< ShaderResource > GlobalResourceTable::createResource( const ResourceType& type,
+	const ResourceLoadStrategy& loadStrategy,
+	const ResourcePersistStrategy& persistStrategy,
+	const ResourceShaderStage& shaderStage ) const
 {
-    frameResources[ frameIndex ][ resourceName ].ref->prepareForUsage( usage );
+	ShaderResourceRequest shaderResourceRequest{ };
+	shaderResourceRequest.type = type;
+	shaderResourceRequest.loadStrategy = loadStrategy;
+	shaderResourceRequest.persistStrategy = persistStrategy;
+	shaderResourceRequest.shaderStage = shaderStage;
+
+	return renderDevice->getResourceProvider( )->createResource( shaderResourceRequest );
 }
 
-void GlobalResourceTable::cleanGeometryData( GeometryData &geometryData )
+void GlobalResourceTable::allocateResource( const int& resourceIdx, const std::string& uniformName, const uint32_t& frameIndex, const IShaderUniform* content )
 {
-    for ( auto &resource: geometryData.resources )
-    {
-        resource.ref->deallocate( );
+	if ( resourceIdx >= frameResources[ frameIndex ].size( ) )
+	{
+		frameResources[ frameIndex ].resize( resourceIdx + 1 );
+		frameResources[ frameIndex ][ resourceIdx ] = { };
+	}
 
-        /* todo wtf crashes
-        if ( resource.ref->dataAttachment != nullptr && resource.ref->dataAttachment->content && !resource.ref->dataAttachment->autoFree)
-        {
-            free( resource.ref->dataAttachment->content );
-        }*/
-    }
+	auto& wrapper = frameResources[ frameIndex ][ resourceIdx ];
+
+	const bool wrapperAllocatedThisFrame = !wrapper.isAllocated;
+
+	if ( wrapperAllocatedThisFrame )
+	{
+		wrapper.isAllocated = true;
+		wrapper.ref = createResource( content->resourceType );
+		wrapper.ref->identifier = { uniformName };
+		wrapper.ref->type = content->resourceType;
+	}
+	else
+	{
+		FUNCTION_BREAK( wrapper.ref->loadStrategy == ResourceLoadStrategy::LoadOnce )
+	}
+
+	attachAllAttachments( content, wrapper.ref );
+
+	FUNCTION_BREAK( wrapper.ref->type == ResourceType::PushConstant );
+
+	if ( wrapperAllocatedThisFrame )
+	{
+		wrapper.ref->allocate( );
+	}
+	else
+	{
+		wrapper.ref->update( );
+	}
 }
 
-std::vector< GeometryData > GlobalResourceTable::getGeometryList( )
+auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo& texture ) -> std::shared_ptr< SamplerDataAttachment >&
 {
-    return geometryList;
+	std::shared_ptr< SamplerDataAttachment > samplerAttachment;
+
+	if ( texture.isInMemory )
+	{
+		samplerAttachment = std::make_shared< SamplerDataAttachment >( );
+		samplerAttachment->content = texture.inMemoryTexture.contents;
+		samplerAttachment->width = texture.inMemoryTexture.width;
+		samplerAttachment->height = texture.inMemoryTexture.height;
+		samplerAttachment->channels = texture.inMemoryTexture.channels;
+
+		switch ( texture.inMemoryTexture.format )
+		{
+		case ECS::Material::ImageFormat::R8G8B8A8Unorm:
+			samplerAttachment->format = ResourceImageFormat::R8G8B8A8Unorm;
+			break;
+		case ECS::Material::ImageFormat::R8G8B8Unorm:
+			samplerAttachment->format = ResourceImageFormat::R8G8B8Unorm;
+			break;
+		case ECS::Material::ImageFormat::R8G8Unorm:
+			samplerAttachment->format = ResourceImageFormat::R8G8Unorm;
+			break;
+		case ECS::Material::ImageFormat::R8Unorm:
+			samplerAttachment->format = ResourceImageFormat::R8Unorm;
+			break;
+		}
+	}
+	else
+	{
+		samplerAttachment = assetManager->getImage( texture.path );
+		samplerAttachment->textureInfo = texture;
+	}
+
+	return samplerAttachment;
 }
 
-std::vector< GeometryData > GlobalResourceTable::getOutputGeometryList( const std::string &outputGeometry )
+std::shared_ptr< ShaderResource >& GlobalResourceTable::getResource( const int& resourceIdx, const uint32_t& frameIndex )
 {
-    std::vector< GeometryData > geometryData;
+	auto resource = frameResources[ frameIndex ][ resourceIdx ];
+	return resource.ref;
+}
 
-    auto find = outputGeometryMap.find( outputGeometry );
+void GlobalResourceTable::allocateAllPerGeometryResources( const int& frameIndex, const MeshGeometry& parent, const SubMeshGeometry& subMeshGeometry )
+{
+	for ( const int& binderIdx : perGeometryResources )
+	{
+		auto binder = resourceBinder->getBinderByIdx( binderIdx );
+		auto content = binder.perGeometryBinder( parent, subMeshGeometry );
+		allocateResource( binderIdx, binder.refUniform, frameIndex, content.get( ) );
+	}
+}
 
-    if ( find == outputGeometryMap.end( ) )
-    {
-        // Todo kind of a hack, see if it can't be fixed
-        auto ptr = std::make_shared< ECS::DynamicGameEntity >( );
-        ptr->createComponent< ECS::CMesh >( );
-        ptr->getComponent< ECS::CMesh >( )->path = outputGeometry;
+void GlobalResourceTable::allocateAllPerEntityResources( const int& frameIndex, const std::shared_ptr< ECS::IGameEntity >& entity )
+{
+	for ( const int& binderIdx : perEntityResources )
+	{
+		auto binder = resourceBinder->getBinderByIdx( binderIdx );
+		auto content = binder.perEntityUniformBinder( entity );
+		allocateResource( binderIdx, binder.refUniform, frameIndex, content.get( ) );
+	}
+}
 
-        const auto &assetGeometry = assetManager->getMeshGeometry( ptr->getComponent< ECS::CMesh >( )->geometryRefIdx, ptr->getComponent< ECS::CMesh >( )->path );
+void GlobalResourceTable::allocatePerEntityResources( const int& frameIndex, const std::shared_ptr< ECS::IGameEntity >& entity, std::vector< int > resources )
+{
+	for ( const int& binderIdx : resources )
+	{
+		auto binder = resourceBinder->getBinderByIdx( binderIdx );
+		auto content = binder.perEntityUniformBinder( entity );
+		allocateResource( binderIdx, binder.refUniform, frameIndex, content.get( ) );
+	}
+}
 
-        outputGeometryMap[ outputGeometry ] = createGeometryData( std::move( ptr ), outputGeometry )[ 0 ];
+void GlobalResourceTable::allocateAllPerFrameResources( const int& frameIndex )
+{
+	for ( const int& binderIdx : perFrameResources )
+	{
+		auto binder = resourceBinder->getBinderByIdx( binderIdx );
+		auto content = binder.perFrameUniformBinder( currentComponentTable );
+		allocateResource( binderIdx, binder.refUniform, frameIndex, content.get( ) );
+	}
+}
 
-        geometryData.emplace_back( outputGeometryMap[ outputGeometry ] );
-    }
-    else
-    {
-        geometryData.emplace_back( find->second );
-    }
+bool GlobalResourceTable::isBinderAssigned( const int& binderIdx )
+{
+	if ( binderIdx >= bindersAssigned.size( ) )
+	{
+		bindersAssigned.resize( 1 + binderIdx, false );
+		bindersAssigned[ binderIdx ] = true;
+		return false;
+	}
 
-    return geometryData;
+	return bindersAssigned[ binderIdx ];
+}
+void GlobalResourceTable::addPerGeometryResource( const int& binderIdx )
+{
+	if ( !isBinderAssigned( binderIdx ) )
+	{
+		perGeometryResources.push_back( binderIdx );
+		bindersAssigned[ binderIdx ] = true;
+	}
+}
+
+void GlobalResourceTable::addPerEntityResource( const int& binderIdx )
+{
+	if ( !isBinderAssigned( binderIdx ) )
+	{
+		perEntityResources.push_back( binderIdx );
+		bindersAssigned[ binderIdx ] = true;
+	}
+}
+
+void GlobalResourceTable::addPerFrameResource( const int& binderIdx )
+{
+	if ( !isBinderAssigned( binderIdx ) )
+	{
+		perFrameResources.push_back( binderIdx );
+		bindersAssigned[ binderIdx ] = true;
+	}
+}
+
+std::vector< EntityWrapper >& GlobalResourceTable::getGeometryList( const InputGeometry& inputGeometry )
+{
+	switch ( inputGeometry )
+	{
+	case InputGeometry::Model:
+		break;
+	case InputGeometry::Quad:
+		return quadGeometryList;
+	case InputGeometry::Cube:
+		return cubeGeometryList;
+	case InputGeometry::OverSizedTriangle:
+		return triangleGeometryList;
+	}
+
+	return geometryList;
 }
 
 GlobalResourceTable::~GlobalResourceTable( )
 {
-    for ( uint32_t frameIndex = 0; frameIndex < renderDevice->getFrameCount( ); ++frameIndex )
-    {
-        for ( auto it = frameResources[ frameIndex ].begin( ); it != frameResources[ frameIndex ].end( ); )
-        {
-            ShaderResourceWrapper resourceWrapper = it->second;
-            if ( resourceWrapper.isAllocated && resourceWrapper.ref->loadStrategy == ResourceLoadStrategy::LoadPerFrame )
-            {
-                resourceWrapper.ref->deallocate( );
-                if ( !resourceWrapper.ref->dataAttachment->autoFree && resourceWrapper.ref->dataAttachment->size != 0 )
-                {
-                    free( resourceWrapper.ref->dataAttachment->content );
-                }
-                it = frameResources[ frameIndex ].erase( it );
-            }
-            else
-            {
-                ++it;
-            }
-        }
-    }
+	for ( uint32_t frameIndex = 0; frameIndex < renderDevice->getFrameCount( ); ++frameIndex )
+	{
+		for ( auto it = frameResources[ frameIndex ].begin( ); it != frameResources[ frameIndex ].end( ); )
+		{
+			if ( ShaderResourceWrapper resourceWrapper = *it; resourceWrapper.isAllocated )
+			{
+				freeResource( resourceWrapper.ref );
 
-    for ( auto &geometry: geometryList )
-    {
-        cleanGeometryData( geometry );
-    }
+				it = frameResources[ frameIndex ].erase( it );
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
 
-    for ( auto &geometry: outputGeometryMap )
-    {
-        cleanGeometryData( geometry.second );
-    }
+	auto cleanGeometryDataList = [ ]( std::vector< EntityWrapper >& geometries )
+	{
+		for ( auto& geometry : geometries )
+		{
+			for ( auto& subGeometry : geometry.subGeometries )
+			{
+				cleanGeometryData( subGeometry );
+			}
+		}
+	};
 
-    globalBoneTransformationsResourcePlaceholder->deallocate( );
-    free( globalModelResourcePlaceholder->dataAttachment->content );
-    free( globalNormalModelResourcePlaceholder->dataAttachment->content );
-    free( globalBoneTransformationsResourcePlaceholder->dataAttachment->content );
+	cleanGeometryDataList( geometryList );
+	cleanGeometryDataList( quadGeometryList );
+	cleanGeometryDataList( triangleGeometryList );
+	cleanGeometryDataList( cubeGeometryList );
+}
+
+void GlobalResourceTable::freeResource( std::shared_ptr< ShaderResource >& resource )
+{
+	FUNCTION_BREAK( resource == nullptr );
+
+	if ( resource->type != ResourceType::PushConstant )
+	{
+		resource->deallocate( );
+	}
+
+	FUNCTION_BREAK( resource->dataAttachment == nullptr );
+	FUNCTION_BREAK( resource->dataAttachment->content == nullptr );
+	FUNCTION_BREAK( resource->dataAttachment->size == 0 );
+	FUNCTION_BREAK( resource->dataAttachment->autoFree );
+
+	free( resource->dataAttachment->content );
+}
+
+void GlobalResourceTable::cleanGeometryData( GeometryData& geometryData )
+{
+	for ( auto& resource : geometryData.resources )
+	{
+		freeResource( resource.ref );
+	}
+
+	for ( auto& resource : geometryData.boundResources )
+	{
+		freeResource( resource.ref );
+	}
 }
 
 END_NAMESPACES

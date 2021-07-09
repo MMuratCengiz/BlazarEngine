@@ -49,14 +49,18 @@ SET(BlazarGraphicsSources
         BlazarGraphics/VulkanBackend/GLSLShaderSet.h
         BlazarGraphics/VulkanBackend/GLSLShaderSet.cpp
         BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.cpp
-        BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h BlazarGraphics/RenderGraph/ResourceBinder.cpp BlazarGraphics/RenderGraph/ResourceBinder.h BlazarGraphics/AnimationStateSystem.cpp BlazarGraphics/AnimationStateSystem.h)
+        BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h
+        BlazarGraphics/AnimationStateSystem.cpp
+        BlazarGraphics/AnimationStateSystem.h
+        BlazarGraphics/RenderGraph/ShaderUniformBinder.cpp
+        BlazarGraphics/RenderGraph/ShaderUniformBinder.h)
 
 ADD_LIBRARY(BlazarGraphics ${BlazarGraphicsSources})
 
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
 
 SET(INCLUDE_BOOST_TARGET BlazarGraphics)
-SET(REQUESTED_BOOST_LIBS thread format atomic)
+SET(REQUESTED_BOOST_LIBS thread format atomic log)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
 

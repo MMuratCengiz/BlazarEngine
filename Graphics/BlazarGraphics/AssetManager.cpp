@@ -27,32 +27,32 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 AssetManager::AssetManager( )
 {
     geometryTable.resize( 4 );
-    const std::string &litCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube );
-    geometryTable[ 0 ] = { };
-    MeshGeometry &litCube = geometryTable[ 0 ];
+    const std::string &litCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::LitCube );
+    geometryTable[ LIT_CUBE_GEOMETRY_IDX ] = { };
+    MeshGeometry &litCube = geometryTable[ LIT_CUBE_GEOMETRY_IDX ];
     SubMeshGeometry &litCubeSubMesh = litCube.subGeometries.emplace_back( );
-    litCubeSubMesh.dataRaw = litCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    litCubeSubMesh.dataRaw = litCubePrimitive.getData( );
     litCubeSubMesh.vertexCount = litCubePrimitive.getVertexCount( );
 
     const std::string &plainCubePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube );
-    geometryTable[ 1 ] = { };
-    MeshGeometry &plainCube = geometryTable[ 1 ];
+    geometryTable[ PLAIN_CUBE_GEOMETRY_IDX ] = { };
+    MeshGeometry &plainCube = geometryTable[ PLAIN_CUBE_GEOMETRY_IDX ];
     SubMeshGeometry &plainCubeSubMesh = plainCube.subGeometries.emplace_back( );
-    plainCubeSubMesh.dataRaw = plainCubePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainCubeSubMesh.dataRaw = plainCubePrimitive.getData( );
     plainCubeSubMesh.vertexCount = plainCubePrimitive.getVertexCount( );
 
     const std::string &plainSquarePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare );
-    geometryTable[ 2 ] = { };
-    MeshGeometry &plainSquare = geometryTable[ 2 ];
+    geometryTable[ PLAIN_SQUARE_GEOMETRY_IDX ] = { };
+    MeshGeometry &plainSquare = geometryTable[ PLAIN_SQUARE_GEOMETRY_IDX ];
     SubMeshGeometry &plainSquareSubMesh = plainSquare.subGeometries.emplace_back( );
-    plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainSquareSubMesh.dataRaw = plainSquarePrimitive.getData( );
     plainSquareSubMesh.vertexCount = plainSquarePrimitive.getVertexCount( );
 
     const std::string &plainTrianglePath = BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle );
-    geometryTable[ 3 ] = { };
-    MeshGeometry &plainTriangle = geometryTable[ 3 ];
+    geometryTable[ PLAIN_TRIANGLE_GEOMETRY_IDX ] = { };
+    MeshGeometry &plainTriangle = geometryTable[ PLAIN_TRIANGLE_GEOMETRY_IDX ];
     SubMeshGeometry &plainTriangleSubMesh = plainTriangle.subGeometries.emplace_back( );
-    plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData( ); //.resize( litCubePrimitive.getVertexCount( ) * sizeof ( float ) );
+    plainTriangleSubMesh.dataRaw = plainTrianglePrimitive.getData( );
     plainTriangleSubMesh.vertexCount = plainTrianglePrimitive.getVertexCount( );
 }
 
@@ -60,9 +60,49 @@ std::shared_ptr< ECS::IGameEntity > AssetManager::createEntity( const std::strin
 {
     std::shared_ptr< ECS::IGameEntity > rootEntity = std::make_shared< ECS::DynamicGameEntity >( );
 
-    loadModel( rootEntity, meshPath );
+    createEntity( rootEntity.get( ), meshPath );
 
     return rootEntity;
+}
+
+void AssetManager::createEntity( ECS::IGameEntity * attachToEntity, const std::string &meshPath )
+{
+    if ( meshPath == Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::LitCube ) )
+    {
+        attachToEntity->createComponent< ECS::CMaterial >( );
+
+        auto mesh = attachToEntity->createComponent< ECS::CMesh >( );
+        mesh->path = meshPath;
+        mesh->geometryRefIdx = LIT_CUBE_GEOMETRY_IDX;
+    }
+    else if ( meshPath == Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::PlainCube ) )
+    {
+        attachToEntity->createComponent< ECS::CMaterial >( );
+
+        auto mesh = attachToEntity->createComponent< ECS::CMesh >( );
+        mesh->path = meshPath;
+        mesh->geometryRefIdx = PLAIN_CUBE_GEOMETRY_IDX;
+    }
+    else if ( meshPath == Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::PlainSquare ) )
+    {
+        attachToEntity->createComponent< ECS::CMaterial >( );
+
+        auto mesh = attachToEntity->createComponent< ECS::CMesh >( );
+        mesh->path = meshPath;
+        mesh->geometryRefIdx = PLAIN_SQUARE_GEOMETRY_IDX;
+    }
+    else if ( meshPath == Graphics::BuiltinPrimitives::getPrimitivePath( Graphics::PrimitiveType::PlainTriangle ) )
+    {
+        attachToEntity->createComponent< ECS::CMaterial >( );
+
+        auto mesh = attachToEntity->createComponent< ECS::CMesh >( );
+        mesh->path = meshPath;
+        mesh->geometryRefIdx = PLAIN_TRIANGLE_GEOMETRY_IDX;
+    }
+    else
+    {
+        loadModel( attachToEntity, meshPath );
+    }
 }
 
 void AssetManager::loadImage( const std::string &path )
@@ -73,7 +113,7 @@ void AssetManager::loadImage( const std::string &path )
 
     if ( contents == nullptr )
     {
-        TRACE( "TextureLoader", VERBOSITY_CRITICAL, stbi_failure_reason( ) )
+        Core::Logger::get( ).log( Core::Verbosity::Debug, stbi_failure_reason( ) );
 
         throw std::runtime_error( "Couldn't find texture." );
     }
@@ -86,7 +126,7 @@ void AssetManager::loadImage( const std::string &path )
     ptr->channels = static_cast< uint32_t >( channels );
 }
 
-void AssetManager::loadModel( const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &path )
+void AssetManager::loadModel( ECS::IGameEntity * rootEntity, const std::string &path )
 {
     tinygltf::TinyGLTF loader;
     std::string err;
@@ -212,7 +252,7 @@ void AssetManager::onEachChannel( const tinygltf::Model &model, const tinygltf::
     animationData.channels.push_back( std::move( animationChannel ) );
 }
 
-void AssetManager::onEachNode( SceneContext &context, const std::shared_ptr< ECS::IGameEntity > &rootEntity, const std::string &currentRootPath, const int &parentNode, const int &currentNode )
+void AssetManager::onEachNode( SceneContext &context, ECS::IGameEntity * rootEntity, const std::string &currentRootPath, const int &parentNode, const int &currentNode )
 {
     addNode( context, parentNode, currentNode );
 
@@ -229,7 +269,7 @@ void AssetManager::onEachNode( SceneContext &context, const std::shared_ptr< ECS
 
             entity->addChild( child );
             auto children = rootEntity->getChildren( );
-            entity = children[ children.size( ) - 1 ];
+            entity = children[ children.size( ) - 1 ].get( );
         }
 
         std::ostringstream keyBuilder;
@@ -424,20 +464,31 @@ void AssetManager::packSubGeometry( SubMeshGeometry &geometry )
     }
 }
 
-MeshGeometry &AssetManager::getMeshGeometry( const int &geometryIdx, const std::string &builtinPrimitive )
+MeshGeometry &AssetManager::getMeshGeometry( const int &geometryIdx )
 {
     int idx = geometryIdx;
 
     if ( idx == -1 )
     {
-        idx = findBuiltinPrimitiveIdx( builtinPrimitive );
-        if ( idx == -1 )
-        {
-            throw GraphicsException { "AssetManager", "Could not find geometry!" };
-        }
+        throw GraphicsException { "AssetManager", "Could not find geometry!" };
     }
 
     return geometryTable[ idx ];
+}
+
+MeshGeometry &AssetManager::getPrimitive( const PrimitiveType& primitive )
+{
+    switch ( primitive )
+    {
+        case PrimitiveType::LitCube:
+            return geometryTable[ LIT_CUBE_GEOMETRY_IDX ];
+        case PrimitiveType::PlainCube:
+            return geometryTable[ PLAIN_CUBE_GEOMETRY_IDX ];
+        case PrimitiveType::PlainSquare:
+            return geometryTable[ PLAIN_SQUARE_GEOMETRY_IDX ];
+        case PrimitiveType::PlainTriangle:
+            return geometryTable[ PLAIN_TRIANGLE_GEOMETRY_IDX ];
+    }
 }
 
 std::shared_ptr< SamplerDataAttachment > AssetManager::getImage( const std::string &path )
@@ -460,31 +511,6 @@ int AssetManager::tryGetPrimitiveAttribute( const tinygltf::Primitive &primitive
     if ( attributeSearch != primitive.attributes.end( ) )
     {
         return attributeSearch->second;
-    }
-
-    return -1;
-}
-
-int AssetManager::findBuiltinPrimitiveIdx( const std::string &primitiveName ) const
-{
-    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::LightedCube ) )
-    {
-        return 0;
-    }
-
-    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainCube ) )
-    {
-        return 1;
-    }
-
-    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainSquare ) )
-    {
-        return 2;
-    }
-
-    if ( primitiveName == BuiltinPrimitives::getPrimitivePath( PrimitiveType::PlainTriangle ) )
-    {
-        return 3;
     }
 
     return -1;
@@ -544,10 +570,9 @@ void AssetManager::addNode( SceneContext &sceneContext, int parent, int nodeId )
     {
         sceneContext.nodeTree->addNode( sceneContext.nodeTree->findNode( parent ), nodeId, meshNode );
     }
-
 }
 
-void AssetManager::attachMaterialData( SceneContext &context, std::shared_ptr< ECS::IGameEntity > entity, int mesh )
+void AssetManager::attachMaterialData( SceneContext &context, ECS::IGameEntity * entity, int mesh )
 {
     tinygltf::Mesh meshNode = context.model.meshes[ mesh ];
 

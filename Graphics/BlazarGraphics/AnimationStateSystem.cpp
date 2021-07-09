@@ -44,7 +44,7 @@ void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &a
 {
     auto currentNode = anim->currentNode;
 
-    MeshGeometry &geometry = assetManager->getMeshGeometry( anim->mesh->geometryRefIdx, "" );
+    MeshGeometry &geometry = assetManager->getMeshGeometry( anim->mesh->geometryRefIdx );
 
     AnimationData &animation = geometry.animations[ currentNode->animName ];
 
