@@ -1,5 +1,3 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
-
 SET(CORE_BOOST_LIBS
         algorithm
         predef

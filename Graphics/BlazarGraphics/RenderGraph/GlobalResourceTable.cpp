@@ -192,14 +192,14 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
 	return data;
 }
 
-void GlobalResourceTable::attachAllAttachments( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource )
+void GlobalResourceTable::attachAllAttachments( const IShaderUniform* content, const std::shared_ptr<ShaderResource>& resource )
 {
 	attachUniformAttachment( content, resource );
 	attachCubeMapAttachment( content, resource );
 	attachSamplerAttachment( content, resource );
 }
 
-void GlobalResourceTable::attachUniformAttachment( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource ) const
+void GlobalResourceTable::attachUniformAttachment( const IShaderUniform* content, const std::shared_ptr<ShaderResource>& resource ) const
 {
 	if ( content->resourceType == ResourceType::Uniform || content->resourceType == ResourceType::PushConstant )
 	{
@@ -217,7 +217,7 @@ void GlobalResourceTable::attachUniformAttachment( const IShaderUniform* content
 	}
 }
 
-void GlobalResourceTable::attachCubeMapAttachment( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource ) const
+void GlobalResourceTable::attachCubeMapAttachment( const IShaderUniform* content, const std::shared_ptr<ShaderResource>& resource ) const
 {
 	if ( content->resourceType == ResourceType::CubeMap )
 	{
@@ -235,7 +235,7 @@ void GlobalResourceTable::attachCubeMapAttachment( const IShaderUniform* content
 }
 
 
-void GlobalResourceTable::attachSamplerAttachment( const IShaderUniform* content, std::shared_ptr<ShaderResource> resource )
+void GlobalResourceTable::attachSamplerAttachment( const IShaderUniform* content, const std::shared_ptr<ShaderResource>& resource )
 {
 	if ( content->resourceType == ResourceType::Sampler2D )
 	{
@@ -308,7 +308,7 @@ void GlobalResourceTable::allocateResource( const int& resourceIdx, const std::s
 	}
 }
 
-auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo& texture ) -> std::shared_ptr< SamplerDataAttachment >&
+auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo& texture ) -> std::shared_ptr< SamplerDataAttachment >
 {
 	std::shared_ptr< SamplerDataAttachment > samplerAttachment;
 

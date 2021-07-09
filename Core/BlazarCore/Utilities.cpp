@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "Utilities.h"
 #include <vector>
 #include <glm/gtc/quaternion.hpp>
-#include <io.h>
 
 NAMESPACES( ENGINE_NAMESPACE, Core )
 
@@ -173,7 +172,8 @@ bool Utilities::doesFileExist( const std::string &file )
 #ifdef WIN32
     return _access(file.c_str(), 0) != -1;
 #else
-    return access( file.c_str(), F_OK ) != -1;
+    return false;
+    //return access( file.c_str(), 0 ) != -1;
 #endif
 }
 

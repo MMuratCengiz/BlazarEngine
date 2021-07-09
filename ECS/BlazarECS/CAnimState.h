@@ -22,6 +22,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <utility>
 #include "CMesh.h"
+#include <unordered_map>
+#include <vector>
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 

@@ -83,7 +83,7 @@ public:
     void resetFrame( const int& frameIdx );
 
     std::shared_ptr< ShaderResource >& getResource( const int& resourceIdx, const uint32_t &frameIndex );
-    std::shared_ptr< SamplerDataAttachment >& getSamplerDataAttachment( const ECS::Material::TextureInfo& texture );
+    std::shared_ptr< SamplerDataAttachment > getSamplerDataAttachment( const ECS::Material::TextureInfo& texture );
 
     std::vector< EntityWrapper >& getGeometryList( const InputGeometry& inputGeometry );
 
@@ -109,10 +109,10 @@ private:
                                                       const ResourceShaderStage &shaderStage = ResourceShaderStage::Vertex ) const;
 
     EntityWrapper createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void attachAllAttachments( const IShaderUniform * content, std::shared_ptr<ShaderResource> resource );
-    void attachUniformAttachment( const IShaderUniform * content, std::shared_ptr<ShaderResource> resource ) const;
-    void attachCubeMapAttachment( const IShaderUniform * content, std::shared_ptr<ShaderResource> resource ) const;
-    void attachSamplerAttachment( const IShaderUniform * content, std::shared_ptr<ShaderResource> resource );
+    void attachAllAttachments( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource );
+    void attachUniformAttachment( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource ) const;
+    void attachCubeMapAttachment( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource ) const;
+    void attachSamplerAttachment( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource );
     void createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity );
     void createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities );
     GeometryData createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, SubMeshGeometry &subMeshGeometry );

@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <BlazarCore/Common.h>
 #include "IComponent.h"
+#include <vector>
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
