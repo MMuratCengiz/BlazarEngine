@@ -24,13 +24,51 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, ECS )
 
+struct ComponentTypeRef
+{
+private:
+    uint64_t typeCount = 0;
+
+    template< class T >
+    struct IdCounter
+    {
+        inline static uint64_t instanceCount = 0;
+        inline static uint64_t assignedType = 0;
+
+        IdCounter( )
+        {
+            instanceCount++;
+        }
+    };
+public:
+    static ComponentTypeRef& get()
+    {
+        static ComponentTypeRef instance;
+        return instance;
+    }
+
+    template< class T >
+    uint64_t getTypeId( )
+    {
+        IdCounter< T > countDummy{ };
+
+        if ( countDummy.instanceCount == 1 )
+        {
+            IdCounter< T >::assignedType = typeCount;
+            return typeCount++;
+        }
+
+        return IdCounter< T >::assignedType;
+    }
+};
+
 struct IComponent
 {
 public:
-    const std::type_index typeId;
+    const uint64_t typeId;
     uint64_t uid;
 
-    inline explicit IComponent( const std::type_index& typeId ) : typeId( typeId )
+    inline explicit IComponent( const uint64_t& typeId ) : typeId( typeId )
     {
         static std::mutex uidGenLock;
         static uint64_t entityUidCounter = 0;
@@ -45,8 +83,10 @@ public:
 
 typedef std::shared_ptr< IComponent > pComponent;
 
-#define BLAZAR_COMPONENT( ClassType ) ClassType( ) : IComponent( typeid( ClassType ) ) { } ~ClassType( ) override = default;
+#define BLAZAR_UNIQUE_TYPE_ID( ClassType ) ComponentTypeRef::get().getTypeId< ClassType >( )
 
-#define BLAZAR_COMPONENT_CUSTOM_DESTRUCTOR( ClassType ) ClassType( ) : IComponent( typeid( ClassType ) ) { }
+#define BLAZAR_COMPONENT( ClassType ) ClassType( ) : IComponent( BLAZAR_UNIQUE_TYPE_ID( ClassType ) ) { } ~ClassType( ) override = default;
+
+#define BLAZAR_COMPONENT_CUSTOM_DESTRUCTOR( ClassType ) ClassType( ) : IComponent( BLAZAR_UNIQUE_TYPE_ID( ClassType ) ) { }
 
 END_NAMESPACES

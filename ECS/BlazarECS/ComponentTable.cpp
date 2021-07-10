@@ -25,7 +25,7 @@ void BlazarEngine::ECS::ComponentTable::addAllEntityComponentRecursive( const st
         addNewComponent( component );
     }
 
-    for ( auto child: gameEntity->getChildren( ) )
+    for ( const auto &child: gameEntity->getChildren( ) )
     {
         addAllEntityComponentRecursive( child );
     }
@@ -33,28 +33,26 @@ void BlazarEngine::ECS::ComponentTable::addAllEntityComponentRecursive( const st
 
 void BlazarEngine::ECS::ComponentTable::addNewComponent( std::shared_ptr< IComponent > component )
 {
-    auto componentList = componentTable.find( component->typeId );
-
-    if ( componentList == componentTable.end( ) )
+    if ( component->typeId >= componentTable.size( ) )
     {
+        componentTable.resize( component->typeId + 1 );
         componentTable[ component->typeId ] = { };
-        componentList = componentTable.find( component->typeId );
     }
-
-    componentList->second.push_back( std::move( component ) );
+  
+    componentTable[ component->typeId ].push_back( std::move( component ) );
 }
 
 void BlazarEngine::ECS::ComponentTable::removeComponent( const std::shared_ptr< IComponent > &component )
 {
-    auto componentList = componentTable.find( component->typeId );
+    FUNCTION_BREAK( component->typeId >= componentTable.size(  ) )
 
-    FUNCTION_BREAK( componentList == componentTable.end( ) ) // Nothing to do
+    auto componentList = componentTable[ component->typeId ];
 
-    for ( auto it = componentList->second.begin( ); it != componentList->second.end( ); ++it )
+    for ( auto it = componentList.begin( ); it != componentList.end( ); ++it )
     {
         if ( it->get( )->uid == component->uid )
         {
-            componentList->second.erase( it );
+            componentList.erase( it );
         }
     }
 }

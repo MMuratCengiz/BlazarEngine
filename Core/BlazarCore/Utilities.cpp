@@ -170,7 +170,8 @@ std::string Utilities::combineDirectories( const std::string &directory, const s
 bool Utilities::doesFileExist( const std::string &file )
 {
 #ifdef WIN32
-    return _access(file.c_str(), 0) != -1;
+    return false;
+    // return _access(file.c_str(), 0) != -1;
 #else
     return false;
     //return access( file.c_str(), 0 ) != -1;

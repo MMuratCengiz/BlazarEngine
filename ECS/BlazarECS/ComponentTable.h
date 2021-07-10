@@ -29,7 +29,7 @@ class ComponentTable
 {
 private:
     /* Used Table Structure */
-    std::unordered_map< std::type_index,
+    std::vector<
             std::vector < // dynamically indexed componentId != index
                 std::shared_ptr< IComponent > > > componentTable;
 public:
@@ -43,25 +43,22 @@ public:
     {
         auto result = std::vector< std::shared_ptr< ComponentType > >( );
 
-        auto componentList = componentTable.find( typeid( ComponentType ) );
+        const uint64_t typeId = ComponentTypeRef::get( ).getTypeId< ComponentType >( );
 
-        if ( componentList == componentTable.end( ) )
+        if ( typeId >= componentTable.size( ) )
         {
             return result;
         }
 
-        for ( auto& component: componentList->second )
+        auto componentList = componentTable[ typeId ];
+
+        for ( auto& component: componentList )
         {
             auto castedComponent = std::dynamic_pointer_cast< ComponentType >( component );
             result.push_back( castedComponent );
         }
 
         return result;
-    }
-
-    template< class ComponentType >
-    inline static std::type_index getComponentTypeId( ) {
-        return typeid( ComponentType );
     }
 };
 
