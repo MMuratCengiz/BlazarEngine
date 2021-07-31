@@ -60,6 +60,11 @@ public:
 
         return IdCounter< T >::assignedType;
     }
+
+    uint64_t createNewTypeId( )
+    {
+        return typeCount++;
+    }
 };
 
 struct IComponent

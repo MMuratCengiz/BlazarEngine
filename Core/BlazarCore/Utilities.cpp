@@ -106,7 +106,7 @@ std::vector< char > Utilities::readFile( const std::string &filename )
     return contents;
 }
 
-glm::mat4 Utilities::getTRSMatrix(const glm::vec3& t, const glm::quat& r, const glm::vec3& s)
+glm::mat4 Utilities::getTRSMatrix( const glm::vec3 &t, const glm::quat &r, const glm::vec3 &s )
 {
     glm::mat4 modelMatrix { 1 };
 

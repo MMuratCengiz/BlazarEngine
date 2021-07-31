@@ -42,7 +42,7 @@ private:
 
 	bool running = true;
 
-    explicit Logger( const LoggerType& loggerType );
+	explicit Logger( const LoggerType& loggerType );
 public:
 	static Logger& get( )
 	{
@@ -66,3 +66,5 @@ private:
 };
 
 END_NAMESPACES
+
+#define LOG( verbosity, component, message)  ENGINE_NAMESPACE::Core::Logger::get( ).log( verbosity, component, message )

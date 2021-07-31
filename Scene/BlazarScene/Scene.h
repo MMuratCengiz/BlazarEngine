@@ -28,32 +28,32 @@ NAMESPACES( ENGINE_NAMESPACE, Scene )
 class Scene
 {
 private:
-    std::shared_ptr< ECS::ComponentTable > componentTable;
+	std::shared_ptr< ECS::ComponentTable > componentTable;
 
-    std::vector< std::shared_ptr< ECS::IGameEntity > > entities;
+	std::vector< std::shared_ptr< ECS::IGameEntity > > entities;
 public:
-    Scene( )
-    {
-        componentTable = std::make_shared< ECS::ComponentTable >( );
-    }
+	Scene( )
+	{
+		componentTable = std::make_shared< ECS::ComponentTable >( );
+	}
 
-    inline void addEntity( std::shared_ptr< ECS::IGameEntity > entity )
-    {
-        NOT_NULL( entity );
+	inline void addEntity( std::shared_ptr< ECS::IGameEntity > entity )
+	{
+		NOT_NULL( entity );
 
-        componentTable->addAllEntityComponentRecursive( entity );
-        entities.emplace_back( std::move( entity ) );
-    }
+		componentTable->addAllEntityComponentRecursive( entity );
+		entities.emplace_back( std::move( entity ) );
+	}
 
-    [[nodiscard]] const std::vector< std::shared_ptr< ECS::IGameEntity > > &getEntities( ) const
-    {
-        return entities;
-    }
+	[[nodiscard]] const std::vector< std::shared_ptr< ECS::IGameEntity > >& getEntities( ) const
+	{
+		return entities;
+	}
 
-    [[nodiscard]] const std::shared_ptr< ECS::ComponentTable > &getComponentTable( ) const
-    {
-        return componentTable;
-    }
+	[[nodiscard]] const std::shared_ptr< ECS::ComponentTable >& getComponentTable( ) const
+	{
+		return componentTable;
+	}
 };
 
 END_NAMESPACES
