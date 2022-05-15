@@ -21,6 +21,7 @@ ADD_SHADER(vertex gBuffer)
 ADD_SHADER(vertex gBuffer_outlined)
 ADD_SHADER(vertex gBuffer_Animated)
 ADD_SHADER(vertex tessellated_proxy)
+ADD_SHADER(vertex quad_position)
 
 ADD_SHADER(fragment gBuffer)
 ADD_SHADER(fragment gBuffer_outlined)

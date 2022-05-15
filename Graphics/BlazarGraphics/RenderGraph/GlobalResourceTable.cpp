@@ -347,8 +347,7 @@ auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::Texture
 
 std::shared_ptr< ShaderResource >& GlobalResourceTable::getResource( const int& resourceIdx, const uint32_t& frameIndex )
 {
-	auto resource = frameResources[ frameIndex ][ resourceIdx ];
-	return resource.ref;
+	return frameResources[ frameIndex ][ resourceIdx ].ref;
 }
 
 void GlobalResourceTable::allocateAllPerGeometryResources( const int& frameIndex, const MeshGeometry& parent, const SubMeshGeometry& subMeshGeometry )

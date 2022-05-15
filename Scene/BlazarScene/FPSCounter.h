@@ -57,7 +57,7 @@ public:
             start = nowInSeconds( );
             std::stringstream s;
             s << "FPS: " << fpsCounter;
-            Core::Logger::get( ).log( Core::Verbosity::Debug, "FPSCounter", s.str( ).c_str( ) );
+            Core::Logger::get( ).log( Core::Verbosity::Information, "FPSCounter", s.str( ).c_str( ) );
 
             fpsCounter = 0;
         }

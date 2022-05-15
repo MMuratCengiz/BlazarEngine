@@ -31,8 +31,8 @@ SampleAnimatedFox::SampleAnimatedFox( Scene::World *world )
 
     addChild( meshEntities );
 
-    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( this, glm::vec3( 3.0f, 0.15f, 5.0f ) );
-    BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( this, glm::vec3( 1.0f, 1.0f, 1.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( this, glm::vec3( 6.0f, 0.15f, 5.0f ) );
+    BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( this, glm::vec3( 0.5f, 0.5f, 0.5f ) );
 
     iterChildren( meshEntities );
 }

@@ -3,11 +3,11 @@
 layout(vertices = 3) out;
 
 layout(location = 0) in vec4 inPosition[];
-layout(location = 1) in vec3 inNormal[];
+layout(location = 1) in vec4 inNormal[];
 layout(location = 2) in vec2 inTextureCoor[];
 
 layout(location = 0) out vec4 outPosition[3];
-layout(location = 1) out vec3 outNormal[3];
+layout(location = 1) out vec4 outNormal[3];
 layout(location = 2) out vec2 outTextureCoor[3];
 
 layout(set = 5, binding = 0) uniform Tessellation {

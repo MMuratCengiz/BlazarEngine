@@ -27,7 +27,7 @@ class Logger
 private:
 
 #ifdef DEBUG
-	const Verbosity globalVerbosity = Verbosity::Debug;
+	const Verbosity globalVerbosity = Verbosity::Information;
 #elif 
 	const Verbosity globalVerbosity = Verbosity::Critical;
 #endif

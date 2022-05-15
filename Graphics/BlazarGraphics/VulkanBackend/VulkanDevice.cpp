@@ -44,7 +44,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverity
             break;
     }
 
-    Core::Logger::get( ).log( Core::Verbosity::Information, "VulkanDevice", pCallbackData->pMessage );
+    Core::Logger::get( ).log( verbosity, "VulkanDevice", pCallbackData->pMessage );
 
     return VK_FALSE;
 }

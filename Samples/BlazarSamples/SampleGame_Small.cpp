@@ -29,14 +29,14 @@ void SampleGame_Small::init( )
     sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec3( 0.25f, 0.25f, 0.22f );
     sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.005f;
 
-    glm::vec3 pos = glm::vec3( 1, 1, 1 );
-    glm::vec3 front = glm::vec3( 0.0, 0.0, 0.0 );
+    glm::vec3 pos = glm::normalize( glm::vec3( 29.65, 18.5822, -4.01676 ) );
+    glm::vec3 front = glm::normalize( glm::vec3( -0.708259,-0.615661,0.345442 ) );
 
     sceneLights->createComponent< ECS::CDirectionalLight >( );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->diffuse = glm::vec3( 1.0, 1.0f, 0.99f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->direction = front - pos;
     sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec3( 1.0, 1.0f, 0.99f );
-    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.15f;
+    sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.35f;
 
     cameraComponent = std::make_shared< ECS::DynamicGameEntity >( );
     cameraComponent->createComponent< ECS::CCamera >( );
@@ -56,8 +56,8 @@ void SampleGame_Small::init( )
     initialScene->addEntity( cameraComponent );
     initialScene->addEntity( floor );
     initialScene->addEntity( sky );
-//    initialScene->addEntity( car1 );
-//    initialScene->addEntity( car2 );
+    initialScene->addEntity( car1 );
+    initialScene->addEntity( car2 );
     initialScene->addEntity( animDummy );
     world->setScene( initialScene );
 

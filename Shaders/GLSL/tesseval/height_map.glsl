@@ -15,11 +15,11 @@ layout(set = 2, binding = 0) uniform Material {
 layout(set = 4, binding = 0) uniform sampler2D HeightMap;
 
 layout(location = 0) in vec4 inPosition[];
-layout(location = 1) in vec3 inNormal[];
+layout(location = 1) in vec4 inNormal[];
 layout(location = 2) in vec2 inTextureCoor[];
 
 layout(location = 0) out vec4 outPosition;
-layout(location = 1) out vec3 outNormal;
+layout(location = 1) out vec4 outNormal;
 layout(location = 2) out vec2 outTextureCoor;
 
 void main() {

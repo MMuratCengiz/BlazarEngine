@@ -60,7 +60,7 @@ enum class ImageFormat
 
 struct InMemoryTexture
 {
-    unsigned char * contents;
+    unsigned char *contents;
     uint32_t width;
     uint32_t height;
     uint32_t channels;
@@ -85,21 +85,14 @@ struct TextureInfo
     float maxLod = 0.0f;
 };
 
-struct TextureScaleOptions
-{
-    bool scaleX = false;
-    bool scaleY = false;
-    bool scaleZ = false;
-};
-
 END_NAMESPACE
 
 struct CMaterial : public IComponent
 {
 public:
-    Material::TextureScaleOptions textureScaleOptions;
+    glm::vec3 textureScale = glm::vec3( 1.0f );
     std::vector< Material::TextureInfo > textures;
-    Material::TextureInfo heightMap{ };
+    Material::TextureInfo heightMap { };
     glm::vec4 diffuse { };
     glm::vec4 specular { };
     float shininess = 0.3f;
