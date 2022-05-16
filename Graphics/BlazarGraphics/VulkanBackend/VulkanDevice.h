@@ -41,6 +41,9 @@ private:
     const std::vector< const char * > REQUIRED_EXTENSIONS {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_MAINTENANCE1_EXTENSION_NAME
+#if __APPLE_CC__
+            ,"VK_KHR_portability_subset"
+#endif
     };
 
     const std::vector< QueueType > queueTypes = {

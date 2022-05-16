@@ -71,7 +71,7 @@ void VulkanDevice::createDevice( RenderWindow *window )
                     VK_MAKE_VERSION( 1, 0, 0 ),
                     "No Engine",
                     VK_MAKE_VERSION( 1, 0, 0 ),
-                    VK_API_VERSION_1_2,
+                    VK_API_VERSION_1_1,
             };
 
     vk::InstanceCreateInfo createInfo
@@ -87,7 +87,7 @@ void VulkanDevice::createDevice( RenderWindow *window )
 #if DEBUG
     extensions.emplace_back( VK_EXT_DEBUG_UTILS_EXTENSION_NAME );
 #endif
-    createInfo.enabledExtensionCount = glfwExtensionCount + 1;
+    createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data( );
 
     std::vector< const char * > layers;
@@ -371,7 +371,8 @@ void VulkanDevice::createSurface( )
 #endif
 
 #if __APPLE_CC__
-    glfwCreateWindowSurface( context->instance, context->window->getWindow(), nullptr, &surface);
+    auto result = glfwCreateWindowSurface( instance, context->window->getWindow(), nullptr, &surface );
+    VkCheckResult( vk::Result( result ) );
 #endif
 
     context->surface = vk::SurfaceKHR( surface );

@@ -4,4 +4,5 @@ cmake-build-release/
 out/
 .vs/
 .cache
+.DS_Store
 build

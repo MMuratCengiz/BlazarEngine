@@ -52,9 +52,13 @@ public:
             Core::Logger::get( ).log( Core::Verbosity::Critical, "Window", errorBuffer );
         }
 
+        glfwSetErrorCallback([](int code, const char* message) {
+            Core::Logger::get( ).log( Core::Verbosity::Critical, "Window", message );
+        });
+
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 
-#ifdef MACOS
+#ifdef __APPLE_CC__
         glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
 #endif
 
@@ -66,9 +70,6 @@ public:
             glfwGetError( &errorBuffer );
             Core::Logger::get( ).log( Core::Verbosity::Critical, "Window", errorBuffer );
         }
-
-        glfwMakeContextCurrent( window );
-        glfwSwapInterval( 0 );
 
         uint32_t count;
         auto extensions = glfwGetRequiredInstanceExtensions( &count );
