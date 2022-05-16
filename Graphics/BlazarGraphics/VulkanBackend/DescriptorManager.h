@@ -70,7 +70,7 @@ struct PushConstantBinding
 
 struct DescriptorPool
 {
-    int freeDescriptors;
+    uint32_t freeDescriptors;
     vk::DescriptorPool pool;
 };
 
@@ -156,7 +156,7 @@ private:
     void addUniformDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout, const uint32_t &objectIndex );
     void addTextureDescriptorSet( const std::string &uniformName, UniformLocation &location, vk::DescriptorSetLayout &layout, const uint32_t &objectIndex );
 
-    DescriptorPool &findFreeDescriptorPool( const bool &findUniformPool, const int &requiredAllocations );
+    DescriptorPool &findFreeDescriptorPool( const bool &findUniformPool, const uint32_t &requiredAllocations );
     void createNullResources( );
 };
 

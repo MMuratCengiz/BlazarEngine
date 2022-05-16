@@ -152,7 +152,8 @@ void GLSLShaderSet::createVertexInput( const uint32_t &offset, const GLSLType &t
     if ( interleavedMode )
     {
         desc.binding = 0;
-    } else
+    }
+    else
     {
         vk::VertexInputBindingDescription &bindingDesc = inputBindingDescriptions.emplace_back( vk::VertexInputBindingDescription { } );
         bindingDesc.binding = inputBindingDescriptions.size( ) - 1;

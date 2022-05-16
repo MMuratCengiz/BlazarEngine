@@ -114,9 +114,9 @@ void DescriptorManager::addUniformDescriptorSet( const std::string &uniformName,
 {
     uint32_t swapChainImageCount = context->swapChainImages.size( );
 
-    std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount * descriptorPoolSize, layout };
+    std::vector< vk::DescriptorSetLayout > layoutsPtr { swapChainImageCount, layout };
 
-    DescriptorPool & pool = findFreeDescriptorPool( false, layoutsPtr.size( ) );
+    DescriptorPool & pool = findFreeDescriptorPool( true, layoutsPtr.size( ) );
 
     vk::DescriptorSetAllocateInfo allocateInfo { };
     allocateInfo.descriptorPool = pool.pool;
@@ -390,7 +390,7 @@ std::string DescriptorManager::getUniformKey( const std::string &uniformName, co
     return key.str( );
 }
 
-DescriptorPool& DescriptorManager::findFreeDescriptorPool( const bool& findUniformPool, const int& requiredAllocations )
+DescriptorPool& DescriptorManager::findFreeDescriptorPool( const bool& findUniformPool, const uint32_t& requiredAllocations )
 {
     auto & pools = findUniformPool ? uniformDescriptorPool : samplerDescriptorPool;
 

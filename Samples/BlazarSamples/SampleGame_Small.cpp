@@ -46,7 +46,7 @@ void SampleGame_Small::init( )
     floor = std::make_shared< SampleFloor >( world );
     sky = std::make_shared< SampleCubeMap >( world );
 
-    animDummy = std::make_shared< SampleAnimatedFox >( world );
+//    animDummy = std::make_shared< SampleAnimatedFox >( world );
 
     car1 = std::make_shared< SampleCar1 >( world );
     car2 = std::make_shared< SampleCar2 >( world );
@@ -58,7 +58,7 @@ void SampleGame_Small::init( )
     initialScene->addEntity( sky );
     initialScene->addEntity( car1 );
     initialScene->addEntity( car2 );
-    initialScene->addEntity( animDummy );
+//    initialScene->addEntity( animDummy );
     world->setScene( initialScene );
 
     Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )

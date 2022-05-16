@@ -149,7 +149,6 @@ void World::run( const std::shared_ptr< IPlayable > &game )
             }
         }
 
-        glfwSwapBuffers( glfwWindow );
         glfwPollEvents( );
 
         eventHandler->pollEvents( );

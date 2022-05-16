@@ -269,18 +269,18 @@ void VulkanDevice::setupQueueFamilies( )
 
         if ( hasGraphics && !exists( QueueType::Graphics ) )
         {
-            context->queueFamilies[ QueueType::Graphics ] = QueueFamily { index, property };
+            context->queueFamilies[ QueueType::Graphics ] = QueueFamily { index, VkQueueFlags(property.queueFlags) };
         }
         else if ( hasTransfer && !exists( QueueType::Transfer ) )
         { // Try to fetch a unique transfer queue
-            context->queueFamilies[ QueueType::Transfer ] = QueueFamily { index, property };
+            context->queueFamilies[ QueueType::Transfer ] = QueueFamily { index, VkQueueFlags(property.queueFlags) };
         }
 
         vk::Bool32 presentationSupport = context->physicalDevice.getSurfaceSupportKHR( index, context->surface );
 
         if ( presentationSupport && !exists( QueueType::Presentation ) )
         {
-            context->queueFamilies[ QueueType::Presentation ] = QueueFamily { index, property };
+            context->queueFamilies[ QueueType::Presentation ] = QueueFamily { index, VkQueueFlags(property.queueFlags) };
         }
 
         ++index;

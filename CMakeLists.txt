@@ -1,5 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 
+SET(VULKAN_SDK /Users/crs/VulkanSDK/1.3.204.1/macOS)
+SET(DYLD_LIBRARY_PATH ${VULKAN_SDK}/lib:${DYLD_LIBRARY_PATH}:)
+SET(VK_LAYER_PATH ${VULKAN_SDK/share/vulkan/explicit_layer.d})
+SET(VK_ICD_FILENAMES ${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json)
+
 PROJECT(BlazarEngine)
 
 SET(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/Shaders/)
