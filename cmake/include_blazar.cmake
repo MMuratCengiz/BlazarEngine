@@ -12,7 +12,7 @@ SET(Shaders
 
 
 SET(SPVDir
-        "${PROJECT_SOURCE_DIR}/external/SPIRV-Cross"
+        "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross"
         )
 
 
@@ -36,8 +36,8 @@ SET(SPV
         ${SPVDir}/spirv_cross_parsed_ir.cpp
         )
 
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/3DModelLoader/")
+ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/3DModelLoader/")
 
 INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/3DModelLoader/src"
+        "${CMAKE_SOURCE_DIR}/3DModelLoader/src"
 )

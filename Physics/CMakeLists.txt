@@ -1,4 +1,4 @@
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
 
 SET(BlazarPhysicsSources
         BlazarPhysics/PhysicsWorld.h
