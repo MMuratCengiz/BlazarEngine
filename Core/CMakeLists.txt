@@ -17,6 +17,6 @@ ADD_LIBRARY(BlazarCore ${BlazarCoreSources})
 SET(INCLUDE_BOOST_TARGET BlazarCore)
 SET(REQUESTED_BOOST_LIBS format atomic log)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 SET_TARGET_PROPERTIES(BlazarCore PROPERTIES LINKER_LANGUAGE CXX)

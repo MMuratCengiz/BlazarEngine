@@ -7,7 +7,7 @@ SET(VK_ICD_FILENAMES ${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json)
 
 PROJECT(BlazarEngine)
 
-SET(SHADER_ROOT_DIR ${CMAKE_SOURCE_DIR}/Shaders/)
+SET(SHADER_ROOT_DIR ${PROJECT_SOURCE_DIR}/Shaders/)
 
 FUNCTION(add_shader SHADER_TYPE SHADER_NAME)
     SET(INPUT_FILE "${SHADER_ROOT_DIR}GLSL/${SHADER_TYPE}/${SHADER_NAME}.glsl")
@@ -46,74 +46,74 @@ ADD_SHADER(fragment smaaBlendWeight)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_external.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_blazar.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_bullet.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_blazar.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_bullet.cmake)
 
 ADD_DEFINITIONS(-DENGINE_NAMESPACE=BlazarEngine)
 ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
 ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ADD_DEFINITIONS(-DDEBUG)
 ADD_DEFINITIONS(-DG_VERBOSITY=3)
-ADD_DEFINITIONS(-DROOT_DIR="${CMAKE_SOURCE_DIR}")
+ADD_DEFINITIONS(-DROOT_DIR="${PROJECT_SOURCE_DIR}")
 ADD_DEFINITIONS(-DGTEST_LANG_CXX11=1)
 
 FIND_PACKAGE(Vulkan REQUIRED)
 
 # BLAZAR CORE LIBRARY #####################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Core/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Core/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/Core"
+        "${PROJECT_SOURCE_DIR}/Core"
 )
 ###########################################################################################################################################
 
 # BLAZAR ECS LIBRARY ######################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/ECS/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/ECS/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/ECS"
+        "${PROJECT_SOURCE_DIR}/ECS"
 )
 ############################################################################################################################################
 
 # BLAZAR INPUT LIBRARY #####################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Input/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Input/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/Input"
+        "${PROJECT_SOURCE_DIR}/Input"
 )
 ############################################################################################################################################
 
 # BLAZAR GRAPHICS LIBRARY ##################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Graphics/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Graphics/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/Graphics"
+        "${PROJECT_SOURCE_DIR}/Graphics"
 )
 ############################################################################################################################################
 
 # BLAZAR PHYSICS LIBRARY ###################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Physics/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Physics/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/Physics"
+        "${PROJECT_SOURCE_DIR}/Physics"
 )
 ############################################################################################################################################
 
 # BLAZAR SCENE LIBRARY #####################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Scene/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Scene/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/Scene"
+        "${PROJECT_SOURCE_DIR}/Scene"
 )
 ############################################################################################################################################
 
 # BLAZAR SAMPLES LIBRARY ###################################################################################################################
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/Samples/")
+ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Samples/")
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/Samples"
+        "${PROJECT_SOURCE_DIR}/Samples"
 )
 ############################################################################################################################################
 
