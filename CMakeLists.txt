@@ -118,12 +118,12 @@ INCLUDE_DIRECTORIES(
 ############################################################################################################################################
 
 ADD_EXECUTABLE(BlazarEngine main.cpp ${Core} ${Graphics} ${Physics} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
+ADD_LIBRARY(BlazarEngine_Lib SHARED ${Core} ${Graphics} ${Physics} ${Input} ${ECS} ${RenderObjects} ${Scene} ${Samples} ${SPV})
 
-TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-TARGET_LINK_LIBRARIES(BlazarEngine
+SET(BlazarLinks
         glm
         Vulkan::Vulkan
-# Blazar Libraries
+        # Blazar Libraries
         BlazarCore
         BlazarECS
         BlazarGraphics
@@ -131,8 +131,8 @@ TARGET_LINK_LIBRARIES(BlazarEngine
         BlazarPhysics
         BlazarSamples
         BlazarScene
-# -- Blazar Libraries
-# Bullet Libraries
+        # -- Blazar Libraries
+        # Bullet Libraries
         Bullet3Common
         Bullet3Geometry
         BulletSoftBody
@@ -142,7 +142,14 @@ TARGET_LINK_LIBRARIES(BlazarEngine
         BulletCollision
         LinearMath
         BulletInverseDynamics
-# -- Bullet Libraries
+        # -- Bullet Libraries
         )
 
+TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+TARGET_COMPILE_DEFINITIONS(BlazarEngine_Lib PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+
+TARGET_LINK_LIBRARIES(BlazarEngine ${BlazarLinks})
+TARGET_LINK_LIBRARIES(BlazarEngine_Lib ${BlazarLinks})
+
 TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${SPVDir})
+TARGET_INCLUDE_DIRECTORIES(BlazarEngine_Lib PUBLIC ${SPVDir})
