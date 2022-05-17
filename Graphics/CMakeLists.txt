@@ -1,6 +1,6 @@
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
 
-SET(BlazarGraphicsSources
+SET(BlazarGraphicsHeaders
         BlazarGraphics/GraphicsException.h
         BlazarGraphics/BuiltinPrimitives.h
         BlazarGraphics/GraphicsCommonIncludes.h
@@ -9,53 +9,62 @@ SET(BlazarGraphicsSources
         BlazarGraphics/IRenderPassProvider.h
         BlazarGraphics/IResourceProvider.h
         BlazarGraphics/RenderWindow.h
-        BlazarGraphics/AssetManager.cpp
         BlazarGraphics/AssetManager.h
-        BlazarGraphics/DataAttachmentFormatter.cpp
         BlazarGraphics/DataAttachmentFormatter.h
         # RenderGraphSources:
         BlazarGraphics/RenderGraph/StaticVars.h
-        BlazarGraphics/RenderGraph/GlobalResourceTable.cpp
         BlazarGraphics/RenderGraph/GlobalResourceTable.h
         BlazarGraphics/RenderGraph/Pass.h
-        BlazarGraphics/RenderGraph/RenderGraph.cpp
         BlazarGraphics/RenderGraph/RenderGraph.h
-        BlazarGraphics/RenderGraph/CommonPasses.cpp
         BlazarGraphics/RenderGraph/CommonPasses.h
-        BlazarGraphics/RenderGraph/GraphSystem.cpp
         BlazarGraphics/RenderGraph/GraphSystem.h
         # VulkanBackendSources:
         BlazarGraphics/VulkanBackend/VulkanDevice.h
-        BlazarGraphics/VulkanBackend/VulkanDevice.cpp
         BlazarGraphics/VulkanBackend/VulkanSurface.h
-        BlazarGraphics/VulkanBackend/VulkanSurface.cpp
         BlazarGraphics/VulkanBackend/VulkanUtilities.h
-        BlazarGraphics/VulkanBackend/VulkanUtilities.cpp
         BlazarGraphics/VulkanBackend/VulkanContext.h
-        BlazarGraphics/VulkanBackend/VulkanPipelineProvider.cpp
         BlazarGraphics/VulkanBackend/VulkanPipelineProvider.h
-        BlazarGraphics/VulkanBackend/VulkanRenderPassProvider.cpp
         BlazarGraphics/VulkanBackend/VulkanRenderPassProvider.h
-        BlazarGraphics/VulkanBackend/VulkanResourceProvider.cpp
         BlazarGraphics/VulkanBackend/VulkanResourceProvider.h
-        BlazarGraphics/VulkanBackend/DescriptorManager.cpp
         BlazarGraphics/VulkanBackend/DescriptorManager.h
         BlazarGraphics/VulkanBackend/VulkanCommandExecutor.h
-        BlazarGraphics/VulkanBackend/VulkanCommandExecutor.cpp
         BlazarGraphics/VulkanBackend/VulkanSamplerAllocator.h
-        BlazarGraphics/VulkanBackend/VulkanSamplerAllocator.cpp
         BlazarGraphics/VulkanBackend/CommandExecutorArguments.h
-        BlazarGraphics/VulkanBackend/VmaImplementation.cpp
         BlazarGraphics/VulkanBackend/GLSLShaderSet.h
-        BlazarGraphics/VulkanBackend/GLSLShaderSet.cpp
-        BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.cpp
         BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h
-        BlazarGraphics/AnimationStateSystem.cpp
         BlazarGraphics/AnimationStateSystem.h
-        BlazarGraphics/RenderGraph/ShaderUniformBinder.cpp
         BlazarGraphics/RenderGraph/ShaderUniformBinder.h)
 
-ADD_LIBRARY(BlazarGraphics ${BlazarGraphicsSources})
+SET(BlazarGraphicsSources
+        BlazarGraphics/AssetManager.cpp
+        BlazarGraphics/DataAttachmentFormatter.cpp
+        # RenderGraphSources:
+        BlazarGraphics/RenderGraph/GlobalResourceTable.cpp
+        BlazarGraphics/RenderGraph/RenderGraph.cpp
+        BlazarGraphics/RenderGraph/CommonPasses.cpp
+        BlazarGraphics/RenderGraph/GraphSystem.cpp
+        # VulkanBackendSources:
+        BlazarGraphics/VulkanBackend/VulkanDevice.cpp
+        BlazarGraphics/VulkanBackend/VulkanSurface.cpp
+        BlazarGraphics/VulkanBackend/VulkanUtilities.cpp
+        BlazarGraphics/VulkanBackend/VulkanPipelineProvider.cpp
+        BlazarGraphics/VulkanBackend/VulkanRenderPassProvider.cpp
+        BlazarGraphics/VulkanBackend/VulkanResourceProvider.cpp
+        BlazarGraphics/VulkanBackend/DescriptorManager.cpp
+        BlazarGraphics/VulkanBackend/VulkanCommandExecutor.cpp
+        BlazarGraphics/VulkanBackend/VulkanSamplerAllocator.cpp
+        BlazarGraphics/VulkanBackend/VmaImplementation.cpp
+        BlazarGraphics/VulkanBackend/GLSLShaderSet.cpp
+        BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.cpp
+        BlazarGraphics/AnimationStateSystem.cpp
+        BlazarGraphics/RenderGraph/ShaderUniformBinder.cpp)
+
+ADD_LIBRARY(BlazarGraphics ${BLAZAR_LIB_TYPE} ${BlazarGraphicsHeaders} ${BlazarGraphicsSources})
+
+IF (DEFINED BLAZAR_INSTALL_LIBS)
+    INSTALL(TARGETS BlazarGraphics DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
+    INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
 

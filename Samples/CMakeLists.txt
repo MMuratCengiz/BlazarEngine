@@ -1,24 +1,34 @@
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
 
-SET(BlazarSamplesSources
+SET(BlazarSamplesHeaders
         BlazarSamples/FpsCamera.h
-        BlazarSamples/FpsCamera.cpp
         BlazarSamples/SampleAnimatedFox.h
-        BlazarSamples/SampleAnimatedFox.cpp
         BlazarSamples/SampleCrate.h
         BlazarSamples/SampleSetupInputBindings.h
         BlazarSamples/SampleSmallCrate.h
         BlazarSamples/SampleGame.h
-        BlazarSamples/SampleGame.cpp
         BlazarSamples/SampleGame_Small.h
-        BlazarSamples/SampleGame_Small.cpp
         BlazarSamples/SampleFloor.h
         BlazarSamples/SampleCar1.h
         BlazarSamples/SampleCar2.h
         BlazarSamples/SampleCubeMap.h
-        BlazarSamples/SampleMovingCrate.h BlazarSamples/SampleAnimatedFox.cpp)
+        BlazarSamples/SampleMovingCrate.h
+        )
 
-ADD_LIBRARY(BlazarSamples ${BlazarSamplesSources})
+SET(BlazarSamplesSources
+        BlazarSamples/FpsCamera.cpp
+        BlazarSamples/SampleAnimatedFox.cpp
+        BlazarSamples/SampleGame.cpp
+        BlazarSamples/SampleGame_Small.cpp
+        BlazarSamples/SampleAnimatedFox.cpp
+        )
+
+ADD_LIBRARY(BlazarSamples ${BLAZAR_LIB_TYPE} ${BlazarSamplesHeaders} ${BlazarSamplesSources})
+
+IF (DEFINED BLAZAR_INSTALL_LIBS)
+    INSTALL(TARGETS BlazarSamples DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
+    INSTALL(FILES ${BlazarSamplesHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+ENDIF()
 
 SET(INCLUDE_BOOST_TARGET BlazarSamples)
 

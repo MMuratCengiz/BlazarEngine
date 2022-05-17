@@ -1,14 +1,23 @@
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
 
-SET(BlazarSceneSources
+SET(BlazarSceneHeaders
         BlazarScene/World.h
         BlazarScene/Scene.h
         BlazarScene/FPSCounter.h
         BlazarScene/IPlayable.h
         BlazarScene/Window.h
-        BlazarScene/World.cpp)
+        )
 
-ADD_LIBRARY(BlazarScene ${BlazarSceneSources})
+SET(BlazarSceneSources
+        BlazarScene/World.cpp
+        )
+
+ADD_LIBRARY(BlazarScene ${BLAZAR_LIB_TYPE} ${BlazarSceneHeaders} ${BlazarSceneSources})
+
+IF (DEFINED BLAZAR_INSTALL_LIBS)
+    INSTALL(TARGETS BlazarScene DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
+    INSTALL(FILES ${BlazarSceneHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarScene PROPERTIES LINKER_LANGUAGE CXX)
 

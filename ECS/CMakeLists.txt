@@ -1,4 +1,4 @@
-SET(BlazarECSSources
+SET(BlazarECSHeaders
         BlazarECS/ECS.h
         BlazarECS/IGameEntity.h
         BlazarECS/IComponent.h
@@ -16,17 +16,25 @@ SET(BlazarECSSources
         BlazarECS/CSpotLight.h
         BlazarECS/CCamera.h
         BlazarECS/ComponentTable.h
-        BlazarECS/ComponentTable.cpp
-        BlazarECS/COutlined.h BlazarECS/CAnimState.h)
+        BlazarECS/COutlined.h
+        BlazarECS/CAnimState.h)
 
-ADD_LIBRARY(BlazarECS ${BlazarECSSources})
+SET(BlazarECSSources
+        BlazarECS/ComponentTable.cpp)
+
+ADD_LIBRARY(BlazarECS ${BLAZAR_LIB_TYPE} ${BlazarECSHeaders} ${BlazarECSSources})
+
+IF (DEFINED BLAZAR_INSTALL_LIBS)
+    INSTALL(TARGETS BlazarECS DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
+    INSTALL(FILES ${BlazarECSHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarECS PROPERTIES LINKER_LANGUAGE CXX)
 
 SET(INCLUDE_BOOST_TARGET BlazarECS)
 SET(REQUESTED_BOOST_LIBS container)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 TARGET_LINK_LIBRARIES(BlazarECS
         BlazarCore
