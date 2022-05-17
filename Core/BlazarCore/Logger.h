@@ -28,8 +28,8 @@ private:
 
 #ifdef DEBUG
 	const Verbosity globalVerbosity = Verbosity::Information;
-#elif 
-	const Verbosity globalVerbosity = Verbosity::Critical;
+#else
+	const Verbosity globalVerbosity = Verbosity::Warning;
 #endif
 
 	const std::string verbosityStrMap[ 4 ] = { "Critical", "Warning", "Information", "Debug" };
@@ -49,8 +49,8 @@ public:
 		static Logger instance(
 #ifdef DEBUG
 			LoggerType::Console
-#elif 
-			LoggerType::File
+#else
+			LoggerType::Console
 #endif		
 		);
 

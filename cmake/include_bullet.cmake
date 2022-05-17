@@ -9,3 +9,5 @@ ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/bullet3/")
 INCLUDE_DIRECTORIES(
         "${PROJECT_SOURCE_DIR}/external/bullet3/src"
 )
+
+LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/bullet3/src")

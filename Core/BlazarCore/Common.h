@@ -22,6 +22,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define WIN32_LEAN_AND_MEAN 
 #endif
 
+#ifndef ENGINE_NAMESPACE
+#define ENGINE_NAMESPACE BlazarEngine
+#endif
+
 #define NAMESPACES( N1, N2 ) namespace N1 { namespace N2 {
 #define NAMESPACE( N1 ) namespace N1 {
 #define END_NAMESPACES } }

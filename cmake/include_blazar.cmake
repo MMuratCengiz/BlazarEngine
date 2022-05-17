@@ -40,12 +40,17 @@ SET(SPVSources
         )
 
 LIST(APPEND BlazarSources ${SPVDir})
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarECS)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarGraphics)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarInput)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarPhysics)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarSamples)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarScene)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Core)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/ECS)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Graphics)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Input)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Physics)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Samples)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Scene)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/stb)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/miniz)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/vma)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/tinygltf)
 
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/3DModelLoader/")
 
