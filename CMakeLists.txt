@@ -142,9 +142,11 @@ SET(BlazarRequiredLibs
         LinearMath
         BulletInverseDynamics
         # -- Bullet Libraries
+        glm
+        glfw
         )
 
-IF (BLAZAR_INSTALL_LIBS)
+IF (${BLAZAR_INSTALL_LIBS})
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
 
     INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
@@ -155,7 +157,6 @@ IF (BLAZAR_INSTALL_LIBS)
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
 ENDIF()
-UNSET(BLAZAR_INSTALL_LIBS)
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine ${BlazarRequiredLibs})

@@ -51,7 +51,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstring>
 #include "Time.h"
 #include <stb_image.h>
-#include "btBulletDynamicsCommon.h"
+#include <btBulletDynamicsCommon.h>
 
 #define PATH( P ) std::string(ROOT_DIR) + P
 
