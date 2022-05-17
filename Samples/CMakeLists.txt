@@ -1,4 +1,4 @@
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 
 SET(BlazarSamplesHeaders
         BlazarSamples/FpsCamera.h
@@ -32,7 +32,7 @@ ENDIF()
 
 SET(INCLUDE_BOOST_TARGET BlazarSamples)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 SET_TARGET_PROPERTIES(BlazarSamples PROPERTIES LINKER_LANGUAGE CXX)
 

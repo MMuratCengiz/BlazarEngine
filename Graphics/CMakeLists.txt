@@ -1,4 +1,4 @@
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 
 SET(BlazarGraphicsHeaders
         BlazarGraphics/GraphicsException.h
@@ -71,7 +71,7 @@ SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
 SET(INCLUDE_BOOST_TARGET BlazarGraphics)
 SET(REQUESTED_BOOST_LIBS format atomic log)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/cmake/include_boost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 TARGET_LINK_LIBRARIES(BlazarGraphics
         glm

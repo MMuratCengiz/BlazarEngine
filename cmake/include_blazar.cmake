@@ -12,7 +12,7 @@ SET(Shaders
 
 
 SET(SPVDir
-        "${CMAKE_SOURCE_DIR}/external/SPIRV-Cross"
+        "${PROJECT_SOURCE_DIR}/external/SPIRV-Cross"
         )
 
 
