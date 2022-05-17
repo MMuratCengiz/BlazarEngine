@@ -7,6 +7,11 @@ INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/miniz")
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/vma")
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/external/tinygltf")
 
+LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/stb")
+LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/miniz")
+LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/vma")
+LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/tinygltf")
+
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glm")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glfw")
 

@@ -1,9 +1,9 @@
 SET(CMAKE_CXX_STANDARD 17)
 
-SET(Libs
-        external/loaders/stb_image.h
-        external/vma/vk_mem_alloc.h
-        )
+#SET(Libs
+#        external/loaders/stb_image.h
+#        external/vma/vk_mem_alloc.h
+#        )
 
 SET(Shaders
         Shaders/GLSL/Fragment/default.glsl
@@ -38,6 +38,8 @@ SET(SPVSources
         ${SPVDir}/spirv_glsl.cpp
         ${SPVDir}/spirv_cross_parsed_ir.cpp
         )
+
+LIST(APPEND BlazarSources ${SPVDir})
 
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/3DModelLoader/")
 

@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 
+INCLUDE(ExternalProject)
+
 #hardcoded for now
 SET(VULKAN_SDK /Users/crs/VulkanSDK/1.3.204.1/macOS)
 SET(DYLD_LIBRARY_PATH ${VULKAN_SDK}/lib:${DYLD_LIBRARY_PATH}:)
@@ -117,21 +119,10 @@ INCLUDE_DIRECTORIES(
         "${PROJECT_SOURCE_DIR}/Samples"
 )
 ############################################################################################################################################
-
-IF (DEFINED BLAZAR_INSTALL_LIBS)
-    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
-
-    INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-ELSE()
-    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
-ENDIF()
-
-TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-TARGET_LINK_LIBRARIES(BlazarEngine
+SET(BlazarRequiredLibs
         glm
         Vulkan::Vulkan
-# Blazar Libraries
+        # Blazar Libraries
         BlazarCore
         BlazarECS
         BlazarGraphics
@@ -139,8 +130,8 @@ TARGET_LINK_LIBRARIES(BlazarEngine
         BlazarPhysics
         BlazarSamples
         BlazarScene
-# -- Blazar Libraries
-# Bullet Libraries
+        # -- Blazar Libraries
+        # Bullet Libraries
         Bullet3Common
         Bullet3Geometry
         BulletSoftBody
@@ -150,7 +141,23 @@ TARGET_LINK_LIBRARIES(BlazarEngine
         BulletCollision
         LinearMath
         BulletInverseDynamics
-# -- Bullet Libraries
+        # -- Bullet Libraries
         )
+
+IF (BLAZAR_INSTALL_LIBS)
+    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
+
+    INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
+    INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+
+    SET(BLAZAR_INCLUDE_DIRS ${BlazarSources} CACHE INTERNAL "BLAZAR_INCLUDE_DIRS")
+    SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
+ELSE()
+    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
+ENDIF()
+UNSET(BLAZAR_INSTALL_LIBS)
+
+TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+TARGET_LINK_LIBRARIES(BlazarEngine ${BlazarRequiredLibs})
 
 TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${SPVDir})
