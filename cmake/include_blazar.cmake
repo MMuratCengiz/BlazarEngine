@@ -40,6 +40,12 @@ SET(SPVSources
         )
 
 LIST(APPEND BlazarSources ${SPVDir})
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarECS)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarGraphics)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarInput)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarPhysics)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarSamples)
+LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/BlazarScene)
 
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/3DModelLoader/")
 
