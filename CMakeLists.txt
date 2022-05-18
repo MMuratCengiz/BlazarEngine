@@ -144,10 +144,12 @@ SET(BlazarRequiredLibs
         # -- Bullet Libraries
         glm
         glfw
+        ${LUA_LIB}
         )
 
 IF (${BLAZAR_INSTALL_LIBS})
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
+    ADD_DEPENDENCIES(BlazarEngine lua)
 
     INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
@@ -156,6 +158,8 @@ IF (${BLAZAR_INSTALL_LIBS})
     SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
+    ADD_DEPENDENCIES(BlazarEngine lua)
+    TARGET_INCLUDE_DIRECTORIES(BlazarEngine PRIVATE ${SOURCE_DIR}/src)
 ENDIF()
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
