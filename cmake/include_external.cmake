@@ -1,3 +1,5 @@
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/utilities.cmake)
+
 SET(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 SET(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -33,3 +35,5 @@ SET(LUA_LIB ${SOURCE_DIR}/src/liblua.a)
 ###############################################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/sol3)
+
+COPY_TO_BINARY("LuaSample" "*.lua")

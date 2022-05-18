@@ -52,12 +52,12 @@ void SampleGame_Small::init( )
     car2 = std::make_shared< SampleCar2 >( world );
 
     initialScene = std::make_shared< Scene::Scene >( );
-    initialScene->addEntity( sceneLights );
+//    initialScene->addEntity( sceneLights );
     initialScene->addEntity( cameraComponent );
-    initialScene->addEntity( floor );
+//    initialScene->addEntity( floor );
     initialScene->addEntity( sky );
-    initialScene->addEntity( car1 );
-    initialScene->addEntity( car2 );
+//    initialScene->addEntity( car1 );
+//    initialScene->addEntity( car2 );
 //    initialScene->addEntity( animDummy );
     world->setScene( initialScene );
 

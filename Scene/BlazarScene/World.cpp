@@ -119,6 +119,14 @@ void World::run( const std::shared_ptr< IPlayable > &game )
     GLFWwindow *glfwWindow = window->getWindow( );
     FPSCounter fpsCounter = FPSCounter::Instance( );
 
+    int width, height;
+    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, const std::shared_ptr< Input::IEventParameters >& parameters )
+    {
+        auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
+        width = windowResizeParameters->width;
+        height = windowResizeParameters->height;
+    } );
+
     while ( !glfwWindowShouldClose( glfwWindow ) )
     {
         Core::Time::tick( );
@@ -134,9 +142,6 @@ void World::run( const std::shared_ptr< IPlayable > &game )
         {
             glfwSetWindowShouldClose( glfwWindow, GL_TRUE );
         }
-
-        int width, height;
-        glfwGetFramebufferSize( glfwWindow, &width, &height );
 
         if ( width > 0 && height > 0 )
         {

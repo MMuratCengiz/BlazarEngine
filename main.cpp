@@ -2,7 +2,6 @@
 #include <BlazarScene/World.h>
 #include <BlazarSamples/SampleGame.h>
 #include <BlazarSamples/SampleGame_Small.h>
-#include <lua.hpp>
 #include <sol/sol.hpp>
 
 using namespace BlazarEngine;
@@ -16,7 +15,9 @@ int main( ) {
     lua.open_libraries(sol::lib::base, sol::lib::package);
     lua.script("print('bark bark bark!')");
 
-    lua_State * state = luaL_newstate();
+    sol::load_result main = lua.load_file("LuaSample/main.lua");
+    main();
+
     std::unique_ptr< Scene::World > world = std::make_unique< Scene::World >( );
     world->init( 1920, 1080, "Some Vulkan" );
 
