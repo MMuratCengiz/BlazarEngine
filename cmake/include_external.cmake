@@ -16,6 +16,7 @@ LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/tinygltf")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glm")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glfw")
 
+# IMPORT LUA #################################################
 ExternalProject_Add(lua
         URL "${PROJECT_SOURCE_DIR}/external/lua-5.4.4.tar.gz"
         CONFIGURE_COMMAND ""
@@ -29,3 +30,6 @@ ExternalProject_Add(lua
 ExternalProject_Get_property(lua SOURCE_DIR)
 INCLUDE_DIRECTORIES(${SOURCE_DIR}/src)
 SET(LUA_LIB ${SOURCE_DIR}/src/liblua.a)
+###############################################################
+
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/external/sol3)

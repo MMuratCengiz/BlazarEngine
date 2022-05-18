@@ -3,11 +3,19 @@
 #include <BlazarSamples/SampleGame.h>
 #include <BlazarSamples/SampleGame_Small.h>
 #include <lua.hpp>
+#include <sol/sol.hpp>
 
 using namespace BlazarEngine;
 using namespace ECS;
 
 int main( ) {
+    std::cout << "=== opening a state ===" << std::endl;
+
+    sol::state lua;
+    // open some common libraries
+    lua.open_libraries(sol::lib::base, sol::lib::package);
+    lua.script("print('bark bark bark!')");
+
     lua_State * state = luaL_newstate();
     std::unique_ptr< Scene::World > world = std::make_unique< Scene::World >( );
     world->init( 1920, 1080, "Some Vulkan" );
