@@ -25,12 +25,13 @@ TARGET_LINK_LIBRARIES(
         BlazarPhysics
         BlazarCore
         BlazarECS
-        LinearMath
-        Bullet3Common
-        Bullet3Geometry
         BulletSoftBody
         BulletDynamics
         Bullet3Dynamics
-        Bullet3Collision
+        Bullet3Geometry
         BulletCollision
+        Bullet3Collision
+        Bullet3Common
+        BulletInverseDynamics
+        LinearMath
 )

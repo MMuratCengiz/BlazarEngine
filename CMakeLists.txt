@@ -132,24 +132,32 @@ SET(BlazarRequiredLibs
         BlazarScene
         # -- Blazar Libraries
         # Bullet Libraries
-        Bullet3Common
-        Bullet3Geometry
         BulletSoftBody
         BulletDynamics
         Bullet3Dynamics
-        Bullet3Collision
+        Bullet3Geometry
         BulletCollision
-        LinearMath
+        Bullet3Collision
+        Bullet3Common
         BulletInverseDynamics
+        LinearMath
         # -- Bullet Libraries
         glm
         glfw
         ${LUA_LIB}
         )
 
+ADD_DEPENDENCIES(BlazarECS bullet3)
+ADD_DEPENDENCIES(BlazarCore bullet3)
+ADD_DEPENDENCIES(BlazarPhysics bullet3)
+ADD_DEPENDENCIES(BlazarScene bullet3)
+ADD_DEPENDENCIES(BlazarSamples bullet3)
+ADD_DEPENDENCIES(BlazarInput bullet3)
+
 IF (${BLAZAR_INSTALL_LIBS})
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
     ADD_DEPENDENCIES(BlazarEngine lua)
+    ADD_DEPENDENCIES(BlazarEngine bullet3)
 
     INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
@@ -159,6 +167,7 @@ IF (${BLAZAR_INSTALL_LIBS})
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
     ADD_DEPENDENCIES(BlazarEngine lua)
+    ADD_DEPENDENCIES(BlazarEngine bullet3)
     TARGET_INCLUDE_DIRECTORIES(BlazarEngine PRIVATE ${SOURCE_DIR}/src)
 ENDIF()
 

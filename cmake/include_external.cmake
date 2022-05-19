@@ -24,7 +24,7 @@ ExternalProject_Add(lua
         CONFIGURE_COMMAND ""
         BUILD_COMMAND make generic
         BUILD_ALWAYS true
-        BUILD_IN_SOURCE true'
+        BUILD_IN_SOURCE true
         INSTALL_COMMAND ""
         PREFIX "lua"
         )
