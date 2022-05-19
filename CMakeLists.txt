@@ -61,6 +61,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_blazar.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_bullet.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/bullet_libs.cmake)
 
 FIND_PACKAGE(Vulkan REQUIRED)
 
@@ -131,17 +132,7 @@ SET(BlazarRequiredLibs
         BlazarSamples
         BlazarScene
         # -- Blazar Libraries
-        # Bullet Libraries
-        BulletSoftBody
-        BulletDynamics
-        Bullet3Dynamics
-        Bullet3Geometry
-        BulletCollision
-        Bullet3Collision
-        Bullet3Common
-        BulletInverseDynamics
-        LinearMath
-        # -- Bullet Libraries
+        ${BULLET_LIBS}
         glm
         glfw
         ${LUA_LIB}

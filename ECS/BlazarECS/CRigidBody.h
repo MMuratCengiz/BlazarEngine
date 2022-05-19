@@ -30,7 +30,7 @@ public:
     std::unique_ptr< btCollisionShape > collisionShape = nullptr;
     std::unique_ptr< btMotionState > motionState = nullptr;
 
-    btScalar mass = 0.0f;
+    btScalar mass = 0.0;
     std::unique_ptr< btRigidBody > instance = nullptr;
 
     BLAZAR_COMPONENT( CRigidBody )
