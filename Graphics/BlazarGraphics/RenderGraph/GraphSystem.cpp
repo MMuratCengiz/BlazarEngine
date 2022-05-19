@@ -24,49 +24,54 @@ GraphSystem::GraphSystem( IRenderDevice *renderDevice, AssetManager *assetManage
 {
     renderGraph = std::make_unique< RenderGraph >( this->renderDevice, this->assetManager );
 
-    renderGraph->addPass( CommonPasses::createShadowMapPass( this->renderDevice ) );
-    renderGraph->addPass( CommonPasses::createGBufferPass( this->renderDevice ) );
-    renderGraph->addPass( CommonPasses::createLightingPass( this->renderDevice ) );
-    renderGraph->addPass( CommonPasses::createSkyBoxPass( this->renderDevice ) );
+    shadowMapPass = CommonPasses::createShadowMapPass( this->renderDevice );
+    gBufferPass = CommonPasses::createGBufferPass( this->renderDevice );
+    lightingPass = CommonPasses::createLightingPass( this->renderDevice );
+    skyBoxPass = CommonPasses::createSkyBoxPass( this->renderDevice );
+    presentPass = CommonPasses::createPresentPass( this->renderDevice );
+
+    renderGraph->addPass( shadowMapPass.get( ) );
+    renderGraph->addPass( gBufferPass.get( ) );
+    renderGraph->addPass( lightingPass.get( ) );
+    renderGraph->addPass( skyBoxPass.get( ) );
     //renderGraph->addPass( CommonPasses::createSMAAEdgePass( this->renderDevice ) );
     //renderGraph->addPass( CommonPasses::createSMAABlendWeightPass( this->renderDevice ) );
     //renderGraph->addPass( CommonPasses::createSMAANeighborPass( this->renderDevice ) );
-    renderGraph->addPass( CommonPasses::createPresentPass( this->renderDevice ) );
+    renderGraph->addPass( presentPass.get( ) );
 
     renderGraph->buildGraph( );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+    Input::Events::subscribe< Input::WindowResizedParameters * >( Input::EventType::WindowResized, [ & ]( Input::WindowResizedParameters * parameters )
     {
-        auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
         isSystemActive = parameters->width > 0 && parameters->height > 0;
     } );
 }
 
-void GraphSystem::addEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GraphSystem::addEntity( ECS::IGameEntity * entity )
 {
     renderGraph->addEntity( entity );
 }
 
-void GraphSystem::updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GraphSystem::updateEntity( ECS::IGameEntity * entity )
 {
     renderGraph->updateEntity( entity );
 }
 
-void GraphSystem::removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GraphSystem::removeEntity( ECS::IGameEntity * entity )
 {
     renderGraph->removeEntity( entity );
 }
 
-void GraphSystem::frameStart( const std::shared_ptr< ECS::ComponentTable > &componentTable )
+void GraphSystem::frameStart( ECS::ComponentTable * componentTable )
 {
     renderGraph->prepare( componentTable );
 }
 
-void GraphSystem::entityTick( const std::shared_ptr< ECS::IGameEntity > &entity )
+void GraphSystem::entityTick( ECS::IGameEntity * entity )
 {
 }
 
-void GraphSystem::frameEnd( const std::shared_ptr< ECS::ComponentTable > &componentTable )
+void GraphSystem::frameEnd( ECS::ComponentTable * componentTable )
 {
     FUNCTION_BREAK( !isSystemActive )
 

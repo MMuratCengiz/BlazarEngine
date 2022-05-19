@@ -39,6 +39,10 @@ SET(SPVSources
         ${SPVDir}/spirv_cross_parsed_ir.cpp
         )
 
+SET(LuaBindingsHeaders
+        ${PROJECT_SOURCE_DIR}/LuaBindings/GraphicsBindings.h
+        )
+
 LIST(APPEND BlazarSources ${SPVDir})
 LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Core)
 LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/ECS)

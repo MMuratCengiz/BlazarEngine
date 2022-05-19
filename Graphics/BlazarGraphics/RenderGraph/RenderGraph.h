@@ -29,9 +29,9 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 struct PassWrapper
 {
     std::vector< std::string > dependencies;
-    std::vector< std::shared_ptr< IResourceLock > > executeLocks;
+    std::vector< std::unique_ptr< IResourceLock > > executeLocks;
 
-    std::vector< std::shared_ptr< IPipeline > > pipelines;
+    std::vector< IPipeline * > pipelines;
     std::shared_ptr< IRenderPass > renderPass;
     std::vector< std::shared_ptr< IRenderTarget > > renderTargets;
 
@@ -46,7 +46,7 @@ struct PassWrapper
     std::vector< std::vector< int > > perFrameInputs;
     std::vector< int > perEntityInputsFlattened;
 
-    std::shared_ptr< Pass > ref;
+    Pass * ref;
 };
 
 class RenderGraph
@@ -67,14 +67,14 @@ private:
     uint32_t frameIndex = 0;
 public:
     explicit RenderGraph( IRenderDevice* renderDevice, AssetManager* assetManager );
-    void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) const;
-    void updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) const;
-    void removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) const;
+    void addEntity( ECS::IGameEntity * entity ) const;
+    void updateEntity( ECS::IGameEntity * entity ) const;
+    void removeEntity( ECS::IGameEntity * entity ) const;
 
-    void addPass( std::shared_ptr< Pass > pass );
+    void addPass( Pass * pass );
     void buildGraph( );
 
-    void prepare( const std::shared_ptr< ECS::ComponentTable >& componentTable );
+    void prepare( ECS::ComponentTable * componentTable );
     void execute( );
 
     const ShaderUniformBinder* getResourceBinder( ) const {  return globalResourceTable->getResourceBinder( ); }

@@ -27,11 +27,11 @@ NAMESPACES( ENGINE_NAMESPACE, ECS )
 struct CRigidBody : public IComponent
 {
 public:
-    std::shared_ptr< btCollisionShape > collisionShape = nullptr;
-    std::shared_ptr< btMotionState > motionState = nullptr;
+    std::unique_ptr< btCollisionShape > collisionShape = nullptr;
+    std::unique_ptr< btMotionState > motionState = nullptr;
 
     float mass = 0.0f;
-    std::shared_ptr< btRigidBody > instance = nullptr;
+    std::unique_ptr< btRigidBody > instance = nullptr;
 
     BLAZAR_COMPONENT( CRigidBody )
 };

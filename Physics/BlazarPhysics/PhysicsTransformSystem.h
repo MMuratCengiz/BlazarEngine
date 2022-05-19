@@ -36,12 +36,12 @@ public:
     // Care, bypasses physics system, ideally only used in initialization
     static void setScaleRecursive( ECS::IGameEntity *entity, const glm::vec3 &scale );
 
-    static void addInstanceRecursive( ECS::IGameEntity *entity, std::shared_ptr< ECS::CTransform > transform );
+    static void addInstanceRecursive( ECS::IGameEntity *entity, ECS::CTransform * transform );
 
-    void translate( const std::shared_ptr< ECS::IGameEntity > &entity, const glm::vec3 &translation );
-    void rotate( const std::shared_ptr< ECS::IGameEntity > &entity, glm::vec3 rotation );
+    void translate( ECS::IGameEntity *entity, const glm::vec3 &translation );
+    void rotate( ECS::IGameEntity *entity, glm::vec3 rotation );
 private:
-    static btTransform toBtTransform( const std::shared_ptr< ECS::CTransform >& transform );
+    static btTransform toBtTransform( ECS::CTransform * transform );
 };
 
 

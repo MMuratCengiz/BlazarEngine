@@ -21,11 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-std::shared_ptr< IPipeline > VulkanPipelineProvider::createPipeline( const PipelineRequest &request )
+IPipeline * VulkanPipelineProvider::createPipeline( const PipelineRequest &request )
 {
     ASSERT_M( request.parentPass != nullptr, "You must provide a parent render pass" );
 
-    auto pipeline = std::make_shared< VulkanPipeline >( );
+    auto pipeline = std::make_unique< VulkanPipeline >( );
     pipeline->context = context;
 
     std::vector< GLSLShaderInfo > glslShaders { };
@@ -73,13 +73,13 @@ std::shared_ptr< IPipeline > VulkanPipelineProvider::createPipeline( const Pipel
     }
 
     // TODO cache depending on the pipeline, or maybe cache somewhere else
-    createPipeline( request, pipeline, glslShaders );
+    createPipeline( request, pipeline.get( ), glslShaders );
 
     pipelineInstances.push_back( std::move( pipeline ) );
-    return pipelineInstances[ pipelineInstances.size( ) - 1 ];
+    return pipelineInstances[ pipelineInstances.size( ) - 1 ].get( );
 }
 
-void VulkanPipelineProvider::createPipeline( const PipelineRequest &request, const std::shared_ptr< VulkanPipeline > &instance, const std::vector< GLSLShaderInfo > &shaderInfos )
+void VulkanPipelineProvider::createPipeline( const PipelineRequest &request, VulkanPipeline * instance, const std::vector< GLSLShaderInfo > &shaderInfos )
 {
     PipelineCreateInfos createInfo { };
     createInfo.request = request;
@@ -289,7 +289,7 @@ void VulkanPipelineProvider::configureDynamicState( PipelineCreateInfos &createI
     createInfo.pipelineCreateInfo.pDynamicState = &createInfo.dynamicStateCreateInfo;
 }
 
-void VulkanPipelineProvider::createPipelineLayout( PipelineCreateInfos &createInfo, const std::shared_ptr< VulkanPipeline > &instance )
+void VulkanPipelineProvider::createPipelineLayout( PipelineCreateInfos &createInfo, VulkanPipeline * instance )
 {
     const std::vector< vk::DescriptorSetLayout > &layouts = instance->descriptorManager->getLayouts( );
     createInfo.pipelineLayoutCreateInfo.setLayoutCount = layouts.size( );

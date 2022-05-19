@@ -35,15 +35,22 @@ private:
     IRenderDevice* renderDevice;
     AssetManager* assetManager;
     bool isSystemActive = true;
+
+    // temporary remove later:
+    std::unique_ptr< Pass > shadowMapPass;
+    std::unique_ptr< Pass > gBufferPass;
+    std::unique_ptr< Pass > lightingPass;
+    std::unique_ptr< Pass > skyBoxPass;
+    std::unique_ptr< Pass > presentPass;
 public:
     GraphSystem( IRenderDevice* renderDevice, AssetManager* assetManager );
-    void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) override;
-    void updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) override;
-    void removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity ) override;
+    void addEntity( ECS::IGameEntity* entity ) override;
+    void updateEntity( ECS::IGameEntity* entity ) override;
+    void removeEntity( ECS::IGameEntity* entity ) override;
 
-    void frameStart( const std::shared_ptr< ECS::ComponentTable > &componentTable ) override;
-    void entityTick( const std::shared_ptr< ECS::IGameEntity > &entity ) override;
-    void frameEnd( const std::shared_ptr< ECS::ComponentTable > &componentTable ) override;
+    void frameStart( ECS::ComponentTable * componentTable ) override;
+    void entityTick( ECS::IGameEntity* entity ) override;
+    void frameEnd( ECS::ComponentTable * componentTable ) override;
     void cleanup( ) override;
 };
 

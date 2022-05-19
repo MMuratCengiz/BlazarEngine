@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "ComponentTable.h"
 
-void BlazarEngine::ECS::ComponentTable::addAllEntityComponentRecursive( const std::shared_ptr< IGameEntity >& gameEntity )
+void BlazarEngine::ECS::ComponentTable::addAllEntityComponentRecursive( IGameEntity * gameEntity )
 {
     for ( const auto& component: gameEntity->getAllComponents( ) )
     {
@@ -31,7 +31,7 @@ void BlazarEngine::ECS::ComponentTable::addAllEntityComponentRecursive( const st
     }
 }
 
-void BlazarEngine::ECS::ComponentTable::addNewComponent( std::shared_ptr< IComponent > component )
+void BlazarEngine::ECS::ComponentTable::addNewComponent( IComponent * component )
 {
     if ( component->typeId >= componentTable.size( ) )
     {
@@ -42,7 +42,7 @@ void BlazarEngine::ECS::ComponentTable::addNewComponent( std::shared_ptr< ICompo
     componentTable[ component->typeId ].push_back( std::move( component ) );
 }
 
-void BlazarEngine::ECS::ComponentTable::removeComponent( const std::shared_ptr< IComponent > &component )
+void BlazarEngine::ECS::ComponentTable::removeComponent( IComponent * component )
 {
     FUNCTION_BREAK( component->typeId >= componentTable.size(  ) )
 
@@ -50,7 +50,7 @@ void BlazarEngine::ECS::ComponentTable::removeComponent( const std::shared_ptr< 
 
     for ( auto it = componentList.begin( ); it != componentList.end( ); ++it )
     {
-        if ( it->get( )->uid == component->uid )
+        if ( (*it)->uid == component->uid )
         {
             componentList.erase( it );
         }

@@ -81,8 +81,8 @@ public:
 };
 
 typedef std::function< std::unique_ptr< IShaderUniform >( const MeshGeometry &parent, const SubMeshGeometry &subMeshGeometry ) > PerGeometryBinder;
-typedef std::function< std::unique_ptr< IShaderUniform >( const std::shared_ptr< ECS::IGameEntity > &entity ) > PerEntityUniformBinder;
-typedef std::function< std::unique_ptr< IShaderUniform >( const std::shared_ptr< ECS::ComponentTable > &components ) > PerFrameUniformBinder;
+typedef std::function< std::unique_ptr< IShaderUniform >( ECS::IGameEntity * entity ) > PerEntityUniformBinder;
+typedef std::function< std::unique_ptr< IShaderUniform >( ECS::ComponentTable * components ) > PerFrameUniformBinder;
 
 struct AllocatorFunction
 {

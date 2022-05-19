@@ -106,8 +106,8 @@ private:
     std::vector< DescriptorPool > uniformDescriptorPool;
     std::vector< DescriptorPool > samplerDescriptorPool;
 
-    std::shared_ptr< VulkanCommandExecutor > commandExecutor;
-    std::shared_ptr< SamplerDataAttachment > nullAttachment;
+    std::unique_ptr< VulkanCommandExecutor > commandExecutor;
+    std::unique_ptr< SamplerDataAttachment > nullAttachment;
     VulkanTextureWrapper emptyImage;
 
     uint32_t objectCounter;

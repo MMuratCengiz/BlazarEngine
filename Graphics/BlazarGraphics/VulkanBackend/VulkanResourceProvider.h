@@ -59,15 +59,15 @@ public:
 class VulkanResourceProvider : public IResourceProvider
 {
     VulkanContext * context;
-    std::shared_ptr< VulkanCommandExecutor > commandExecutor;
+    std::unique_ptr< VulkanCommandExecutor > commandExecutor;
 public:
     inline explicit VulkanResourceProvider( VulkanContext * context ) : context( context )
     {
-        commandExecutor = std::make_shared< VulkanCommandExecutor >( this->context );
+        commandExecutor = std::make_unique< VulkanCommandExecutor >( this->context );
     }
 
     std::shared_ptr< ShaderResource > createResource( const ShaderResourceRequest &request ) override;
-    std::shared_ptr< IResourceLock > createLock( const ResourceLockType &lockType ) override;
+    std::unique_ptr< IResourceLock > createLock( const ResourceLockType &lockType ) override;
 
     void createBufferAllocator( const std::shared_ptr< ShaderResource > &resource );
     void createSampler2DAllocator( const std::shared_ptr< ShaderResource > &resource );

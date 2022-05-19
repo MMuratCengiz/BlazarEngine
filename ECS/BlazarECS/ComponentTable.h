@@ -31,17 +31,17 @@ private:
     /* Used Table Structure */
     std::vector<
             std::vector < // dynamically indexed componentId != index
-                std::shared_ptr< IComponent > > > componentTable;
+                IComponent * > > componentTable;
 public:
-    void addAllEntityComponentRecursive( const std::shared_ptr< IGameEntity >& gameEntity );
-    void addNewComponent( std::shared_ptr< IComponent > component );
+    void addAllEntityComponentRecursive( IGameEntity * gameEntity );
+    void addNewComponent( IComponent * component );
     // Expensive operation don't use often
-    void removeComponent( const std::shared_ptr< IComponent >& component );
+    void removeComponent( IComponent * component );
 
     template< class ComponentType >
-    inline std::vector< std::shared_ptr< ComponentType > > getComponents( )
+    inline std::vector< ComponentType * > getComponents( )
     {
-        auto result = std::vector< std::shared_ptr< ComponentType > >( );
+        auto result = std::vector< ComponentType * >( );
 
         const uint64_t typeId = ComponentTypeRef::get( ).getTypeId< ComponentType >( );
 
@@ -54,7 +54,7 @@ public:
 
         for ( auto& component: componentList )
         {
-            auto castedComponent = std::dynamic_pointer_cast< ComponentType >( component );
+            auto castedComponent = ( ComponentType * )( component );
             result.push_back( castedComponent );
         }
 

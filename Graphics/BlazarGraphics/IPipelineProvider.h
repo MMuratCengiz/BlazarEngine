@@ -115,7 +115,7 @@ struct IPipeline
 class IPipelineProvider
 {
 public:
-    virtual std::shared_ptr< IPipeline > createPipeline( const PipelineRequest& request ) = 0;
+    virtual IPipeline * createPipeline( const PipelineRequest& request ) = 0;
     virtual ~IPipelineProvider( ) = default;
 };
 

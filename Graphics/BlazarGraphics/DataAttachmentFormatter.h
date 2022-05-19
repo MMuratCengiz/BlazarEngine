@@ -131,22 +131,22 @@ struct WorldContext
 class DataAttachmentFormatter
 {
 public:
-    static Material formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform > &transform );
-    static Tessellation formatTessellationComponent( const std::shared_ptr< ECS::CTessellation > &tessellation );
-    static ViewProjection formatCamera( const std::shared_ptr< ECS::ComponentTable > &components );
-    static EnvironmentLights formatLightingEnvironment( const std::shared_ptr< ECS::ComponentTable > &components );
-    static LightViewProjectionMatrices formatLightViewProjectionMatrices( const std::shared_ptr< ECS::ComponentTable > &components );
-    static WorldContext formatWorldContext( const std::shared_ptr< ECS::ComponentTable > &components );
-    static glm::mat4 formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity );
-    static glm::mat4 formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity );
-    static InstanceData formatInstances( const std::shared_ptr< ECS::CInstances > &instances, const std::shared_ptr< ECS::IGameEntity > &entity );
-    static BoneTransformations formatBoneTransformations( const std::shared_ptr< ECS::IGameEntity >& entity );
+    static Material formatMaterialComponent( ECS::CMaterial * material, ECS::CTransform * transform );
+    static Tessellation formatTessellationComponent( ECS::CTessellation * tessellation );
+    static ViewProjection formatCamera( ECS::ComponentTable* components );
+    static EnvironmentLights formatLightingEnvironment( ECS::ComponentTable* components );
+    static LightViewProjectionMatrices formatLightViewProjectionMatrices( ECS::ComponentTable* components );
+    static WorldContext formatWorldContext( ECS::ComponentTable* components );
+    static glm::mat4 formatModelMatrix( ECS::CTransform * transform, ECS::IGameEntity * refEntity );
+    static glm::mat4 formatNormalMatrix( ECS::CTransform * transform, ECS::IGameEntity * refEntity );
+    static InstanceData formatInstances( ECS::CInstances * instances, ECS::IGameEntity* entity );
+    static BoneTransformations formatBoneTransformations( ECS::IGameEntity * entity );
     static Resolution formatResolution( const uint32_t& width, const uint32_t& height );
-    static std::vector< ECS::Material::TextureInfo > getSkyBoxTextures( const std::shared_ptr< ECS::ComponentTable > &components );
+    static std::vector< ECS::Material::TextureInfo > getSkyBoxTextures( ECS::ComponentTable* components );
     static std::vector< ECS::Material::TextureInfo > getSearchTex( );
     static std::vector< ECS::Material::TextureInfo > getAreaTex( );
-    static std::vector< ECS::Material::TextureInfo > getHeightMap( const std::shared_ptr< ECS::IGameEntity > &entity );
-    static std::vector< ECS::Material::TextureInfo > getTexture1( const std::shared_ptr< ECS::IGameEntity > &entity );
+    static std::vector< ECS::Material::TextureInfo > getHeightMap( ECS::IGameEntity* entity );
+    static std::vector< ECS::Material::TextureInfo > getTexture1( ECS::IGameEntity* entity );
 };
 
 END_NAMESPACES

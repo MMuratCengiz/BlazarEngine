@@ -24,8 +24,7 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice* renderDevice, AssetMana
 {
 	frameResources.resize( renderDevice->getFrameCount( ) );
 
-	std::shared_ptr< ECS::IGameEntity > dummy = std::make_shared< ECS::DynamicGameEntity >( );
-
+    dummy = std::make_unique< ECS::DynamicGameEntity >( );
 	resourceBinder = std::make_unique< ShaderUniformBinder >( );
 
 	auto createPrimitiveEntityWrapper = [ = ]( const PrimitiveType& type )
@@ -34,9 +33,9 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice* renderDevice, AssetMana
 		SubMeshGeometry& subGeometry = primitive.subGeometries[ 0 ];
 
 		EntityWrapper entityWrapper = { };
-		entityWrapper.entity = dummy;
+		entityWrapper.entity = dummy.get( );
 		entityWrapper.geometryRef = assetManager->getPrimitive( type );
-		entityWrapper.subGeometries.push_back( createGeometryData( dummy, subGeometry ) );
+		entityWrapper.subGeometries.push_back( createGeometryData( dummy.get( ), subGeometry ) );
 
 		return entityWrapper;
 	};
@@ -46,7 +45,7 @@ GlobalResourceTable::GlobalResourceTable( IRenderDevice* renderDevice, AssetMana
 	triangleGeometryList.push_back( std::move( createPrimitiveEntityWrapper( PrimitiveType::PlainTriangle ) ) );
 }
 
-void GlobalResourceTable::resetTable( const std::shared_ptr< ECS::ComponentTable >& componentTable, const uint32_t& frameIndex )
+void GlobalResourceTable::resetTable( ECS::ComponentTable * componentTable, const uint32_t& frameIndex )
 {
 	currentComponentTable = componentTable;
 }
@@ -56,19 +55,19 @@ void GlobalResourceTable::resetFrame( const int& frameIdx )
     // std::fill( frameUpdatedResources[ frameIdx ].begin(  ), frameUpdatedResources[ frameIdx ].end( ), false );    
 }
 
-void GlobalResourceTable::addEntity( const std::shared_ptr< ECS::IGameEntity >& entity )
+void GlobalResourceTable::addEntity( ECS::IGameEntity * entity )
 {
 	createGeometry( entity );
 	createGeometryList( entity->getChildren( ) );
 }
 
-void GlobalResourceTable::updateEntity( const std::shared_ptr< ECS::IGameEntity >& entity )
+void GlobalResourceTable::updateEntity( ECS::IGameEntity * entity )
 {
 	removeEntity( entity );
 	addEntity( entity );
 }
 
-void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity >& entity )
+void GlobalResourceTable::removeEntity( ECS::IGameEntity * entity )
 {
 	FUNCTION_BREAK( entity->getUID( ) >= entityGeometryMap.size( ) );
 
@@ -83,7 +82,7 @@ void GlobalResourceTable::removeEntity( const std::shared_ptr< ECS::IGameEntity 
 	}
 }
 
-void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntity >& entity )
+void GlobalResourceTable::createGeometry( ECS::IGameEntity * entity )
 {
 	FUNCTION_BREAK( !entity->hasComponent< ECS::CMesh >( ) );
 	FUNCTION_BREAK( entity->hasComponent< ECS::CCubeMap >( ) );
@@ -105,7 +104,7 @@ void GlobalResourceTable::createGeometry( const std::shared_ptr< ECS::IGameEntit
 	}
 }
 
-EntityWrapper GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity >& entity )
+EntityWrapper GlobalResourceTable::createGeometryData( ECS::IGameEntity * entity )
 {
 	auto transformComponent = entity->getComponent< ECS::CTransform >( );
 	const auto meshComponent = entity->getComponent< ECS::CMesh >( );
@@ -129,7 +128,7 @@ EntityWrapper GlobalResourceTable::createGeometryData( const std::shared_ptr< EC
 	return std::move( result );
 }
 
-GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS::IGameEntity >& entity, SubMeshGeometry& subMeshGeometry )
+GeometryData GlobalResourceTable::createGeometryData( ECS::IGameEntity * entity, SubMeshGeometry& subMeshGeometry )
 {
 	GeometryData data{ };
 	data.subMeshGeometry = subMeshGeometry;
@@ -141,7 +140,7 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
 
 	vertices->identifier = { "VertexData" };
 
-	std::shared_ptr< VertexData > vertexData = std::make_shared< VertexData >( );
+	std::unique_ptr< VertexData > vertexData = std::make_unique< VertexData >( );
 	vertexData->vertexCount = subMeshGeometry.vertexCount;
 	vertexData->content = subMeshGeometry.dataRaw.data( );
 	vertexData->size = subMeshGeometry.dataRaw.size( ) * sizeof( float );
@@ -159,7 +158,7 @@ GeometryData GlobalResourceTable::createGeometryData( const std::shared_ptr< ECS
 	{
 		auto indices = createResource( ResourceType::IndexData, ResourceLoadStrategy::LoadOnce );
 		indices->identifier = { "IndexData" };
-		std::shared_ptr< IndexData > indexData = std::make_shared< IndexData >( );
+		std::unique_ptr< IndexData > indexData = std::make_unique< IndexData >( );
 		indexData->indexCount = subMeshGeometry.indices.size( );
 		indexData->content = subMeshGeometry.indices.data( );
 		indexData->size = subMeshGeometry.indices.size( ) * sizeof( uint32_t );
@@ -205,7 +204,7 @@ void GlobalResourceTable::attachUniformAttachment( const IShaderUniform* content
 	{
 		if ( resource->dataAttachment == nullptr )
 		{
-			resource->dataAttachment = std::make_shared< IDataAttachment >( );
+			resource->dataAttachment = std::make_unique< IDataAttachment >( );
 		}
 
 	    free( resource->dataAttachment->content );
@@ -221,7 +220,7 @@ void GlobalResourceTable::attachCubeMapAttachment( const IShaderUniform* content
 {
 	if ( content->resourceType == ResourceType::CubeMap )
 	{
-		std::shared_ptr< CubeMapDataAttachment > cubeMapAttachment = std::make_shared< CubeMapDataAttachment >( );
+		std::unique_ptr< CubeMapDataAttachment > cubeMapAttachment = std::make_unique< CubeMapDataAttachment >( );
 
 		const auto* pUniform = dynamic_cast< const SamplerShaderUniform* >( content );
 
@@ -247,7 +246,7 @@ void GlobalResourceTable::attachSamplerAttachment( const IShaderUniform* content
 	}
 }
 
-void GlobalResourceTable::createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > >& entities )
+void GlobalResourceTable::createGeometryList( const std::vector< ECS::IGameEntity * >& entities )
 {
 	for ( const auto& entity : entities )
 	{
@@ -308,13 +307,13 @@ void GlobalResourceTable::allocateResource( const int& resourceIdx, const std::s
 	}
 }
 
-auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo& texture ) -> std::shared_ptr< SamplerDataAttachment >
+auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::TextureInfo& texture ) -> std::unique_ptr< SamplerDataAttachment >
 {
-	std::shared_ptr< SamplerDataAttachment > samplerAttachment;
+	std::unique_ptr< SamplerDataAttachment > samplerAttachment;
 
 	if ( texture.isInMemory )
 	{
-		samplerAttachment = std::make_shared< SamplerDataAttachment >( );
+		samplerAttachment = std::make_unique< SamplerDataAttachment >( );
 		samplerAttachment->content = texture.inMemoryTexture.contents;
 		samplerAttachment->width = texture.inMemoryTexture.width;
 		samplerAttachment->height = texture.inMemoryTexture.height;
@@ -342,7 +341,7 @@ auto GlobalResourceTable::getSamplerDataAttachment( const ECS::Material::Texture
 		samplerAttachment->textureInfo = texture;
 	}
 
-	return samplerAttachment;
+	return std::move( samplerAttachment );
 }
 
 std::shared_ptr< ShaderResource >& GlobalResourceTable::getResource( const int& resourceIdx, const uint32_t& frameIndex )
@@ -360,7 +359,7 @@ void GlobalResourceTable::allocateAllPerGeometryResources( const int& frameIndex
 	}
 }
 
-void GlobalResourceTable::allocateAllPerEntityResources( const int& frameIndex, const std::shared_ptr< ECS::IGameEntity >& entity )
+void GlobalResourceTable::allocateAllPerEntityResources( const int& frameIndex, ECS::IGameEntity * entity )
 {
 	for ( const int& binderIdx : perEntityResources )
 	{
@@ -370,7 +369,7 @@ void GlobalResourceTable::allocateAllPerEntityResources( const int& frameIndex, 
 	}
 }
 
-void GlobalResourceTable::allocatePerEntityResources( const int& frameIndex, const std::shared_ptr< ECS::IGameEntity >& entity, std::vector< int > resources )
+void GlobalResourceTable::allocatePerEntityResources( const int& frameIndex, ECS::IGameEntity * entity, std::vector< int > resources )
 {
 	for ( const int& binderIdx : resources )
 	{

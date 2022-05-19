@@ -108,18 +108,18 @@ class IRenderPass
 {
 public:
     virtual void create( const RenderPassRequest &request ) = 0;
-    virtual void frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > > &pipelines ) = 0;
+    virtual void frameStart( const uint32_t &frameIndex, const std::vector< IPipeline * > &pipelines ) = 0;
     virtual void begin( std::shared_ptr< IRenderTarget > renderTarget, std::array< float, 4 > clearColor ) = 0;
 
     virtual void bindPerFrame( std::shared_ptr< ShaderResource > resource ) = 0;
-    virtual void bindPipeline( std::shared_ptr< IPipeline > pipeline ) = 0;
+    virtual void bindPipeline( IPipeline * pipeline ) = 0;
     virtual void bindPerObject( std::shared_ptr< ShaderResource > resource ) = 0;
 
     virtual RenderArea getRenderArea( ) const = 0;
 
     virtual void draw( const uint32_t& instanceCount ) = 0;
     // Returns if the submission was successful or not
-    virtual bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) = 0;
+    virtual bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, IResourceLock * notifyFence ) = 0;
     virtual std::string getProperty( const std::string &propertyName ) = 0;
     virtual void cleanup( ) = 0;
     virtual ~IRenderPass( ) = default;

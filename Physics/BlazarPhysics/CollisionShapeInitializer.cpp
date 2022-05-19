@@ -20,13 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Physics )
 
-CollisionShapeInitializer::CollisionShapeInitializer( std::shared_ptr< ECS::CCollisionObject > collisionObject, std::shared_ptr< ECS::CTransform > transform )
-        : collisionObject( std::move( collisionObject ) ), transform( std::move( transform ) )
+CollisionShapeInitializer::CollisionShapeInitializer( ECS::CCollisionObject * collisionObject, ECS::CTransform * transform )
+        : collisionObject( collisionObject ), transform( transform )
 {
 }
 
-CollisionShapeInitializer::CollisionShapeInitializer( std::shared_ptr< ECS::CRigidBody > rigidBody, std::shared_ptr< ECS::CTransform > transform )
-        : rigidBody( std::move( rigidBody ) ), transform( std::move( transform ) )
+CollisionShapeInitializer::CollisionShapeInitializer( ECS::CRigidBody * rigidBody, ECS::CTransform * transform )
+        : rigidBody( rigidBody ), transform( transform )
 {
 }
 
@@ -34,7 +34,7 @@ void CollisionShapeInitializer::initializeBoxCollisionShape( const glm::vec3 &di
 {
     auto *boxShape = new btBoxShape( Core::Utilities::toBt( dimensions ) );
 
-    shape = std::shared_ptr< btCollisionShape >( boxShape );
+    shape = std::unique_ptr< btCollisionShape >( boxShape );
 
     initializeRequestedComponent( );
 }
@@ -43,7 +43,7 @@ void CollisionShapeInitializer::initializeSphereCollisionShape( const float& rad
 {
     auto *sphereShape = new btSphereShape( radius );
 
-    shape = std::shared_ptr< btCollisionShape >( sphereShape );
+    shape = std::unique_ptr< btCollisionShape >( sphereShape );
 
     initializeRequestedComponent( );
 }
@@ -66,15 +66,15 @@ void CollisionShapeInitializer::initializeRequestedComponent( )
         }
 
         rigidBody->collisionShape = std::move( shape );
-        rigidBody->motionState = std::make_shared< btDefaultMotionState >( initialTransform );
+        rigidBody->motionState = std::make_unique< btDefaultMotionState >( initialTransform );
 
-        rigidBody->instance = std::make_shared< btRigidBody >( rigidBody->mass, rigidBody->motionState.get( ), rigidBody->collisionShape.get( ), localInertia );
+        rigidBody->instance = std::make_unique< btRigidBody >( rigidBody->mass, rigidBody->motionState.get( ), rigidBody->collisionShape.get( ), localInertia );
     }
         // Handle the case where a collisionObject is provided
     else
     {
         collisionObject->collisionShape = std::move( shape );
-        collisionObject->instance = std::make_shared< btCollisionObject >( );
+        collisionObject->instance = std::make_unique< btCollisionObject >( );
         collisionObject->instance->setCollisionShape( collisionObject->collisionShape.get( ) );
     }
 }

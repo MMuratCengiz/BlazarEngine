@@ -49,6 +49,10 @@ struct TickParameters : IEventParameters
     GLFWwindow *window;
 };
 
+struct SwapChainInvalidatedParameters : IEventParameters
+{
+};
+
 enum class EventType
 {
     WindowResized,
@@ -56,21 +60,26 @@ enum class EventType
     Tick
 };
 
-namespace FunctionDefinitions
-{
-typedef std::function< void( const EventType &type, std::shared_ptr< IEventParameters > eventParams ) > EventCallback;
-}
-
-
+template< class T >
 class GlobalEventHandler
 {
 private:
     GlobalEventHandler( ) = default;
-    std::unordered_map< EventType, std::vector< FunctionDefinitions::EventCallback > > eventSubscribers;
+    std::unordered_map< EventType, std::vector<  std::function< void( T eventParams ) > > > eventSubscribers;
 public:
-    void initWindowEvents( GLFWwindow *window );
-    void subscribeToEvent( const EventType &event, const FunctionDefinitions::EventCallback &cb );
-    void triggerEvent( const EventType &event, const std::shared_ptr< IEventParameters > &parameters );
+    void subscribeToEvent( const EventType &event, const std::function< void( T eventParams ) > &cb ) {
+        ensureMapContainsEvent( event );
+        eventSubscribers[ event ].emplace_back( cb );
+    }
+
+    void triggerEvent( const EventType &event, T parameters ) {
+        ensureMapContainsEvent( event );
+
+        for ( const auto &cb: eventSubscribers[ event ] )
+        {
+            cb( parameters );
+        }
+    }
 
     static GlobalEventHandler &Instance( )
     {
@@ -78,25 +87,48 @@ public:
         return inst;
     }
 
-    static std::shared_ptr< TickParameters > createTickParameters( GLFWwindow *pWwindow );
-
-    inline static std::shared_ptr< WindowResizedParameters > ToWindowResizedParameters( const std::shared_ptr< IEventParameters > &parameters )
-    {
-        return std::dynamic_pointer_cast< WindowResizedParameters >( parameters );
-    }
-
-    inline static std::shared_ptr< TickParameters > ToTickParameters( const std::shared_ptr< IEventParameters > &parameters )
-    {
-        return std::dynamic_pointer_cast< TickParameters >( parameters );
-    }
 
     GlobalEventHandler( GlobalEventHandler const & ) = delete;
     void operator=( GlobalEventHandler const & ) = delete;
-    void cleanup( );
+    void cleanup( )
+    {
+        eventSubscribers.clear( );
+    }
 private:
-    void ensureMapContainsEvent( const EventType &event );
+    void ensureMapContainsEvent( const EventType &event )
+    {
+        if ( eventSubscribers.find( event ) == eventSubscribers.end( ) )
+        {
+            eventSubscribers[ event ] = { };
+        }
+    }
 };
 
-typedef std::shared_ptr< IEventParameters > pEventParameters;
+class Events {
+public:
+    template< typename T >
+    static void subscribe( const EventType &event, const std::function< void( T eventParams ) > &cb ) {
+        GlobalEventHandler<T>::Instance().subscribeToEvent(event, cb);
+    }
+
+    template< typename T >
+    static void trigger( const EventType &event, T parameters ) {
+        GlobalEventHandler<T>::Instance().triggerEvent(event, parameters);
+    }
+
+    static void initWindowEvents( GLFWwindow *window )
+    {
+        glfwSetFramebufferSizeCallback( window, [ ]( GLFWwindow *window, int width, int height )
+        {
+            auto windowResizedParameters = std::make_unique< WindowResizedParameters >( );
+            auto swapChainInvalidatedParameters = std::make_unique< SwapChainInvalidatedParameters >( );
+            windowResizedParameters->width = width;
+            windowResizedParameters->height = height;
+
+            GlobalEventHandler<WindowResizedParameters * >::Instance().triggerEvent( EventType::WindowResized, windowResizedParameters.get( ) );
+            GlobalEventHandler<SwapChainInvalidatedParameters * >::Instance().triggerEvent(EventType::SwapChainInvalidated, swapChainInvalidatedParameters.get( ) );
+        } );
+    }
+};
 
 END_NAMESPACES

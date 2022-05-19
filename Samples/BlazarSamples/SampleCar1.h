@@ -27,10 +27,12 @@ namespace Sample
 
 class SampleCar1 : public BlazarEngine::ECS::IGameEntity
 {
+private:
+    std::unique_ptr< ECS::IGameEntity > meshEntities;
 public:
     explicit SampleCar1( Scene::World * world )
     {
-        auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_1.gltf" ) );
+        meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/car_1.gltf" ) );
 
         for ( auto& child: meshEntities->getChildren( ) )
         {
@@ -40,7 +42,7 @@ public:
             texInfo.path = PATH( "/assets/textures/Car Texture 1.png" );
         }
 
-        addChild( meshEntities );
+        addChild( meshEntities.get( ) );
 
         BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( this, glm::vec3( 3.0f, 0.15f, 5.0f ) );
         BlazarEngine::Physics::PhysicsTransformSystem::setRotationRecursive( this, { BlazarEngine::ECS::RotationUnit::Degrees, glm::vec3( -0.0f, -45.0f, 0.0f ) } );

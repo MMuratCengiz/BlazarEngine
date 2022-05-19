@@ -176,7 +176,7 @@ private:
     const int PLAIN_TRIANGLE_GEOMETRY_IDX = 3;
 
     std::vector< MeshGeometry > geometryTable;
-    std::unordered_map< std::string, std::shared_ptr< SamplerDataAttachment > > imageMap;
+    std::unordered_map< std::string, std::unique_ptr< SamplerDataAttachment > > imageMap;
 
     LitCubePrimitive litCubePrimitive { };
     PlainCubePrimitive plainCubePrimitive { };
@@ -186,13 +186,13 @@ private:
 public:
     AssetManager( );
 
-    std::shared_ptr< ECS::IGameEntity > createEntity( const std::string &meshPath );
+    std::unique_ptr< ECS::IGameEntity > createEntity( const std::string &meshPath );
     void createEntity( ECS::IGameEntity * attachToEntity, const std::string &meshPath );
 
     MeshGeometry &getMeshGeometry( const int &geometryIdx );
     MeshGeometry &getPrimitive( const PrimitiveType& primitive );
 
-    std::shared_ptr< SamplerDataAttachment > getImage( const std::string &path );
+    std::unique_ptr< SamplerDataAttachment > getImage( const std::string &path );
 
     ~AssetManager( );
 

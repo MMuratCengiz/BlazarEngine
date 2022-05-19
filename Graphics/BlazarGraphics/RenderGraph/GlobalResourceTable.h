@@ -46,7 +46,7 @@ struct GeometryData
 struct EntityWrapper
 {
     MeshGeometry geometryRef;
-    std::shared_ptr< ECS::IGameEntity > entity;
+    ECS::IGameEntity * entity;
     std::vector< GeometryData > subGeometries;
 };
 
@@ -57,7 +57,9 @@ private:
     IRenderDevice *renderDevice;
 
     std::unique_ptr< ShaderUniformBinder > resourceBinder;
-    std::shared_ptr< ECS::ComponentTable > currentComponentTable;
+    std::unique_ptr< ECS::IGameEntity > dummy;
+
+    ECS::ComponentTable * currentComponentTable;
     std::vector< std::vector< ShaderResourceWrapper > > frameResources;
     std::vector< std::vector< bool > > frameUpdatedResources;
 
@@ -75,23 +77,23 @@ private:
 public:
     explicit GlobalResourceTable( IRenderDevice *renderDevice, AssetManager *assetManager );
 
-    void addEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void updateEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void removeEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
+    void addEntity( ECS::IGameEntity* entity );
+    void updateEntity( ECS::IGameEntity* entity );
+    void removeEntity( ECS::IGameEntity* entity );
 
-    void resetTable( const std::shared_ptr< ECS::ComponentTable > &componentTable, const uint32_t &frameIndex );
+    void resetTable( ECS::ComponentTable * componentTable, const uint32_t &frameIndex );
     void resetFrame( const int& frameIdx );
 
     std::shared_ptr< ShaderResource >& getResource( const int& resourceIdx, const uint32_t &frameIndex );
-    std::shared_ptr< SamplerDataAttachment > getSamplerDataAttachment( const ECS::Material::TextureInfo& texture );
+    std::unique_ptr< SamplerDataAttachment > getSamplerDataAttachment( const ECS::Material::TextureInfo& texture );
 
     std::vector< EntityWrapper >& getGeometryList( const InputGeometry& inputGeometry );
 
     inline ShaderUniformBinder *getResourceBinder( ) { return resourceBinder.get( ); }
 
     void allocateAllPerGeometryResources( const int& frameIndex, const MeshGeometry &parent, const SubMeshGeometry &subMeshGeometry );
-    void allocateAllPerEntityResources( const int& frameIndex, const std::shared_ptr< ECS::IGameEntity > &entity );
-    void allocatePerEntityResources( const int& frameIndex, const std::shared_ptr< ECS::IGameEntity > &entity, std::vector< int > resources );
+    void allocateAllPerEntityResources( const int& frameIndex, ECS::IGameEntity* entity );
+    void allocatePerEntityResources( const int& frameIndex, ECS::IGameEntity* entity, std::vector< int > resources );
     void allocateAllPerFrameResources( const int& frameIndex );
 
     bool isBinderAssigned( const int& binderIdx );
@@ -108,14 +110,14 @@ private:
                                                       const ResourcePersistStrategy &persistStrategy = ResourcePersistStrategy::StoreOnDeviceMemory,
                                                       const ResourceShaderStage &shaderStage = ResourceShaderStage::Vertex ) const;
 
-    EntityWrapper createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity );
+    EntityWrapper createGeometryData( ECS::IGameEntity* entity );
     void attachAllAttachments( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource );
     void attachUniformAttachment( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource ) const;
     void attachCubeMapAttachment( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource ) const;
     void attachSamplerAttachment( const IShaderUniform * content, const std::shared_ptr<ShaderResource>& resource );
-    void createGeometry( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void createGeometryList( const std::vector< std::shared_ptr< ECS::IGameEntity > > &entities );
-    GeometryData createGeometryData( const std::shared_ptr< ECS::IGameEntity > &entity, SubMeshGeometry &subMeshGeometry );
+    void createGeometry( ECS::IGameEntity* entity );
+    void createGeometryList( const std::vector< ECS::IGameEntity * > &entities );
+    GeometryData createGeometryData( ECS::IGameEntity* entity, SubMeshGeometry &subMeshGeometry );
 
     static void cleanGeometryData( GeometryData &geometryData );
     static void freeResource( std::shared_ptr< ShaderResource >& resource );

@@ -25,10 +25,10 @@ PhysicsTransformSystem::PhysicsTransformSystem( PhysicsWorld *physicsWorld ) : p
 
 }
 
-void PhysicsTransformSystem::translate( const std::shared_ptr< ECS::IGameEntity > &entity, const glm::vec3 &translation )
+void PhysicsTransformSystem::translate( ECS::IGameEntity * entity, const glm::vec3 &translation )
 {
-    std::shared_ptr< ECS::CTransform > transform = entity->getComponent< ECS::CTransform >( );
-    std::shared_ptr< ECS::CRigidBody > rigidBody = entity->getComponent< ECS::CRigidBody >( );
+    ECS::CTransform * transform = entity->getComponent< ECS::CTransform >( );
+    ECS::CRigidBody * rigidBody = entity->getComponent< ECS::CRigidBody >( );
 
     FUNCTION_BREAK( transform == nullptr && rigidBody == nullptr )
 
@@ -36,18 +36,18 @@ void PhysicsTransformSystem::translate( const std::shared_ptr< ECS::IGameEntity 
     rigidBody->instance->activate( );
 }
 
-void PhysicsTransformSystem::rotate( const std::shared_ptr< ECS::IGameEntity > &entity, glm::vec3 rotation )
+void PhysicsTransformSystem::rotate( ECS::IGameEntity * entity, glm::vec3 rotation )
 {
-    std::shared_ptr< ECS::CTransform > transform = entity->getComponent< ECS::CTransform >( );
-    std::shared_ptr< ECS::CRigidBody > rigidBody = entity->getComponent< ECS::CRigidBody >( );
+    ECS::CTransform * transform = entity->getComponent< ECS::CTransform >( );
+    ECS::CRigidBody * rigidBody = entity->getComponent< ECS::CRigidBody >( );
 
     FUNCTION_BREAK( transform == nullptr && rigidBody == nullptr )
 }
 
 void PhysicsTransformSystem::setPositionRecursive( ECS::IGameEntity *entity, const glm::vec3 &position )
 {
-    std::shared_ptr< ECS::CTransform > transform = entity->getComponent< ECS::CTransform >( );
-    std::shared_ptr< ECS::CRigidBody > rigidBody = entity->getComponent< ECS::CRigidBody >( );
+    ECS::CTransform * transform = entity->getComponent< ECS::CTransform >( );
+    ECS::CRigidBody * rigidBody = entity->getComponent< ECS::CRigidBody >( );
 
     FUNCTION_BREAK( transform == nullptr )
 
@@ -55,7 +55,7 @@ void PhysicsTransformSystem::setPositionRecursive( ECS::IGameEntity *entity, con
 
     for ( auto &child: entity->getChildren( ) )
     {
-        PhysicsTransformSystem::setPositionRecursive( child.get( ), position );
+        PhysicsTransformSystem::setPositionRecursive( child, position );
         if ( rigidBody != nullptr )
         {
             rigidBody->instance->setWorldTransform( toBtTransform( transform ) );
@@ -65,8 +65,8 @@ void PhysicsTransformSystem::setPositionRecursive( ECS::IGameEntity *entity, con
 
 void PhysicsTransformSystem::setRotationRecursive( ECS::IGameEntity *entity, const ECS::Rotation &rotation )
 {
-    std::shared_ptr< ECS::CTransform > transform = entity->getComponent< ECS::CTransform >( );
-    std::shared_ptr< ECS::CRigidBody > rigidBody = entity->getComponent< ECS::CRigidBody >( );
+    ECS::CTransform * transform = entity->getComponent< ECS::CTransform >( );
+    ECS::CRigidBody * rigidBody = entity->getComponent< ECS::CRigidBody >( );
 
     FUNCTION_BREAK( transform == nullptr )
 
@@ -74,7 +74,7 @@ void PhysicsTransformSystem::setRotationRecursive( ECS::IGameEntity *entity, con
 
     for ( auto &child: entity->getChildren( ) )
     {
-        PhysicsTransformSystem::setRotationRecursive( child.get( ), rotation );
+        PhysicsTransformSystem::setRotationRecursive( child, rotation );
         if ( rigidBody != nullptr )
         {
             rigidBody->instance->setWorldTransform( toBtTransform( transform ) );
@@ -84,7 +84,7 @@ void PhysicsTransformSystem::setRotationRecursive( ECS::IGameEntity *entity, con
 
 void PhysicsTransformSystem::setScaleRecursive( ECS::IGameEntity *entity, const glm::vec3 &scale )
 {
-    std::shared_ptr< ECS::CTransform > transform = entity->getComponent< ECS::CTransform >( );
+    ECS::CTransform * transform = entity->getComponent< ECS::CTransform >( );
 
     FUNCTION_BREAK( transform == nullptr )
 
@@ -92,11 +92,11 @@ void PhysicsTransformSystem::setScaleRecursive( ECS::IGameEntity *entity, const 
 
     for ( auto &child: entity->getChildren( ) )
     {
-        PhysicsTransformSystem::setScaleRecursive( child.get( ), scale );
+        PhysicsTransformSystem::setScaleRecursive( child, scale );
     }
 }
 
-btTransform PhysicsTransformSystem::toBtTransform( const std::shared_ptr< ECS::CTransform > &transform )
+btTransform PhysicsTransformSystem::toBtTransform( ECS::CTransform * transform )
 {
     btTransform btTransform { };
 
@@ -106,7 +106,7 @@ btTransform PhysicsTransformSystem::toBtTransform( const std::shared_ptr< ECS::C
     return btTransform;
 }
 
-void PhysicsTransformSystem::addInstanceRecursive( ECS::IGameEntity *entity, std::shared_ptr< ECS::CTransform > transform )
+void PhysicsTransformSystem::addInstanceRecursive( ECS::IGameEntity *entity, ECS::CTransform * transform )
 {
     if ( !entity->hasComponent< ECS::CInstances >( ) )
     {
@@ -117,7 +117,7 @@ void PhysicsTransformSystem::addInstanceRecursive( ECS::IGameEntity *entity, std
 
     for ( auto &child: entity->getChildren( ) )
     {
-        PhysicsTransformSystem::addInstanceRecursive( child.get( ), transform );
+        PhysicsTransformSystem::addInstanceRecursive( child, transform );
     }
 }
 

@@ -22,15 +22,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-void AnimationStateSystem::frameStart( const std::shared_ptr< ECS::ComponentTable > &componentTable )
+void AnimationStateSystem::frameStart( ECS::ComponentTable * componentTable )
 {
-    for ( const std::shared_ptr< ECS::CAnimState > &animState: componentTable->getComponents< ECS::CAnimState >( ) )
+    for ( const auto& animState: componentTable->getComponents< ECS::CAnimState >( ) )
     {
         handleAnim( animState );
     }
 }
 
-void AnimationStateSystem::handleAnim( const std::shared_ptr< ECS::CAnimState > &anim )
+void AnimationStateSystem::handleAnim( ECS::CAnimState * anim )
 {
     if ( anim->state != anim->previousState )
     {
@@ -40,7 +40,7 @@ void AnimationStateSystem::handleAnim( const std::shared_ptr< ECS::CAnimState > 
     playAnim( anim );
 }
 
-void AnimationStateSystem::playAnim( const std::shared_ptr< ECS::CAnimState > &anim )
+void AnimationStateSystem::playAnim( ECS::CAnimState * anim )
 {
     auto currentNode = anim->currentNode;
 
@@ -185,7 +185,7 @@ void AnimationStateSystem::setStepInterpolation( const AnimationChannel &channel
     }
 }
 
-void AnimationStateSystem::handleAnimStateChange( const std::shared_ptr< ECS::CAnimState > &anim )
+void AnimationStateSystem::handleAnimStateChange( ECS::CAnimState * anim  )
 {
     anim->currentNode->currentPlayTime = 0.0;
 
@@ -194,10 +194,10 @@ void AnimationStateSystem::handleAnimStateChange( const std::shared_ptr< ECS::CA
     anim->currentNode = anim->nodes[ anim->currentNode->transitions[ anim->state ] ];
 }
 
-void AnimationStateSystem::entityTick( const std::shared_ptr< ECS::IGameEntity > &entity )
+void AnimationStateSystem::entityTick( ECS::IGameEntity * entity )
 { }
 
-void AnimationStateSystem::frameEnd( const std::shared_ptr< ECS::ComponentTable > &componentTable )
+void AnimationStateSystem::frameEnd( ECS::ComponentTable * componentTable )
 {
 
 }

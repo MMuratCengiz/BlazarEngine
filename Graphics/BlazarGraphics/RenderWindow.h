@@ -46,11 +46,9 @@ private:
 public:
     RenderWindow( const uint32_t& width, const uint32_t& height, std::vector< std::string > extensions ) : width( width ), height( height ), extensions( std::move( extensions ) )
     {
-        Input::GlobalEventHandler::Instance().subscribeToEvent(
-                Input::EventType::WindowResized, [ & ]( const Input::EventType& eventType, std::shared_ptr< Input::IEventParameters > parameters )
+        Input::Events::subscribe< Input::WindowResizedParameters * >(
+                Input::EventType::WindowResized, [ & ](  Input::WindowResizedParameters *  windowResizeParameters )
                 {
-                    auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
-
                     if ( windowResizeParameters->width > 0 && windowResizeParameters->height > 0 )
                     {
                         this->width = windowResizeParameters->width;

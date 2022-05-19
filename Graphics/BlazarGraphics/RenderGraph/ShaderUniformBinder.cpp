@@ -26,7 +26,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 {
     registerBinder(
             "InstanceData",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatInstances( entity->getComponent< ECS::CInstances >( ), entity );
                 return getAttachment< InstanceData >( data );
@@ -35,7 +35,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "ModelMatrix",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatModelMatrix( entity->getComponent< ECS::CTransform >( ), entity );
                 auto attachment = getAttachment< glm::mat4 >( data );
@@ -46,7 +46,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "NormalModelMatrix",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatNormalMatrix( entity->getComponent< ECS::CTransform >( ), entity );
                 auto attachment = getAttachment< glm::mat4 >( data );
@@ -57,7 +57,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "BoneTransformations",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatBoneTransformations( entity );
                 return getAttachment< BoneTransformations >( data );
@@ -66,7 +66,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "EnvironmentLights",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatLightingEnvironment( table );
                 return getAttachment< EnvironmentLights >( data );
@@ -75,7 +75,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "LightViewProjectionMatrix",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatLightViewProjectionMatrices( table );
                 return getAttachment< LightViewProjectionMatrices >( data );
@@ -84,7 +84,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "OutlineColor",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto outlineComponent = entity->getComponent< ECS::COutlined >( );
                 return getAttachment< glm::vec4 >( outlineComponent == nullptr ? glm::vec4( 1.0f ) : outlineComponent->outlineColor );
@@ -93,7 +93,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "OutlineScale",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto outlineComponent = entity->getComponent< ECS::COutlined >( );
                 return getAttachment< float >( outlineComponent == nullptr ? 1.0f : outlineComponent->borderScale );
@@ -102,7 +102,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "ViewProjection",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatCamera( table );
                 return getAttachment< ViewProjection >( data );
@@ -111,9 +111,9 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "Tessellation",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
-                const std::shared_ptr< ECS::CTessellation > tessellation = entity->getComponent< ECS::CTessellation >( );
+                ECS::CTessellation * tessellation = entity->getComponent< ECS::CTessellation >( );
                 const auto data = DataAttachmentFormatter::formatTessellationComponent( tessellation );
                 return getAttachment< Tessellation >( data );
             }
@@ -121,7 +121,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "WorldContext",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto data = DataAttachmentFormatter::formatWorldContext( table );
                 return getAttachment< WorldContext >( data );
@@ -130,9 +130,9 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "Material",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
-                const std::shared_ptr< ECS::CMaterial > material = entity->getComponent< ECS::CMaterial >( );
+                ECS::CMaterial * material = entity->getComponent< ECS::CMaterial >( );
                 const auto data = DataAttachmentFormatter::formatMaterialComponent( entity->getComponent< ECS::CMaterial >( ), entity->getComponent< ECS::CTransform >( ) );
                 return getAttachment< Material >( data );
             }
@@ -140,7 +140,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "Resolution",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 const auto gameStateComponent = table->getComponents< ECS::CGameState >( )[ 0 ];
                 const auto data = DataAttachmentFormatter::formatResolution( gameStateComponent->surfaceWidth, gameStateComponent->surfaceHeight );
@@ -150,7 +150,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "SkyBox",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 return createSamplerShaderUniform( DataAttachmentFormatter::getSkyBoxTextures( table ), ResourceType::CubeMap );
             }
@@ -158,7 +158,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "searchTex",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 return createSamplerShaderUniform( DataAttachmentFormatter::getSearchTex( ) );
             }
@@ -166,7 +166,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinder(
             "areaTex",
-            [ ]( const std::shared_ptr< ECS::ComponentTable > &table ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::ComponentTable * table ) -> std::unique_ptr< IShaderUniform >
             {
                 return createSamplerShaderUniform( DataAttachmentFormatter::getAreaTex( ) );
             }
@@ -174,7 +174,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinderLoadOnce(
             "HeightMap",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 return createSamplerShaderUniform( DataAttachmentFormatter::getHeightMap( entity ) );
             }
@@ -182,7 +182,7 @@ ShaderUniformBinder::ShaderUniformBinder( )
 
     registerBinderLoadOnce(
             "Texture1",
-            [ ]( const std::shared_ptr< ECS::IGameEntity > &entity ) -> std::unique_ptr< IShaderUniform >
+            [ ]( ECS::IGameEntity * entity ) -> std::unique_ptr< IShaderUniform >
             {
                 return createSamplerShaderUniform( DataAttachmentFormatter::getTexture1( entity ) );
             }

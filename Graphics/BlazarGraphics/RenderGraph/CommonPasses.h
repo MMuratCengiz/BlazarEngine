@@ -30,16 +30,16 @@ class CommonPasses
 private:
     CommonPasses( ) = default;
 public:
-    static std::shared_ptr< Pass > createGBufferPass(  IRenderDevice* renderDevice );
-    static std::shared_ptr< Pass > createShadowMapPass(  IRenderDevice* renderDevice );
-    static std::shared_ptr< Pass > createLightingPass( IRenderDevice* renderDevice );
-    static std::shared_ptr< Pass > createSkyBoxPass( IRenderDevice* renderDevice );
-    static std::shared_ptr< Pass > createPresentPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createGBufferPass(  IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createShadowMapPass(  IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createLightingPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createSkyBoxPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createPresentPass( IRenderDevice* renderDevice );
 
     // SMAA passes
-    static std::shared_ptr< Pass > createSMAAEdgePass( IRenderDevice* renderDevice );
-    static std::shared_ptr< Pass > createSMAABlendWeightPass( IRenderDevice* renderDevice );
-    static std::shared_ptr< Pass > createSMAANeighborPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createSMAAEdgePass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createSMAABlendWeightPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createSMAANeighborPass( IRenderDevice* renderDevice );
 };
 
 END_NAMESPACES

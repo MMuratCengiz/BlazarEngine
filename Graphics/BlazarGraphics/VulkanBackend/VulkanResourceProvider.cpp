@@ -177,9 +177,9 @@ void VulkanResourceProvider::createSampler2DAllocator( const std::shared_ptr< Sh
 
         TextureLoadArguments loadArguments { };
         loadArguments.context = context;
-        loadArguments.commandExecutor = commandExecutor;
+        loadArguments.commandExecutor = commandExecutor.get( );
 
-        const std::shared_ptr< SamplerDataAttachment > &samplerAttachment = std::dynamic_pointer_cast< SamplerDataAttachment >( resource->dataAttachment );
+        auto * samplerAttachment = ( SamplerDataAttachment * ) resource->dataAttachment.get( );
 
         if ( samplerAttachment->width == 0 )
         {
@@ -227,9 +227,9 @@ void VulkanResourceProvider::createCubeMapAllocator( const std::shared_ptr< Shad
         FUNCTION_BREAK( resource->dataAttachment == nullptr )
 
         CubeMapLoadArguments loadArguments { context };
-        loadArguments.commandExecutor = commandExecutor;
+        loadArguments.commandExecutor = commandExecutor.get( );
 
-        const std::shared_ptr< CubeMapDataAttachment > &cubeMapDataAttachment = std::dynamic_pointer_cast< CubeMapDataAttachment >( resource->dataAttachment );
+        CubeMapDataAttachment * cubeMapDataAttachment = ( CubeMapDataAttachment * )( resource->dataAttachment.get( ) );
         loadArguments.image = cubeMapDataAttachment;
 
         VulkanCubeMapAllocator::load( loadArguments, reinterpret_cast< VulkanTextureWrapper * >( resource->apiSpecificBuffer ) );
@@ -255,9 +255,9 @@ void VulkanResourceProvider::createCubeMapAllocator( const std::shared_ptr< Shad
     };
 }
 
-std::shared_ptr< IResourceLock > VulkanResourceProvider::createLock( const ResourceLockType &lockType )
+std::unique_ptr< IResourceLock > VulkanResourceProvider::createLock( const ResourceLockType &lockType )
 {
-    return std::make_shared< VulkanResourceLock >( context, lockType );
+    return std::make_unique< VulkanResourceLock >( context, lockType );
 }
 
 VulkanResourceLock::VulkanResourceLock( VulkanContext *context, const ResourceLockType &lockType ) : IResourceLock( lockType ), context( context )

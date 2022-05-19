@@ -193,7 +193,7 @@ struct ShaderResource
     ResourcePersistStrategy persistStrategy;
     ResourceShaderStage shaderStage;
 
-    std::shared_ptr< IDataAttachment > dataAttachment;
+    std::unique_ptr< IDataAttachment > dataAttachment;
     std::function< void( ) > allocate;
     std::function< void( ) > update;
     std::function< void( const ResourceUsage &usage ) > prepareForUsage;
@@ -206,7 +206,7 @@ class IResourceProvider
 {
 public:
     virtual std::shared_ptr< ShaderResource > createResource( const ShaderResourceRequest &request ) = 0;
-    virtual std::shared_ptr< IResourceLock > createLock( const ResourceLockType &lockType ) = 0;
+    virtual std::unique_ptr< IResourceLock > createLock( const ResourceLockType &lockType ) = 0;
     virtual ~IResourceProvider( ) = default;
 };
 

@@ -48,24 +48,24 @@ void World::init( const uint32_t &windowWidth, const uint32_t &windowHeight, con
     renderDevice->createDevice( window->getRenderWindow( ) );
     renderDevice->listDevices( )[ 0 ].select( );
 
-    Input::GlobalEventHandler::Instance( ).initWindowEvents( window->getWindow( ) );
+    Input::Events::initWindowEvents( window->getWindow( ) );
 
     eventHandler = std::make_unique< Input::EventHandler >( window->getWindow( ) );
     actionMap = std::make_unique< Input::ActionMap >( eventHandler.get( ) );
     assetManager = std::make_unique< Graphics::AssetManager >( );
     animationStateSystem = std::make_unique< Graphics::AnimationStateSystem >( assetManager.get( ) );
+    graphSystem = std::make_unique< Graphics::GraphSystem >( renderDevice.get( ), assetManager.get( ) );
 
-    auto graphSystem = std::make_unique< Graphics::GraphSystem >( renderDevice.get( ), assetManager.get( ) );
-    registerSystem( std::move( graphSystem ) );
-    registerSystem( std::move( animationStateSystem ) );
+    registerSystem( graphSystem.get( ) );
+    registerSystem( animationStateSystem.get( ) );
 }
 
-void World::registerSystem( std::unique_ptr< ECS::ISystem > system )
+void World::registerSystem( ECS::ISystem *system )
 {
-    systems.push_back( std::move( system ) );
+    systems.push_back( system );
 }
 
-void World::setScene( std::shared_ptr< Scene > scene )
+void World::setScene( Scene *scene )
 {
     if ( currentScene != nullptr )
     {
@@ -78,28 +78,26 @@ void World::setScene( std::shared_ptr< Scene > scene )
         }
     }
 
-    currentScene = std::move( scene );
+    currentScene = scene;
 
     // * attach game state entity
 
-    auto gameState = std::make_shared< ECS::DynamicGameEntity >( );
+    gameState = std::make_unique< ECS::DynamicGameEntity >( );
     gameState->createComponent< ECS::CGameState >( );
 
     auto gameStateComponent = gameState->getComponent< ECS::CGameState >( );
     gameStateComponent->surfaceWidth = window->getRenderWindow( )->getWidth( );
     gameStateComponent->surfaceHeight = window->getRenderWindow( )->getHeight( );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent(
+    Input::Events::subscribe< Input::WindowResizedParameters * >(
             Input::EventType::WindowResized,
-            [ = ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > parameters )
+            [ = ]( Input::WindowResizedParameters *windowResizeParameters )
             {
-                auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
-
                 gameStateComponent->surfaceWidth = windowResizeParameters->width;
                 gameStateComponent->surfaceHeight = windowResizeParameters->height;
             } );
 
-    currentScene->addEntity( std::move( gameState ) );
+    currentScene->addEntity( gameState.get( ) );
 
     for ( const auto &entity: currentScene->getEntities( ) )
     {
@@ -112,7 +110,7 @@ void World::setScene( std::shared_ptr< Scene > scene )
     }
 }
 
-void World::run( const std::shared_ptr< IPlayable > &game )
+void World::run( IPlayable *game )
 {
     game->init( );
 
@@ -120,12 +118,15 @@ void World::run( const std::shared_ptr< IPlayable > &game )
     FPSCounter fpsCounter = FPSCounter::Instance( );
 
     int width, height;
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, const std::shared_ptr< Input::IEventParameters >& parameters )
+    Input::Events::subscribe< Input::WindowResizedParameters * >( Input::EventType::WindowResized, [ & ]( Input::WindowResizedParameters *windowResizeParameters )
     {
-        auto windowResizeParameters = Input::GlobalEventHandler::ToWindowResizedParameters( parameters );
         width = windowResizeParameters->width;
         height = windowResizeParameters->height;
     } );
+
+    Input::TickParameters * tickParameters = new Input::TickParameters { };
+    tickParameters->window = glfwWindow;
+    auto tickParams = std::unique_ptr< Input::TickParameters >( tickParameters );
 
     while ( !glfwWindowShouldClose( glfwWindow ) )
     {
@@ -158,8 +159,7 @@ void World::run( const std::shared_ptr< IPlayable > &game )
 
         eventHandler->pollEvents( );
 
-        auto tickParams = Input::GlobalEventHandler::createTickParameters( glfwWindow );
-        Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::Tick, tickParams );
+        Input::Events::trigger( Input::EventType::Tick, tickParams.get( ) );
 
         for ( auto &system: systems )
         {
@@ -172,7 +172,9 @@ void World::run( const std::shared_ptr< IPlayable > &game )
 
 World::~World( )
 {
-    Input::GlobalEventHandler::Instance( ).cleanup( );
+    Input::GlobalEventHandler< Input::TickParameters * >::Instance( ).cleanup( );
+    Input::GlobalEventHandler< Input::WindowResizedParameters * >::Instance( ).cleanup( );
+    Input::GlobalEventHandler< Input::SwapChainInvalidatedParameters * >::Instance( ).cleanup( );
 
     renderDevice->beforeDelete( );
 

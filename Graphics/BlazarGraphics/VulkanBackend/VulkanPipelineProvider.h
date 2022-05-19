@@ -90,22 +90,22 @@ private:
     };
 
     VulkanContext *context;
-    std::vector< std::shared_ptr< VulkanPipeline > > pipelineInstances;
+    std::vector< std::unique_ptr< VulkanPipeline > > pipelineInstances;
     std::vector< vk::ShaderModule > shaderModules;
 public:
     explicit inline VulkanPipelineProvider( VulkanContext *context ) : context( context )
     { }
 
-    std::shared_ptr< IPipeline > createPipeline( const PipelineRequest &request ) override;
+    IPipeline * createPipeline( const PipelineRequest &request ) override;
 
-    void createPipeline( const PipelineRequest &request, const std::shared_ptr< VulkanPipeline > &instance, const std::vector< GLSLShaderInfo > &shaderInfo );
+    void createPipeline( const PipelineRequest &request, VulkanPipeline * pipeline, const std::vector< GLSLShaderInfo > &shaderInfo );
     void configureVertexInput( PipelineCreateInfos &createInfo );
     void configureColorBlend( PipelineCreateInfos &createInfo );
     void configureRasterization( PipelineCreateInfos &createInfo );
     void configureViewport( PipelineCreateInfos &createInfo );
     void configureMultisampling( PipelineCreateInfos &createInfo );
     void configureDynamicState( PipelineCreateInfos &createInfo );
-    void createPipelineLayout( PipelineCreateInfos &createInfo, const std::shared_ptr< VulkanPipeline > &instance );
+    void createPipelineLayout( PipelineCreateInfos &createInfo, VulkanPipeline * pipeline );
     void createRenderPass( PipelineCreateInfos &createInfo );
     void createDepthAttachmentImages( PipelineCreateInfos &createInfo );
     vk::ShaderModule createShaderModule( const std::string &filename );

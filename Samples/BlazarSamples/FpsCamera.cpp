@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace Sample
 {
 
-FpsCamera::FpsCamera( std::shared_ptr< BlazarEngine::ECS::CCamera > cameraComponent, glm::vec3 front )
+FpsCamera::FpsCamera( BlazarEngine::ECS::CCamera * cameraComponent, glm::vec3 front )
 {
     this->cameraComponent = std::move( cameraComponent );
     this->right = glm::vec3( 1.0f, 0.0f, 0.0f );

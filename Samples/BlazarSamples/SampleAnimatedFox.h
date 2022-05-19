@@ -32,7 +32,7 @@ class SampleAnimatedFox : public BlazarEngine::ECS::IGameEntity
 public:
     explicit SampleAnimatedFox( BlazarEngine::Scene::World * world );
 
-    void iterChildren( const std::shared_ptr< BlazarEngine::ECS::IGameEntity >& entity );
+    void iterChildren( BlazarEngine::ECS::IGameEntity * entity );
 };
 
 }

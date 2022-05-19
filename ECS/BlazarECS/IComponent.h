@@ -86,8 +86,6 @@ public:
     virtual ~IComponent( ) = default;
 };
 
-typedef std::shared_ptr< IComponent > pComponent;
-
 #define BLAZAR_UNIQUE_TYPE_ID( ClassType ) ComponentTypeRef::get().getTypeId< ClassType >( )
 
 #define BLAZAR_COMPONENT( ClassType ) ClassType( ) : IComponent( BLAZAR_UNIQUE_TYPE_ID( ClassType ) ) { } ~ClassType( ) override = default;

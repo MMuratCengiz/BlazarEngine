@@ -26,7 +26,7 @@ VulkanSurface::VulkanSurface( VulkanContext * context ) : context( context )
 {
     createSurface( );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+    Input::Events::subscribe< Input::SwapChainInvalidatedParameters * >( Input::EventType::SwapChainInvalidated, [ & ]( Input::SwapChainInvalidatedParameters * eventParams )
     {
         this->context->logicalDevice.waitIdle( );
 

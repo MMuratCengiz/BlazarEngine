@@ -33,27 +33,27 @@ PhysicsWorld::PhysicsWorld( const PhysicsWorldConfiguration &physicsWorldConfigu
     dynamicsWorld->setGravity( btVector3( 0.0f, GRAVITY_EARTH, 0.0f ) );
 }
 
-void PhysicsWorld::addOrUpdateEntity( const std::shared_ptr< ECS::IGameEntity > &entity )
+void PhysicsWorld::addOrUpdateEntity( ECS::IGameEntity *entity )
 {
-    std::shared_ptr< ECS::CTransform > transformObject = entity->getComponent< ECS::CTransform >( );
-    std::shared_ptr< ECS::CCollisionObject > collisionObject = entity->getComponent< ECS::CCollisionObject >( );
-    std::shared_ptr< ECS::CRigidBody > rigidBody = entity->getComponent< ECS::CRigidBody >( );
+    auto * transformObject = entity->getComponent< ECS::CTransform >( );
+    auto * collisionObject = entity->getComponent< ECS::CCollisionObject >( );
+    auto * rigidBody = entity->getComponent< ECS::CRigidBody >( );
 
     FUNCTION_BREAK( rigidBody == nullptr && collisionObject == nullptr )
 
     if ( rigidBody != nullptr )
     {
-        rigidBody->instance->setUserPointer( transformObject.get( ) );
+        rigidBody->instance->setUserPointer( transformObject );
         dynamicsWorld->addRigidBody( rigidBody->instance.get( ) );
     }
     if ( collisionObject != nullptr )
     {
-        collisionObject->instance->setUserPointer( transformObject.get( ) );
+        collisionObject->instance->setUserPointer( transformObject );
         dynamicsWorld->addCollisionObject( collisionObject->instance.get( ) );
     }
 }
 
-void PhysicsWorld::update( const std::shared_ptr< ECS::IGameEntity > &entity )
+void PhysicsWorld::update( ECS::IGameEntity *entity )
 {
 
 }

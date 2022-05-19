@@ -37,9 +37,9 @@ struct ShaderInputMaterial
 struct TextureLoadArguments
 {
     VulkanContext* context;
-    std::shared_ptr< VulkanCommandExecutor > commandExecutor;
+    VulkanCommandExecutor * commandExecutor;
 
-    std::shared_ptr< SamplerDataAttachment > image;
+    SamplerDataAttachment * image;
 };
 
 class VulkanSamplerAllocator

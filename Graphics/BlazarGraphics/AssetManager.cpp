@@ -56,13 +56,13 @@ AssetManager::AssetManager( )
 	plainTriangleSubMesh.vertexCount = plainTrianglePrimitive.getVertexCount( );
 }
 
-std::shared_ptr< ECS::IGameEntity > AssetManager::createEntity( const std::string& meshPath )
+std::unique_ptr< ECS::IGameEntity > AssetManager::createEntity( const std::string& meshPath )
 {
-	std::shared_ptr< ECS::IGameEntity > rootEntity = std::make_shared< ECS::DynamicGameEntity >( );
+	std::unique_ptr< ECS::IGameEntity > rootEntity = std::make_unique< ECS::DynamicGameEntity >( );
 
 	createEntity( rootEntity.get( ), meshPath );
 
-	return rootEntity;
+	return std::move( rootEntity );
 }
 
 void AssetManager::createEntity( ECS::IGameEntity* attachToEntity, const std::string& meshPath )
@@ -118,7 +118,7 @@ void AssetManager::loadImage( const std::string& path )
 		throw std::runtime_error( "Couldn't find texture." );
 	}
 
-	imageMap[ path ] = std::make_shared< SamplerDataAttachment >( );
+	imageMap[ path ] = std::make_unique< SamplerDataAttachment >( );
 	auto& ptr = imageMap[ path ];
 	ptr->content = contents;
 	ptr->width = static_cast< uint32_t >( width );
@@ -265,11 +265,10 @@ void AssetManager::onEachNode( SceneContext& context, ECS::IGameEntity* rootEnti
 	{
 		if ( context.multiMeshNodes )
 		{
-			std::shared_ptr< ECS::IGameEntity > child = std::make_shared< ECS::DynamicGameEntity >( );
-
-			entity->addChild( child );
+			std::unique_ptr< ECS::IGameEntity > child = std::make_unique< ECS::DynamicGameEntity >( );
+			entity->addManagedChild( std::move( child ) );
 			auto children = rootEntity->getChildren( );
-			entity = children[ children.size( ) - 1 ].get( );
+			entity = children[ children.size( ) - 1 ];
 		}
 
 		std::ostringstream keyBuilder;
@@ -492,7 +491,7 @@ MeshGeometry& AssetManager::getPrimitive( const PrimitiveType& primitive )
 	}
 }
 
-std::shared_ptr< SamplerDataAttachment > AssetManager::getImage( const std::string& path )
+std::unique_ptr< SamplerDataAttachment > AssetManager::getImage( const std::string& path )
 {
 	auto find = imageMap.find( path );
 
@@ -502,7 +501,17 @@ std::shared_ptr< SamplerDataAttachment > AssetManager::getImage( const std::stri
 		find = imageMap.find( path );
 	}
 
-	return find->second;
+    auto * copiedAttachment = new SamplerDataAttachment { };
+
+    copiedAttachment->format = find->second->format;
+    copiedAttachment->width = find->second->width;
+    copiedAttachment->height = find->second->height;
+    copiedAttachment->channels = find->second->channels;
+    copiedAttachment->textureInfo = find->second->textureInfo;
+    copiedAttachment->size = find->second->size;
+    copiedAttachment->content = find->second->content;
+
+	return std::move( std::unique_ptr< SamplerDataAttachment >( copiedAttachment ) );
 }
 
 int AssetManager::tryGetPrimitiveAttribute( const tinygltf::Primitive& primitive, const std::string& attribute )
@@ -525,11 +534,6 @@ glm::mat4 AssetManager::flatMatToGLMMat( const std::vector< float >& matFlat, in
 void AssetManager::addNode( SceneContext& sceneContext, int parent, int nodeId )
 {
 	tinygltf::Node node = sceneContext.model.nodes[ nodeId ];
-
-	if ( nodeId == 3 )
-	{
-		int i = 1;
-	}
 
 	MeshNode meshNode = { };
 	meshNode.translation = glm::vec3( 0.0f );

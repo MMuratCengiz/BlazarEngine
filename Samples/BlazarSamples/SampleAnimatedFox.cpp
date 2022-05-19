@@ -29,15 +29,15 @@ SampleAnimatedFox::SampleAnimatedFox( Scene::World *world )
 
     auto meshEntities = world->getAssetManager( )->createEntity( PATH( "/assets/models/scene.gltf" ) );
 
-    addChild( meshEntities );
+    addChild( meshEntities.get( ) );
 
     BlazarEngine::Physics::PhysicsTransformSystem::setPositionRecursive( this, glm::vec3( 6.0f, 0.15f, 5.0f ) );
     BlazarEngine::Physics::PhysicsTransformSystem::setScaleRecursive( this, glm::vec3( 0.5f, 0.5f, 0.5f ) );
 
-    iterChildren( meshEntities );
+    iterChildren( meshEntities.get( ) );
 }
 
-void SampleAnimatedFox::iterChildren( const std::shared_ptr< ECS::IGameEntity >& entity )
+void SampleAnimatedFox::iterChildren( ECS::IGameEntity * entity )
 {
     for ( const auto& child: entity->getChildren( ) )
     {

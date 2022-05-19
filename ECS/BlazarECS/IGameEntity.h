@@ -32,9 +32,10 @@ NAMESPACES( ENGINE_NAMESPACE, ECS )
 class IGameEntity
 {
 private:
-	std::vector< std::shared_ptr< IComponent > > componentQuickAccess;
+	std::vector< std::unique_ptr< IComponent > > componentQuickAccess;
 	std::vector< uint64_t > componentList;
-	std::vector< std::shared_ptr< IGameEntity > > children;
+	std::vector< IGameEntity * > children;
+    std::vector< std::unique_ptr< IGameEntity > > managedChildren;
 	uint64_t uid;
 public:
 	IGameEntity( )
@@ -49,9 +50,15 @@ public:
 		createComponent< CTransform >( );
 	};
 
-	void addChild( std::shared_ptr< IGameEntity > child )
+	inline void addChild( IGameEntity * child )
 	{
-		children.push_back( std::move( child ) );
+		children.push_back( child );
+	}
+
+	inline void addManagedChild( std::unique_ptr< IGameEntity > child )
+	{
+        auto & c = managedChildren.emplace_back( std::move( child ) );
+		children.push_back( c.get( ) );
 	}
 
 	[[nodiscard]] const uint64_t& getUID( ) const noexcept
@@ -59,7 +66,7 @@ public:
 		return uid;
 	}
 
-    [[nodiscard]] const std::vector< std::shared_ptr< IGameEntity > >& getChildren( ) const noexcept
+    [[nodiscard]] const std::vector< IGameEntity * >& getChildren( ) const noexcept
 	{
 		return children;
 	}
@@ -71,7 +78,7 @@ public:
 	}
 
 	template < class CastAs >
-	std::shared_ptr< CastAs > getComponent( ) noexcept
+	CastAs * getComponent( ) noexcept
 	{
         const uint64_t typeId = ComponentTypeRef::get( ).getTypeId< CastAs >( );
 
@@ -80,32 +87,32 @@ public:
 			return nullptr;
 		}
 
-        const auto component = componentQuickAccess[ typeId ];
+        const auto& component = componentQuickAccess[ typeId ];
 
 		if ( component == nullptr )
 		{
 			return nullptr;
 		}
 
-		return std::dynamic_pointer_cast< CastAs >( component );
+		return ( CastAs * )( component.get() );
 	}
 
-    [[nodiscard]] std::vector< std::shared_ptr< IComponent > > getAllComponents( ) const noexcept
+    [[nodiscard]] std::vector< IComponent * > getAllComponents( ) const noexcept
 	{
-		std::vector< std::shared_ptr< IComponent > > result{ componentList.size( ) };
+		std::vector< IComponent * > result{ componentList.size( ) };
 
 		for ( int i = 0; i < componentList.size(  ); ++i )
 		{
-			result[ i ] = componentQuickAccess[ componentList[ i ] ];
+			result[ i ] = componentQuickAccess[ componentList[ i ] ].get();
 		}
 
 		return result;
 	}
 
 	template < class CType >
-	std::shared_ptr< CType > createComponent( )
+	CType * createComponent( )
 	{
-		std::shared_ptr< CType > newComponent = std::make_shared< CType >( );
+		std::unique_ptr< CType > newComponent = std::make_unique< CType >( );
 
         const uint64_t typeId = newComponent->typeId;
 
@@ -115,7 +122,7 @@ public:
 		}
 		else if ( componentQuickAccess[ typeId ] != nullptr )
 		{
-			return std::dynamic_pointer_cast< CType >( componentQuickAccess[ typeId ] );
+			return ( CType * )( componentQuickAccess[ typeId ].get() );
 		}
 
 		componentList.push_back( typeId );
@@ -125,8 +132,6 @@ public:
 
 	virtual ~IGameEntity( ) = default;
 };
-
-using pGameEntity = std::shared_ptr< IGameEntity >;
 
 class DynamicGameEntity : public IGameEntity
 {

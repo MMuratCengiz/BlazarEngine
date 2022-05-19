@@ -42,8 +42,8 @@ public:
     static const float GRAVITY_EARTH;
 
     explicit PhysicsWorld( const PhysicsWorldConfiguration &physicsWorldConfiguration );
-    void addOrUpdateEntity( const std::shared_ptr< ECS::IGameEntity > &entity );
-    void update( const std::shared_ptr< ECS::IGameEntity > &entity );
+    void addOrUpdateEntity( ECS::IGameEntity *entity );
+    void update( ECS::IGameEntity *entity  );
     void tick( );
 
     ~PhysicsWorld();

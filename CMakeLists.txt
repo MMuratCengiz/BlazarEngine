@@ -148,7 +148,7 @@ SET(BlazarRequiredLibs
         )
 
 IF (${BLAZAR_INSTALL_LIBS})
-    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
+    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
     ADD_DEPENDENCIES(BlazarEngine lua)
 
     INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
@@ -157,7 +157,7 @@ IF (${BLAZAR_INSTALL_LIBS})
     SET(BLAZAR_INCLUDE_DIRS ${BlazarSources} CACHE INTERNAL "BLAZAR_INCLUDE_DIRS")
     SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
 ELSE()
-    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
+    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
     ADD_DEPENDENCIES(BlazarEngine lua)
     TARGET_INCLUDE_DIRECTORIES(BlazarEngine PRIVATE ${SOURCE_DIR}/src)
 ENDIF()

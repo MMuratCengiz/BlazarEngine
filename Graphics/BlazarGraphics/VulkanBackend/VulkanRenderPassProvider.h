@@ -50,10 +50,10 @@ class VulkanRenderPass : public IRenderPass
 {
 private:
     VulkanContext *context;
-    std::shared_ptr< VulkanPipeline > boundPipeline;
+    VulkanPipeline * boundPipeline;
     std::shared_ptr< VulkanRenderTarget > currentRenderTarget;
-    std::shared_ptr< VertexData > vertexDataAttachment = nullptr;
-    std::shared_ptr< IndexData > indexDataAttachment = nullptr;
+    VertexData * vertexDataAttachment = nullptr;
+    IndexData * indexDataAttachment = nullptr;
 
     RenderArea renderArea;
 
@@ -94,10 +94,10 @@ public:
     }
 
     void create( const RenderPassRequest &request ) override;
-    void frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > >& pipelines ) override;
+    void frameStart( const uint32_t &frameIndex, const std::vector< IPipeline * >& pipelines ) override;
     void begin( std::shared_ptr< IRenderTarget > renderTarget, std::array< float, 4 > clearColor ) override;
     void bindPerFrame( std::shared_ptr< ShaderResource > resource ) override;
-    void bindPipeline( std::shared_ptr< IPipeline > pipeline ) override;
+    void bindPipeline( IPipeline * pipeline ) override;
     void bindPerObject( std::shared_ptr< ShaderResource > resource ) override;
     std::string getProperty( const std::string& propertyName ) override;
 
@@ -107,7 +107,7 @@ public:
     void updateViewport( const uint32_t& width, const uint32_t& height );
 
     void draw( const uint32_t& instanceCount ) override;
-    bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence ) override;
+    bool submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, IResourceLock * notifyFence ) override;
     [[nodiscard]] const vk::RenderPass &getPassInstance( ) const;
     [[nodiscard]] vk::PipelineBindPoint getBoundPipelineBindPoint( ) const;
     void presentPassToSwapChain( );

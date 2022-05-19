@@ -28,13 +28,13 @@ RenderGraph::RenderGraph( IRenderDevice* renderDevice, AssetManager* assetManage
 	globalResourceTable = std::make_unique< GlobalResourceTable >( this->renderDevice, this->assetManager );
 }
 
-void RenderGraph::addPass( std::shared_ptr< Pass > pass )
+void RenderGraph::addPass( Pass * pass )
 {
 	FUNCTION_BREAK( passMap.find( pass->name ) != passMap.end( ) )
 
 	PassWrapper& wrapper = passes.emplace_back( );
 	wrapper.renderPass = nullptr;
-	wrapper.ref = std::move( pass );
+	wrapper.ref = pass;
 
 	passMap[ wrapper.ref->name ] = passes.size( ) - 1;
 }
@@ -108,7 +108,7 @@ void RenderGraph::buildGraph( )
 	}
 }
 
-void RenderGraph::prepare( const std::shared_ptr< ECS::ComponentTable >& componentTable )
+void RenderGraph::prepare( ECS::ComponentTable * componentTable )
 {
 	// Last pass should always be the render pass!
 	PassWrapper& lastPass = passes[ passes.size( ) - 1 ];
@@ -183,7 +183,9 @@ void RenderGraph::preparePass( PassWrapper& pass )
 
 	if ( pass.executeLocks.empty( ) )
 	{
-		pass.executeLocks = std::vector( renderDevice->getFrameCount( ), renderDevice->getResourceProvider( )->createLock( ResourceLockType::Fence ) );
+        for ( int i = 0; i < renderDevice->getFrameCount(); ++i ) {
+            pass.executeLocks.push_back( std::move( renderDevice->getResourceProvider( )->createLock( ResourceLockType::Fence ) ) );
+        }
 	}
 }
 
@@ -266,7 +268,7 @@ void RenderGraph::execute( )
 
 void RenderGraph::executePass( const PassWrapper& pass )
 {
-	std::shared_ptr< IRenderPass > renderPass = pass.renderPass;
+	auto renderPass = pass.renderPass;
 
 	renderPass->frameStart( frameIndex, pass.pipelines );
 
@@ -309,7 +311,7 @@ void RenderGraph::executePass( const PassWrapper& pass )
 		drawEntity( pass, renderPass, wrapper );
 	}
 
-	redrawFrame = !renderPass->submit( std::vector< std::shared_ptr< IResourceLock > >( ), pass.executeLocks[ frameIndex ] );
+	redrawFrame = !renderPass->submit( std::vector< std::shared_ptr< IResourceLock > >( ), pass.executeLocks[ frameIndex ].get( ) );
 
 	for ( auto& output : pass.ref->outputs )
 	{
@@ -371,17 +373,17 @@ void RenderGraph::bindDependentInputs( const PassWrapper& pass, std::shared_ptr<
 	}
 }
 
-void RenderGraph::addEntity( const std::shared_ptr< ECS::IGameEntity >& entity ) const
+void RenderGraph::addEntity( ECS::IGameEntity * entity ) const
 {
 	globalResourceTable->addEntity( entity );
 }
 
-void RenderGraph::updateEntity( const std::shared_ptr< ECS::IGameEntity >& entity ) const
+void RenderGraph::updateEntity( ECS::IGameEntity * entity ) const
 {
 	globalResourceTable->updateEntity( entity );
 }
 
-void RenderGraph::removeEntity( const std::shared_ptr< ECS::IGameEntity >& entity ) const
+void RenderGraph::removeEntity( ECS::IGameEntity * entity ) const
 {
 	globalResourceTable->removeEntity( entity );
 }

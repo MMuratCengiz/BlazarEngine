@@ -28,31 +28,31 @@ NAMESPACES( ENGINE_NAMESPACE, Scene )
 class Scene
 {
 private:
-	std::shared_ptr< ECS::ComponentTable > componentTable;
+	std::unique_ptr< ECS::ComponentTable > componentTable;
 
-	std::vector< std::shared_ptr< ECS::IGameEntity > > entities;
+	std::vector< ECS::IGameEntity * > entities;
 public:
 	Scene( )
 	{
-		componentTable = std::make_shared< ECS::ComponentTable >( );
+		componentTable = std::make_unique< ECS::ComponentTable >( );
 	}
 
-	inline void addEntity( std::shared_ptr< ECS::IGameEntity > entity )
+	inline void addEntity( ECS::IGameEntity * entity )
 	{
 		NOT_NULL( entity );
 
 		componentTable->addAllEntityComponentRecursive( entity );
-		entities.emplace_back( std::move( entity ) );
+		entities.emplace_back( entity );
 	}
 
-	[[nodiscard]] const std::vector< std::shared_ptr< ECS::IGameEntity > >& getEntities( ) const
+	[[nodiscard]] const std::vector< ECS::IGameEntity * >& getEntities( ) const
 	{
 		return entities;
 	}
 
-	[[nodiscard]] const std::shared_ptr< ECS::ComponentTable >& getComponentTable( ) const
+	[[nodiscard]] ECS::ComponentTable * getComponentTable( ) const
 	{
-		return componentTable;
+		return componentTable.get();
 	}
 };
 

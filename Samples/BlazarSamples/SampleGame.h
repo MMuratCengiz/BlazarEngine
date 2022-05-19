@@ -51,22 +51,22 @@ class SampleGame : public Scene::IPlayable
 {
     Scene::World *world;
 
-    std::shared_ptr< ECS::IGameEntity > cuteBoat;
-    std::shared_ptr< ECS::IGameEntity > tree1;
-    std::shared_ptr< ECS::IGameEntity > tree2;
-    std::shared_ptr< ECS::IGameEntity > rocks;
-    std::shared_ptr< Scene::Scene > initialScene;
+    std::unique_ptr< ECS::IGameEntity > cuteBoat;
+    std::unique_ptr< ECS::IGameEntity > tree1;
+    std::unique_ptr< ECS::IGameEntity > tree2;
+    std::unique_ptr< ECS::IGameEntity > rocks;
+    std::unique_ptr< Scene::Scene > initialScene;
 
-    std::shared_ptr< FpsCamera > camera;
-    std::shared_ptr< ECS::DynamicGameEntity > sceneLights;
-    std::shared_ptr< ECS::DynamicGameEntity > cameraComponent;
-    std::shared_ptr< SampleCar1 > car1;
-    std::shared_ptr< SampleCar2 > car2;
-    std::shared_ptr< SampleFloor > floor;
-    std::shared_ptr< SampleCubeMap > sky;
-    std::shared_ptr< SampleCrate > crate;
-    std::shared_ptr< SampleSmallCrate > smallCrate;
-    std::shared_ptr< SampleAnimatedFox > animDummy;
+    std::unique_ptr< FpsCamera > camera;
+    std::unique_ptr< ECS::DynamicGameEntity > sceneLights;
+    std::unique_ptr< ECS::DynamicGameEntity > cameraComponent;
+    std::unique_ptr< SampleCar1 > car1;
+    std::unique_ptr< SampleCar2 > car2;
+    std::unique_ptr< SampleFloor > floor;
+    std::unique_ptr< SampleCubeMap > sky;
+    std::unique_ptr< SampleCrate > crate;
+    std::unique_ptr< SampleSmallCrate > smallCrate;
+    std::unique_ptr< SampleAnimatedFox > animDummy;
     Input::ActionCallback inputCallback;
 public:
     inline explicit SampleGame( Scene::World *world ) : world( world )

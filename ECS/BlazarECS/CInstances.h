@@ -26,7 +26,7 @@ NAMESPACES( ENGINE_NAMESPACE, ECS )
 struct CInstances : public IComponent
 {
 public:
-    std::vector< std::shared_ptr< CTransform > > transforms;
+    std::vector< CTransform * > transforms;
 
     BLAZAR_COMPONENT( CInstances )
 };

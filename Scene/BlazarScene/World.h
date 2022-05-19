@@ -44,6 +44,7 @@ class World
 {
 private:
     std::unique_ptr< Graphics::VulkanDevice > renderDevice { };
+    std::unique_ptr< ECS::IGameEntity > gameState { };
 
     std::unique_ptr< Window > window;
     std::unique_ptr< Input::ActionMap > actionMap;
@@ -51,35 +52,35 @@ private:
     std::unique_ptr< Physics::PhysicsTransformSystem > transformSystem { };
     std::unique_ptr< Graphics::AssetManager > assetManager;
     std::unique_ptr< Graphics::AnimationStateSystem > animationStateSystem;
+    std::unique_ptr< Graphics::GraphSystem > graphSystem;
     std::unique_ptr< Input::EventHandler > eventHandler;
+    Scene * currentScene;
 
-    std::shared_ptr< Scene > currentScene;
-
-    std::vector< std::unique_ptr< ECS::ISystem > > systems;
+    std::vector< ECS::ISystem * > systems;
 public:
     World( ) = default;
 
     void init( const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title );
 
-    void registerSystem( std::unique_ptr< ECS::ISystem > system );
+    void registerSystem( ECS::ISystem * system );
 
-    void setScene( std::shared_ptr< Scene > scene );
+    void setScene( Scene * scene );
 
-    void run( const std::shared_ptr< IPlayable > &game );
+    void run( IPlayable * game );
 
-    inline const std::unique_ptr< Graphics::AssetManager > &getAssetManager( )
+    inline Graphics::AssetManager* getAssetManager( )
     {
-        return assetManager;
+        return assetManager.get();
     }
 
-    inline const std::unique_ptr< Input::ActionMap > &getActionMap( )
+    inline Input::ActionMap* getActionMap( )
     {
-        return actionMap;
+        return actionMap.get();
     }
 
-    inline const std::unique_ptr< Physics::PhysicsTransformSystem > &getTransformSystem( )
+    inline Physics::PhysicsTransformSystem* getTransformSystem( )
     {
-        return transformSystem;
+        return transformSystem.get();
     }
 
     // todo remove later

@@ -26,7 +26,7 @@ void SampleGame::init( )
     boost::uniform_real< > range( -28.0f, 28.0f );
     boost::variate_generator< boost::mt19937, boost::uniform_real< > > randomRange( rng, range );
 
-    sceneLights = std::make_shared< ECS::DynamicGameEntity >( );
+    sceneLights = std::make_unique< ECS::DynamicGameEntity >( );
     sceneLights->createComponent< ECS::CAmbientLight >( );
     sceneLights->getComponent< ECS::CAmbientLight >( )->diffuse = glm::vec3( 0.25f, 0.25f, 0.22f );
     sceneLights->getComponent< ECS::CAmbientLight >( )->power = 0.005f;
@@ -40,20 +40,20 @@ void SampleGame::init( )
     sceneLights->getComponent< ECS::CDirectionalLight >( )->specular = glm::vec3( 1.0, 1.0f, 0.99f );
     sceneLights->getComponent< ECS::CDirectionalLight >( )->power = 0.15f;
 
-    cameraComponent = std::make_shared< ECS::DynamicGameEntity >( );
+    cameraComponent = std::make_unique< ECS::DynamicGameEntity >( );
     cameraComponent->createComponent< ECS::CCamera >( );
     cameraComponent->getComponent< ECS::CCamera >( )->position = glm::vec3( -0.6f, 1.0f, 5.4f );
-    camera = std::make_shared< FpsCamera >( cameraComponent->getComponent< ECS::CCamera >( ) );
+    camera = std::make_unique< FpsCamera >( cameraComponent->getComponent< ECS::CCamera >( ) );
 
-    floor = std::make_shared< SampleFloor >( world );
-    car1 = std::make_shared< SampleCar1 >( world );
-    car2 = std::make_shared< SampleCar2 >( world );
-    sky = std::make_shared< SampleCubeMap >( world );
-    crate = std::make_shared< SampleCrate >( );
-    smallCrate = std::make_shared< SampleSmallCrate >( );
-    animDummy = std::make_shared< SampleAnimatedFox >( world );
+    floor = std::make_unique< SampleFloor >( world );
+    car1 = std::make_unique< SampleCar1 >( world );
+    car2 = std::make_unique< SampleCar2 >( world );
+    sky = std::make_unique< SampleCubeMap >( world );
+    crate = std::make_unique< SampleCrate >( );
+    smallCrate = std::make_unique< SampleSmallCrate >( );
+    animDummy = std::make_unique< SampleAnimatedFox >( world );
 
-    rocks = std::make_shared< ECS::DynamicGameEntity >( );
+    rocks = std::make_unique< ECS::DynamicGameEntity >( );
 
     /*
     DIR *dir;
@@ -108,42 +108,40 @@ void SampleGame::init( )
 
         for ( int i = 0; i < 35; ++i )
         {
-            auto instanceTransform = std::make_shared< ECS::CTransform >( );
+            auto instanceTransform = std::make_unique< ECS::CTransform >( );
 
             instanceTransform->position = glm::vec3( randomRange( ), 0.15, randomRange( ) );
             instanceTransform->scale = glm::vec3( 0.5f, 0.5f, 0.5f );
 
-            BlazarEngine::Physics::PhysicsTransformSystem::addInstanceRecursive( ptr.get( ), instanceTransform );
+            BlazarEngine::Physics::PhysicsTransformSystem::addInstanceRecursive( ptr.get( ), instanceTransform.get( ) );
         }
     }
 
-    initialScene = std::make_shared< Scene::Scene >( );
-    initialScene->addEntity( sceneLights );
-    initialScene->addEntity( cameraComponent );
-    initialScene->addEntity( car1 );
-    initialScene->addEntity( car2 );
-    initialScene->addEntity( tree1 );
-    initialScene->addEntity( tree2 );
-    initialScene->addEntity( floor );
-    initialScene->addEntity( crate );
-    initialScene->addEntity( rocks );
-    initialScene->addEntity( smallCrate );
-    initialScene->addEntity( sky );
-    initialScene->addEntity( animDummy );
-    world->setScene( initialScene );
+    initialScene = std::make_unique< Scene::Scene >( );
+    initialScene->addEntity( sceneLights.get() );
+    initialScene->addEntity( cameraComponent.get() );
+    initialScene->addEntity( car1.get() );
+    initialScene->addEntity( car2.get() );
+    initialScene->addEntity( tree1.get() );
+    initialScene->addEntity( tree2.get() );
+    initialScene->addEntity( floor.get() );
+    initialScene->addEntity( crate.get() );
+    initialScene->addEntity( rocks.get() );
+    initialScene->addEntity( smallCrate.get() );
+    initialScene->addEntity( sky.get() );
+    initialScene->addEntity( animDummy.get() );
+    world->setScene( initialScene.get() );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )
+    Input::Events::subscribe<Input::WindowResizedParameters * >( Input::EventType::WindowResized, [ & ]( auto windowParams )
     {
-        if ( const auto windowParams = Input::GlobalEventHandler::ToWindowResizedParameters( parameters ); windowParams->width > 0 && windowParams->height > 0 )
+        if ( windowParams->width > 0 && windowParams->height > 0 )
         {
             camera->updateAspectRatio( windowParams->width, windowParams->height );
         }
     } );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::Tick, [ & ]( const Input::EventType &type, const Input::pEventParameters &parameters )
+    Input::Events::subscribe< Input::TickParameters * >( Input::EventType::Tick, [ & ]( auto tickParams )
     {
-        auto tickParams = Input::GlobalEventHandler::ToTickParameters( parameters );
-
         camera->processKeyboardEvents( tickParams->window );
         camera->processMouseEvents( tickParams->window );
     } );
@@ -171,7 +169,7 @@ void SampleGame::init( )
             translation.x += Core::Time::getDeltaTime( ) * 40.0f;
         }
 
-        world->getTransformSystem( )->translate( smallCrate, translation );
+        world->getTransformSystem( )->translate( smallCrate.get( ), translation );
     };
 
     world->getActionMap( )->subscribeToAction( "MoveSmallCrate_Forward", movement );

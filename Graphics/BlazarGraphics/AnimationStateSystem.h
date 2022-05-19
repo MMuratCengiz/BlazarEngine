@@ -32,19 +32,19 @@ private:
 public:
     explicit AnimationStateSystem( AssetManager * assetManager ) : assetManager( std::move( assetManager ) ) { }
 
-    void frameStart( const std::shared_ptr< ECS::ComponentTable > &componentTable ) override;
+    void frameStart( ECS::ComponentTable * componentTable ) override;
 
-    void entityTick( const std::shared_ptr< ECS::IGameEntity > &entity ) override;
+    void entityTick( ECS::IGameEntity * entity ) override;
 
-    void frameEnd( const std::shared_ptr< ECS::ComponentTable > &componentTable ) override;
+    void frameEnd( ECS::ComponentTable * componentTable ) override;
 
     void cleanup( ) override;
 private:
-    void handleAnim( const std::shared_ptr< ECS::CAnimState > &anim );
+    void handleAnim( ECS::CAnimState * anim );
 
-    void handleAnimStateChange( const std::shared_ptr< ECS::CAnimState > &sharedPtr );
+    void handleAnimStateChange( ECS::CAnimState * sharedPtr );
 
-    void playAnim( const std::shared_ptr< ECS::CAnimState > &sharedPtr );
+    void playAnim( ECS::CAnimState * sharedPtr );
 
     void setStepInterpolation( const AnimationChannel &channel, const glm::vec4 &transform_0, MeshNode &joint ) const;
 

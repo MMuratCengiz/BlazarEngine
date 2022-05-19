@@ -25,9 +25,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
 {
-    auto gBufferPass = std::make_shared< Pass >( "gBufferPass" );
+    auto gBufferPass = std::make_unique< Pass >( "gBufferPass" );
     gBufferPass->inputGeometry = InputGeometry::Model;
 
     gBufferPass->pipelineInputs.resize( 5 );
@@ -92,7 +92,7 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
 
     gBufferPass->renderPassRequest = renderPassRequest;
 
-    gBufferPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    gBufferPass->selectPipeline = [ ](  ECS::IGameEntity * entity )
     {
         int pipeline = entity->hasComponent< ECS::CTessellation >( ) ? 1 : 0;
 
@@ -169,12 +169,12 @@ std::shared_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     animatedGBufferRequest.cullMode = ECS::CullMode::None;
     animatedGBufferRequest.depthCompareOp = CompareOp::Less;
 
-    return gBufferPass;
+    return std::move( gBufferPass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderDevice )
 {
-    auto lightingPass = std::make_shared< Pass >( "lightingPass" );
+    auto lightingPass = std::make_unique< Pass >( "lightingPass" );
     lightingPass->inputGeometry = InputGeometry::Quad;
 
     lightingPass->pipelineInputs.resize( 1 );
@@ -207,17 +207,17 @@ std::shared_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    lightingPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    lightingPass->selectPipeline = [ ](  ECS::IGameEntity * entity )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return lightingPass;
+    return std::move( lightingPass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *renderDevice )
 {
-    auto shadowMapPass = std::make_shared< Pass >( "shadowMap" );
+    auto shadowMapPass = std::make_unique< Pass >( "shadowMap" );
     shadowMapPass->inputGeometry = InputGeometry::Model;
 
     shadowMapPass->pipelineInputs.resize( 1 );
@@ -248,17 +248,17 @@ std::shared_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::LessOrEqual;
 
-    shadowMapPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    shadowMapPass->selectPipeline = [ ](  ECS::IGameEntity * entity )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return shadowMapPass;
+    return std::move( shadowMapPass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDevice )
 {
-    auto skyboxPass = std::make_shared< Pass >( "skyBoxPass" );
+    auto skyboxPass = std::make_unique< Pass >( "skyBoxPass" );
     skyboxPass->inputGeometry = InputGeometry::Cube;
 
     skyboxPass->pipelineInputs.resize( 1 );
@@ -285,17 +285,17 @@ std::shared_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    skyboxPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    skyboxPass->selectPipeline = [ ](  ECS::IGameEntity * entity )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return skyboxPass;
+    return std::move( skyboxPass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderDevice )
 {
-    auto smaaEdgePass = std::make_shared< Pass >( "smaaEdgePass" );
+    auto smaaEdgePass = std::make_unique< Pass >( "smaaEdgePass" );
     smaaEdgePass->inputGeometry = InputGeometry::OverSizedTriangle;
 
     smaaEdgePass->pipelineInputs.resize( 1 );
@@ -322,17 +322,17 @@ std::shared_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderD
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    smaaEdgePass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    smaaEdgePass->selectPipeline = [ ](  ECS::IGameEntity * entity )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return smaaEdgePass;
+    return std::move( smaaEdgePass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *renderDevice )
 {
-    auto smaaBlendWeightPass = std::make_shared< Pass >( "smaaBlendWeightPass" );
+    auto smaaBlendWeightPass = std::make_unique< Pass >( "smaaBlendWeightPass" );
     smaaBlendWeightPass->inputGeometry = InputGeometry::OverSizedTriangle;
 
     smaaBlendWeightPass->pipelineInputs.resize( 1 );
@@ -361,17 +361,17 @@ std::shared_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    smaaBlendWeightPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    smaaBlendWeightPass->selectPipeline = [ ](  ECS::IGameEntity * entity )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return smaaBlendWeightPass;
+    return std::move( smaaBlendWeightPass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *renderDevice )
 {
-    auto smaaNeighborPass = std::make_shared< Pass >( "smaaNeighborPass" );
+    auto smaaNeighborPass = std::make_unique< Pass >( "smaaNeighborPass" );
     smaaNeighborPass->inputGeometry = InputGeometry::OverSizedTriangle;
 
     smaaNeighborPass->pipelineInputs.resize( 1 );
@@ -399,17 +399,17 @@ std::shared_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *ren
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    smaaNeighborPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    smaaNeighborPass->selectPipeline = [ ]( ECS::IGameEntity * )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return smaaNeighborPass;
+    return std::move( smaaNeighborPass );
 }
 
-std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDevice )
 {
-    auto presentPass = std::make_shared< Pass >( "presentPass" );
+    auto presentPass = std::make_unique< Pass >( "presentPass" );
     presentPass->inputGeometry = InputGeometry::Quad;
 
     presentPass->pipelineInputs.resize( 1 );
@@ -438,12 +438,12 @@ std::shared_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDe
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 
-    presentPass->selectPipeline = [ ]( const std::shared_ptr< ECS::IGameEntity > &entity )
+    presentPass->selectPipeline = [ ]( ECS::IGameEntity * entity )
     {
         RETURN_SINGLE_PIPELINE( 0 )
     };
 
-    return presentPass;
+    return std::move( presentPass );
 }
 
 END_NAMESPACES

@@ -30,9 +30,9 @@ NAMESPACES( ENGINE_NAMESPACE, Graphics )
 struct CubeMapLoadArguments
 {
     const VulkanContext* vulkanContext;
-    std::shared_ptr< VulkanCommandExecutor > commandExecutor;
+    VulkanCommandExecutor * commandExecutor;
 
-    std::shared_ptr< CubeMapDataAttachment > image;
+    CubeMapDataAttachment * image;
 
     explicit CubeMapLoadArguments( const VulkanContext* context ) : vulkanContext( context ) { }
 };

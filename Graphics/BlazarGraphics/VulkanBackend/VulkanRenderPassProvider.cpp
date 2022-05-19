@@ -104,7 +104,7 @@ std::shared_ptr< IRenderTarget > VulkanRenderPassProvider::createRenderTarget( c
 
     renderTarget->recreateBuffer( );
 
-    Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::SwapChainInvalidated, [ = ]( const Input::EventType &type, std::shared_ptr< Input::IEventParameters > )
+    Input::Events::subscribe< Input::SwapChainInvalidatedParameters * >( Input::EventType::SwapChainInvalidated, [ = ]( Input::SwapChainInvalidatedParameters *_ )
     {
         context->logicalDevice.waitIdle( );
         if ( context->surfaceExtent.width > 0 && context->surfaceExtent.height > 0 )
@@ -430,7 +430,7 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
         dependency1.dstSubpass = 0;
 
         dependency1.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-        dependency1.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput ;
+        dependency1.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
         dependency1.srcAccessMask = vk::AccessFlagBits::eMemoryRead;
         dependency1.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead;
@@ -507,9 +507,8 @@ void VulkanRenderPass::create( const RenderPassRequest &request )
     // Only update renderArea which want to match screen size
     if ( request.renderArea.width == 0 )
     {
-        Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::WindowResized, [ & ]( const Input::EventType &eventType, std::shared_ptr< Input::IEventParameters > eventParams )
+        Input::Events::subscribe< Input::WindowResizedParameters * >( Input::EventType::WindowResized, [ & ]( auto parameters )
         {
-            auto parameters = Input::GlobalEventHandler::ToWindowResizedParameters( eventParams );
             this->context->logicalDevice.waitIdle( );
             updateViewport( parameters->width, parameters->height );
             this->context->logicalDevice.waitIdle( );
@@ -536,13 +535,13 @@ std::string VulkanRenderPass::getProperty( const std::string &propertyName )
     return "";
 }
 
-void VulkanRenderPass::frameStart( const uint32_t &frameIndex, const std::vector< std::shared_ptr< IPipeline > > &pipelines )
+void VulkanRenderPass::frameStart( const uint32_t &frameIndex, const std::vector< IPipeline * > &pipelines )
 {
     this->frameIndex = frameIndex;
 
     for ( auto &pipeline: pipelines )
     {
-        auto vkPipeline = std::dynamic_pointer_cast< VulkanPipeline >( pipeline );
+        auto vkPipeline = ( VulkanPipeline * )( pipeline );
         vkPipeline->descriptorManager->resetObjectCounter( );
     }
 }
@@ -569,10 +568,10 @@ void VulkanRenderPass::begin( std::shared_ptr< IRenderTarget > renderTarget, std
     buffers[ frameIndex ].beginRenderPass( &renderPassBeginInfo, vk::SubpassContents::eInline );
 }
 
-void VulkanRenderPass::bindPipeline( std::shared_ptr< IPipeline > pipeline )
+void VulkanRenderPass::bindPipeline( IPipeline * pipeline )
 {
-    auto vkPipeline = std::dynamic_pointer_cast< VulkanPipeline >( pipeline );
-    boundPipeline = std::move( vkPipeline );
+    auto vkPipeline = ( VulkanPipeline * )( pipeline );
+    boundPipeline = vkPipeline;
 }
 
 vk::PipelineBindPoint VulkanRenderPass::getBoundPipelineBindPoint( ) const
@@ -594,7 +593,7 @@ void VulkanRenderPass::bindPerFrame( std::shared_ptr< ShaderResource > resource 
         boundPipeline->descriptorManager->updateUniform(
                 frameIndex,
                 resource->identifier.name,
-                static_cast< VulkanBufferWrapper* >( resource->apiSpecificBuffer )->buffer,
+                static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer )->buffer,
                 0, // Global resource object index doesn't matter
                 resource->identifier.deviation
         );
@@ -604,7 +603,7 @@ void VulkanRenderPass::bindPerFrame( std::shared_ptr< ShaderResource > resource 
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
                 resource->identifier.getKey( ),
-                *static_cast< VulkanTextureWrapper* >( resource->apiSpecificBuffer ),
+                *static_cast< VulkanTextureWrapper * >( resource->apiSpecificBuffer ),
                 0 // Global resource object index doesn't matter
         );
     }
@@ -614,7 +613,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
 {
     if ( resource->type == ResourceType::VertexData )
     {
-        vertexDataAttachment = std::dynamic_pointer_cast< VertexData >( resource->dataAttachment );
+        vertexDataAttachment = ( VertexData * )( resource->dataAttachment.get( ) );
 
         const auto bufferWrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
 
@@ -632,7 +631,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
     }
     else if ( resource->type == ResourceType::IndexData )
     {
-        indexDataAttachment = std::dynamic_pointer_cast< IndexData >( resource->dataAttachment );
+        indexDataAttachment = ( IndexData * )( resource->dataAttachment.get( ) );
 
         const auto bufferWrapper = static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer );
 
@@ -660,7 +659,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
         boundPipeline->descriptorManager->updateUniform(
                 frameIndex,
                 resource->identifier.name,
-                static_cast< VulkanBufferWrapper* >( resource->apiSpecificBuffer )->buffer,
+                static_cast< VulkanBufferWrapper * >( resource->apiSpecificBuffer )->buffer,
                 boundPipeline->descriptorManager->getObjectCount( ),
                 resource->identifier.deviation
         );
@@ -670,7 +669,7 @@ void VulkanRenderPass::bindPerObject( std::shared_ptr< ShaderResource > resource
         boundPipeline->descriptorManager->updateTexture(
                 frameIndex,
                 resource->identifier.getKey( ),
-                *static_cast< VulkanTextureWrapper* >( resource->apiSpecificBuffer ),
+                *static_cast< VulkanTextureWrapper * >( resource->apiSpecificBuffer ),
                 boundPipeline->descriptorManager->getObjectCount( )
         );
     }
@@ -751,7 +750,7 @@ void VulkanRenderPass::draw( const uint32_t &instanceCount )
     indexDataAttachment = nullptr;
 }
 
-bool VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, std::shared_ptr< IResourceLock > notifyFence )
+bool VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > waitOnLock, IResourceLock * notifyFence )
 {
     buffers[ frameIndex ].endRenderPass( );
     buffers[ frameIndex ].end( );
@@ -762,7 +761,8 @@ bool VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > w
 
         if ( result.result == vk::Result::eErrorOutOfDateKHR )
         {
-            Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
+            auto swapChainInvalidated = std::make_unique< Input::SwapChainInvalidatedParameters >( );
+            Input::Events::trigger( Input::EventType::SwapChainInvalidated, swapChainInvalidated.get( ) );
             return false;
         }
         else if ( result.result != vk::Result::eSuccess && result.result != vk::Result::eSuboptimalKHR )
@@ -807,7 +807,7 @@ bool VulkanRenderPass::submit( std::vector< std::shared_ptr< IResourceLock > > w
     }
 
     notifyFence->reset( );
-    auto submitResult = context->queues[ QueueType::Graphics ].submit( 1, &submitInfo, std::dynamic_pointer_cast< VulkanResourceLock >( notifyFence )->getVkFence( ) );
+    auto submitResult = context->queues[ QueueType::Graphics ].submit( 1, &submitInfo, (( VulkanResourceLock * )( notifyFence ))->getVkFence( ) );
 
     VkCheckResult( submitResult );
     if ( currentRenderTarget->type == RenderTargetType::SwapChain )
@@ -836,7 +836,8 @@ void VulkanRenderPass::presentPassToSwapChain( )
 
     if ( const auto presentResult = context->queues[ QueueType::Presentation ].presentKHR( presentInfo ); presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR )
     {
-        Input::GlobalEventHandler::Instance( ).triggerEvent( Input::EventType::SwapChainInvalidated, nullptr );
+        auto swapChainInvalidated = std::make_unique< Input::SwapChainInvalidatedParameters >( );
+        Input::Events::trigger( Input::EventType::SwapChainInvalidated, swapChainInvalidated.get( ) );
     }
     else if ( presentResult != vk::Result::eSuccess )
     {

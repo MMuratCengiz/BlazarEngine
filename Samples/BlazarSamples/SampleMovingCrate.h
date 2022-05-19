@@ -62,11 +62,11 @@ public:
         zRotator[ 1 ] = glm::vec3( 0.0f, 1.0f, 0.0f );
         zRotator[ 2 ] = glm::vec3( 0.0f, 0.0f, -1.0f );
 
-        Input::GlobalEventHandler::Instance( ).subscribeToEvent( Input::EventType::Tick, [ & ]( const Input::EventType &event, std::shared_ptr< Input::IEventParameters > parameters )
+        Input::Events::subscribe< Input::TickParameters * >( Input::EventType::Tick, [ & ]( Input::TickParameters * parameters )
         {
             countSeconds += Core::Time::getDeltaTime( );
 
-            const std::shared_ptr< ECS::CTransform > &transform = getComponent< ECS::CTransform >( );
+            ECS::CTransform * transform = getComponent< ECS::CTransform >( );
             bool hasReachedDestination = glm::length( transform->position - destination ) <= 0.01f;
             if ( !hasReachedDestination )
             {

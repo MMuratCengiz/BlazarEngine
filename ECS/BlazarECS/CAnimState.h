@@ -60,7 +60,7 @@ struct CAnimFlowNode
 
 struct CAnimState : IComponent
 {
-    std::shared_ptr< CMesh > mesh; // Performance ref
+    CMesh * mesh; // Performance ref
 
     std::vector< glm::mat4 > boneTransformations;
 

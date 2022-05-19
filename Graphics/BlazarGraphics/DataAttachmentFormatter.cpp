@@ -19,7 +19,7 @@ Copyright (c) 2020-2021 Muhammed Murat Cengiz
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-ViewProjection BlazarEngine::Graphics::DataAttachmentFormatter::formatCamera( const std::shared_ptr< ECS::ComponentTable > &components )
+ViewProjection BlazarEngine::Graphics::DataAttachmentFormatter::formatCamera( ECS::ComponentTable * components )
 {
     ViewProjection vp { };
 
@@ -39,7 +39,7 @@ ViewProjection BlazarEngine::Graphics::DataAttachmentFormatter::formatCamera( co
     return vp;
 }
 
-EnvironmentLights DataAttachmentFormatter::formatLightingEnvironment( const std::shared_ptr< ECS::ComponentTable > &components )
+EnvironmentLights DataAttachmentFormatter::formatLightingEnvironment( ECS::ComponentTable * components )
 {
     const auto &ambientLights = components->getComponents< ECS::CAmbientLight >( );
     const auto &directionalLights = components->getComponents< ECS::CDirectionalLight >( );
@@ -100,7 +100,7 @@ EnvironmentLights DataAttachmentFormatter::formatLightingEnvironment( const std:
     return lights;
 }
 
-glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity )
+glm::mat4 DataAttachmentFormatter::formatModelMatrix( ECS::CTransform * transform, ECS::IGameEntity * refEntity )
 {
     glm::vec3 radiansRotation = transform->rotation.euler;
 
@@ -118,17 +118,17 @@ glm::mat4 DataAttachmentFormatter::formatModelMatrix( const std::shared_ptr< ECS
     return Core::Utilities::getTRSMatrix( transform->position, qRotation, transform->scale );
 }
 
-glm::mat4 DataAttachmentFormatter::formatNormalMatrix( const std::shared_ptr< ECS::CTransform > &transform, const std::shared_ptr< ECS::IGameEntity >& refEntity )
+glm::mat4 DataAttachmentFormatter::formatNormalMatrix( ECS::CTransform * transform, ECS::IGameEntity * refEntity )
 {
     glm::mat3 normalMatrix = glm::mat3( formatModelMatrix( transform, refEntity ) );
 
     normalMatrix = glm::inverse( normalMatrix );
     normalMatrix = glm::transpose( normalMatrix );
 
-    return glm::mat4( normalMatrix );
+    return { normalMatrix };
 }
 
-Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr< ECS::CMaterial > &material, const std::shared_ptr< ECS::CTransform > &transform )
+Material DataAttachmentFormatter::formatMaterialComponent( ECS::CMaterial * material, ECS::CTransform * transform )
 {
     if ( material == nullptr )
     {
@@ -145,7 +145,7 @@ Material DataAttachmentFormatter::formatMaterialComponent( const std::shared_ptr
             };
 }
 
-Tessellation DataAttachmentFormatter::formatTessellationComponent( const std::shared_ptr< ECS::CTessellation > &tessellation )
+Tessellation DataAttachmentFormatter::formatTessellationComponent( ECS::CTessellation * tessellation )
 {
     if ( tessellation == nullptr )
     {
@@ -155,7 +155,7 @@ Tessellation DataAttachmentFormatter::formatTessellationComponent( const std::sh
     return { tessellation->innerLevel, tessellation->outerLevel };
 }
 
-InstanceData DataAttachmentFormatter::formatInstances( const std::shared_ptr< ECS::CInstances > &instances, const std::shared_ptr< ECS::IGameEntity > &entity )
+InstanceData DataAttachmentFormatter::formatInstances( ECS::CInstances * instances, ECS::IGameEntity * entity )
 {
     InstanceData instanceData = { };
     instanceData.instanceCount = 0;
@@ -182,7 +182,7 @@ Resolution DataAttachmentFormatter::formatResolution( const uint32_t& width, con
     return Resolution{ width, height };
 }
 
-BoneTransformations DataAttachmentFormatter::formatBoneTransformations( const std::shared_ptr< ECS::IGameEntity > &entity )
+BoneTransformations DataAttachmentFormatter::formatBoneTransformations( ECS::IGameEntity * entity )
 {
     BoneTransformations boneTransformations = { };
 
@@ -203,7 +203,7 @@ BoneTransformations DataAttachmentFormatter::formatBoneTransformations( const st
     return boneTransformations;
 }
 
-LightViewProjectionMatrices DataAttachmentFormatter::formatLightViewProjectionMatrices( const std::shared_ptr< ECS::ComponentTable > &table )
+LightViewProjectionMatrices DataAttachmentFormatter::formatLightViewProjectionMatrices( ECS::ComponentTable * table )
 {
     const auto directionalLights = table->getComponents< ECS::CDirectionalLight >( );
 
@@ -234,7 +234,7 @@ LightViewProjectionMatrices DataAttachmentFormatter::formatLightViewProjectionMa
     return result;
 }
 
-WorldContext DataAttachmentFormatter::formatWorldContext( const std::shared_ptr< ECS::ComponentTable > &table )
+WorldContext DataAttachmentFormatter::formatWorldContext( ECS::ComponentTable * table )
 {
     auto cameras = table->getComponents< ECS::CCamera >( );
 
@@ -252,7 +252,7 @@ WorldContext DataAttachmentFormatter::formatWorldContext( const std::shared_ptr<
     return data;
 }
 
-std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getSkyBoxTextures( const std::shared_ptr< ECS::ComponentTable > &table )
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getSkyBoxTextures( ECS::ComponentTable * table )
 {
     std::vector< ECS::Material::TextureInfo > result;
 
@@ -309,11 +309,11 @@ std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getAreaTex( )
     return result;
 }
 
-std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getHeightMap( const std::shared_ptr< ECS::IGameEntity > &entity )
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getHeightMap( ECS::IGameEntity * entity )
 {
     std::vector< ECS::Material::TextureInfo > result;
 
-    const std::shared_ptr< ECS::CMaterial > material = entity->getComponent< ECS::CMaterial >( );
+    ECS::CMaterial * material = entity->getComponent< ECS::CMaterial >( );
 
     if ( material != nullptr && !material->heightMap.path.empty( ) )
     {
@@ -323,11 +323,11 @@ std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getHeightMap(
     return result;
 }
 
-std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getTexture1( const std::shared_ptr< ECS::IGameEntity > &entity )
+std::vector< ECS::Material::TextureInfo > DataAttachmentFormatter::getTexture1( ECS::IGameEntity * entity )
 {
     std::vector< ECS::Material::TextureInfo > result;
 
-    const std::shared_ptr< ECS::CMaterial > material = entity->getComponent< ECS::CMaterial >( );
+    ECS::CMaterial * material = entity->getComponent< ECS::CMaterial >( );
 
     if ( material != nullptr && !material->textures[ 0 ].path.empty( ) )
     {

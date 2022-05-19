@@ -440,8 +440,8 @@ DescriptorManager::~DescriptorManager( )
 
 void DescriptorManager::createNullResources( )
 {
-    commandExecutor = std::make_shared< VulkanCommandExecutor >( context );
-    nullAttachment = std::make_shared< SamplerDataAttachment >( );
+    commandExecutor = std::make_unique< VulkanCommandExecutor >( context );
+    nullAttachment = std::make_unique< SamplerDataAttachment >( );
     nullAttachment->content = new int[4]{ 0, 0, 0, 0 };
     nullAttachment->width = 1;
     nullAttachment->height = 1;
@@ -449,8 +449,8 @@ void DescriptorManager::createNullResources( )
     nullAttachment->format = ResourceImageFormat::R8G8B8A8Srgb;
 
     TextureLoadArguments textureLoadArguments{ };
-    textureLoadArguments.image = nullAttachment;
-    textureLoadArguments.commandExecutor = commandExecutor;
+    textureLoadArguments.image = nullAttachment.get( );
+    textureLoadArguments.commandExecutor = commandExecutor.get( );
     textureLoadArguments.context = context;
 
     VulkanSamplerAllocator::load( textureLoadArguments, &emptyImage );

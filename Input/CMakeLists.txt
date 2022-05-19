@@ -7,7 +7,6 @@ SET(BlazarInputHeaders
         )
 
 SET(BlazarInputSources
-        BlazarInput/GlobalEventHandler.cpp
         BlazarInput/ActionMap.cpp
         BlazarInput/EventHandler.cpp
         )
