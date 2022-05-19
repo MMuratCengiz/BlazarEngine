@@ -18,12 +18,33 @@
 
 #include <BlazarCore/Common.h>
 #include "BindingsCommon.h"
+#include "BlazarScene/World.h"
+#include "CoreBindings.h"
+#include "ECSBindings.h"
+#include "GraphicsBindings.h"
+#include "InputBindings.h"
+#include "PhysicsBindings.h"
+#include "SceneBindings.h"
 
-NAMESPACE(ENGINE_NAMESPACE)
+NAMESPACE( ENGINE_NAMESPACE )
 
-class GraphicsBindings
+class LuaBindings
 {
+private:
+    sol::state lua;
+public:
+    LuaBindings( Scene::World *world )
+    {
+        lua.open_libraries( sol::lib::base, sol::lib::package );
 
+        bindAll( );
+    }
+
+    void bindAll( )
+    {
+        SceneBindings sceneBindings { lua };
+        ECSBindings ecsBindings { lua };
+    }
 };
 
 END_NAMESPACE

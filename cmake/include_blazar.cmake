@@ -40,7 +40,14 @@ SET(SPVSources
         )
 
 SET(LuaBindingsHeaders
+        ${PROJECT_SOURCE_DIR}/LuaBindings/BindingsCommon.h
+        ${PROJECT_SOURCE_DIR}/LuaBindings/CoreBindings.h
+        ${PROJECT_SOURCE_DIR}/LuaBindings/ECSBindings.h
         ${PROJECT_SOURCE_DIR}/LuaBindings/GraphicsBindings.h
+        ${PROJECT_SOURCE_DIR}/LuaBindings/InputBindings.h
+        ${PROJECT_SOURCE_DIR}/LuaBindings/LuaBindings.h
+        ${PROJECT_SOURCE_DIR}/LuaBindings/PhysicsBindings.h
+        ${PROJECT_SOURCE_DIR}/LuaBindings/SceneBindings.h
         )
 
 LIST(APPEND BlazarSources ${SPVDir})

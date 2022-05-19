@@ -18,12 +18,29 @@
 
 #include <BlazarCore/Common.h>
 #include "BindingsCommon.h"
+#include "BlazarScene/World.h"
 
 NAMESPACE(ENGINE_NAMESPACE)
 
-class GraphicsBindings
+class SceneBindings
 {
+public:
+    explicit SceneBindings( sol::state& lua )
+    {
+        bindWorld( lua );
+    }
 
+    void bindWorld( sol::state& lua )
+    {
+        sol::usertype< Scene::World > worldType = lua.new_usertype< Scene::World >( "World", sol::constructors< Scene::World( ) >( ) );
+
+        worldType["getActionMap"] = &Scene::World::getActionMap;
+        worldType["getAssetManager"] = &Scene::World::getAssetManager;
+        worldType["getTransformSystem"] = &Scene::World::getTransformSystem;
+        worldType["resize"] = &Scene::World::resize;
+        worldType["rename"] = &Scene::World::rename;
+        worldType["setScene"] = &Scene::World::setScene;
+    }
 };
 
 END_NAMESPACE

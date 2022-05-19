@@ -60,6 +60,16 @@ void World::init( const uint32_t &windowWidth, const uint32_t &windowHeight, con
     registerSystem( animationStateSystem.get( ) );
 }
 
+void World::resize( const uint32_t &windowWidth, const uint32_t &windowHeight )
+{
+
+}
+
+void World::rename( const std::string &title )
+{
+
+}
+
 void World::registerSystem( ECS::ISystem *system )
 {
     systems.push_back( system );

@@ -21,7 +21,7 @@
 
 NAMESPACE(ENGINE_NAMESPACE)
 
-class GraphicsBindings
+class CoreBindings
 {
 
 };

@@ -62,6 +62,9 @@ public:
 
     void init( const uint32_t &windowWidth, const uint32_t &windowHeight, const std::string &title );
 
+    void resize( const uint32_t &windowWidth, const uint32_t &windowHeight );
+    void rename( const std::string &title );
+
     void registerSystem( ECS::ISystem * system );
 
     void setScene( Scene * scene );
