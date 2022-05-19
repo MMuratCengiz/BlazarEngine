@@ -1,24 +1,15 @@
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 
-SET(BlazarGraphicsHeaders
-        BlazarGraphics/GraphicsException.h
-        BlazarGraphics/BuiltinPrimitives.h
-        BlazarGraphics/GraphicsCommonIncludes.h
-        BlazarGraphics/IRenderDevice.h
-        BlazarGraphics/IPipelineProvider.h
-        BlazarGraphics/IRenderPassProvider.h
-        BlazarGraphics/IResourceProvider.h
-        BlazarGraphics/RenderWindow.h
-        BlazarGraphics/AssetManager.h
-        BlazarGraphics/DataAttachmentFormatter.h
-        # RenderGraphSources:
+SET(BlazarGraphicsRenderGraphHeaders
         BlazarGraphics/RenderGraph/StaticVars.h
         BlazarGraphics/RenderGraph/GlobalResourceTable.h
         BlazarGraphics/RenderGraph/Pass.h
         BlazarGraphics/RenderGraph/RenderGraph.h
         BlazarGraphics/RenderGraph/CommonPasses.h
         BlazarGraphics/RenderGraph/GraphSystem.h
-        # VulkanBackendSources:
+        )
+
+SET(BlazarGraphicsVulkanBackendHeaders
         BlazarGraphics/VulkanBackend/VulkanDevice.h
         BlazarGraphics/VulkanBackend/VulkanSurface.h
         BlazarGraphics/VulkanBackend/VulkanUtilities.h
@@ -32,6 +23,23 @@ SET(BlazarGraphicsHeaders
         BlazarGraphics/VulkanBackend/CommandExecutorArguments.h
         BlazarGraphics/VulkanBackend/GLSLShaderSet.h
         BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h
+        )
+
+SET(BlazarGraphicsHeaders
+        BlazarGraphics/GraphicsException.h
+        BlazarGraphics/BuiltinPrimitives.h
+        BlazarGraphics/GraphicsCommonIncludes.h
+        BlazarGraphics/IRenderDevice.h
+        BlazarGraphics/IPipelineProvider.h
+        BlazarGraphics/IRenderPassProvider.h
+        BlazarGraphics/IResourceProvider.h
+        BlazarGraphics/RenderWindow.h
+        BlazarGraphics/AssetManager.h
+        BlazarGraphics/DataAttachmentFormatter.h
+        # RenderGraphSources:
+        ${BlazarGraphicsRenderGraphHeaders}
+        # VulkanBackendSources:
+        ${BlazarGraphicsVulkanBackendHeaders}
         BlazarGraphics/AnimationStateSystem.h
         BlazarGraphics/RenderGraph/ShaderUniformBinder.h)
 
@@ -64,6 +72,8 @@ ADD_LIBRARY(BlazarGraphics ${BLAZAR_LIB_TYPE} ${BlazarGraphicsHeaders} ${BlazarG
 IF (DEFINED BLAZAR_INSTALL_LIBS)
     INSTALL(TARGETS BlazarGraphics DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics)
+    INSTALL(FILES ${BlazarGraphicsRenderGraphHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics/RenderGraph)
+    INSTALL(FILES ${BlazarGraphicsVulkanBackendHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics/VulkanBackend)
 ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)

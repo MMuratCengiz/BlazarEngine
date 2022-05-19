@@ -9,6 +9,8 @@ IF (WIN32)
     SET(OSDIR "win")
 ENDIF()
 
+# TODO if install libs is on, change the directory
+
 SET(BULLET_OPTIONS
         -DINSTALL_LIBS=on
         -DPKGCONFIG_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/bullet3/lib

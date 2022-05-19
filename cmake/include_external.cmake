@@ -18,6 +18,10 @@ LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/tinygltf")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glm")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glfw")
 
+IF (DEFINED BLAZAR_INSTALL_LIBS)
+    INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics)
+ENDIF()
+
 # IMPORT LUA #################################################
 ExternalProject_Add(lua
         URL "${PROJECT_SOURCE_DIR}/external/lua-5.4.4.tar.gz"
