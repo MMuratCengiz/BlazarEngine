@@ -7,6 +7,9 @@ SET(BlazarGraphicsRenderGraphHeaders
         BlazarGraphics/RenderGraph/RenderGraph.h
         BlazarGraphics/RenderGraph/CommonPasses.h
         BlazarGraphics/RenderGraph/GraphSystem.h
+        BlazarGraphics/RenderGraph/ShaderUniformBinder.h
+        BlazarGraphics/RenderGraph/AreaTex.h
+        BlazarGraphics/RenderGraph/SearchTex.h
         )
 
 SET(BlazarGraphicsVulkanBackendHeaders
@@ -40,8 +43,7 @@ SET(BlazarGraphicsHeaders
         ${BlazarGraphicsRenderGraphHeaders}
         # VulkanBackendSources:
         ${BlazarGraphicsVulkanBackendHeaders}
-        BlazarGraphics/AnimationStateSystem.h
-        BlazarGraphics/RenderGraph/ShaderUniformBinder.h)
+        BlazarGraphics/AnimationStateSystem.h)
 
 SET(BlazarGraphicsSources
         BlazarGraphics/AssetManager.cpp

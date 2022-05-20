@@ -16,6 +16,9 @@ SET(BlazarECSHeaders
         BlazarECS/CSpotLight.h
         BlazarECS/CCamera.h
         BlazarECS/ComponentTable.h
+        BlazarECS/CTessellation.h
+        BlazarECS/CInstances.h
+        BlazarECS/CGameState.h
         BlazarECS/COutlined.h
         BlazarECS/CAnimState.h)
 

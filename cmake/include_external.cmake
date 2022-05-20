@@ -19,11 +19,31 @@ ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glm")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glfw")
 
 IF (${BLAZAR_INSTALL_LIBS})
-    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/stb/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/miniz/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/vma/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/tinygltf/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/glm/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/stb/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include
+            FILES_MATCHING
+            PATTERN "*.h" )
+
+    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/miniz/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include
+            FILES_MATCHING
+            PATTERN "*.h" )
+
+    SET(VMA_FILES
+            "${PROJECT_SOURCE_DIR}/external/vma/vk_mem_alloc.h"
+            "${PROJECT_SOURCE_DIR}/external/vma/vk_mem_alloc.hpp"
+            )
+    INSTALL(FILES ${VMA_FILES} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+
+    SET(TINYGLTF_FILES
+            "${PROJECT_SOURCE_DIR}/external/tinygltf/tiny_gltf.h"
+            "${PROJECT_SOURCE_DIR}/external/tinygltf/json.hpp"
+            )
+    INSTALL(FILES ${TINYGLTF_FILES} DESTINATION ${BLAZAR_INSTALL_LOCATION}include )
+
+    INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/external/glm/" DESTINATION ${BLAZAR_INSTALL_LOCATION}include
+            FILES_MATCHING
+            PATTERN "*.inl"
+            PATTERN "*.h"
+            PATTERN "*.hpp" )
 ENDIF()
 
 # IMPORT LUA #################################################
