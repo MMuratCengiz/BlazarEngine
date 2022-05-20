@@ -1,4 +1,5 @@
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
 
 SET(BlazarGraphicsRenderGraphHeaders
         BlazarGraphics/RenderGraph/StaticVars.h
@@ -86,8 +87,8 @@ SET(REQUESTED_BOOST_LIBS format atomic log)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 TARGET_LINK_LIBRARIES(BlazarGraphics
-        glm
-        glfw
+#        glm
+        ${GLFW_LIBS}
         Vulkan::Vulkan
         BlazarCore
         BlazarECS

@@ -1,24 +1,19 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.19)
 PROJECT(BlazarEngine VERSION 0.2)
 
+OPTION(BLAZAR_INSTALL_LIBS OFF)
+OPTION(BLAZAR_BUILD_SHARED_LIBS OFF)
+OPTION(BLAZAR_INSTALL_LIBS_RELEASE OFF)
+
 INCLUDE(ExternalProject)
-
-IF(${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    SET(BLAZAR_INSTALL_LOCATION ${CMAKE_INSTALL_PREFIX} CACHE INTERNAL "BLAZAR_INSTALL_LOCATION")
-ELSE()
-    SET(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/BlazarEngine/${CMAKE_BUILD_TYPE})
-    SET(BLAZAR_INSTALL_LOCATION ${PROJECT_BINARY_DIR} CACHE INTERNAL "BLAZAR_INSTALL_LOCATION")
-ENDIF()
-
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
 
 #hardcoded for now
 SET(VULKAN_SDK /Users/crs/VulkanSDK/1.3.204.1/macOS)
 SET(DYLD_LIBRARY_PATH ${VULKAN_SDK}/lib:${DYLD_LIBRARY_PATH}:)
 SET(VK_LAYER_PATH ${VULKAN_SDK/share/vulkan/explicit_layer.d})
 SET(VK_ICD_FILENAMES ${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json)
-
-OPTION(BLAZAR_INSTALL_LIBS OFF)
-OPTION(BLAZAR_BUILD_SHARED_LIBS OFF)
 
 SET(BLAZAR_LIB_TYPE STATIC)
 IF (BLAZAR_BUILD_SHARED_LIBS)
@@ -64,7 +59,6 @@ ADD_SHADER(fragment smaaBlendWeight)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_blazar.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_bullet.cmake)
@@ -128,7 +122,6 @@ INCLUDE_DIRECTORIES(
 )
 ############################################################################################################################################
 SET(BlazarRequiredLibs
-        glm
         Vulkan::Vulkan
         # Blazar Libraries
         BlazarCore
@@ -140,8 +133,8 @@ SET(BlazarRequiredLibs
         BlazarScene
         # -- Blazar Libraries
         ${BULLET_LIBS}
-        glm
-        glfw
+#        glm
+        ${GLFW_LIBS}
         ${LUA_LIB}
         )
 
@@ -151,11 +144,10 @@ ADD_DEPENDENCIES(BlazarPhysics bullet3)
 ADD_DEPENDENCIES(BlazarScene bullet3)
 ADD_DEPENDENCIES(BlazarSamples bullet3)
 ADD_DEPENDENCIES(BlazarInput bullet3)
+ADD_DEPENDENCIES(BlazarGraphics glfw)
 
 IF (${BLAZAR_INSTALL_LIBS})
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
-    ADD_DEPENDENCIES(BlazarEngine lua)
-    ADD_DEPENDENCIES(BlazarEngine bullet3)
 
     INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
@@ -164,10 +156,12 @@ IF (${BLAZAR_INSTALL_LIBS})
     SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
-    ADD_DEPENDENCIES(BlazarEngine lua)
-    ADD_DEPENDENCIES(BlazarEngine bullet3)
     TARGET_INCLUDE_DIRECTORIES(BlazarEngine PRIVATE ${SOURCE_DIR}/src)
 ENDIF()
+
+ADD_DEPENDENCIES(BlazarEngine lua)
+ADD_DEPENDENCIES(BlazarEngine bullet3)
+ADD_DEPENDENCIES(BlazarEngine glfw)
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine ${BlazarRequiredLibs})
