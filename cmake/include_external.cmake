@@ -18,8 +18,8 @@ LIST(APPEND BlazarSources "${PROJECT_SOURCE_DIR}/external/tinygltf")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glm")
 ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/external/glfw")
 
-IF (DEFINED BLAZAR_INSTALL_LIBS)
-    INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics)
+IF (${BLAZAR_INSTALL_LIBS})
+    INSTALL(FILES "${PROJECT_SOURCE_DIR}/external/stb/stb.h" DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
 ENDIF()
 
 # IMPORT LUA #################################################

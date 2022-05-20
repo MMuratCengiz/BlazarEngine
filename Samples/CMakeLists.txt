@@ -25,7 +25,7 @@ SET(BlazarSamplesSources
 
 ADD_LIBRARY(BlazarSamples ${BLAZAR_LIB_TYPE} ${BlazarSamplesHeaders} ${BlazarSamplesSources})
 
-IF (DEFINED BLAZAR_INSTALL_LIBS)
+IF (${BLAZAR_INSTALL_LIBS})
     INSTALL(TARGETS BlazarSamples DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${BlazarSamplesHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarSamples)
 ENDIF()

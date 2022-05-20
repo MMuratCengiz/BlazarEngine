@@ -15,7 +15,7 @@ SET(BlazarPhysicsSources
 
 ADD_LIBRARY(BlazarPhysics ${BLAZAR_LIB_TYPE} ${BlazarPhysicsHeaders} ${BlazarPhysicsSources})
 
-IF (DEFINED BLAZAR_INSTALL_LIBS)
+IF (${BLAZAR_INSTALL_LIBS})
     INSTALL(TARGETS BlazarPhysics DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${BlazarPhysicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarPhysics)
 ENDIF()

@@ -13,7 +13,7 @@ SET(BlazarInputSources
 
 ADD_LIBRARY(BlazarInput ${BLAZAR_LIB_TYPE} ${BlazarInputHeaders} ${BlazarInputSources})
 
-IF (DEFINED BLAZAR_INSTALL_LIBS)
+IF (${BLAZAR_INSTALL_LIBS})
     INSTALL(TARGETS BlazarInput DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${BlazarInputHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarInput)
 ENDIF()

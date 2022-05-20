@@ -69,7 +69,7 @@ SET(BlazarGraphicsSources
 
 ADD_LIBRARY(BlazarGraphics ${BLAZAR_LIB_TYPE} ${BlazarGraphicsHeaders} ${BlazarGraphicsSources})
 
-IF (DEFINED BLAZAR_INSTALL_LIBS)
+IF (${BLAZAR_INSTALL_LIBS})
     INSTALL(TARGETS BlazarGraphics DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics)
     INSTALL(FILES ${BlazarGraphicsRenderGraphHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics/RenderGraph)

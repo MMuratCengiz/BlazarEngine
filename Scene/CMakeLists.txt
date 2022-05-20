@@ -14,7 +14,7 @@ SET(BlazarSceneSources
 
 ADD_LIBRARY(BlazarScene ${BLAZAR_LIB_TYPE} ${BlazarSceneHeaders} ${BlazarSceneSources})
 
-IF (DEFINED BLAZAR_INSTALL_LIBS)
+IF (${BLAZAR_INSTALL_LIBS})
     INSTALL(TARGETS BlazarScene DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
     INSTALL(FILES ${BlazarSceneHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarScene)
 ENDIF()
