@@ -30,16 +30,16 @@ class CommonPasses
 private:
     CommonPasses( ) = default;
 public:
-    static std::unique_ptr< Pass > createGBufferPass(  IRenderDevice* renderDevice );
-    static std::unique_ptr< Pass > createShadowMapPass(  IRenderDevice* renderDevice );
-    static std::unique_ptr< Pass > createLightingPass( IRenderDevice* renderDevice );
-    static std::unique_ptr< Pass > createSkyBoxPass( IRenderDevice* renderDevice );
-    static std::unique_ptr< Pass > createPresentPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createGBufferPass( );
+    static std::unique_ptr< Pass > createShadowMapPass( );
+    static std::unique_ptr< Pass > createLightingPass( );
+    static std::unique_ptr< Pass > createSkyBoxPass( );
+    static std::unique_ptr< Pass > createPresentPass( );
 
     // SMAA passes
-    static std::unique_ptr< Pass > createSMAAEdgePass( IRenderDevice* renderDevice );
-    static std::unique_ptr< Pass > createSMAABlendWeightPass( IRenderDevice* renderDevice );
-    static std::unique_ptr< Pass > createSMAANeighborPass( IRenderDevice* renderDevice );
+    static std::unique_ptr< Pass > createSMAAEdgePass( );
+    static std::unique_ptr< Pass > createSMAABlendWeightPass( );
+    static std::unique_ptr< Pass > createSMAANeighborPass( );
 };
 
 END_NAMESPACES

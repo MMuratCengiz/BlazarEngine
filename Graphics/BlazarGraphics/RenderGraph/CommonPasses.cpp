@@ -25,7 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-std::unique_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createGBufferPass( )
 {
     auto gBufferPass = std::make_unique< Pass >( "gBufferPass" );
     gBufferPass->inputGeometry = InputGeometry::Model;
@@ -85,8 +85,6 @@ std::unique_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     gBuffer_Material.imageFormat = ResourceImageFormat::R8G8B8A8Unorm;
     gBuffer_Material.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
 
@@ -172,7 +170,7 @@ std::unique_ptr< Pass > CommonPasses::createGBufferPass( IRenderDevice *renderDe
     return std::move( gBufferPass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createLightingPass( )
 {
     auto lightingPass = std::make_unique< Pass >( "lightingPass" );
     lightingPass->inputGeometry = InputGeometry::Quad;
@@ -193,8 +191,6 @@ std::unique_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     presentImage.flags.msaaSampled = false;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
 
@@ -215,7 +211,7 @@ std::unique_ptr< Pass > CommonPasses::createLightingPass( IRenderDevice *renderD
     return std::move( lightingPass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createShadowMapPass( )
 {
     auto shadowMapPass = std::make_unique< Pass >( "shadowMap" );
     shadowMapPass->inputGeometry = InputGeometry::Model;
@@ -230,8 +226,6 @@ std::unique_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     shadowMap.imageFormat = ResourceImageFormat::BestDepthFormat;
     shadowMap.attachmentType = ResourceAttachmentType::Depth;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
     renderPassRequest.setDepthBias = true;
@@ -256,7 +250,7 @@ std::unique_ptr< Pass > CommonPasses::createShadowMapPass( IRenderDevice *render
     return std::move( shadowMapPass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( )
 {
     auto skyboxPass = std::make_unique< Pass >( "skyBoxPass" );
     skyboxPass->inputGeometry = InputGeometry::Cube;
@@ -271,8 +265,6 @@ std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
     presentImage.flags.msaaSampled = false;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
 
@@ -293,7 +285,7 @@ std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( IRenderDevice *renderDev
     return std::move( skyboxPass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSMAAEdgePass( )
 {
     auto smaaEdgePass = std::make_unique< Pass >( "smaaEdgePass" );
     smaaEdgePass->inputGeometry = InputGeometry::OverSizedTriangle;
@@ -308,8 +300,6 @@ std::unique_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderD
     edgesTex.flags.msaaSampled = false;
     edgesTex.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
 
@@ -330,7 +320,7 @@ std::unique_ptr< Pass > CommonPasses::createSMAAEdgePass( IRenderDevice *renderD
     return std::move( smaaEdgePass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSMAABlendWeightPass( )
 {
     auto smaaBlendWeightPass = std::make_unique< Pass >( "smaaBlendWeightPass" );
     smaaBlendWeightPass->inputGeometry = InputGeometry::OverSizedTriangle;
@@ -347,8 +337,6 @@ std::unique_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *
     blendTex.flags.msaaSampled = false;
     blendTex.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
 
@@ -369,7 +357,7 @@ std::unique_ptr< Pass > CommonPasses::createSMAABlendWeightPass( IRenderDevice *
     return std::move( smaaBlendWeightPass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createSMAANeighborPass( )
 {
     auto smaaNeighborPass = std::make_unique< Pass >( "smaaNeighborPass" );
     smaaNeighborPass->inputGeometry = InputGeometry::OverSizedTriangle;
@@ -385,8 +373,6 @@ std::unique_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *ren
     aliasedImage.flags.msaaSampled = false;
     aliasedImage.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
 
@@ -407,7 +393,7 @@ std::unique_ptr< Pass > CommonPasses::createSMAANeighborPass( IRenderDevice *ren
     return std::move( smaaNeighborPass );
 }
 
-std::unique_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDevice )
+std::unique_ptr< Pass > CommonPasses::createPresentPass( )
 {
     auto presentPass = std::make_unique< Pass >( "presentPass" );
     presentPass->inputGeometry = InputGeometry::Quad;
@@ -423,8 +409,6 @@ std::unique_ptr< Pass > CommonPasses::createPresentPass( IRenderDevice *renderDe
     presentImage.flags.presentedImage = true;
     presentImage.attachmentType = ResourceAttachmentType::Color;
 
-    auto &pipelineProvider = renderDevice->getPipelineProvider( );
-    auto &renderPassProvider = renderDevice->getRenderPassProvider( );
 
     RenderPassRequest renderPassRequest { };
     renderPassRequest.isFinalDrawPass = true;

@@ -81,6 +81,11 @@ public:
         return actionMap.get();
     }
 
+    inline Graphics::GraphSystem* getGraphSystem()
+    {
+        return graphSystem.get( );
+    }
+
     inline Physics::PhysicsTransformSystem* getTransformSystem( )
     {
         return transformSystem.get();

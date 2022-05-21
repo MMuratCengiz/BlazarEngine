@@ -59,6 +59,12 @@ class SampleGame_Small : public Scene::IPlayable
     std::unique_ptr< SampleFloor > floor;
     std::unique_ptr< SampleCubeMap > sky;
     Input::ActionCallback inputCallback;
+
+    std::unique_ptr< Graphics::Pass > shadowMapPass;
+    std::unique_ptr< Graphics::Pass > gBufferPass;
+    std::unique_ptr< Graphics::Pass > lightingPass;
+    std::unique_ptr< Graphics::Pass > skyBoxPass;
+    std::unique_ptr< Graphics::Pass > presentPass;
 public:
     inline explicit SampleGame_Small( Scene::World *world ) : world( world )
     { }

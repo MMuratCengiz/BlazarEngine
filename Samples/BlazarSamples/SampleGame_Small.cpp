@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <BlazarECS/CMaterial.h>
+#include <BlazarGraphics/RenderGraph/CommonPasses.h>
 #include "SampleGame_Small.h"
 
 namespace Sample
@@ -50,6 +51,21 @@ void SampleGame_Small::init( )
 
     car1 = std::make_unique< SampleCar1 >( world );
     car2 = std::make_unique< SampleCar2 >( world );
+
+    shadowMapPass = Graphics::CommonPasses::createShadowMapPass( );
+    gBufferPass = Graphics::CommonPasses::createGBufferPass( );
+    lightingPass = Graphics::CommonPasses::createLightingPass( );
+    skyBoxPass = Graphics::CommonPasses::createSkyBoxPass( );
+    presentPass = Graphics::CommonPasses::createPresentPass( );
+
+    world->getGraphSystem()->addPass( shadowMapPass.get( ) );
+    world->getGraphSystem()->addPass( gBufferPass.get( ) );
+    world->getGraphSystem()->addPass( lightingPass.get( ) );
+    world->getGraphSystem()->addPass( skyBoxPass.get( ) );
+    //world->getGraphSystem()->addPass( CommonPasses::createSMAAEdgePass( ) );
+    //world->getGraphSystem()->addPass( CommonPasses::createSMAABlendWeightPass( ) );
+    //world->getGraphSystem()->addPass( CommonPasses::createSMAANeighborPass( ) );
+    world->getGraphSystem()->addPass( presentPass.get( ) );
 
     initialScene = std::make_unique< Scene::Scene >( );
 //    initialScene->addEntity( sceneLights );

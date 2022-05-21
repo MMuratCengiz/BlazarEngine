@@ -33,7 +33,6 @@ GLSLShaderSet::GLSLShaderSet( const std::vector< GLSLShaderInfo > &shaderInfos, 
 void GLSLShaderSet::onEachShader( const GLSLShaderInfo &shaderInfo )
 {
     auto contents = readFile( shaderInfo.path );
-
     spirv_cross::Compiler compiler( move( contents ) );
 
     auto shaderResources = compiler.get_shader_resources( );

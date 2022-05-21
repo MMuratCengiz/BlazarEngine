@@ -24,27 +24,32 @@ GraphSystem::GraphSystem( IRenderDevice *renderDevice, AssetManager *assetManage
 {
     renderGraph = std::make_unique< RenderGraph >( this->renderDevice, this->assetManager );
 
-    shadowMapPass = CommonPasses::createShadowMapPass( this->renderDevice );
-    gBufferPass = CommonPasses::createGBufferPass( this->renderDevice );
-    lightingPass = CommonPasses::createLightingPass( this->renderDevice );
-    skyBoxPass = CommonPasses::createSkyBoxPass( this->renderDevice );
-    presentPass = CommonPasses::createPresentPass( this->renderDevice );
-
-    renderGraph->addPass( shadowMapPass.get( ) );
-    renderGraph->addPass( gBufferPass.get( ) );
-    renderGraph->addPass( lightingPass.get( ) );
-    renderGraph->addPass( skyBoxPass.get( ) );
-    //renderGraph->addPass( CommonPasses::createSMAAEdgePass( this->renderDevice ) );
-    //renderGraph->addPass( CommonPasses::createSMAABlendWeightPass( this->renderDevice ) );
-    //renderGraph->addPass( CommonPasses::createSMAANeighborPass( this->renderDevice ) );
-    renderGraph->addPass( presentPass.get( ) );
-
-    renderGraph->buildGraph( );
-
     Input::Events::subscribe< Input::WindowResizedParameters * >( Input::EventType::WindowResized, [ & ]( Input::WindowResizedParameters * parameters )
     {
         isSystemActive = parameters->width > 0 && parameters->height > 0;
     } );
+}
+
+void GraphSystem::addPass( Pass * pass )
+{
+    passes.push_back( pass );
+    buildGraph = true;
+}
+
+void GraphSystem::removePass( Pass * pass )
+{
+    passes.erase(
+            std::remove_if(
+                    passes.begin(),
+                    passes.end(),
+                    [&]( Pass * p )
+                    {
+                        return p->name == pass->name;
+                    } ),
+            passes.end( )
+    );
+
+    buildGraph = true;
 }
 
 void GraphSystem::addEntity( ECS::IGameEntity * entity )
@@ -64,6 +69,18 @@ void GraphSystem::removeEntity( ECS::IGameEntity * entity )
 
 void GraphSystem::frameStart( ECS::ComponentTable * componentTable )
 {
+    if ( buildGraph )
+    {
+        renderGraph->clearGraph( );
+        for ( Pass * p : passes )
+        {
+            renderGraph->addPass( p );
+        }
+        
+        renderGraph->buildGraph( );
+        buildGraph = false;
+    }
+
     renderGraph->prepare( componentTable );
 }
 

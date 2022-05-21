@@ -39,9 +39,24 @@ void RenderGraph::addPass( Pass * pass )
 	passMap[ wrapper.ref->name ] = passes.size( ) - 1;
 }
 
+void RenderGraph::clearGraph( )
+{
+    for ( auto& pass : passes )
+    {
+        pass.pipelines.clear( );
+        pass.pipelineInputsMap.clear( );
+        pass.pipelineInputsFlat.clear( );
+        pass.dependencies.clear( );
+    }
+
+    this->pipelineInputOutputDependencies.clear( );
+    this->frameLocks.clear( );
+    passes.clear( );
+}
+
 void RenderGraph::buildGraph( )
 {
-	// flatten pipeline input, saves a loop later
+    // flatten pipeline input, saves a loop later
 	for ( auto& pass : passes )
 	{
 		uint32_t pipelineIndex = 0;

@@ -35,15 +35,12 @@ private:
     IRenderDevice* renderDevice;
     AssetManager* assetManager;
     bool isSystemActive = true;
-
-    // temporary remove later:
-    std::unique_ptr< Pass > shadowMapPass;
-    std::unique_ptr< Pass > gBufferPass;
-    std::unique_ptr< Pass > lightingPass;
-    std::unique_ptr< Pass > skyBoxPass;
-    std::unique_ptr< Pass > presentPass;
+    bool buildGraph = true;
+    std::vector< Pass * > passes;
 public:
     GraphSystem( IRenderDevice* renderDevice, AssetManager* assetManager );
+    void addPass( Pass * pass );
+    void removePass( Pass * pass );
     void addEntity( ECS::IGameEntity* entity ) override;
     void updateEntity( ECS::IGameEntity* entity ) override;
     void removeEntity( ECS::IGameEntity* entity ) override;
