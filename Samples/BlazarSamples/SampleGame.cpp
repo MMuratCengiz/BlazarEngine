@@ -108,12 +108,12 @@ void SampleGame::init( )
 
         for ( int i = 0; i < 35; ++i )
         {
-            auto instanceTransform = std::make_unique< ECS::CTransform >( );
+            ECS::CTransform instanceTransform { };
 
-            instanceTransform->position = glm::vec3( randomRange( ), 0.15, randomRange( ) );
-            instanceTransform->scale = glm::vec3( 0.5f, 0.5f, 0.5f );
+            instanceTransform.position = glm::vec3( randomRange( ), 0.15, randomRange( ) );
+            instanceTransform.scale = glm::vec3( 0.5f, 0.5f, 0.5f );
 
-            BlazarEngine::Physics::PhysicsTransformSystem::addInstanceRecursive( ptr.get( ), instanceTransform.get( ) );
+            BlazarEngine::Physics::PhysicsTransformSystem::addInstanceRecursive( ptr.get( ), std::move( instanceTransform ) );
         }
     }
 

@@ -34,12 +34,12 @@ std::unique_ptr< Pass > CommonPasses::createGBufferPass( )
 
     for ( int i = 0; i < 5; ++i )
     {
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ViewProjection ) );
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::NormalModelMatrix ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ViewProjection ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ModelMatrix ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::NormalModelMatrix ) );
         gBufferPass->pipelineInputs[ i ].push_back( "InstanceData" );
 
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::Input::Material ) );
+        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::Material ) );
         gBufferPass->pipelineInputs[ i ].push_back( "Texture1" );
 
         if ( i == 1 )
@@ -182,7 +182,7 @@ std::unique_ptr< Pass > CommonPasses::createLightingPass( )
     lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Material" );
     lightingPass->pipelineInputs[ 0 ].push_back( "WorldContext" );
     lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
-    lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::EnvironmentLights ) );
+    lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::EnvironmentLights ) );
     lightingPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
 
     auto &presentImage = lightingPass->outputs.emplace_back( OutputImage { } );
@@ -217,7 +217,7 @@ std::unique_ptr< Pass > CommonPasses::createShadowMapPass( )
     shadowMapPass->inputGeometry = InputGeometry::Model;
 
     shadowMapPass->pipelineInputs.resize( 1 );
-    shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::ModelMatrix ) );
+    shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ModelMatrix ) );
     shadowMapPass->pipelineInputs[ 0 ].push_back( "InstanceData" );
     shadowMapPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
 
@@ -257,7 +257,7 @@ std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( )
 
     skyboxPass->pipelineInputs.resize( 1 );
     skyboxPass->pipelineInputs[ 0 ].push_back( "ViewProjection" );
-    skyboxPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::Input::SkyBox ) );
+    skyboxPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::SkyBox ) );
 
     auto &presentImage = skyboxPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "skyBoxTex";
@@ -408,7 +408,6 @@ std::unique_ptr< Pass > CommonPasses::createPresentPass( )
     presentImage.flags.msaaSampled = false;
     presentImage.flags.presentedImage = true;
     presentImage.attachmentType = ResourceAttachmentType::Color;
-
 
     RenderPassRequest renderPassRequest { };
     renderPassRequest.isFinalDrawPass = true;

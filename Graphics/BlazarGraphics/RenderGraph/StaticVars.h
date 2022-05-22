@@ -36,7 +36,7 @@ public:
         SwapChainImage
     };
 
-    enum class Input
+    enum class ShaderInput
     {
         GeometryData,
         ViewProjection,
@@ -47,23 +47,23 @@ public:
         NormalModelMatrix
     };
 
-    static std::string getInputName( const Input &inputName )
+    static std::string getInputName( const ShaderInput &inputName )
     {
         switch ( inputName )
         {
-            case Input::GeometryData:
+            case ShaderInput::GeometryData:
                 return "GeometryData";
-            case Input::ViewProjection:
+            case ShaderInput::ViewProjection:
                 return "ViewProjection";
-            case Input::EnvironmentLights:
+            case ShaderInput::EnvironmentLights:
                 return "EnvironmentLights";
-            case Input::SkyBox:
+            case ShaderInput::SkyBox:
                 return "SkyBox";
-            case Input::Material:
+            case ShaderInput::Material:
                 return "Material";
-            case Input::ModelMatrix:
+            case ShaderInput::ModelMatrix:
                 return "ModelMatrix";
-            case Input::NormalModelMatrix:
+            case ShaderInput::NormalModelMatrix:
                 return "NormalModelMatrix";
         }
 

@@ -91,7 +91,7 @@ enum class BlendMode
 
 struct PipelineRequest
 {
-    ECS::CullMode cullMode;
+    ECS::CullMode cullMode = ECS::CullMode::BackFace;
     CompareOp depthCompareOp;
     bool enableDepthTest = true;
 

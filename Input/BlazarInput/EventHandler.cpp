@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "EventHandler.h"
 #include <unordered_map>
 #include <vector>
+#include <execution>
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
@@ -37,6 +38,7 @@ void EventHandler::pollEvents( )
     KeyboardKeyCode iter;
 
     uint32_t i = 0;
+
     do
     {
         iter = static_cast< KeyboardKeyCode >( i );

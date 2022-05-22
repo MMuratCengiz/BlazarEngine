@@ -72,7 +72,7 @@ public:
     void removeEntity( ECS::IGameEntity * entity ) const;
 
     void addPass( Pass * pass );
-    void clearGraph( );
+    void clearGraph( ); // todo do not use for now, not implemented fully
     void buildGraph( );
 
     void prepare( ECS::ComponentTable * componentTable );

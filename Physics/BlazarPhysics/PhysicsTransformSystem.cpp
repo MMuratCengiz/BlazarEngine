@@ -106,7 +106,7 @@ btTransform PhysicsTransformSystem::toBtTransform( ECS::CTransform * transform )
     return btTransform;
 }
 
-void PhysicsTransformSystem::addInstanceRecursive( ECS::IGameEntity *entity, ECS::CTransform * transform )
+void PhysicsTransformSystem::addInstanceRecursive( ECS::IGameEntity *entity, ECS::CTransform transform )
 {
     if ( !entity->hasComponent< ECS::CInstances >( ) )
     {

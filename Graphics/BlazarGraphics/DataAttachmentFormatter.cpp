@@ -169,7 +169,7 @@ InstanceData DataAttachmentFormatter::formatInstances( ECS::CInstances * instanc
 
     for ( ; i < instances->transforms.size( ); ++i )
     {
-        instanceData.instances[ i ] = formatModelMatrix( instances->transforms[ i ], entity );
+        instanceData.instances[ i ] = formatModelMatrix( &instances->transforms[ i ], entity );
     }
    
     instanceData.instanceCount = i;

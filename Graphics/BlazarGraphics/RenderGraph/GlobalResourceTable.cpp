@@ -111,7 +111,7 @@ EntityWrapper GlobalResourceTable::createGeometryData( ECS::IGameEntity * entity
 	auto materialComponent = entity->getComponent< ECS::CMaterial >( );
 	auto tessellationComponent = entity->getComponent< ECS::CTessellation >( );
 
-	std::string parentBoundingName = StaticVars::getInputName( StaticVars::Input::GeometryData );
+	std::string parentBoundingName = StaticVars::getInputName( StaticVars::ShaderInput::GeometryData );
 
 	MeshGeometry geometry = assetManager->getMeshGeometry( meshComponent->geometryRefIdx );
 

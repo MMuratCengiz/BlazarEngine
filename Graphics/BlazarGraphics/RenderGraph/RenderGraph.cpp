@@ -41,6 +41,7 @@ void RenderGraph::addPass( Pass * pass )
 
 void RenderGraph::clearGraph( )
 {
+    // Todo does
     for ( auto& pass : passes )
     {
         pass.pipelines.clear( );

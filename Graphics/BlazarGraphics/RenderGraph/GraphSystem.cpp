@@ -76,7 +76,7 @@ void GraphSystem::frameStart( ECS::ComponentTable * componentTable )
         {
             renderGraph->addPass( p );
         }
-        
+
         renderGraph->buildGraph( );
         buildGraph = false;
     }
