@@ -22,3 +22,6 @@
 [submodule "external/tinygltf"]
 	path = external/tinygltf
 	url = https://github.com/syoyo/tinygltf
+[submodule "external/vma"]
+	path = external/vma
+	url = https://github.com/YaaZ/VulkanMemoryAllocator-Hpp
