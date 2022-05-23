@@ -8,3 +8,6 @@ out/
 build/bullet3
 build/BlazarEngine
 BlazarEngine
+CMakeFiles/
+CMakeCache.txt
+/Shaders/SPIRV/

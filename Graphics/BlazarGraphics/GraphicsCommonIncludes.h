@@ -43,5 +43,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifdef _WIN32
 #include <vulkan/vulkan_win32.h>
 #endif
+#define VULKAN_HPP_DISABLE_ENHANCED_MODE
 #include <vulkan/vulkan.hpp>
 #include <vk_mem_alloc.hpp>

@@ -135,7 +135,6 @@ SET(BlazarRequiredLibs
         ${BULLET_LIBS}
 #        glm
         ${GLFW_LIBS}
-        ${LUA_LIB}
         )
 
 ADD_DEPENDENCIES(BlazarECS bullet3)
