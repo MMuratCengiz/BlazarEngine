@@ -37,6 +37,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#include <windows.h>
+#endif
+#endif
+
 #ifndef __APPLE_CC__
 #include <malloc.h>
 #endif

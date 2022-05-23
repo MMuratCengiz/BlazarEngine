@@ -19,9 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include <BlazarCore/Common.h>
-
 #include "../GraphicsCommonIncludes.h"
-#include <fstream>
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_parser.hpp>
 

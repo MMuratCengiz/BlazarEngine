@@ -18,14 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <BlazarCore/Common.h>
+
 #if !defined(_WIN32) && (defined(__WIN32__) || defined(WIN32) || defined(__MINGW32__))
 #define _WIN32
 #endif
 
 #ifdef _WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
 
@@ -43,6 +42,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifdef _WIN32
 #include <vulkan/vulkan_win32.h>
 #endif
-#define VULKAN_HPP_DISABLE_ENHANCED_MODE
 #include <vulkan/vulkan.hpp>
 #include <vk_mem_alloc.hpp>

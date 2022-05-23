@@ -22,3 +22,25 @@ ELSE()
     ENDIF()
     SET(BLAZAR_INSTALL_LOCATION ${RUNTIME_OUTPUT_DIRECTORY} CACHE INTERNAL "BLAZAR_INSTALL_LOCATION")
 ENDIF()
+
+IF(MSVC)
+    ADD_COMPILE_OPTIONS(
+        $<$<CONFIG:>:/MT>
+        $<$<CONFIG:Debug>:/MTd> 
+        $<$<CONFIG:Release>:/MT>
+    )
+
+    SET(CompilerFlags
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELEASE
+        )
+
+    FOREACH(CompilerFlag ${CompilerFlags})
+        STRING(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+    ENDFOREACH()
+
+ENDIF()
