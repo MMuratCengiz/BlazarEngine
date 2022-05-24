@@ -6,17 +6,24 @@
       "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x64" ],
       "buildRoot": "${projectDir}\\build\\BlazarEngine\\${name}",
-      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "installRoot": "${projectDir}\\build\\BlazarEngine\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
-      "ctestCommandArgs": ""
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "BLAZAR_INSTALL_LIBS",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
     },
     {
       "name": "release",
       "generator": "Ninja",
       "configurationType": "Release",
       "buildRoot": "${projectDir}\\build\\BlazarEngine\\${name}",
-      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "installRoot": "${projectDir}\\release\\BlazarEngine\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",

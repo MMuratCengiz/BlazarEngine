@@ -65,8 +65,12 @@ IF (${BLAZAR_INSTALL_LIBS})
             PATTERN "*.h")
 
     SET(VMA_FILES
-            "${PROJECT_SOURCE_DIR}/external/vma/vk_mem_alloc.h"
-            "${PROJECT_SOURCE_DIR}/external/vma/vk_mem_alloc.hpp"
+            "${PROJECT_SOURCE_DIR}/external/vma/include/vk_mem_alloc.h"
+            "${PROJECT_SOURCE_DIR}/external/vma/include/vk_mem_alloc.hpp"
+            "${PROJECT_SOURCE_DIR}/external/vma/include/vk_mem_alloc_enums.hpp"
+            "${PROJECT_SOURCE_DIR}/external/vma/include/vk_mem_alloc_funcs.hpp"
+            "${PROJECT_SOURCE_DIR}/external/vma/include/vk_mem_alloc_handles.hpp"
+            "${PROJECT_SOURCE_DIR}/external/vma/include/vk_mem_alloc_structs.hpp"
             )
     INSTALL(FILES ${VMA_FILES} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
 
