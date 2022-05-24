@@ -26,7 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-
+#define VMA_STATS_STRING_ENABLED 0
 #include <vulkan/vulkan.hpp>
 
 #include "vk_mem_alloc.hpp"
