@@ -29,7 +29,7 @@ SET(BlazarECSSources
 
 ADD_LIBRARY(BlazarECS ${BLAZAR_LIB_TYPE} ${BlazarECSHeaders} ${BlazarECSSources})
 
-IF (${BLAZAR_INSTALL_LIBS})
+IF (BLAZAR_INSTALL_LIBS)
     INSTALL_TARGET(BlazarECS)
     INSTALL(FILES ${BlazarECSHeaders} DESTINATION include/BlazarECS)
 ENDIF()

@@ -18,7 +18,7 @@ SET(BlazarCoreSources
 
 ADD_LIBRARY(BlazarCore ${BLAZAR_LIB_TYPE} ${BlazarCoreHeaders} ${BlazarCoreSources})
 
-IF (${BLAZAR_INSTALL_LIBS})
+IF (BLAZAR_INSTALL_LIBS)
     INSTALL_TARGET(BlazarCore)
     INSTALL(FILES ${BlazarCoreHeaders} DESTINATION include/BlazarCore)
 ENDIF()

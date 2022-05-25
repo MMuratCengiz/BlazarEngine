@@ -72,12 +72,12 @@ SET(BlazarGraphicsSources
 
 ADD_LIBRARY(BlazarGraphics ${BLAZAR_LIB_TYPE} ${BlazarGraphicsHeaders} ${BlazarGraphicsSources})
 
-IF (${BLAZAR_INSTALL_LIBS})
+IF (BLAZAR_INSTALL_LIBS)
     INSTALL_TARGET(BlazarGraphics)
     INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION include/BlazarGraphics)
     INSTALL(FILES ${BlazarGraphicsRenderGraphHeaders} DESTINATION include/BlazarGraphics/RenderGraph)
     INSTALL(FILES ${BlazarGraphicsVulkanBackendHeaders} DESTINATION include/BlazarGraphics/VulkanBackend)
-ENDIF()
+ENDIF ()
 
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
 

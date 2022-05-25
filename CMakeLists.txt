@@ -77,9 +77,9 @@ ADD_SHADER(fragment smaaBlendWeight)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_blazar.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/bullet_libs.cmake)
+INCLUDE(cmake/common.cmake)
+INCLUDE(cmake/include_blazar.cmake)
+INCLUDE(cmake/bullet_libs.cmake)
 
 FIND_PACKAGE(Vulkan REQUIRED)
 
@@ -92,13 +92,10 @@ INSTALL(FILES ${Vulkan_SPIRV-Tools_LIBRARY} DESTINATION lib)
 
 SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
-FOREACH(BLAZAR_LIB IN LISTS BLAZAR_LIBS)
-    ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/${BLAZAR_LIB}/")
-
-    INCLUDE_DIRECTORIES(
-            "${PROJECT_SOURCE_DIR}/${BLAZAR_LIB}"
-    )
-    ADD_DEPENDENCIES(Blazar${BLAZAR_LIB} bullet3 glfw)
+FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
+    ADD_SUBDIRECTORY(${BLAZAR_L})
+    INCLUDE_DIRECTORIES(${BLAZAR_L})
+    ADD_DEPENDENCIES(Blazar${BLAZAR_L} bullet3 glfw)
 ENDFOREACH()
 
 ############################################################################################################################################

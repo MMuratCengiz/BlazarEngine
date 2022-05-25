@@ -31,7 +31,7 @@ SET(BlazarSamplesSources
 
 ADD_LIBRARY(BlazarSamples ${BLAZAR_LIB_TYPE} ${BlazarSamples2DHeaders} ${BlazarSamplesHeaders} ${BlazarSamplesSources} ${BlazarSamples2DSources})
 
-IF (${BLAZAR_INSTALL_LIBS})
+IF (BLAZAR_INSTALL_LIBS)
     INSTALL_TARGET(BlazarSamples)
     INSTALL(FILES ${BlazarSamplesHeaders} DESTINATION include/BlazarSamples)
     INSTALL(FILES ${BlazarSamples2DHeaders} DESTINATION include/BlazarSamples/SampleGame2D)
