@@ -1,10 +1,5 @@
 SET(CMAKE_CXX_STANDARD 17)
 
-#SET(Libs
-#        external/loaders/stb_image.h
-#        external/vma/vk_mem_alloc.h
-#        )
-
 SET(Shaders
         Shaders/GLSL/Fragment/default.glsl
         Shaders/GLSL/Vertex/default.glsl
@@ -14,7 +9,6 @@ SET(Shaders
 SET(SPVDir
         "${PROJECT_SOURCE_DIR}/external/SPIRV-Cross"
         )
-
 
 SET(SPVHeaders
         ${SPVDir}/spirv.hpp
@@ -38,33 +32,3 @@ SET(SPVSources
         ${SPVDir}/spirv_glsl.cpp
         ${SPVDir}/spirv_cross_parsed_ir.cpp
         )
-
-SET(LuaBindingsHeaders
-        ${PROJECT_SOURCE_DIR}/LuaBindings/BindingsCommon.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/CoreBindings.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/ECSBindings.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/GraphicsBindings.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/InputBindings.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/LuaBindings.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/PhysicsBindings.h
-        ${PROJECT_SOURCE_DIR}/LuaBindings/SceneBindings.h
-        )
-
-LIST(APPEND BlazarSources ${SPVDir})
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Core)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/ECS)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Graphics)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Input)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Physics)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Samples)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/Scene)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/stb)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/miniz)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/vma)
-LIST(APPEND BlazarSources ${PROJECT_SOURCE_DIR}/external/tinygltf)
-
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/3DModelLoader/")
-
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/3DModelLoader/src"
-)

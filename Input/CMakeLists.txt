@@ -1,4 +1,4 @@
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
 
 SET(BlazarInputHeaders
@@ -15,8 +15,8 @@ SET(BlazarInputSources
 ADD_LIBRARY(BlazarInput ${BLAZAR_LIB_TYPE} ${BlazarInputHeaders} ${BlazarInputSources})
 
 IF (${BLAZAR_INSTALL_LIBS})
-    INSTALL(TARGETS BlazarInput DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${BlazarInputHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarInput)
+    INSTALL_TARGET(BlazarInput)
+    INSTALL(FILES ${BlazarInputHeaders} DESTINATION include/BlazarInput)
 ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarInput PROPERTIES LINKER_LANGUAGE CXX)

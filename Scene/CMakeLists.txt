@@ -1,4 +1,4 @@
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 
 SET(BlazarSceneHeaders
         BlazarScene/World.h
@@ -15,8 +15,8 @@ SET(BlazarSceneSources
 ADD_LIBRARY(BlazarScene ${BLAZAR_LIB_TYPE} ${BlazarSceneHeaders} ${BlazarSceneSources})
 
 IF (${BLAZAR_INSTALL_LIBS})
-    INSTALL(TARGETS BlazarScene DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${BlazarSceneHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarScene)
+    INSTALL_TARGET(BlazarScene)
+    INSTALL(FILES ${BlazarSceneHeaders} DESTINATION include/BlazarScene)
 ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarScene PROPERTIES LINKER_LANGUAGE CXX)

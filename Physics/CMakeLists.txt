@@ -1,4 +1,4 @@
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/bullet_libs.cmake)
 
 SET(BlazarPhysicsHeaders
@@ -16,8 +16,8 @@ SET(BlazarPhysicsSources
 ADD_LIBRARY(BlazarPhysics ${BLAZAR_LIB_TYPE} ${BlazarPhysicsHeaders} ${BlazarPhysicsSources})
 
 IF (${BLAZAR_INSTALL_LIBS})
-    INSTALL(TARGETS BlazarPhysics DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${BlazarPhysicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarPhysics)
+    INSTALL_TARGET(BlazarPhysics)
+    INSTALL(FILES ${BlazarPhysicsHeaders} DESTINATION include/BlazarPhysics)
 ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarPhysics PROPERTIES LINKER_LANGUAGE CXX)

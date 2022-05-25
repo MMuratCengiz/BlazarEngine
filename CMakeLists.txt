@@ -1,9 +1,21 @@
+#Sample Configuration:
+#-DCMAKE_INSTALL_PREFIX=/Users/crs/Workspace/BlazarEngine/build/BlazarEngine/debug
+#-DBLAZAR_INSTALL_LIBS=ON
+#-DCMAKE_INSTALL_LIBS=ON
+
+#In OSX Vulkan environment variables should be set:
+
+#VULKAN_SDK=/Users/crs/VulkanSDK/1.3.211.0/macOS
+#DYLD_LIBRARY_PATH=${VULKAN_SDK}/lib:${DYLD_LIBRARY_PATH}:
+#VK_LAYER_PATH=${VULKAN_SDK/share/vulkan/explicit_layer.d}
+#VK_ICD_FILENAMES=${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json
+
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
 PROJECT(BlazarEngine VERSION 0.2)
 
+OPTION(BUILD_SHARED_LIBS OFF)
 OPTION(BLAZAR_INSTALL_LIBS ON)
 OPTION(BLAZAR_BUILD_AS_LIB OFF)
-OPTION(BLAZAR_BUILD_SHARED_LIBS OFF)
 
 SET(CPACK_PACKAGE_VENDOR "BlazarGames")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Blazar 3D Game Engine")
@@ -14,18 +26,14 @@ SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 INCLUDE(ExternalProject)
-SET(SKIP_COMPILE_OPTIONS 1)
+
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
 
-#hardcoded for now
-SET(VULKAN_SDK /Users/crs/VulkanSDK/1.3.211.0/macOS)
-SET(DYLD_LIBRARY_PATH ${VULKAN_SDK}/lib:${DYLD_LIBRARY_PATH}:)
-SET(VK_LAYER_PATH ${VULKAN_SDK/share/vulkan/explicit_layer.d})
-SET(VK_ICD_FILENAMES ${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json)
-
 SET(BLAZAR_LIB_TYPE STATIC)
-IF (BLAZAR_BUILD_SHARED_LIBS)
+
+IF (BUILD_SHARED_LIBS)
     SET(BLAZAR_LIB_TYPE SHARED)
 ENDIF()
 
@@ -69,74 +77,30 @@ ADD_SHADER(fragment smaaBlendWeight)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_blazar.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_bullet.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/bullet_libs.cmake)
 
 FIND_PACKAGE(Vulkan REQUIRED)
 
-INSTALL(DIRECTORY ${Vulkan_INCLUDE_DIRS}/ DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
+INSTALL(DIRECTORY ${Vulkan_INCLUDE_DIRS}/ DESTINATION include)
 
-INSTALL(FILES ${Vulkan_LIBRARY} DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-INSTALL(FILES ${Vulkan_glslang_LIBRARY} DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-INSTALL(FILES ${Vulkan_shaderc_combined_LIBRARY} DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-INSTALL(FILES ${Vulkan_SPIRV-Tools_LIBRARY} DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
+INSTALL(FILES ${Vulkan_LIBRARY} DESTINATION lib)
+INSTALL(FILES ${Vulkan_glslang_LIBRARY} DESTINATION lib)
+INSTALL(FILES ${Vulkan_shaderc_combined_LIBRARY} DESTINATION lib)
+INSTALL(FILES ${Vulkan_SPIRV-Tools_LIBRARY} DESTINATION lib)
 
-# BLAZAR CORE LIBRARY #####################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Core/")
+SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/Core"
-)
-###########################################################################################################################################
+FOREACH(BLAZAR_LIB IN LISTS BLAZAR_LIBS)
+    ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/${BLAZAR_LIB}/")
 
-# BLAZAR ECS LIBRARY ######################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/ECS/")
+    INCLUDE_DIRECTORIES(
+            "${PROJECT_SOURCE_DIR}/${BLAZAR_LIB}"
+    )
+    ADD_DEPENDENCIES(Blazar${BLAZAR_LIB} bullet3 glfw)
+ENDFOREACH()
 
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/ECS"
-)
-############################################################################################################################################
-
-# BLAZAR INPUT LIBRARY #####################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Input/")
-
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/Input"
-)
-############################################################################################################################################
-
-# BLAZAR GRAPHICS LIBRARY ##################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Graphics/")
-
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/Graphics"
-)
-############################################################################################################################################
-
-# BLAZAR PHYSICS LIBRARY ###################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Physics/")
-
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/Physics"
-)
-############################################################################################################################################
-
-# BLAZAR SCENE LIBRARY #####################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Scene/")
-
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/Scene"
-)
-############################################################################################################################################
-
-# BLAZAR SAMPLES LIBRARY ###################################################################################################################
-ADD_SUBDIRECTORY("${PROJECT_SOURCE_DIR}/Samples/")
-
-INCLUDE_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/Samples"
-)
 ############################################################################################################################################
 SET(BlazarRequiredLibs
         Vulkan::Vulkan
@@ -150,40 +114,20 @@ SET(BlazarRequiredLibs
         BlazarScene
         # -- Blazar Libraries
         ${BULLET_LIBS}
-#        glm
         ${GLFW_LIBS}
         )
 
-ADD_DEPENDENCIES(BlazarECS bullet3)
-ADD_DEPENDENCIES(BlazarCore bullet3)
-ADD_DEPENDENCIES(BlazarPhysics bullet3)
-ADD_DEPENDENCIES(BlazarScene bullet3)
-ADD_DEPENDENCIES(BlazarSamples bullet3)
-ADD_DEPENDENCIES(BlazarInput bullet3)
-ADD_DEPENDENCIES(BlazarInput glfw)
-ADD_DEPENDENCIES(BlazarGraphics glfw)
-
 IF (${BLAZAR_BUILD_AS_LIB})
-    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
-
-    INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-
-    SET(BLAZAR_INCLUDE_DIRS ${BlazarSources} CACHE INTERNAL "BLAZAR_INCLUDE_DIRS")
-    SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
+    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
 ELSE()
-    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources} ${LuaBindingsHeaders})
-
-    INSTALL(TARGETS BlazarEngine DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${SPVHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include)
-
-    SET(BLAZAR_INCLUDE_DIRS ${BlazarSources} CACHE INTERNAL "BLAZAR_INCLUDE_DIRS")
-    SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
-
-    TARGET_INCLUDE_DIRECTORIES(BlazarEngine PRIVATE ${SOURCE_DIR}/src)
+    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
 ENDIF()
 
-ADD_DEPENDENCIES(BlazarEngine lua)
+INSTALL(TARGETS BlazarEngine DESTINATION lib)
+INSTALL(FILES ${SPVHeaders} DESTINATION include)
+
+SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
+
 ADD_DEPENDENCIES(BlazarEngine bullet3)
 ADD_DEPENDENCIES(BlazarEngine glfw)
 

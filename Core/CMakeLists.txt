@@ -1,3 +1,5 @@
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
+
 FIND_PACKAGE(Vulkan REQUIRED)
 
 SET(BlazarCoreHeaders
@@ -17,8 +19,8 @@ SET(BlazarCoreSources
 ADD_LIBRARY(BlazarCore ${BLAZAR_LIB_TYPE} ${BlazarCoreHeaders} ${BlazarCoreSources})
 
 IF (${BLAZAR_INSTALL_LIBS})
-    INSTALL(TARGETS BlazarCore DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${BlazarCoreHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarCore)
+    INSTALL_TARGET(BlazarCore)
+    INSTALL(FILES ${BlazarCoreHeaders} DESTINATION include/BlazarCore)
 ENDIF()
 
 SET(INCLUDE_BOOST_TARGET BlazarCore)

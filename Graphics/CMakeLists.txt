@@ -1,5 +1,5 @@
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 
 SET(BlazarGraphicsRenderGraphHeaders
         BlazarGraphics/RenderGraph/StaticVars.h
@@ -73,10 +73,10 @@ SET(BlazarGraphicsSources
 ADD_LIBRARY(BlazarGraphics ${BLAZAR_LIB_TYPE} ${BlazarGraphicsHeaders} ${BlazarGraphicsSources})
 
 IF (${BLAZAR_INSTALL_LIBS})
-    INSTALL(TARGETS BlazarGraphics DESTINATION ${BLAZAR_INSTALL_LOCATION}lib)
-    INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics)
-    INSTALL(FILES ${BlazarGraphicsRenderGraphHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics/RenderGraph)
-    INSTALL(FILES ${BlazarGraphicsVulkanBackendHeaders} DESTINATION ${BLAZAR_INSTALL_LOCATION}include/BlazarGraphics/VulkanBackend)
+    INSTALL_TARGET(BlazarGraphics)
+    INSTALL(FILES ${BlazarGraphicsHeaders} DESTINATION include/BlazarGraphics)
+    INSTALL(FILES ${BlazarGraphicsRenderGraphHeaders} DESTINATION include/BlazarGraphics/RenderGraph)
+    INSTALL(FILES ${BlazarGraphicsVulkanBackendHeaders} DESTINATION include/BlazarGraphics/VulkanBackend)
 ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
@@ -87,7 +87,6 @@ SET(REQUESTED_BOOST_LIBS format atomic log)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 TARGET_LINK_LIBRARIES(BlazarGraphics
-#        glm
         ${GLFW_LIBS}
         Vulkan::Vulkan
         BlazarCore
