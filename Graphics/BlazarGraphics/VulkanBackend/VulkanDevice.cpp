@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "VulkanDevice.h"
+#include "SpirvHelper.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -119,6 +120,7 @@ void VulkanDevice::createDevice( RenderWindow *window )
     initDebugMessages( debugUtilsCreateInfo );
 
     createSurface( );
+    SpirvHelper::init( );
 }
 
 void VulkanDevice::initSupportedExtensions( )
@@ -414,6 +416,7 @@ std::vector< vk::DeviceQueueCreateInfo > VulkanDevice::createUniqueDeviceCreateI
 
 void VulkanDevice::beforeDelete( )
 {
+
     context->logicalDevice.waitIdle( );
 }
 
@@ -442,6 +445,8 @@ VulkanDevice::~VulkanDevice( )
     context->vma.destroy( );
     context->logicalDevice.destroy( );
     context->instance.destroy( );
+
+    SpirvHelper::destroy( );
 }
 
 void VulkanDevice::destroyDebugUtils( ) const

@@ -38,7 +38,7 @@ public:
 
     static btQuaternion toBtQuat( glm::vec3 euler, bool isInRadians );
 
-    static std::vector< char > readFile( const std::string &filename );
+    static std::string readFile( const std::string &filename );
 
     static glm::mat4 getTRSMatrix( const glm::vec3 &t, const glm::quat &r, const glm::vec3 &s );
 

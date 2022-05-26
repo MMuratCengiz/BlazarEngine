@@ -41,7 +41,7 @@ void TDGameScene::init( )
     auto boxMaterial = box->getComponent< ECS::CMaterial >( );
     ECS::Material::TextureInfo & boxTexture = boxMaterial->textures.emplace_back( );
     box->getComponent< ECS::CMesh >( )->cullMode = ECS::CullMode::None;
-    boxTexture.path = PATH( "/assets/textures/floor2.png" );
+    boxTexture.path = "assets/textures/floor2.png";
 
     scene = std::make_unique< Scene::Scene >( );
 

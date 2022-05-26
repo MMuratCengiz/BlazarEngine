@@ -4,6 +4,9 @@
 using namespace BlazarEngine;
 using namespace ECS;
 
+#include <filesystem>
+#include <iostream>
+
 int main( )
 {
     std::unique_ptr< Scene::World > world = std::make_unique< Scene::World >( );

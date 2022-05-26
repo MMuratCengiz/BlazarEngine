@@ -20,6 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <BlazarCore/Common.h>
 #include "../GraphicsCommonIncludes.h"
+#include "SpirvHelper.h"
+#include "BlazarCore/Utilities.h"
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_parser.hpp>
 
@@ -71,7 +73,15 @@ struct DescriptorSet
 struct GLSLShaderInfo
 {
     vk::ShaderStageFlagBits type;
-    std::string path;
+    std::vector< uint32_t > data;
+
+public:
+    explicit GLSLShaderInfo( vk::ShaderStageFlagBits type, const std::string& path )
+    {
+        this->type = type;
+        auto glslContents = Core::Utilities::readFile( path ) ;
+        data = std::move( SpirvHelper::GLSLtoSPV( type, glslContents.c_str( ) ) );
+    }
 };
 
 struct StructChild
@@ -161,7 +171,7 @@ public:
 
 private:
     void onEachShader( const GLSLShaderInfo &shaderInfo );
-    static std::vector< uint32_t > readFile( const std::string &filename );
+    static char * readFile( const std::string &filename );
     void ensureSetExists( uint32_t set );
     void createVertexInput( const uint32_t &offset, const GLSLType &type, const uint32_t &location );
 

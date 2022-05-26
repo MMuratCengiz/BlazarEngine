@@ -12,8 +12,8 @@ std::unique_ptr< Pass > TDGamePasses::createPresentPass( )
     presentPass->pipelineInputs.resize( 1 );
     presentPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ViewProjection ) );
     presentPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ModelMatrix ) );
-    presentPass->pipelineInputs[ 0 ].push_back( "InstanceData" );
-    presentPass->pipelineInputs[ 0 ].push_back( "Texture1" );
+    presentPass->pipelineInputs[ 0 ].emplace_back("InstanceData" );
+    presentPass->pipelineInputs[ 0 ].emplace_back("Texture1" );
 
     auto &presentImage = presentPass->outputs.emplace_back( Graphics::OutputImage { } );
     presentImage.outputResourceName = "presentImage";
@@ -29,8 +29,8 @@ std::unique_ptr< Pass > TDGamePasses::createPresentPass( )
 
     Graphics::PipelineRequest &pipelineRequest = presentPass->pipelineRequests.emplace_back( );
 
-    pipelineRequest.shaderPaths[ Graphics::ShaderType::Vertex ] = PATH( "/Shaders/SPIRV/Vertex/2d_vertex.spv" );
-    pipelineRequest.shaderPaths[ Graphics::ShaderType::Fragment ] = PATH( "/Shaders/SPIRV/Fragment/2d_frag.spv" );
+    pipelineRequest.shaderPaths[ Graphics::ShaderType::Vertex ] = "./Shaders/Vertex/2d_vertex.glsl";
+    pipelineRequest.shaderPaths[ Graphics::ShaderType::Fragment ] = "./Shaders/Fragment/2d_frag.glsl";
     pipelineRequest.cullMode = ECS::CullMode::None;
     pipelineRequest.depthCompareOp = CompareOp::Less;
 

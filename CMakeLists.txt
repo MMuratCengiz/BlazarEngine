@@ -37,43 +37,6 @@ IF (BUILD_SHARED_LIBS)
     SET(BLAZAR_LIB_TYPE SHARED)
 ENDIF()
 
-SET(SHADER_ROOT_DIR ${PROJECT_SOURCE_DIR}/Shaders/)
-
-FUNCTION(add_shader SHADER_TYPE SHADER_NAME)
-    SET(INPUT_FILE "${SHADER_ROOT_DIR}GLSL/${SHADER_TYPE}/${SHADER_NAME}.glsl")
-    SET(OUTPUT_FILE "${SHADER_ROOT_DIR}SPIRV/${SHADER_TYPE}/${SHADER_NAME}.spv")
-
-    #remember to add glslc to environment path
-    EXECUTE_PROCESS(COMMAND glslc -fshader-stage=${SHADER_TYPE} ${INPUT_FILE} -o ${OUTPUT_FILE})
-ENDFUNCTION()
-
-ADD_SHADER(vertex cube_position)
-ADD_SHADER(fragment skybox_default)
-ADD_SHADER(fragment present_pass)
-ADD_SHADER(fragment lighting_pass)
-ADD_SHADER(fragment skybox_pass)
-ADD_SHADER(vertex 2d_vertex)
-ADD_SHADER(vertex gBuffer)
-ADD_SHADER(vertex gBuffer_outlined)
-ADD_SHADER(vertex gBuffer_Animated)
-ADD_SHADER(vertex tessellated_proxy)
-ADD_SHADER(vertex quad_position)
-ADD_SHADER(fragment gBuffer)
-ADD_SHADER(fragment gBuffer_outlined)
-ADD_SHADER(vertex shadowMap)
-ADD_SHADER(tesscontrol height_map)
-ADD_SHADER(tesseval height_map)
-ADD_SHADER(fragment 2d_frag)
-
-# SMAA SHADERS:
-ADD_SHADER(vertex smaaEdge)
-ADD_SHADER(fragment smaaEdge)
-ADD_SHADER(vertex smaaNeighbor)
-ADD_SHADER(fragment smaaNeighbor)
-ADD_SHADER(vertex smaaBlendWeight)
-ADD_SHADER(fragment smaaBlendWeight)
-# //---
-
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -81,14 +44,26 @@ INCLUDE(cmake/common.cmake)
 INCLUDE(cmake/include_blazar.cmake)
 INCLUDE(cmake/bullet_libs.cmake)
 
+IF(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
+ELSE()
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+ENDIF()
+
 FIND_PACKAGE(Vulkan REQUIRED)
+FIND_PACKAGE(glslang CONFIG REQUIRED)
 
-INSTALL(DIRECTORY ${Vulkan_INCLUDE_DIRS}/ DESTINATION include)
+#MESSAGE(${glslang_LIBRARY})
 
-INSTALL(FILES ${Vulkan_LIBRARY} DESTINATION lib)
-INSTALL(FILES ${Vulkan_glslang_LIBRARY} DESTINATION lib)
-INSTALL(FILES ${Vulkan_shaderc_combined_LIBRARY} DESTINATION lib)
-INSTALL(FILES ${Vulkan_SPIRV-Tools_LIBRARY} DESTINATION lib)
+#INSTALL(DIRECTORY ${Vulkan_INCLUDE_DIRS}/ DESTINATION include)
+#GET_FILENAME_COMPONENT(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
+#
+#INSTALL(DIRECTORY "${Vulkan_INCLUDE_DIRS}/" DESTINATION include)
+#INSTALL(DIRECTORY "${VULKAN_LIB_DIR}/" DESTINATION lib)
+
+#INSTALL(IMPORTED_RUNTIME_ARTIFACTS glslang DESTINATION lib)
+#INSTALL(IMPORTED_RUNTIME_ARTIFACTS Vulkan DESTINATION lib)
+#INSTALL(RUNTIME_DEPENDENCY_SET)
 
 SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
@@ -116,12 +91,14 @@ SET(BlazarRequiredLibs
 
 IF (${BLAZAR_BUILD_AS_LIB})
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
+    INSTALL(TARGETS BlazarEngine DESTINATION lib)
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
+    INSTALL(TARGETS BlazarEngine DESTINATION bin/..)
 ENDIF()
 
-INSTALL(TARGETS BlazarEngine DESTINATION lib)
 INSTALL(FILES ${SPVHeaders} DESTINATION include)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/install_resources.cmake)
 
 SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
 
@@ -129,7 +106,7 @@ ADD_DEPENDENCIES(BlazarEngine bullet3)
 ADD_DEPENDENCIES(BlazarEngine glfw)
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-TARGET_LINK_LIBRARIES(BlazarEngine ${BlazarRequiredLibs})
+TARGET_LINK_LIBRARIES(BlazarEngine PRIVATE ${BlazarRequiredLibs})
 
 TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${SPVDir})
 

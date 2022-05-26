@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "GLSLShaderSet.h"
 
 #include <spirv_cross/spirv_cross.hpp>
+#include "SpirvHelper.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -32,8 +33,7 @@ GLSLShaderSet::GLSLShaderSet( const std::vector< GLSLShaderInfo > &shaderInfos, 
 
 void GLSLShaderSet::onEachShader( const GLSLShaderInfo &shaderInfo )
 {
-    auto contents = readFile( shaderInfo.path );
-    spirv_cross::Compiler compiler( move( contents ) );
+    spirv_cross::Compiler compiler( shaderInfo.data );
 
     auto shaderResources = compiler.get_shader_resources( );
 
@@ -112,7 +112,7 @@ void GLSLShaderSet::onEachShader( const GLSLShaderInfo &shaderInfo )
     }
 }
 
-std::vector< uint32_t > GLSLShaderSet::readFile( const std::string &filename )
+char * GLSLShaderSet::readFile( const std::string &filename )
 {
     FILE *file = fopen( filename.c_str( ), "rb" );
     if ( !file )
@@ -121,18 +121,14 @@ std::vector< uint32_t > GLSLShaderSet::readFile( const std::string &filename )
     }
 
     fseek( file, 0, SEEK_END );
-    long fileSize = ftell( file ) / sizeof( uint32_t );
+    long fileSize = ftell( file );
     rewind( file );
 
-    std::vector< uint32_t > contents( fileSize );
-
-    if ( fread( contents.data( ), sizeof( uint32_t ), fileSize, file ) != size_t( fileSize ) )
-    {
-        contents.clear( );
-    }
-
+    char * contents = ( char * ) malloc( fileSize + 1);
+    contents[ fileSize ] = 0;
+    fread( contents, fileSize, 1, file );
     fclose( file );
-    return contents;
+    return contents ;
 }
 
 void GLSLShaderSet::ensureSetExists( uint32_t set )

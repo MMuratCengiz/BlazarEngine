@@ -86,7 +86,7 @@ btQuaternion Utilities::toBtQuat( glm::vec3 euler, bool isInRadians )
 }
 
 
-std::vector< char > Utilities::readFile( const std::string &filename )
+std::string Utilities::readFile( const std::string &filename )
 {
     std::ifstream file( filename, std::ios::ate | std::ios::binary );
 
@@ -95,15 +95,15 @@ std::vector< char > Utilities::readFile( const std::string &filename )
         throw std::runtime_error( "failed to open file!" );
     }
 
-    size_t fileSize = static_cast<size_t>( file.tellg( ) );
-    std::vector< char > contents( fileSize );
+    std::string data;
 
-    file.seekg( 0 );
-    file.read( contents.data( ), fileSize );
+    file.seekg( 0, std::ios::end );
+    data.reserve( file.tellg( ) );
+    file.seekg( 0, std::ios::beg );
+    data.assign( ( std::istreambuf_iterator< char >( file ) ), std::istreambuf_iterator< char >( ) );
 
-    file.close( );
+    return std::move( data );
 
-    return contents;
 }
 
 glm::mat4 Utilities::getTRSMatrix( const glm::vec3 &t, const glm::quat &r, const glm::vec3 &s )

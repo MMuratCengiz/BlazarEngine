@@ -1,0 +1,31 @@
+{
+  "configurePresets": [
+    {
+      "name": "Debug_MSVC",
+      "generator": "Ninja",
+      "installDir": "build/BlazarEngine/debug-msvc",
+      "binaryDir": "build/BlazarEngine/debug-msvc",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS" : "OFF",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BLAZAR_INSTALL_LIBS" : "ON",
+        "CMAKE_TOOLCHAIN_FILE" : "external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    },
+    {
+      "name": "Release_MSVC",
+      "generator": "Ninja",
+      "installDir": "build/BlazarEngine/release-msvc",
+      "binaryDir": "build/BlazarEngine/release-msvc",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS" : "OFF",
+        "BLAZAR_INSTALL_LIBS" : "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE" : "external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    }
+  ],
+  "version": 3
+}

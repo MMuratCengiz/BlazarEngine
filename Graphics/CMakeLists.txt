@@ -26,6 +26,7 @@ SET(BlazarGraphicsVulkanBackendHeaders
         BlazarGraphics/VulkanBackend/VulkanSamplerAllocator.h
         BlazarGraphics/VulkanBackend/CommandExecutorArguments.h
         BlazarGraphics/VulkanBackend/GLSLShaderSet.h
+        BlazarGraphics/VulkanBackend/SpirvHelper.h
         BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.h
         )
 
@@ -40,9 +41,7 @@ SET(BlazarGraphicsHeaders
         BlazarGraphics/RenderWindow.h
         BlazarGraphics/AssetManager.h
         BlazarGraphics/DataAttachmentFormatter.h
-        # RenderGraphSources:
         ${BlazarGraphicsRenderGraphHeaders}
-        # VulkanBackendSources:
         ${BlazarGraphicsVulkanBackendHeaders}
         BlazarGraphics/AnimationStateSystem.h)
 
@@ -67,6 +66,7 @@ SET(BlazarGraphicsSources
         BlazarGraphics/VulkanBackend/VmaImplementation.cpp
         BlazarGraphics/VulkanBackend/GLSLShaderSet.cpp
         BlazarGraphics/VulkanBackend/VulkanCubeMapAllocator.cpp
+        BlazarGraphics/VulkanBackend/SpirvHelper.cpp
         BlazarGraphics/AnimationStateSystem.cpp
         BlazarGraphics/RenderGraph/ShaderUniformBinder.cpp)
 
@@ -89,6 +89,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 TARGET_LINK_LIBRARIES(BlazarGraphics
         ${GLFW_LIBS}
         Vulkan::Vulkan
+        HLSL
+        SPIRV
+        glslang
+        OGLCompiler
         BlazarCore
         BlazarECS
         BlazarInput

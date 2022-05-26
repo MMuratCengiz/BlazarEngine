@@ -25,3 +25,6 @@
 [submodule "external/vma"]
 	path = external/vma
 	url = https://github.com/YaaZ/VulkanMemoryAllocator-Hpp
+[submodule "external/vcpkg"]
+	path = external/vcpkg
+	url = https://github.com/microsoft/vcpkg.git

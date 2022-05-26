@@ -18,10 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <BlazarCore/Utilities.h>
 #include "VulkanPipelineProvider.h"
+#include "SpirvHelper.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-IPipeline * VulkanPipelineProvider::createPipeline( const PipelineRequest &request )
+IPipeline *VulkanPipelineProvider::createPipeline( const PipelineRequest &request )
 {
     ASSERT_M( request.parentPass != nullptr, "You must provide a parent render pass" );
 
@@ -30,7 +31,6 @@ IPipeline * VulkanPipelineProvider::createPipeline( const PipelineRequest &reque
 
     std::vector< GLSLShaderInfo > glslShaders { };
 
-    // todo make sure maybe have a dynamic path once multiple render apis are supported
     auto vertexShaderSearch = request.shaderPaths.find( ShaderType::Vertex );
     auto fragmentShaderSearch = request.shaderPaths.find( ShaderType::Fragment );
     auto tessControlShaderSearch = request.shaderPaths.find( ShaderType::TessellationControl );
@@ -39,37 +39,27 @@ IPipeline * VulkanPipelineProvider::createPipeline( const PipelineRequest &reque
 
     if ( vertexShaderSearch != request.shaderPaths.end( ) )
     {
-        auto &vertexShader = glslShaders.emplace_back( );
-        vertexShader.type = vk::ShaderStageFlagBits::eVertex;
-        vertexShader.path = vertexShaderSearch->second;
+        glslShaders.emplace_back( GLSLShaderInfo { vk::ShaderStageFlagBits::eVertex, vertexShaderSearch->second } );
     }
 
     if ( fragmentShaderSearch != request.shaderPaths.end( ) )
     {
-        auto &fragmentShader = glslShaders.emplace_back( );
-        fragmentShader.type = vk::ShaderStageFlagBits::eFragment;
-        fragmentShader.path = fragmentShaderSearch->second;
+        glslShaders.emplace_back( GLSLShaderInfo { vk::ShaderStageFlagBits::eFragment, fragmentShaderSearch->second } );
     }
 
     if ( tessControlShaderSearch != request.shaderPaths.end( ) )
     {
-        auto &tessControlShader = glslShaders.emplace_back( );
-        tessControlShader.type = vk::ShaderStageFlagBits::eTessellationControl;
-        tessControlShader.path = tessControlShaderSearch->second;
+        glslShaders.emplace_back( GLSLShaderInfo { vk::ShaderStageFlagBits::eTessellationControl, tessControlShaderSearch->second } );
     }
 
     if ( tessEvalShaderSearch != request.shaderPaths.end( ) )
     {
-        auto &tessEvalShader = glslShaders.emplace_back( );
-        tessEvalShader.type = vk::ShaderStageFlagBits::eTessellationEvaluation;
-        tessEvalShader.path = tessEvalShaderSearch->second;
+        glslShaders.emplace_back( GLSLShaderInfo { vk::ShaderStageFlagBits::eTessellationEvaluation, tessEvalShaderSearch->second } );
     }
 
     if ( geometryShaderSearch != request.shaderPaths.end( ) )
     {
-        auto &geometryShader = glslShaders.emplace_back( );
-        geometryShader.type = vk::ShaderStageFlagBits::eGeometry;
-        geometryShader.path = geometryShaderSearch->second;
+        glslShaders.emplace_back( GLSLShaderInfo { vk::ShaderStageFlagBits::eGeometry, geometryShaderSearch->second } );
     }
 
     // TODO cache depending on the pipeline, or maybe cache somewhere else
@@ -79,7 +69,7 @@ IPipeline * VulkanPipelineProvider::createPipeline( const PipelineRequest &reque
     return pipelineInstances[ pipelineInstances.size( ) - 1 ].get( );
 }
 
-void VulkanPipelineProvider::createPipeline( const PipelineRequest &request, VulkanPipeline * instance, const std::vector< GLSLShaderInfo > &shaderInfos )
+void VulkanPipelineProvider::createPipeline( const PipelineRequest &request, VulkanPipeline *instance, const std::vector< GLSLShaderInfo > &shaderInfos )
 {
     PipelineCreateInfos createInfo { };
     createInfo.request = request;
@@ -123,7 +113,7 @@ void VulkanPipelineProvider::configureVertexInput( PipelineCreateInfos &createIn
     {
         vk::PipelineShaderStageCreateInfo shaderStageCreateInfo { };
 
-        vk::ShaderModule shaderModule = this->createShaderModule( shader.path );
+        vk::ShaderModule shaderModule = this->createShaderModule( shader.data );
         shaderStageCreateInfo.stage = shader.type;
         shaderStageCreateInfo.module = shaderModule;
         shaderStageCreateInfo.pName = "main";
@@ -289,7 +279,7 @@ void VulkanPipelineProvider::configureDynamicState( PipelineCreateInfos &createI
     createInfo.pipelineCreateInfo.pDynamicState = &createInfo.dynamicStateCreateInfo;
 }
 
-void VulkanPipelineProvider::createPipelineLayout( PipelineCreateInfos &createInfo, VulkanPipeline * instance )
+void VulkanPipelineProvider::createPipelineLayout( PipelineCreateInfos &createInfo, VulkanPipeline *instance )
 {
     const std::vector< vk::DescriptorSetLayout > &layouts = instance->descriptorManager->getLayouts( );
     createInfo.pipelineLayoutCreateInfo.setLayoutCount = layouts.size( );
@@ -317,7 +307,7 @@ void VulkanPipelineProvider::createDepthAttachmentImages( PipelineCreateInfos &c
     createInfo.depthStencilStateCreateInfo.depthTestEnable = createInfo.request.enableDepthTest;
     createInfo.depthStencilStateCreateInfo.depthWriteEnable = createInfo.request.enableDepthTest;
 
-    auto setCompareOp = [ ]( vk::CompareOp & vkCompareOp, const CompareOp& blazarCompareOp )
+    auto setCompareOp = [ ]( vk::CompareOp &vkCompareOp, const CompareOp &blazarCompareOp )
     {
         switch ( blazarCompareOp )
         {
@@ -345,7 +335,7 @@ void VulkanPipelineProvider::createDepthAttachmentImages( PipelineCreateInfos &c
         }
     };
 
-    auto setStencilOp = [ ]( vk::StencilOp & vkStencilOp, const StencilOp& blazarStencilOp )
+    auto setStencilOp = [ ]( vk::StencilOp &vkStencilOp, const StencilOp &blazarStencilOp )
     {
         switch ( blazarStencilOp )
         {
@@ -389,7 +379,7 @@ void VulkanPipelineProvider::createDepthAttachmentImages( PipelineCreateInfos &c
     createInfo.depthStencilStateCreateInfo.front = vk::StencilOpState { };
     createInfo.depthStencilStateCreateInfo.back = vk::StencilOpState { };
 
-    auto initStencilState = [ = ]( vk::StencilOpState& state, const StencilTestState& blazarState )
+    auto initStencilState = [ = ]( vk::StencilOpState &state, const StencilTestState &blazarState )
     {
         FUNCTION_BREAK( !blazarState.enabled );
 
@@ -408,13 +398,11 @@ void VulkanPipelineProvider::createDepthAttachmentImages( PipelineCreateInfos &c
     createInfo.pipelineCreateInfo.pDepthStencilState = &createInfo.depthStencilStateCreateInfo;
 }
 
-vk::ShaderModule VulkanPipelineProvider::createShaderModule( const std::string &filename )
+vk::ShaderModule VulkanPipelineProvider::createShaderModule( std::vector< uint32_t > data )
 {
-    std::vector< char > data = Core::Utilities::readFile( filename );
-
     vk::ShaderModuleCreateInfo shaderModuleCreateInfo { };
-    shaderModuleCreateInfo.codeSize = data.size( );
-    shaderModuleCreateInfo.pCode = reinterpret_cast< const uint32_t * >( data.data( ) );
+    shaderModuleCreateInfo.codeSize = data.size( ) * sizeof( uint32_t );
+    shaderModuleCreateInfo.pCode = data.data( );
 
     return context->logicalDevice.createShaderModule( shaderModuleCreateInfo );
 }

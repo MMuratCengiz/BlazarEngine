@@ -15,7 +15,7 @@ SET(CMAKE_CXX_STANDARD 17)
 IF(MSVC)
     ADD_COMPILE_OPTIONS(
         $<$<CONFIG:>:/MT>
-        $<$<CONFIG:Debug>:/MTd> 
+        $<$<CONFIG:Debug>:/MTd>
         $<$<CONFIG:Release>:/MT>
     )
 
@@ -28,7 +28,9 @@ IF(MSVC)
         CMAKE_C_FLAGS_RELEASE
         )
 
-    FOREACH(CompilerFlag ${CompilerFlags})
-        STRING(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-    ENDFOREACH()
+    IF (CMAKE_BUILD_TYPE MATCHES "Debug")
+        FOREACH(CompilerFlag ${CompilerFlags})
+            STRING(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+        ENDFOREACH()
+    ENDIF()
 ENDIF()

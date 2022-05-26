@@ -108,7 +108,7 @@ public:
     void createPipelineLayout( PipelineCreateInfos &createInfo, VulkanPipeline * pipeline );
     void createRenderPass( PipelineCreateInfos &createInfo );
     void createDepthAttachmentImages( PipelineCreateInfos &createInfo );
-    vk::ShaderModule createShaderModule( const std::string &filename );
+    vk::ShaderModule createShaderModule( std::vector< uint32_t > data );
 
     ~VulkanPipelineProvider( ) override;
 };
