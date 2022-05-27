@@ -28,6 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <BlazarCore/SimpleTree.h>
 #include "boost/algorithm/string/case_conv.hpp"
 #include <BlazarCore/Logger.h>
+#include <vector>
 
 #define SUPPORTED_BONE_COUNT 4
 

@@ -1,5 +1,4 @@
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/bullet_libs.cmake)
 
 SET(BlazarPhysicsHeaders
         BlazarPhysics/PhysicsWorld.h
@@ -26,5 +25,4 @@ TARGET_LINK_LIBRARIES(
         BlazarPhysics
         BlazarCore
         BlazarECS
-        ${BULLET_LIBS}
 )

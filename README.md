@@ -31,3 +31,30 @@ Custom Game Engine developed in C++ and Vulkan, it is still work in progress, th
 Note the visual quality and framerate are compressed so the gif could be embedded in a reasonable file size and browsing speed. 
 
 ![Demo](/docs/sample_1.gif)
+
+
+# Building:
+
+You may need install the Vulkan SDK and set the VULKAN_SDK environment variable beforehand.
+
+```
+git submodule update --init --recursive
+.\external\vcpkg\scripts\bootstrap.sh 
+.\external\vcpkg\vcpkg.exe install glfw3:x64-windows-static
+.\external\vcpkg\vcpkg.exe install Vulkan:x64-windows-static
+.\external\vcpkg\vcpkg.exe install glslang:x64-windows-static
+.\external\vcpkg\vcpkg.exe install bullet3:x64-windows-static
+# or for unix:
+.\external\vcpkg\vcpkg.exe install glfw3
+.\external\vcpkg\vcpkg.exe install bullet3
+.\external\vcpkg\vcpkg.exe install Vulkan
+.\external\vcpkg\vcpkg.exe install glslang
+```
+
+If you're not using the presets, make sure to add the cacheVariables as cmake options.
+
+To use BlazarEngine as an ExternalProject:
+
+```
+
+```

@@ -489,6 +489,8 @@ MeshGeometry& AssetManager::getPrimitive( const PrimitiveType& primitive )
 	case PrimitiveType::PlainTriangle:
 		return geometryTable[ PLAIN_TRIANGLE_GEOMETRY_IDX ];
 	}
+
+    return geometryTable[ PLAIN_TRIANGLE_GEOMETRY_IDX ];
 }
 
 std::unique_ptr< SamplerDataAttachment > AssetManager::getImage( const std::string& path )

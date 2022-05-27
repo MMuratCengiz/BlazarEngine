@@ -42,7 +42,6 @@ SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 INCLUDE(cmake/common.cmake)
 INCLUDE(cmake/include_blazar.cmake)
-INCLUDE(cmake/bullet_libs.cmake)
 
 IF(WIN32)
     SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
@@ -53,24 +52,11 @@ ENDIF()
 FIND_PACKAGE(Vulkan REQUIRED)
 FIND_PACKAGE(glslang CONFIG REQUIRED)
 
-#MESSAGE(${glslang_LIBRARY})
-
-#INSTALL(DIRECTORY ${Vulkan_INCLUDE_DIRS}/ DESTINATION include)
-#GET_FILENAME_COMPONENT(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
-#
-#INSTALL(DIRECTORY "${Vulkan_INCLUDE_DIRS}/" DESTINATION include)
-#INSTALL(DIRECTORY "${VULKAN_LIB_DIR}/" DESTINATION lib)
-
-#INSTALL(IMPORTED_RUNTIME_ARTIFACTS glslang DESTINATION lib)
-#INSTALL(IMPORTED_RUNTIME_ARTIFACTS Vulkan DESTINATION lib)
-#INSTALL(RUNTIME_DEPENDENCY_SET)
-
 SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
     ADD_SUBDIRECTORY(${BLAZAR_L})
     INCLUDE_DIRECTORIES(${BLAZAR_L})
-    ADD_DEPENDENCIES(Blazar${BLAZAR_L} bullet3 glfw)
 ENDFOREACH()
 
 ############################################################################################################################################
@@ -85,7 +71,6 @@ SET(BlazarRequiredLibs
         BlazarSamples
         BlazarScene
         # -- Blazar Libraries
-        ${BULLET_LIBS}
         ${GLFW_LIBS}
         )
 
@@ -102,7 +87,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/install_resources.cmake)
 
 SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
 
-ADD_DEPENDENCIES(BlazarEngine bullet3)
 ADD_DEPENDENCIES(BlazarEngine glfw)
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
