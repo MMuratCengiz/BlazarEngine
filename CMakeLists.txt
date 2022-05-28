@@ -25,6 +25,7 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
+LIST(APPEND BlazarIncludeDirectories "")
 INCLUDE(ExternalProject)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
@@ -49,9 +50,6 @@ ELSE()
     SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 ENDIF()
 
-FIND_PACKAGE(Vulkan REQUIRED)
-FIND_PACKAGE(glslang CONFIG REQUIRED)
-
 SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
@@ -72,6 +70,7 @@ SET(BlazarRequiredLibs
         BlazarScene
         # -- Blazar Libraries
         ${GLFW_LIBS}
+        ${BULLET_LIBRARIES}
         )
 
 IF (${BLAZAR_BUILD_AS_LIB})
@@ -81,6 +80,11 @@ ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
     INSTALL(TARGETS BlazarEngine DESTINATION bin/..)
 ENDIF()
+
+SET_TARGET_PROPERTIES(BlazarEngine PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${BlazarIncludeDirectories}"
+        INTERFACE_LINK_LIBRARIES "${BlazarRequiredLibs}"
+        )
 
 INSTALL(FILES ${SPVHeaders} DESTINATION include)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/install_resources.cmake)
