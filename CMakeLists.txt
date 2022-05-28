@@ -55,6 +55,10 @@ SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
     ADD_SUBDIRECTORY(${BLAZAR_L})
     INCLUDE_DIRECTORIES(${BLAZAR_L})
+
+    SET_TARGET_PROPERTIES(Blazar${BLAZAR_L} PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${BlazarIncludeDirectories} ${${BLAZAR_L}_INCLUDE_DIRS}"
+            )
 ENDFOREACH()
 
 ############################################################################################################################################
