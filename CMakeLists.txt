@@ -31,6 +31,7 @@ INCLUDE(ExternalProject)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 
 SET(BLAZAR_LIB_TYPE STATIC)
 
@@ -41,20 +42,17 @@ ENDIF()
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-INCLUDE(cmake/common.cmake)
-
-IF(WIN32)
-    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
-ELSE()
-    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-ENDIF()
-
 SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
     ADD_SUBDIRECTORY(${BLAZAR_L})
-    TARGET_INCLUDE_DIRECTORIES(Blazar${BLAZAR_L} PUBLIC ${ExternalDependencies_Includes})
     TARGET_LINK_LIBRARIES(Blazar${BLAZAR_L} PUBLIC ${${BLAZAR_L}_LINK_LIBRARIES} ${ExternalDependencies_Libraries})
+    FOREACH(LIB_INCLUDE IN LISTS ExternalDependencies_Includes)
+        TARGET_INCLUDE_DIRECTORIES(Blazar${BLAZAR_L} PUBLIC
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_INCLUDE}>
+                $<INSTALL_INTERFACE:${LIB_INCLUDE}>)
+    ENDFOREACH()
+    TARGET_INCLUDE_DIRECTORIES(Blazar${BLAZAR_L} PUBLIC ${Vulkan_INCLUDE_DIR})
 ENDFOREACH()
 
 SET(BlazarRequiredLibs
@@ -70,24 +68,49 @@ SET(BlazarRequiredLibs
 
 IF (BLAZAR_BUILD_AS_LIB)
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp)
-    INSTALL(TARGETS BlazarEngine DESTINATION lib)
+    INSTALL(TARGETS BlazarEngine
+            EXPORT BlazarEngineConfig
+            DESTINATION lib)
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp)
-    INSTALL(TARGETS BlazarEngine DESTINATION bin/..)
+    INSTALL(TARGETS BlazarEngine
+            EXPORT BlazarEngineConfig
+            DESTINATION bin/..)
 ENDIF()
 
-INSTALL(FILES ${SPVHeaders} DESTINATION include)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/install_resources.cmake)
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Shaders/ DESTINATION Shaders/)
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION assets/)
+
+COPY_TO_BINARY("Shaders" "*.glsl")
+COPY_TO_BINARY("assets" "*.*")
 
 ADD_DEPENDENCIES(BlazarEngine glfw)
 
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
-    TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${PROJECT_SOURCE_DIR}/${BLAZAR_L})
+    TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${BLAZAR_L}>
+            $<INSTALL_INTERFACE:${BLAZAR_L}>)
 ENDFOREACH()
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine PUBLIC ${BlazarRequiredLibs})
 
-TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${ExternalDependencies_Includes})
+FOREACH(LIB_INCLUDE IN LISTS ExternalDependencies_Includes)
+    TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_INCLUDE}>
+            $<INSTALL_INTERFACE:${LIB_INCLUDE}>)
+ENDFOREACH()
+
+TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${Vulkan_INCLUDE_DIR})
+
+EXPORT(TARGETS
+        BlazarEngine
+        FILE cmake/BlazarEngineConfig.cmake
+        )
+
+INSTALL(EXPORT
+        BlazarEngineConfig
+        DESTINATION cmake
+        )
 
 INCLUDE(CPack)

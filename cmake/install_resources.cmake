@@ -1,7 +1,0 @@
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
-
-INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Shaders/ DESTINATION Shaders/)
-INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION assets/)
-
-COPY_TO_BINARY("Shaders" "*.glsl")
-COPY_TO_BINARY("assets" "*.*")
