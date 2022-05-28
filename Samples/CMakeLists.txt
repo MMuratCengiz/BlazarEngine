@@ -43,11 +43,19 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
 SET_TARGET_PROPERTIES(BlazarSamples PROPERTIES LINKER_LANGUAGE CXX)
 
-TARGET_LINK_LIBRARIES(
-        BlazarSamples
+TARGET_INCLUDE_DIRECTORIES(BlazarSamples PUBLIC
+        ${PROJECT_SOURCE_DIR}/Core
+        ${PROJECT_SOURCE_DIR}/ECS
+        ${PROJECT_SOURCE_DIR}/Input
+        ${PROJECT_SOURCE_DIR}/Physics
+        ${PROJECT_SOURCE_DIR}/Graphics
+        ${PROJECT_SOURCE_DIR}/Scene
+        )
+
+SET(Samples_LINK_LIBRARIES
+        BlazarCore
         BlazarECS
         BlazarInput
         BlazarScene
         BlazarGraphics
-        BlazarPhysics
-)
+        BlazarPhysics PARENT_SCOPE)

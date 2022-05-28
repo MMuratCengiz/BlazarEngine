@@ -86,7 +86,14 @@ SET(REQUESTED_BOOST_LIBS format atomic log)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
-TARGET_LINK_LIBRARIES(BlazarGraphics
+TARGET_INCLUDE_DIRECTORIES(BlazarGraphics PUBLIC
+        ${PROJECT_SOURCE_DIR}/external/glfw/include
+        ${PROJECT_SOURCE_DIR}/Core
+        ${PROJECT_SOURCE_DIR}/ECS
+        ${PROJECT_SOURCE_DIR}/Input
+)
+
+SET(Graphics_LINK_LIBRARIES
         ${GLFW_LIBS}
         Vulkan::Vulkan
         HLSL
@@ -96,4 +103,5 @@ TARGET_LINK_LIBRARIES(BlazarGraphics
         BlazarCore
         BlazarECS
         BlazarInput
+        PARENT_SCOPE
         )

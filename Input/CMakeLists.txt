@@ -21,10 +21,9 @@ ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarInput PROPERTIES LINKER_LANGUAGE CXX)
 
-TARGET_INCLUDE_DIRECTORIES(BlazarInput PUBLIC ${PROJECT_SOURCE_DIR}/external/glfw/include)
-
-TARGET_LINK_LIBRARIES(BlazarInput
-        ${GLFW_LIBS}
-        Vulkan::Vulkan
-        BlazarCore
+TARGET_INCLUDE_DIRECTORIES(BlazarInput PUBLIC
+        ${PROJECT_SOURCE_DIR}/external/glfw/include
+        ${PROJECT_SOURCE_DIR}/Core
         )
+
+SET(Input_LINK_LIBRARIES BlazarCore PARENT_SCOPE)

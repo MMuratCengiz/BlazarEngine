@@ -21,8 +21,9 @@ ENDIF()
 
 SET_TARGET_PROPERTIES(BlazarPhysics PROPERTIES LINKER_LANGUAGE CXX)
 
-TARGET_LINK_LIBRARIES(
-        BlazarPhysics
-        BlazarCore
-        BlazarECS
-)
+TARGET_INCLUDE_DIRECTORIES(BlazarPhysics PUBLIC
+        ${PROJECT_SOURCE_DIR}/Core
+        ${PROJECT_SOURCE_DIR}/ECS
+        )
+
+SET(Physics_LINK_LIBRARIES BlazarCore BlazarECS PARENT_SCOPE)

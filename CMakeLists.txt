@@ -25,7 +25,6 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
-LIST(APPEND BlazarIncludeDirectories "")
 INCLUDE(ExternalProject)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
@@ -54,17 +53,12 @@ SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
     ADD_SUBDIRECTORY(${BLAZAR_L})
-    INCLUDE_DIRECTORIES(${BLAZAR_L})
-
-    SET_TARGET_PROPERTIES(Blazar${BLAZAR_L} PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${BlazarIncludeDirectories} ${${BLAZAR_L}_INCLUDE_DIRS}"
-            )
+    TARGET_INCLUDE_DIRECTORIES(Blazar${BLAZAR_L} PUBLIC ${ExternalDependencies_Includes})
+    TARGET_LINK_LIBRARIES(Blazar${BLAZAR_L} PUBLIC ${${BLAZAR_L}_LINK_LIBRARIES} ${ExternalDependencies_Libraries})
 ENDFOREACH()
 
 ############################################################################################################################################
 SET(BlazarRequiredLibs
-        Vulkan::Vulkan
-        # Blazar Libraries
         BlazarCore
         BlazarECS
         BlazarGraphics
@@ -72,9 +66,7 @@ SET(BlazarRequiredLibs
         BlazarPhysics
         BlazarSamples
         BlazarScene
-        # -- Blazar Libraries
-        ${GLFW_LIBS}
-        ${BULLET_LIBRARIES}
+        ${ExternalDependencies_Libraries}
         )
 
 IF (${BLAZAR_BUILD_AS_LIB})
@@ -85,21 +77,18 @@ ELSE()
     INSTALL(TARGETS BlazarEngine DESTINATION bin/..)
 ENDIF()
 
-SET_TARGET_PROPERTIES(BlazarEngine PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${BlazarIncludeDirectories}"
-        INTERFACE_LINK_LIBRARIES "${BlazarRequiredLibs}"
-        )
-
 INSTALL(FILES ${SPVHeaders} DESTINATION include)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/install_resources.cmake)
 
-SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
-
 ADD_DEPENDENCIES(BlazarEngine glfw)
 
-TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-TARGET_LINK_LIBRARIES(BlazarEngine PRIVATE ${BlazarRequiredLibs})
+FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
+    TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${PROJECT_SOURCE_DIR}/${BLAZAR_L})
+ENDFOREACH()
 
-TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${SPVDir})
+TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+TARGET_LINK_LIBRARIES(BlazarEngine PUBLIC ${BlazarRequiredLibs})
+
+TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${ExternalDependencies_Includes} ${SPVDir})
 
 INCLUDE(CPack)

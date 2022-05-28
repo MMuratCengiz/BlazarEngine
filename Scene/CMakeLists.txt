@@ -26,9 +26,20 @@ SET(REQUESTED_BOOST_LIBS thread format atomic)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
 
-TARGET_INCLUDE_DIRECTORIES(BlazarScene PUBLIC ${PROJECT_SOURCE_DIR}/external/glfw/include)
-
-TARGET_LINK_LIBRARIES(BlazarScene
-        Vulkan::Vulkan
+TARGET_INCLUDE_DIRECTORIES(BlazarScene PUBLIC
+        ${PROJECT_SOURCE_DIR}/external/glfw/include
+        ${PROJECT_SOURCE_DIR}/Core
+        ${PROJECT_SOURCE_DIR}/ECS
+        ${PROJECT_SOURCE_DIR}/Input
+        ${PROJECT_SOURCE_DIR}/Physics
+        ${PROJECT_SOURCE_DIR}/Graphics
         )
 
+SET(Scene_LINK_LIBRARIES
+        BlazarCore
+        BlazarECS
+        BlazarInput
+        BlazarPhysics
+        BlazarGraphics
+        Vulkan::Vulkan
+        PARENT_SCOPE)

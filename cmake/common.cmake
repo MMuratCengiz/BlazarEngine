@@ -1,4 +1,4 @@
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 
 FUNCTION(copy_to_binary Dir FileSelect)
     FILE(GLOB_RECURSE FilesInDir "${PROJECT_SOURCE_DIR}/${Dir}/${FileSelect}")
