@@ -12,6 +12,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
 PROJECT(BlazarEngine VERSION 0.2)
+INCLUDE("${PROJECT_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 OPTION(BUILD_SHARED_LIBS OFF)
 OPTION(BLAZAR_INSTALL_LIBS ON)
@@ -41,7 +42,6 @@ SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 INCLUDE(cmake/common.cmake)
-INCLUDE(cmake/include_blazar.cmake)
 
 IF(WIN32)
     SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
@@ -57,7 +57,6 @@ FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
     TARGET_LINK_LIBRARIES(Blazar${BLAZAR_L} PUBLIC ${${BLAZAR_L}_LINK_LIBRARIES} ${ExternalDependencies_Libraries})
 ENDFOREACH()
 
-############################################################################################################################################
 SET(BlazarRequiredLibs
         BlazarCore
         BlazarECS
@@ -69,11 +68,11 @@ SET(BlazarRequiredLibs
         ${ExternalDependencies_Libraries}
         )
 
-IF (${BLAZAR_BUILD_AS_LIB})
-    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
+IF (BLAZAR_BUILD_AS_LIB)
+    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp)
     INSTALL(TARGETS BlazarEngine DESTINATION lib)
 ELSE()
-    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
+    ADD_EXECUTABLE(BlazarEngine main.cpp)
     INSTALL(TARGETS BlazarEngine DESTINATION bin/..)
 ENDIF()
 
@@ -89,6 +88,6 @@ ENDFOREACH()
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine PUBLIC ${BlazarRequiredLibs})
 
-TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${ExternalDependencies_Includes} ${SPVDir})
+TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${ExternalDependencies_Includes})
 
 INCLUDE(CPack)
