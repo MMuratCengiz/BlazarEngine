@@ -1,31 +1,33 @@
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 
 FIND_PACKAGE(Vulkan REQUIRED)
+FIND_PACKAGE(glfw3 CONFIG REQUIRED)
+FIND_PACKAGE(glm REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS thread atomic log REQUIRED)
+FIND_PACKAGE(Bullet CONFIG REQUIRED)
 
-SET(BlazarCoreHeaders
-        BlazarCore/DynamicMemory.h
-        BlazarCore/Common.h
-        BlazarCore/Time.h
-        BlazarCore/Constants.h
-        BlazarCore/Utilities.h
-        BlazarCore/SimpleTree.h
-        BlazarCore/Logger.h)
+FIND_PATH(STB_INCLUDE_DIRS "stb_image.h")
 
 SET(BlazarCoreSources
-        BlazarCore/Utilities.cpp
-        BlazarCore/Time.cpp
-        BlazarCore/Logger.cpp)
+        src/BlazarCore/Utilities.cpp
+        src/BlazarCore/Time.cpp
+        src/BlazarCore/Logger.cpp)
 
-ADD_LIBRARY(BlazarCore ${BLAZAR_LIB_TYPE} ${BlazarCoreHeaders} ${BlazarCoreSources})
+ADD_LIBRARY(BlazarCore ${BLAZAR_LIB_TYPE} ${BlazarCoreSources})
 
-IF (BLAZAR_INSTALL_LIBS)
-    INSTALL_TARGET(BlazarCore)
-    INSTALL(FILES ${BlazarCoreHeaders} DESTINATION include/BlazarCore)
-ENDIF()
-
-SET(INCLUDE_BOOST_TARGET BlazarCore)
-SET(REQUESTED_BOOST_LIBS format atomic log)
-
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_boost.cmake)
+TARGET_INCLUDE_DEFAULT_DIRECTORIES(BlazarCore)
+TARGET_LINK_LIBRARIES(BlazarCore
+        PUBLIC
+            Boost::boost
+            Boost::thread
+            Boost::atomic
+            Boost::log
+            glm::glm
+            glfw
+            Vulkan::Vulkan
+            ${BULLET_LIBRARIES}
+)
+TARGET_INCLUDE_DIRECTORIES(BlazarCore PUBLIC PRIVATE ${STB_INCLUDE_DIRS})
+INSTALL_TARGET(BlazarCore)
 
 SET_TARGET_PROPERTIES(BlazarCore PROPERTIES LINKER_LANGUAGE CXX)

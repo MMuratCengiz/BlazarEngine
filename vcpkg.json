@@ -1,0 +1,15 @@
+{
+  "name": "blazar-engine",
+  "version": "0.2",
+  "dependencies": [
+    "bullet3",
+    "glfw3",
+    "vulkan",
+    "glslang",
+    "boost",
+    "glm",
+    "stb",
+    "tinygltf",
+    "spirv-cross"
+  ]
+}

@@ -1,30 +1,20 @@
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
 
-SET(BlazarInputHeaders
-        BlazarInput/GlobalEventHandler.h
-        BlazarInput/ActionMap.h
-        BlazarInput/EventHandler.h
-        )
+FIND_PACKAGE(glfw3 CONFIG REQUIRED)
 
 SET(BlazarInputSources
-        BlazarInput/ActionMap.cpp
-        BlazarInput/EventHandler.cpp
+        src/BlazarInput/ActionMap.cpp
+        src/BlazarInput/EventHandler.cpp
         )
 
-ADD_LIBRARY(BlazarInput ${BLAZAR_LIB_TYPE} ${BlazarInputHeaders} ${BlazarInputSources})
+ADD_LIBRARY(BlazarInput ${BLAZAR_LIB_TYPE} ${BlazarInputSources})
 
-IF (BLAZAR_INSTALL_LIBS)
-    INSTALL_TARGET(BlazarInput)
-    INSTALL(FILES ${BlazarInputHeaders} DESTINATION include/BlazarInput)
-ENDIF()
-
-SET_TARGET_PROPERTIES(BlazarInput PROPERTIES LINKER_LANGUAGE CXX)
-
-TARGET_INCLUDE_DIRECTORIES(BlazarInput PUBLIC ${PROJECT_SOURCE_DIR}/external/glfw/include)
-
+TARGET_INCLUDE_DEFAULT_DIRECTORIES(BlazarInput)
 TARGET_LINK_LIBRARIES(BlazarInput
-        ${GLFW_LIBS}
-        Vulkan::Vulkan
-        BlazarCore
+        PUBLIC
+            BlazarCore glfw
         )
+
+INSTALL_TARGET(BlazarInput)
+SET_TARGET_PROPERTIES(BlazarInput PROPERTIES LINKER_LANGUAGE CXX)

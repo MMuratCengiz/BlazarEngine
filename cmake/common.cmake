@@ -1,4 +1,4 @@
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
 
 FUNCTION(copy_to_binary Dir FileSelect)
     FILE(GLOB_RECURSE FilesInDir "${PROJECT_SOURCE_DIR}/${Dir}/${FileSelect}")
@@ -25,10 +25,31 @@ FUNCTION(copy_to_binary Dir FileSelect)
 ENDFUNCTION()
 
 FUNCTION(INSTALL_TARGET target)
-    INSTALL(TARGETS ${target}
-            RUNTIME DESTINATION bin
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib)
+    IF (BLAZAR_INSTALL_LIBS)
+        INSTALL(TARGETS ${target}
+                EXPORT ${target}-export
+                LIBRARY DESTINATION lib
+                ARCHIVE DESTINATION lib
+                )
+
+        INSTALL(EXPORT ${target}-export
+                FILE ${target}Targets.cmake
+                NAMESPACE BlazarEngine::
+                DESTINATION cmake/${target}
+                )
+
+        INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
+    ENDIF()
+ENDFUNCTION()
+
+FUNCTION(TARGET_INCLUDE_DEFAULT_DIRECTORIES target)
+    TARGET_INCLUDE_DIRECTORIES(${target}
+            PUBLIC
+                $<INSTALL_INTERFACE:include>
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/src
+            )
 ENDFUNCTION()
 
 SET(CMAKE_ARGS_FOR_EXTERNALS

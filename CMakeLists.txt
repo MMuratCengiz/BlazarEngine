@@ -1,17 +1,13 @@
-#Sample Configuration:
-#-DCMAKE_INSTALL_PREFIX=/Users/crs/Workspace/BlazarEngine/build/BlazarEngine/debug
-#-DBLAZAR_INSTALL_LIBS=ON
-#-DCMAKE_INSTALL_LIBS=ON
-
-#In OSX Vulkan environment variables should be set:
-
-#VULKAN_SDK=/Users/crs/VulkanSDK/1.3.211.0/macOS
-#DYLD_LIBRARY_PATH=${VULKAN_SDK}/lib:${DYLD_LIBRARY_PATH}:
-#VK_LAYER_PATH=${VULKAN_SDK/share/vulkan/explicit_layer.d}
-#VK_ICD_FILENAMES=${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json
-
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
+
+SET(VCPKG_MANIFEST_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+IF(WIN32)
+    SET(VCPKG_TARGET_TRIPLET "x64-windows-static")
+ENDIF()
+INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
 PROJECT(BlazarEngine VERSION 0.2)
+INCLUDE("${PROJECT_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 OPTION(BUILD_SHARED_LIBS OFF)
 OPTION(BLAZAR_INSTALL_LIBS ON)
@@ -27,9 +23,7 @@ SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 INCLUDE(ExternalProject)
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_definitions.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/include_external.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/glfw_libs.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/common.cmake)
 
 SET(BLAZAR_LIB_TYPE STATIC)
 
@@ -40,74 +34,38 @@ ENDIF()
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-INCLUDE(cmake/common.cmake)
-INCLUDE(cmake/include_blazar.cmake)
-INCLUDE(cmake/bullet_libs.cmake)
-
-IF(WIN32)
-    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
-ELSE()
-    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-ENDIF()
-
-FIND_PACKAGE(Vulkan REQUIRED)
-FIND_PACKAGE(glslang CONFIG REQUIRED)
-
-#MESSAGE(${glslang_LIBRARY})
-
-#INSTALL(DIRECTORY ${Vulkan_INCLUDE_DIRS}/ DESTINATION include)
-#GET_FILENAME_COMPONENT(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
-#
-#INSTALL(DIRECTORY "${Vulkan_INCLUDE_DIRS}/" DESTINATION include)
-#INSTALL(DIRECTORY "${VULKAN_LIB_DIR}/" DESTINATION lib)
-
-#INSTALL(IMPORTED_RUNTIME_ARTIFACTS glslang DESTINATION lib)
-#INSTALL(IMPORTED_RUNTIME_ARTIFACTS Vulkan DESTINATION lib)
-#INSTALL(RUNTIME_DEPENDENCY_SET)
-
 SET(BLAZAR_LIBS Core ECS Input Graphics Physics Scene Samples)
 
 FOREACH(BLAZAR_L IN LISTS BLAZAR_LIBS)
     ADD_SUBDIRECTORY(${BLAZAR_L})
-    INCLUDE_DIRECTORIES(${BLAZAR_L})
-    ADD_DEPENDENCIES(Blazar${BLAZAR_L} bullet3 glfw)
 ENDFOREACH()
 
-############################################################################################################################################
-SET(BlazarRequiredLibs
-        Vulkan::Vulkan
-        # Blazar Libraries
-        BlazarCore
-        BlazarECS
-        BlazarGraphics
-        BlazarInput
-        BlazarPhysics
-        BlazarSamples
-        BlazarScene
-        # -- Blazar Libraries
-        ${BULLET_LIBS}
-        ${GLFW_LIBS}
-        )
-
-IF (${BLAZAR_BUILD_AS_LIB})
-    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp ${SPVHeaders} ${SPVSources})
-    INSTALL(TARGETS BlazarEngine DESTINATION lib)
+IF (BLAZAR_BUILD_AS_LIB)
+    ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp)
+    INSTALL(TARGETS BlazarEngine
+            EXPORT BlazarEngine-export
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib)
 ELSE()
-    ADD_EXECUTABLE(BlazarEngine main.cpp ${SPVHeaders} ${SPVSources})
-    INSTALL(TARGETS BlazarEngine DESTINATION bin/..)
+    ADD_EXECUTABLE(BlazarEngine main.cpp)
+    INSTALL(TARGETS BlazarEngine
+            EXPORT BlazarEngine-export
+            DESTINATION bin/..)
 ENDIF()
 
-INSTALL(FILES ${SPVHeaders} DESTINATION include)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/install_resources.cmake)
 
-SET(BLAZAR_LIBS ${BlazarRequiredLibs} BlazarEngine CACHE INTERNAL "BLAZAR_LIBS")
+INSTALL(EXPORT BlazarEngine-export
+        FILE BlazarEngineTargets.cmake
+        DESTINATION cmake/BlazarEngine
+        )
 
-ADD_DEPENDENCIES(BlazarEngine bullet3)
-ADD_DEPENDENCIES(BlazarEngine glfw)
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Shaders/ DESTINATION Shaders/)
+INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION assets/)
+
+COPY_TO_BINARY("Shaders" "*.glsl")
+COPY_TO_BINARY("assets" "*.*")
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-TARGET_LINK_LIBRARIES(BlazarEngine PRIVATE ${BlazarRequiredLibs})
-
-TARGET_INCLUDE_DIRECTORIES(BlazarEngine PUBLIC ${SPVDir})
+TARGET_LINK_LIBRARIES(BlazarEngine PUBLIC BlazarSamples) # Todo use Scene when not building samples
 
 INCLUDE(CPack)
