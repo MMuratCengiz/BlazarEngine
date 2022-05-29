@@ -8,7 +8,7 @@ LIST(APPEND ExternalDependencies_Includes external/stb)
 LIST(APPEND ExternalDependencies_Includes external/miniz)
 LIST(APPEND ExternalDependencies_Includes external/vma/include)
 LIST(APPEND ExternalDependencies_Includes external/tinygltf)
-LIST(APPEND ExternalDependencies_Includes external/glm)
+#LIST(APPEND ExternalDependencies_Includes external/glm)
 
 IF (WIN32)
     SET(GLFW_OPTIONS ${GLFW_OPTIONS}
@@ -55,8 +55,6 @@ FIND_PACKAGE(Bullet CONFIG REQUIRED)
 FIND_PACKAGE(glfw3 CONFIG REQUIRED)
 
 STRING(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" Bullet_INSTALL_INCLUDE_DIR ${BULLET_INCLUDE_DIR})
-
-LIST(APPEND ExternalDependencies_Includes ${Bullet_INSTALL_INCLUDE_DIR})
 
 LIST(APPEND ExternalDependencies_Libraries
         ${BULLET_LIBRARIES}

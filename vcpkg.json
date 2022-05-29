@@ -6,6 +6,11 @@
     "bullet3",
     "glfw3",
     "vulkan",
-    "glslang"
+    "glslang",
+    "boost",
+    "glm",
+    "stb",
+    "tinygltf",
+    "spirv-cross"
   ]
 }
