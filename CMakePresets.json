@@ -25,6 +25,32 @@
         "CMAKE_TOOLCHAIN_FILE" : "external/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
       }
+    },
+    {
+      "name": "Debug_OSX",
+      "installDir": "build/BlazarEngine/debug-osx",
+      "binaryDir": "build/BlazarEngine/debug-osx",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS" : "OFF",
+        "BLAZAR_INSTALL_LIBS" : "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE" : "external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "VCPKG_KEEP_ENV_VARS": "VULKAN_SDK"
+      }
+    },
+    {
+      "name": "Release_OSX",
+      "installDir": "build/BlazarEngine/release-osx",
+      "binaryDir": "build/BlazarEngine/release-osx",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS" : "OFF",
+        "BLAZAR_INSTALL_LIBS" : "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE" : "external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "VCPKG_KEEP_ENV_VARS": "VULKAN_SDK"
+      }
     }
   ],
   "version": 3
