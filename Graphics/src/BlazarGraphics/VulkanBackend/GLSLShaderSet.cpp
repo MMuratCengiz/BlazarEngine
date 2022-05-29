@@ -18,8 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <BlazarGraphics/VulkanBackend/GLSLShaderSet.h>
 #include <BlazarGraphics/VulkanBackend/SpirvHelper.h>
-#include <spirv_cross/spirv_cross.hpp>
-#include <spirv_cross/spirv_glsl.hpp>
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -33,7 +31,7 @@ GLSLShaderSet::GLSLShaderSet( const std::vector< GLSLShaderInfo > &shaderInfos, 
 
 void GLSLShaderSet::onEachShader( const GLSLShaderInfo &shaderInfo )
 {
-    spirv_cross::CompilerGLSL compiler( shaderInfo.data );
+    spirv_cross::Compiler compiler( shaderInfo.data );
 
     auto shaderResources = compiler.get_shader_resources( );
 
@@ -110,25 +108,6 @@ void GLSLShaderSet::onEachShader( const GLSLShaderInfo &shaderInfo )
         detail.name = decoration.name;
         detail.children = std::move( decoration.children );
     }
-}
-
-char * GLSLShaderSet::readFile( const std::string &filename )
-{
-    FILE *file = fopen( filename.c_str( ), "rb" );
-    if ( !file )
-    {
-        throw std::runtime_error( "Failed to load shader: " + filename + "." );
-    }
-
-    fseek( file, 0, SEEK_END );
-    long fileSize = ftell( file );
-    rewind( file );
-
-    char * contents = ( char * ) malloc( fileSize + 1);
-    contents[ fileSize ] = 0;
-    fread( contents, fileSize, 1, file );
-    fclose( file );
-    return contents ;
 }
 
 void GLSLShaderSet::ensureSetExists( uint32_t set )

@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../GraphicsCommonIncludes.h"
 #include "SpirvHelper.h"
 #include "BlazarCore/Utilities.h"
-#include <spirv_cross/spirv_glsl.hpp>
+#include "spirv_glsl.hpp"
 
 /*
 TODO List:
@@ -170,7 +170,6 @@ public:
 
 private:
     void onEachShader( const GLSLShaderInfo &shaderInfo );
-    static char * readFile( const std::string &filename );
     void ensureSetExists( uint32_t set );
     void createVertexInput( const uint32_t &offset, const GLSLType &type, const uint32_t &location );
 

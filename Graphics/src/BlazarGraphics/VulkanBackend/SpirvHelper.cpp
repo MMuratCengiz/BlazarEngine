@@ -148,10 +148,6 @@ std::vector< uint32_t > SpirvHelper::GLSLtoSPV( const vk::ShaderStageFlagBits sh
 
     glslang::TShader shader( stage );
 
-    /*shader.setEnvInput( glslang::EShSource::EShSourceGlsl, stage, glslang::EShClient::EShClientVulkan, 110);
-    shader.setEnvClient( glslang::EShClientVulkan, glslang::EShTargetVulkan_1_1 );
-    shader.setEnvTarget( glslang::EShTargetSpv, glslang::EShTargetSpv_1_3 );*/
-
     glslang::TProgram program;
 
     const char *shaderStrings[1];

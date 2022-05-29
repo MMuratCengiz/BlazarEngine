@@ -45,7 +45,7 @@ INSTALL_TARGET(BlazarGraphics)
 INSTALL(FILES ${SPVHeaders} DESTINATION include/BlazarGraphics)
 
 TARGET_INCLUDE_DIRECTORIES(BlazarGraphics PUBLIC ${TINYGLTF_INCLUDE_DIRS})
-TARGET_INCLUDE_DEFAULT_DIRECTORIES(BlazarGraphics) ${spir
+TARGET_INCLUDE_DEFAULT_DIRECTORIES(BlazarGraphics)
 TARGET_LINK_LIBRARIES(BlazarGraphics
         PUBLIC
             glfw
@@ -57,14 +57,13 @@ TARGET_LINK_LIBRARIES(BlazarGraphics
             BlazarCore
             BlazarECS
             BlazarInput
-            spirv-cross-msl
-            spirv-cross-hlsl
-            spirv-cross-core
-            spirv-cross-cpp
-            spirv-cross-c
-            spirv-cross-reflect
-            spirv-cross-util
             spirv-cross-glsl
+            spirv-cross-hlsl
+            spirv-cross-cpp
+            spirv-cross-reflect
+            spirv-cross-msl
+            spirv-cross-util
+            spirv-cross-core
         )
 
 SET_TARGET_PROPERTIES(BlazarGraphics PROPERTIES LINKER_LANGUAGE CXX)
