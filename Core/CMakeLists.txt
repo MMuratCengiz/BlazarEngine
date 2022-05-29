@@ -24,10 +24,10 @@ TARGET_LINK_LIBRARIES(BlazarCore
             Boost::log
             glm::glm
             glfw
-            ${Vulkan_LIBRARY}
+            Vulkan::Vulkan
             ${BULLET_LIBRARIES}
 )
-TARGET_INCLUDE_DIRECTORIES(BlazarCore PUBLIC ${STB_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR})
+TARGET_INCLUDE_DIRECTORIES(BlazarCore PUBLIC PRIVATE ${STB_INCLUDE_DIRS})
 INSTALL_TARGET(BlazarCore)
 
 SET_TARGET_PROPERTIES(BlazarCore PROPERTIES LINKER_LANGUAGE CXX)

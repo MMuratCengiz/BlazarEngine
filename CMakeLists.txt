@@ -11,6 +11,8 @@
 #VK_ICD_FILENAMES=${VULKAN_SDK}/share/vulkan/icd.d/MoltenVK_icd.json
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
+SET(VCPKG_MANIFEST_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
 PROJECT(BlazarEngine VERSION 0.2)
 INCLUDE("${PROJECT_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
