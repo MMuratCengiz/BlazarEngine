@@ -171,19 +171,10 @@ struct SceneContext
 class AssetManager
 {
 private:
-    const int LIT_CUBE_GEOMETRY_IDX = 0;
-    const int PLAIN_CUBE_GEOMETRY_IDX = 1;
-    const int PLAIN_SQUARE_GEOMETRY_IDX = 2;
-    const int PLAIN_TRIANGLE_GEOMETRY_IDX = 3;
-
     std::vector< MeshGeometry > geometryTable;
     std::unordered_map< std::string, std::unique_ptr< SamplerDataAttachment > > imageMap;
 
-    LitCubePrimitive litCubePrimitive { };
-    PlainCubePrimitive plainCubePrimitive { };
-    PlainSquarePrimitive plainSquarePrimitive { };
-    PlainTrianglePrimitive plainTrianglePrimitive { };
-
+    std::unordered_map< std::string, std::unique_ptr< IPrimitive > > builtinPrimitivePathMap { };
 public:
     AssetManager( );
 

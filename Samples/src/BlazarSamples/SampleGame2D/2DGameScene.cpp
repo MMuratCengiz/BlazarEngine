@@ -12,7 +12,7 @@ void TDGameScene::init( )
     camera = std::make_unique< TDGameTopDownCamera >( );
     box = std::move(
             world->getAssetManager( )->createEntity(
-                    BuiltinPrimitives::getPrimitivePath( PrimitiveType::LitCube ) ) );
+                    BuiltinPrimitives::getPrimitivePath( PrimitiveType::TexturedSquare ) ) );
 
     auto *pTransform = box->getComponent< ECS::CTransform >( );
     pTransform->position.x = 960.0f;
@@ -41,7 +41,7 @@ void TDGameScene::init( )
     auto boxMaterial = box->getComponent< ECS::CMaterial >( );
     ECS::Material::TextureInfo & boxTexture = boxMaterial->textures.emplace_back( );
     box->getComponent< ECS::CMesh >( )->cullMode = ECS::CullMode::None;
-    boxTexture.path = "assets/textures/floor2.png";
+    boxTexture.path = "assets/textures/wood_box_1.png";
 
     scene = std::make_unique< Scene::Scene >( );
 

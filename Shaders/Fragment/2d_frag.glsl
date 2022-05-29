@@ -3,8 +3,7 @@
 layout(set = 2, binding = 0) uniform sampler2D Texture1;
 
 layout (location = 0) in vec4 outPosition;
-layout (location = 1) in vec4 outNormal;
-layout (location = 2) in vec2 outTextureCoor;
+layout (location = 1) in vec2 outTextureCoor;
 
 layout (location = 0) out vec4 outputColor;
 

@@ -16,12 +16,10 @@ layout(set = 1, binding = 0) uniform InstanceData
 } instanceData;
 
 layout(location = 0) in vec4 inPosition;
-layout(location = 1) in vec4 inNormal;
-layout(location = 2) in vec2 inTextureCoor;
+layout(location = 1) in vec2 inTextureCoor;
 
 layout (location = 0) out vec4 outPosition;
-layout (location = 1) out vec4 outNormal;
-layout (location = 2) out vec2 outTextureCoor;
+layout (location = 1) out vec2 outTextureCoor;
 
 void main() {
     mat4 model = pushConstants.ModelMatrix;

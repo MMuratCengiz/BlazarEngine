@@ -27,15 +27,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
-enum class PrimitiveType
+enum class PrimitiveType : uint32_t
 {
-	LitCube,
-	PlainSquare,
-	PlainTriangle,
-	PlainCube
+	LitCube = 0,
+	PlainSquare = 1,
+	TexturedSquare = 2,
+	PlainTriangle = 3,
+	PlainCube = 4
 };
 
-class LitCubePrimitive
+class IPrimitive {
+public:
+    virtual uint32_t getVertexCount( ) = 0;
+    virtual const std::vector< float >& getData( ) const = 0;
+    virtual std::string getPath( ) const = 0;
+    virtual PrimitiveType getType( ) const = 0;
+};
+
+class LitCubePrimitive : public IPrimitive
 {
 	std::vector< float > data;
 public:
@@ -101,18 +110,28 @@ public:
 		}
 	}
 
-	uint32_t getVertexCount( )
+	uint32_t getVertexCount( ) override
 	{
 		return 36;
 	}
 
-	[[nodiscard]] const std::vector< float >& getData( ) const
+	[[nodiscard]] const std::vector< float >& getData( ) const override
 	{
 		return data;
 	}
+
+    [[nodiscard]] std::string getPath( ) const override
+    {
+        return "BuiltinPrimitives/LitCube";
+    }
+
+    [[nodiscard]] PrimitiveType getType( ) const override
+    {
+        return PrimitiveType::LitCube;
+    }
 };
 
-class PlainCubePrimitive
+class PlainCubePrimitive : public IPrimitive
 {
 	std::vector< float > data;
 public:
@@ -161,18 +180,28 @@ public:
 		}
 	}
 
-	uint32_t getVertexCount( )
+	uint32_t getVertexCount( ) override
 	{
 		return 36;
 	}
 
-	[[nodiscard]] const std::vector< float >& getData( ) const
+	[[nodiscard]] const std::vector< float >& getData( ) const override
 	{
 		return data;
 	}
+
+    [[nodiscard]] std::string getPath( ) const override
+    {
+        return "BuiltinPrimitives/PlainCube";
+    }
+
+    [[nodiscard]] PrimitiveType getType( ) const override
+    {
+        return PrimitiveType::PlainCube;
+    }
 };
 
-class PlainSquarePrimitive
+class PlainSquarePrimitive : public IPrimitive
 {
 	std::vector< float > data;
 public:
@@ -192,18 +221,69 @@ public:
 		}
 	}
 
-	uint32_t getVertexCount( )
+	uint32_t getVertexCount( ) override
 	{
 		return 6;
 	}
 
-	[[nodiscard]] const std::vector< float >& getData( ) const
+	[[nodiscard]] const std::vector< float >& getData( ) const override
 	{
 		return data;
 	}
+
+    [[nodiscard]] std::string getPath( ) const override
+    {
+        return "BuiltinPrimitives/PlainSquare";
+    }
+
+    [[nodiscard]] PrimitiveType getType( ) const override
+    {
+        return PrimitiveType::PlainSquare;
+    }
 };
 
-class PlainTrianglePrimitive
+class TexturedSquarePrimitive : public IPrimitive
+{
+	std::vector< float > data;
+public:
+    TexturedSquarePrimitive( )
+	{
+		data.insert( data.end( ), { -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f, 0.0f } );
+		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f,  0.0f, 1.0f, 1.0f } );
+
+		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 0.0f, 1.0f , 0.0f, 1.0f, 0.0f } );
+		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f } );
+
+		if ( SHOULD_FLIP_Y )
+		{
+			FLIP_Y( data, 1, 8 )
+		}
+	}
+
+	uint32_t getVertexCount( ) override
+	{
+		return 6;
+	}
+
+	[[nodiscard]] const std::vector< float >& getData( ) const override
+	{
+		return data;
+	}
+
+    [[nodiscard]] std::string getPath( ) const override
+    {
+        return "BuiltinPrimitives/TexturedSquare";
+    }
+
+    [[nodiscard]] PrimitiveType getType( ) const override
+    {
+        return PrimitiveType::TexturedSquare;
+    }
+};
+
+class PlainTrianglePrimitive : public IPrimitive
 {
 	std::vector< float > data;
 public:
@@ -219,32 +299,45 @@ public:
 		}
 	}
 
-	uint32_t getVertexCount( )
+	uint32_t getVertexCount( ) override
 	{
 		return 3;
 	}
 
-	[[nodiscard]] const std::vector< float >& getData( ) const
+	[[nodiscard]] const std::vector< float >& getData( ) const override
 	{
 		return data;
 	}
+
+    [[nodiscard]] std::string getPath( ) const override
+    {
+        return "BuiltinPrimitives/PlainTriangle";
+    }
+
+    [[nodiscard]] PrimitiveType getType( ) const override
+    {
+        return PrimitiveType::PlainTriangle;
+    }
 };
 
 class BuiltinPrimitives
 {
 public:
+    // todo remove in favor of direct access
 	static std::string getPrimitivePath( PrimitiveType type )
 	{
 		switch ( type )
 		{
 		case PrimitiveType::LitCube:
-			return "BuiltinPrimitives/LightedCube";
+			return LitCubePrimitive{ }.getPath();
 		case PrimitiveType::PlainCube:
-			return "BuiltinPrimitives/PlainCube";
+            return PlainCubePrimitive{ }.getPath();
 		case PrimitiveType::PlainSquare:
-			return "BuiltinPrimitives/PlainSquare";
+            return PlainSquarePrimitive{ }.getPath();
 		case PrimitiveType::PlainTriangle:
-			return "BuiltinPrimitives/PlainTriangle";
+            return PlainTrianglePrimitive{ }.getPath();
+		case PrimitiveType::TexturedSquare:
+            return TexturedSquarePrimitive{ }.getPath();
 		}
 
 		return "";
