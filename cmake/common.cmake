@@ -34,7 +34,7 @@ FUNCTION(INSTALL_TARGET target)
 
         INSTALL(EXPORT ${target}-export
                 FILE ${target}Targets.cmake
-                NAMESPACE ${target}::
+                NAMESPACE BlazarEngine::
                 DESTINATION cmake/${target}
                 )
 

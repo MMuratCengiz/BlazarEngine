@@ -48,14 +48,21 @@ ENDFOREACH()
 IF (BLAZAR_BUILD_AS_LIB)
     ADD_LIBRARY(BlazarEngine ${BLAZAR_LIB_TYPE} main.cpp)
     INSTALL(TARGETS BlazarEngine
-            EXPORT BlazarEngineConfig
-            DESTINATION lib)
+            EXPORT BlazarEngine-export
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib)
 ELSE()
     ADD_EXECUTABLE(BlazarEngine main.cpp)
     INSTALL(TARGETS BlazarEngine
-            EXPORT BlazarEngineConfig
+            EXPORT BlazarEngine-export
             DESTINATION bin/..)
 ENDIF()
+
+
+INSTALL(EXPORT BlazarEngine-export
+        FILE BlazarEngineTargets.cmake
+        DESTINATION cmake/BlazarEngine
+        )
 
 INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/Shaders/ DESTINATION Shaders/)
 INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/assets/ DESTINATION assets/)
@@ -65,9 +72,5 @@ COPY_TO_BINARY("assets" "*.*")
 
 TARGET_COMPILE_DEFINITIONS(BlazarEngine PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 TARGET_LINK_LIBRARIES(BlazarEngine PUBLIC BlazarSamples) # Todo use Scene when not building samples
-
-EXPORT(TARGETS BlazarEngine FILE cmake/BlazarEngineConfig.cmake)
-
-INSTALL(EXPORT BlazarEngineConfig DESTINATION cmake)
 
 INCLUDE(CPack)
