@@ -29,6 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class VulkanSurface;
+
 struct Shader;
 
 class VulkanDevice : public IRenderDevice
@@ -63,37 +64,65 @@ private:
     std::unique_ptr< IResourceProvider > resourceProvider;
 public:
     VulkanDevice( ) = default;
-    void createDevice( RenderWindow* window ) override;
+
+    void createDevice( RenderWindow *window ) override;
 
     std::vector< SelectableDevice > listDevices( ) override;
-    void selectDevice( const vk::PhysicalDevice & device );
+
+    void selectDevice( const vk::PhysicalDevice &device );
 
     void beforeDelete( );
 
-    const std::unique_ptr< IPipelineProvider >& getPipelineProvider( ) const override;
-    const std::unique_ptr< IRenderPassProvider >& getRenderPassProvider( ) const override;
-    const std::unique_ptr< IResourceProvider >& getResourceProvider( ) const override;
+    const std::unique_ptr< IPipelineProvider > &getPipelineProvider( ) const override;
+
+    const std::unique_ptr< IRenderPassProvider > &getRenderPassProvider( ) const override;
+
+    const std::unique_ptr< IResourceProvider > &getResourceProvider( ) const override;
+
+    inline std::unique_ptr< IShaderInfo > getShaderInfo( const std::unordered_map< ShaderType, std::string > &shaders, const bool &interleavedMode = true ) override
+    {
+        std::vector< GLSLShaderInfo > glslShaders;
+        for ( const auto &shaderInfo: shaders )
+        {
+            glslShaders.push_back( GLSLShaderInfo { shaderInfo.first, shaderInfo.second } );
+        }
+
+        return std::make_unique< GLSLShaderSet >( glslShaders, interleavedMode );
+    }
+
     uint32_t getFrameCount( ) const override;
 
-    const VulkanContext * getContext( ) const;
+    const VulkanContext *getContext( ) const;
+
     ~VulkanDevice( ) override;
+
 private:
     void createRenderSurface( );
 
     void initSupportedExtensions( );
+
     void initDebugMessages( const vk::DebugUtilsMessengerCreateInfoEXT &createInfo );
+
     void initSupportedLayers( std::vector< const char * > &layers );
 
     vk::DebugUtilsMessengerCreateInfoEXT getDebugUtilsCreateInfo( ) const;
+
     static void loadExtensionFunctions( );
+
     void setupQueueFamilies( );
+
     void createLogicalDevice( );
+
     void createSurface( );
+
     void createImageFormat( );
+
     void initializeVMA( );
 
     static std::unordered_map< std::string, bool > defaultRequiredExtensions( );
+
     static void createDeviceInfo( const vk::PhysicalDevice &physicalDevice, DeviceInfo &deviceInfo );
+
     std::vector< vk::DeviceQueueCreateInfo > createUniqueDeviceCreateInfos( );
 
     void destroyDebugUtils( ) const;

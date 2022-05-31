@@ -61,21 +61,23 @@ void RenderGraph::buildGraph( )
     for ( auto& pass : passes )
     {
         uint32_t pipelineIndex = 0;
+        pass.pipelineInputsMap.resize( pass.ref->pipelineRequests.size( ) );
 
-        pass.pipelineInputsMap.resize( pass.ref->pipelineInputs.size( ) );
-
-        for ( const auto& pipelineInputs : pass.ref->pipelineInputs )
+        for ( const auto & pipelineRequest : pass.ref->pipelineRequests )
         {
-            for ( const auto& input : pipelineInputs )
+            std::vector< std::string > & pipelineInputs = pass.pipelineInputs.emplace_back( );
+
+            auto pipelineSet = renderDevice->getShaderInfo( pipelineRequest.shaderPaths );
+
+            for ( const auto& input: pipelineSet->getMergedInputs( ) )
             {
                 if ( pass.pipelineInputsMap[ pipelineIndex ].find( input ) == pass.pipelineInputsMap[ pipelineIndex ].end( ) )
                 {
+                    pipelineInputs.push_back( input );
                     pass.pipelineInputsFlat.push_back( input );
                     pass.pipelineInputsMap[ pipelineIndex ][ input ] = true;
                 }
             }
-
-            pipelineIndex++;
         }
     }
 
@@ -208,15 +210,15 @@ void RenderGraph::preparePass( PassWrapper& pass )
 
 void RenderGraph::prepareInputs( PassWrapper& pass ) const
 {
-    pass.passDependentInputs.resize( pass.ref->pipelineInputs.size( ) );
-    pass.perGeometryInputs.resize( pass.ref->pipelineInputs.size( ) );
-    pass.perEntityInputs.resize( pass.ref->pipelineInputs.size( ) );
-    pass.loadOnceInputs.resize( pass.ref->pipelineInputs.size( ) );
-    pass.perFrameInputs.resize( pass.ref->pipelineInputs.size( ) );
+    pass.passDependentInputs.resize( pass.pipelineInputsFlat.size( ) );
+    pass.perGeometryInputs.resize( pass.pipelineInputsFlat.size( ) );
+    pass.perEntityInputs.resize( pass.pipelineInputsFlat.size( ) );
+    pass.loadOnceInputs.resize( pass.pipelineInputsFlat.size( ) );
+    pass.perFrameInputs.resize( pass.pipelineInputsFlat.size( ) );
 
     int pipelineIdx = 0;
 
-    for ( const auto& pipelineInput : pass.ref->pipelineInputs )
+    for ( const auto& pipelineInput : pass.pipelineInputs )
     {
         for ( auto& input : pipelineInput )
         {

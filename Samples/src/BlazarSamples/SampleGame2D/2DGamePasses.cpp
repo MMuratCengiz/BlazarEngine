@@ -9,12 +9,6 @@ std::unique_ptr< Pass > TDGamePasses::createPresentPass( )
     auto presentPass = std::make_unique< Graphics::Pass >( "presentPass" );
     presentPass->inputGeometry = Graphics::InputGeometry::Model;
 
-    presentPass->pipelineInputs.resize( 1 );
-    presentPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ViewProjection ) );
-    presentPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ModelMatrix ) );
-    presentPass->pipelineInputs[ 0 ].emplace_back("InstanceData" );
-    presentPass->pipelineInputs[ 0 ].emplace_back("Texture1" );
-
     auto &presentImage = presentPass->outputs.emplace_back( Graphics::OutputImage { } );
     presentImage.outputResourceName = "presentImage";
     presentImage.imageFormat = Graphics::ResourceImageFormat::MatchSwapChainImageFormat;

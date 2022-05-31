@@ -21,25 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <BlazarCore/Common.h>
 #include <BlazarECS/ECS.h>
 #include "IRenderPassProvider.h"
+#include "IShaderInfo.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
 class IRenderPass;
-
-enum class ShaderType
-{
-    Vertex,
-    Fragment,
-    TessellationEval,
-    TessellationControl,
-    Geometry
-};
-
-struct Shader
-{
-    ShaderType type;
-    std::string path;
-};
 
 enum class CompareOp
 {

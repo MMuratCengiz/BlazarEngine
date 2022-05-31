@@ -23,34 +23,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "SpirvHelper.h"
 #include "BlazarCore/Utilities.h"
 #include "spirv_glsl.hpp"
+#include <BlazarGraphics/IShaderInfo.h>
 
 /*
 TODO List:
 - Support matrix as vertex input.
 */
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
-
-typedef struct MVP
-{
-    glm::mat4x4 model;
-    glm::mat4x4 view;
-    glm::mat4x4 projection;
-
-    [[nodiscard]] uint32_t size( ) const
-    {
-        return 3 /*Matrices*/ * 4 /*columns*/ * 4 /*rows*/;
-    }
-
-    static uint32_t fullSize( )
-    {
-        return 3 /*Matrices*/ * 4 /*columns*/ * 4 /*rows*/ * sizeof( float );
-    }
-
-    [[nodiscard]] const MVP *data( ) const
-    {
-        return this;
-    }
-} MVP;
 
 struct DescriptorSetBinding
 {
@@ -73,13 +52,40 @@ struct GLSLShaderInfo
 {
     vk::ShaderStageFlagBits type;
     std::vector< uint32_t > data;
-
 public:
-    explicit GLSLShaderInfo( vk::ShaderStageFlagBits type, const std::string& path )
+    GLSLShaderInfo( ShaderType type, const std::string& path ) : GLSLShaderInfo( genericTypeToVkType( type ), path ){ }
+
+    GLSLShaderInfo( vk::ShaderStageFlagBits type, const std::string& path )
     {
         this->type = type;
         auto glslContents = Core::Utilities::readFile( path ) ;
         data = SpirvHelper::GLSLtoSPV( type, glslContents.c_str( ) );
+    }
+
+    static vk::ShaderStageFlagBits genericTypeToVkType( ShaderType type )
+    {
+        vk::ShaderStageFlagBits shaderType { };
+
+        switch ( type )
+        {
+            case ShaderType::Vertex:
+                shaderType = vk::ShaderStageFlagBits::eVertex;
+                break;
+            case ShaderType::Fragment:
+                shaderType = vk::ShaderStageFlagBits::eFragment;
+                break;
+            case ShaderType::Geometry:
+                shaderType = vk::ShaderStageFlagBits::eGeometry;
+                break;
+            case ShaderType::TessellationControl:
+                shaderType = vk::ShaderStageFlagBits::eTessellationControl;
+                break;
+            case ShaderType::TessellationEval:
+                shaderType = vk::ShaderStageFlagBits::eTessellationEvaluation;
+                break;
+        }
+
+        return shaderType;
     }
 };
 
@@ -98,7 +104,7 @@ struct PushConstantDetail
     std::vector< StructChild > children;
 };
 
-class GLSLShaderSet
+class GLSLShaderSet : public IShaderInfo
 {
 private:
     struct SpvDecoration
@@ -168,6 +174,28 @@ public:
         return vertexAttributeDescriptions;
     }
 
+    inline std::vector< std::string > getMergedInputs( ) override
+    {
+        std::vector< std::string > result;
+
+        for ( const auto& sets: descriptorSets )
+        {
+            for ( const auto& set: sets.descriptorSetBindings )
+            {
+                result.emplace_back( set.name );
+            }
+        }
+
+        for ( const auto& pushConstant: pushConstantDetails )
+        {
+            for ( const auto& pushConstantChild: pushConstant.children )
+            {
+                result.emplace_back( pushConstantChild.name );
+            }
+        }
+
+        return std::move( result );
+    }
 private:
     void onEachShader( const GLSLShaderInfo &shaderInfo );
     void ensureSetExists( uint32_t set );

@@ -36,6 +36,7 @@ struct PassWrapper
     std::vector< std::shared_ptr< IRenderTarget > > renderTargets;
 
     std::vector< std::string > pipelineInputsFlat;
+    std::vector< std::vector< std::string > > pipelineInputs;
     std::vector< std::unordered_map< std::string, bool > > pipelineInputsMap;
 
     bool inputsBuilt = false;

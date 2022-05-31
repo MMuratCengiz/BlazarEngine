@@ -41,8 +41,6 @@ struct Pass
     InputGeometry inputGeometry;
     std::vector< PipelineRequest > pipelineRequests;
     RenderPassRequest renderPassRequest;
-
-    std::vector< std::vector< std::string > > pipelineInputs;
     std::vector< OutputImage > outputs;
 
     // If more than one pipelines are returned the same object is rendered multiple times with different pipelines

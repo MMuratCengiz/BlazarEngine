@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "IResourceProvider.h"
 #include "IRenderPassProvider.h"
 #include "RenderWindow.h"
+#include "IShaderInfo.h"
 
 NAMESPACES( ENGINE_NAMESPACE, Graphics )
 
@@ -59,6 +60,7 @@ public:
     virtual const std::unique_ptr< IPipelineProvider >& getPipelineProvider( ) const = 0;
     virtual const std::unique_ptr< IResourceProvider >& getResourceProvider( ) const = 0;
     virtual const std::unique_ptr< IRenderPassProvider >& getRenderPassProvider( ) const = 0;
+    virtual std::unique_ptr< IShaderInfo > getShaderInfo( const std::unordered_map< ShaderType, std::string > &shaders, const bool &interleavedMode = true ) = 0;
     virtual uint32_t getFrameCount( ) const = 0;
     virtual ~IRenderDevice( ) = default;
 };

@@ -30,36 +30,6 @@ std::unique_ptr< Pass > CommonPasses::createGBufferPass( )
     auto gBufferPass = std::make_unique< Pass >( "gBufferPass" );
     gBufferPass->inputGeometry = InputGeometry::Model;
 
-    gBufferPass->pipelineInputs.resize( 5 );
-
-    for ( int i = 0; i < 5; ++i )
-    {
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ViewProjection ) );
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ModelMatrix ) );
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::NormalModelMatrix ) );
-        gBufferPass->pipelineInputs[ i ].push_back( "InstanceData" );
-
-        gBufferPass->pipelineInputs[ i ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::Material ) );
-        gBufferPass->pipelineInputs[ i ].push_back( "Texture1" );
-
-        if ( i == 1 )
-        {
-            gBufferPass->pipelineInputs[ i ].push_back( "HeightMap" );
-            gBufferPass->pipelineInputs[ i ].push_back( "Tessellation" );
-        }
-
-        if ( i == 3 )
-        {
-            gBufferPass->pipelineInputs[ i ].push_back( "OutlineScale" );
-            gBufferPass->pipelineInputs[ i ].push_back( "OutlineColor" );
-        }
-
-        if ( i == 4 )
-        {
-            gBufferPass->pipelineInputs[ i ].push_back( "BoneTransformations" );
-        }
-    }
-
     auto &depthBuffer = gBufferPass->outputs.emplace_back( );
     depthBuffer.outputResourceName = "depthBuffer";
     depthBuffer.imageFormat = ResourceImageFormat::BestDepthFormat;
@@ -175,22 +145,11 @@ std::unique_ptr< Pass > CommonPasses::createLightingPass( )
     auto lightingPass = std::make_unique< Pass >( "lightingPass" );
     lightingPass->inputGeometry = InputGeometry::Quad;
 
-    lightingPass->pipelineInputs.resize( 1 );
-    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Position" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Normal" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Albedo" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "gBuffer_Material" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "WorldContext" );
-    lightingPass->pipelineInputs[ 0 ].push_back( "shadowMap" );
-    lightingPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::EnvironmentLights ) );
-    lightingPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
-
     auto &presentImage = lightingPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "litScene";
     presentImage.imageFormat = ResourceImageFormat::R16G16B16A16Sfloat;
     presentImage.flags.msaaSampled = false;
     presentImage.attachmentType = ResourceAttachmentType::Color;
-
 
     RenderPassRequest renderPassRequest { };
 
@@ -216,16 +175,10 @@ std::unique_ptr< Pass > CommonPasses::createShadowMapPass( )
     auto shadowMapPass = std::make_unique< Pass >( "shadowMap" );
     shadowMapPass->inputGeometry = InputGeometry::Model;
 
-    shadowMapPass->pipelineInputs.resize( 1 );
-    shadowMapPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::ModelMatrix ) );
-    shadowMapPass->pipelineInputs[ 0 ].push_back( "InstanceData" );
-    shadowMapPass->pipelineInputs[ 0 ].push_back( "LightViewProjectionMatrix" );
-
     auto &shadowMap = shadowMapPass->outputs.emplace_back( OutputImage { } );
     shadowMap.outputResourceName = "shadowMap";
     shadowMap.imageFormat = ResourceImageFormat::BestDepthFormat;
     shadowMap.attachmentType = ResourceAttachmentType::Depth;
-
 
     RenderPassRequest renderPassRequest { };
     renderPassRequest.setDepthBias = true;
@@ -254,10 +207,6 @@ std::unique_ptr< Pass > CommonPasses::createSkyBoxPass( )
 {
     auto skyboxPass = std::make_unique< Pass >( "skyBoxPass" );
     skyboxPass->inputGeometry = InputGeometry::Cube;
-
-    skyboxPass->pipelineInputs.resize( 1 );
-    skyboxPass->pipelineInputs[ 0 ].push_back( "ViewProjection" );
-    skyboxPass->pipelineInputs[ 0 ].push_back( StaticVars::getInputName( StaticVars::ShaderInput::SkyBox ) );
 
     auto &presentImage = skyboxPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "skyBoxTex";
@@ -290,10 +239,6 @@ std::unique_ptr< Pass > CommonPasses::createSMAAEdgePass( )
     auto smaaEdgePass = std::make_unique< Pass >( "smaaEdgePass" );
     smaaEdgePass->inputGeometry = InputGeometry::OverSizedTriangle;
 
-    smaaEdgePass->pipelineInputs.resize( 1 );
-    smaaEdgePass->pipelineInputs[ 0 ].push_back( "Resolution" );
-    smaaEdgePass->pipelineInputs[ 0 ].push_back( "litScene" );
-
     auto &edgesTex = smaaEdgePass->outputs.emplace_back( OutputImage { } );
     edgesTex.outputResourceName = "edgesTex";
     edgesTex.imageFormat = ResourceImageFormat::R32G32B32A32Sfloat;
@@ -324,12 +269,6 @@ std::unique_ptr< Pass > CommonPasses::createSMAABlendWeightPass( )
 {
     auto smaaBlendWeightPass = std::make_unique< Pass >( "smaaBlendWeightPass" );
     smaaBlendWeightPass->inputGeometry = InputGeometry::OverSizedTriangle;
-
-    smaaBlendWeightPass->pipelineInputs.resize( 1 );
-    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "Resolution" );
-    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "edgesTex" );
-    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "areaTex" );
-    smaaBlendWeightPass->pipelineInputs[ 0 ].push_back( "searchTex" );
 
     auto &blendTex = smaaBlendWeightPass->outputs.emplace_back( OutputImage { } );
     blendTex.outputResourceName = "blendTex";
@@ -362,11 +301,6 @@ std::unique_ptr< Pass > CommonPasses::createSMAANeighborPass( )
     auto smaaNeighborPass = std::make_unique< Pass >( "smaaNeighborPass" );
     smaaNeighborPass->inputGeometry = InputGeometry::OverSizedTriangle;
 
-    smaaNeighborPass->pipelineInputs.resize( 1 );
-    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "Resolution" );
-    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "litScene" );
-    smaaNeighborPass->pipelineInputs[ 0 ].push_back( "blendTex" );
-
     auto &aliasedImage = smaaNeighborPass->outputs.emplace_back( OutputImage { } );
     aliasedImage.outputResourceName = "aliasedImage";
     aliasedImage.imageFormat = ResourceImageFormat::R32G32B32A32Sfloat;
@@ -397,10 +331,6 @@ std::unique_ptr< Pass > CommonPasses::createPresentPass( )
 {
     auto presentPass = std::make_unique< Pass >( "presentPass" );
     presentPass->inputGeometry = InputGeometry::Quad;
-
-    presentPass->pipelineInputs.resize( 1 );
-    presentPass->pipelineInputs[ 0 ].push_back( "litScene" );
-    presentPass->pipelineInputs[ 0 ].push_back( "skyBoxTex" );
 
     auto &presentImage = presentPass->outputs.emplace_back( OutputImage { } );
     presentImage.outputResourceName = "presentImage";
