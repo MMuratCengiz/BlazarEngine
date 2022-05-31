@@ -17,42 +17,137 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <BlazarInput/EventHandler.h>
-#include <unordered_map>
-#include <vector>
-#include <execution>
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
-void EventHandler::registerKeyboardPress( const KeyboardKeyCode &code, const KeyboardPressEventCallback &callback )
+EventHandler::EventHandler( GLFWwindow *window ) : window( window )
 {
-    if ( keyboardPressCallbacks.find( code ) == keyboardPressCallbacks.end( ) )
+    glfwSetWindowUserPointer( window, this );
+
+    glfwSetKeyCallback( window, [ ]( GLFWwindow *window, int key, int scancode, int action, int mods ) {
+        auto * handler = ( EventHandler * ) glfwGetWindowUserPointer( window );
+
+        auto it = handler->keyboardCallbacks.find( ( KeyboardKeyCode ) key );
+        if ( it != handler->keyboardCallbacks.end( ) )
+        {
+            for ( const auto &callback: it->second )
+            {
+                callback( ( KeyState ) action, ( KeyboardKeyCode ) key );
+            }
+        }
+    });
+
+    glfwSetMouseButtonCallback( window, [ ]( GLFWwindow *window, int button, int action, int mods ) {
+        auto * handler = ( EventHandler * ) glfwGetWindowUserPointer( window );
+
+        auto it = handler->mouseKeyCallbacks.find( ( MouseKeyCode ) button );
+        if ( it != handler->mouseKeyCallbacks.end( ) )
+        {
+            for ( const auto &callback: it->second )
+            {
+                callback( ( KeyState ) action, ( MouseKeyCode ) button );
+            }
+        }
+    });
+
+    glfwSetCursorPosCallback( window, []( GLFWwindow * window, double x, double y ) {
+        auto * handler = ( EventHandler * ) glfwGetWindowUserPointer( window );
+        for ( auto & cb: handler->mouseMoveCallbacks ) {
+            cb( x, y );
+        }
+    } );
+
+    glfwSetScrollCallback( window, []( GLFWwindow * window, double x, double y ) {
+        auto * handler = ( EventHandler * ) glfwGetWindowUserPointer( window );
+        for ( auto & cb: handler->scrollCallbacks ) {
+            cb( x, y );
+        }
+    } );
+}
+
+void EventHandler::registerCallback( const KeyboardKeyCode &code, const KeyboardEventCallback &callback )
+{
+    registerEvent( code, keyboardCallbacks, callback);
+}
+
+void EventHandler::registerCallback( const MouseKeyCode &code, const MouseEventCallback &callback )
+{
+    registerEvent( code, mouseKeyCallbacks, callback);
+}
+
+void EventHandler::registerCallback( const int& gamepadIdx, const GamepadKeyCode &code, const GamepadKeyEventCallback &callback )
+{
+    if ( gamepadKeyCallbacks.size( ) <= gamepadIdx )
     {
-        keyboardPressCallbacks[ code ] = { };
+        gamepadKeyCallbacks.resize( gamepadIdx );
     }
 
-    keyboardPressCallbacks[ code ].emplace_back( callback );
+    registerEvent( code, gamepadKeyCallbacks[ gamepadIdx ], callback);
+}
+
+void EventHandler::registerCallback( const int& gamepadIdx, const GamepadAxisEventCallback &callback )
+{
+    if ( gamepadAxisCallbacks.size( ) <= gamepadIdx )
+    {
+        gamepadAxisCallbacks.resize( gamepadIdx );
+    }
+
+    gamepadAxisCallbacks[ gamepadIdx ].push_back( callback );
+}
+
+void EventHandler::registerMouseMoveCallback( const MouseMoveEventCallback &callback )
+{
+    mouseMoveCallbacks.push_back( callback );
+}
+
+void EventHandler::registerScrollCallback( const ScrollEventCallback &callback )
+{
+    scrollCallbacks.push_back( callback );
 }
 
 void EventHandler::pollEvents( )
 {
-    KeyboardKeyCode iter;
+    glfwPollEvents( );
 
-    uint32_t i = 0;
+    int maxSize = std::max( gamepadAxisCallbacks.size( ), gamepadKeyCallbacks.size( ) );
 
-    do
+    if ( currentGamepadStates.size( ) < maxSize )
     {
-        iter = static_cast< KeyboardKeyCode >( i );
+        currentGamepadStates.resize( maxSize );
+    }
 
-        if ( glfwGetKey( window, GLFW_KEY_A + i ) == GLFW_PRESS )
+    for ( int i = 0; i < maxSize; ++i )
+    {
+        bool gamepadConnected = glfwGetGamepadState( i, &currentGamepadStates[ i ] );
+
+        if ( !gamepadConnected )
         {
-            for ( const auto &callback: keyboardPressCallbacks[ iter ] )
+            continue;
+        }
+
+        auto & gamepadState = currentGamepadStates[ i ];
+        GamepadAxisPressure axisPressures { gamepadState.axes };
+
+        for ( auto & axisCb: gamepadAxisCallbacks[ i ] )
+        {
+            axisCb( axisPressures );
+        }
+
+        for ( auto & cbMap: gamepadKeyCallbacks[ i ] )
+        {
+            auto state = gamepadState.buttons[ ( int ) cbMap.first ];
+            if ( state == GLFW_PRESS )
             {
-                callback( iter );
+                for ( auto & cb: cbMap.second )
+                {
+                    cb( KeyState::Pressed, cbMap.first );
+                }
             }
         }
 
-        ++i;
-    } while ( iter != KeyboardKeyCode::Z );
+    }
+
+
 }
 
 END_NAMESPACES

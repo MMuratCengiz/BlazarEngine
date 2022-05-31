@@ -22,34 +22,48 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
-ActionMap::ActionMap( EventHandler* eventHandler ) : eventHandler( eventHandler )
+ActionMap::ActionMap( EventHandler *eventHandler ) : eventHandler( eventHandler )
 {
-    proxyActionCallback = [ & ]( const std::string &actionName )
+    proxyActionCallback = [ & ]( const std::string &actionName, const KeyState &keyPressForm, const float &pressure )
     {
         FUNCTION_BREAK( callbacks.find( actionName ) == callbacks.end( ) );
 
-        for ( auto& callback: callbacks[ actionName ] )
+        for ( auto &callback: callbacks[ actionName ] )
         {
-            callback( actionName );
+            callback( actionName, keyPressForm, pressure );
         }
     };
 }
 
-void ActionMap::registerAction( const std::string &actionName, ActionBinding binding)
+void ActionMap::registerAction( const std::string &actionName, const std::initializer_list< KeyboardKeyCode > &codes )
 {
-    if ( binding.controller == Controller::Keyboard )
-    {
-        if ( binding.pressForm == KeyPressForm::Pressed )
-        {
-            eventHandler->registerKeyboardPress( binding.keyCode, [ = ]( const KeyboardKeyCode &code )
-            {
-                proxyActionCallback( actionName );
-            } );
-        }
-    }
+    registerActionInternal( actionName, codes );
 }
 
-void ActionMap::subscribeToAction( const std::string &actionName, ActionCallback callback )
+void ActionMap::registerAction( const std::string &actionName, const std::initializer_list< MouseKeyCode > &codes )
+{
+    registerActionInternal( actionName, codes );
+}
+
+void ActionMap::registerAction( const std::string &actionName, const int& gamepadIdx, const std::initializer_list< GamepadKeyCode > &codes )
+{
+    FUNCTION_BREAK( codes.size( ) == 0 )
+
+    eventHandler->registerCallback( gamepadIdx, data( codes )[ 0 ], [ = ]( const KeyState &form, const GamepadKeyCode &code )
+    {
+        bool allSelected = true;
+        for ( int i = 1; i < codes.size( ); ++i )
+        {
+            KeyState pressForm = eventHandler->checkKey( gamepadIdx, data( codes )[ i ] );
+            allSelected = allSelected && ( pressForm == KeyState::Pressed || pressForm == KeyState::Repeated );
+        }
+
+        FUNCTION_BREAK( !allSelected );
+        proxyActionCallback( actionName, form, 0.0f );
+    } );
+}
+
+void ActionMap::subscribeToAction( const std::string &actionName, const ActionCallback &callback )
 {
     if ( callbacks.find( actionName ) == callbacks.end( ) )
     {
@@ -57,6 +71,21 @@ void ActionMap::subscribeToAction( const std::string &actionName, ActionCallback
     }
 
     callbacks[ actionName ].emplace_back( callback );
+}
+
+void ActionMap::registerScroll( const ScrollEventCallback & scrollEventCallback )
+{
+    eventHandler->registerScrollCallback( scrollEventCallback );
+}
+
+void ActionMap::registerGamepadAxisMove( const int& gamepadIdx, const GamepadAxisEventCallback & axisMoveCallback )
+{
+    eventHandler->registerCallback( gamepadIdx, axisMoveCallback );
+}
+
+void ActionMap::registerMouseMove( const MouseMoveEventCallback &mouseMoveCallback )
+{
+    eventHandler->registerMouseMoveCallback( mouseMoveCallback );
 }
 
 END_NAMESPACES

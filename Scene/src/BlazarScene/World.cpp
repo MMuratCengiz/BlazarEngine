@@ -165,8 +165,6 @@ void World::run( IPlayable *game )
             }
         }
 
-        glfwPollEvents( );
-
         eventHandler->pollEvents( );
 
         Input::Events::trigger( Input::EventType::Tick, tickParams.get( ) );

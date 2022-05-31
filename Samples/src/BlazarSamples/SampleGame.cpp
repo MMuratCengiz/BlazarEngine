@@ -148,7 +148,7 @@ void SampleGame::init( )
 
     SampleSetupInputBindings::setup( world );
 
-    auto movement = [ = ]( const std::string &actionName )
+    auto movement = [ = ]( const std::string &actionName, const Input::KeyState& form, float pressure)
     {
         glm::vec3 translation { };
 

@@ -9,7 +9,7 @@ using namespace Graphics;
 
 void TDGameScene::init( )
 {
-    camera = std::make_unique< TDGameTopDownCamera >( );
+    camera = std::make_unique< TDGameTopDownCamera >( world );
     box = std::move(
             world->getAssetManager( )->createEntity(
                     BuiltinPrimitives::getPrimitivePath( PrimitiveType::TexturedSquare ) ) );
@@ -17,26 +17,8 @@ void TDGameScene::init( )
     auto *pTransform = box->getComponent< ECS::CTransform >( );
     pTransform->position.x = 960.0f;
     pTransform->position.y = 540.0f;
-    pTransform->scale.x = 20.0f;
-    pTransform->scale.y = 20.0f;
-
-    boost::mt19937 rng;
-    boost::uniform_real< > rangeX( 0.0f, 1920.0f );
-    boost::uniform_real< > rangeY( 0.0f, 1080.0f );
-    boost::variate_generator< boost::mt19937, boost::uniform_real< > > randomRangeX( rng, rangeX );
-    boost::variate_generator< boost::mt19937, boost::uniform_real< > > randomRangeY( rng, rangeY );
-
-    box->createComponent< ECS::CInstances >( );
-    for (int i = 0; i < 100; ++i)
-    {
-        ECS::CTransform instance { };
-        instance.position.x = randomRangeX( );
-        instance.position.y = randomRangeY( );
-        instance.scale.x = 20.0f;
-        instance.scale.y = 20.0f;
-        box->getComponent< ECS::CInstances >( )
-                ->transforms.push_back( std::move( instance ) );
-    }
+    pTransform->scale.x = 200.0f;
+    pTransform->scale.y = 200.0f;
 
     auto boxMaterial = box->getComponent< ECS::CMaterial >( );
     ECS::Material::TextureInfo & boxTexture = boxMaterial->textures.emplace_back( );
@@ -45,7 +27,7 @@ void TDGameScene::init( )
 
     scene = std::make_unique< Scene::Scene >( );
 
-    scene->addEntity( camera.get( ));
+    scene->addEntity( camera.get( ) );
     scene->addEntity( box.get( ));
 
     presentPass = TDGamePasses::createPresentPass( );
@@ -53,7 +35,7 @@ void TDGameScene::init( )
     world->setScene( scene.get( ) );
     srand (time(NULL));
 
-    auto movement = [ = ]( const std::string &actionName )
+    auto movement = [ = ]( const std::string &actionName, const Input::KeyState &keyPressForm, const float &pressure )
     {
         glm::vec3 translation { };
         double velocity = 200;
@@ -75,31 +57,10 @@ void TDGameScene::init( )
         }
     };
 
-    Input::ActionBinding moveBoxForward { };
-    moveBoxForward.keyCode = Input::KeyboardKeyCode::W;
-    moveBoxForward.pressForm = Input::KeyPressForm::Pressed;
-    moveBoxForward.controller = Input::Controller::Keyboard;
-    Input::ActionBinding moveBoxBackward { };
-    moveBoxBackward.keyCode = Input::KeyboardKeyCode::S;
-    moveBoxBackward.pressForm = Input::KeyPressForm::Pressed;
-    moveBoxBackward.controller = Input::Controller::Keyboard;
-    Input::ActionBinding moveBoxRight { };
-    moveBoxRight.keyCode = Input::KeyboardKeyCode::D;
-    moveBoxRight.pressForm = Input::KeyPressForm::Pressed;
-    moveBoxRight.controller = Input::Controller::Keyboard;
-    Input::ActionBinding moveBoxLeft { };
-    moveBoxLeft.keyCode = Input::KeyboardKeyCode::A;
-    moveBoxLeft.pressForm = Input::KeyPressForm::Pressed;
-    moveBoxLeft.controller = Input::Controller::Keyboard;
-    Input::ActionBinding leftClick { };
-    moveBoxLeft.keyCode = Input::KeyboardKeyCode::A;
-    moveBoxLeft.pressForm = Input::KeyPressForm::Pressed;
-    moveBoxLeft.controller = Input::Controller::Keyboard;
-
-    world->getActionMap( )->registerAction( "Right", moveBoxRight );
-    world->getActionMap( )->registerAction( "Left", moveBoxLeft );
-    world->getActionMap( )->registerAction( "Forward", moveBoxForward );
-    world->getActionMap( )->registerAction( "Backward", moveBoxBackward );
+    world->getActionMap( )->registerAction( "Right", { Input::KeyboardKeyCode::D } );
+    world->getActionMap( )->registerAction( "Left", { Input::KeyboardKeyCode::A } );
+    world->getActionMap( )->registerAction( "Forward", { Input::KeyboardKeyCode::W } );
+    world->getActionMap( )->registerAction( "Backward", { Input::KeyboardKeyCode::S } );
     world->getActionMap( )->subscribeToAction( "Right", movement );
     world->getActionMap( )->subscribeToAction( "Left", movement );
     world->getActionMap( )->subscribeToAction( "Forward", movement );

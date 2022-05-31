@@ -248,13 +248,13 @@ class TexturedSquarePrimitive : public IPrimitive
 public:
     TexturedSquarePrimitive( )
 	{
-		data.insert( data.end( ), { -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f } );
-		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f, 0.0f } );
-		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f,  0.0f, 1.0f, 1.0f } );
+		data.insert( data.end( ), { 0.0f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f } );
+		data.insert( data.end( ), { 0.0f, 1.0f,  0.0f, 1.0f, 0.0f, 1.0f } );
+		data.insert( data.end( ), { 1.0f, 0.0f,  0.0f, 1.0f, 1.0f, 0.0f } );
 
-		data.insert( data.end( ), { 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f } );
-		data.insert( data.end( ), { 1.0f, 1.0f, 0.0f, 1.0f , 0.0f, 1.0f, 0.0f } );
-		data.insert( data.end( ), { -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f } );
+		data.insert( data.end( ), { 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f } );
+		data.insert( data.end( ), { 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f } );
+		data.insert( data.end( ), { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f } );
 
 		if ( SHOULD_FLIP_Y )
 		{

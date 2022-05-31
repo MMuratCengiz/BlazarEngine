@@ -75,14 +75,9 @@ void SampleAnimatedFox::iterChildren( ECS::IGameEntity * entity )
     attack->transitions[ 1 ] = surveyTransition->id;
     animState->state = 1;
 
-    Input::ActionBinding animChange { };
-    animChange.keyCode = Input::KeyboardKeyCode::T;
-    animChange.pressForm = Input::KeyPressForm::Pressed;
-    animChange.controller = Input::Controller::Keyboard;
+    world->getActionMap( )->registerAction( "ChangeAnim", { Input::KeyboardKeyCode::T } );
 
-    world->getActionMap( )->registerAction( "ChangeAnim", animChange );
-
-    auto changeAnim = [ = ]( const std::string &actionName )
+    auto changeAnim = [ = ]( const std::string &actionName, const Input::KeyState &keyPressForm, const float &pressure )
     {
         entity->getComponent< ECS::CAnimState >( )->state
             = entity->getComponent< ECS::CAnimState >( )->currentNode->transitions.begin()->first;

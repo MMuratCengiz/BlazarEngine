@@ -23,34 +23,50 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 NAMESPACES( ENGINE_NAMESPACE, Input )
 
-typedef std::function< void( std::string ) > ActionCallback;
-
-enum class Controller
-{
-    Keyboard,
-    Mouse,
-};
-
-struct ActionBinding
-{
-    Controller controller;
-    KeyPressForm pressForm;
-
-    // If controller == Keyboard
-    KeyboardKeyCode keyCode;
-};
+typedef std::function< void( const std::string &, const KeyState &keyPressForm, const float &pressure ) > ActionCallback;
 
 class ActionMap
 {
 private:
-    EventHandler* eventHandler;
+    EventHandler *eventHandler;
     std::unordered_map< std::string, std::vector< ActionCallback > > callbacks;
     ActionCallback proxyActionCallback;
 public:
-    explicit ActionMap( EventHandler* eventHandler );
+    explicit ActionMap( EventHandler *eventHandler );
 
-    void registerAction( const std::string &actionName, ActionBinding binding );
-    void subscribeToAction( const std::string &actionName, ActionCallback callback );
+    void registerAction( const std::string &actionName, const std::initializer_list< KeyboardKeyCode > &codes );
+
+    void registerAction( const std::string &actionName, const std::initializer_list< MouseKeyCode > &codes );
+
+    void registerAction( const std::string &actionName, const int &gamepadIdx, const std::initializer_list< GamepadKeyCode > &codes );
+
+    void registerGamepadAxisMove( const int &gamepadIdx, const GamepadAxisEventCallback &axisMoveCallback );
+
+    void registerScroll( const ScrollEventCallback &scrollEventCallback );
+
+    void registerMouseMove( const MouseMoveEventCallback &moveMoveCallback );
+
+    void subscribeToAction( const std::string &actionName, const ActionCallback &callback );
+
+private:
+    template< class tKeyCode >
+    inline void registerActionInternal( const std::string &actionName, const std::initializer_list< tKeyCode > &codes )
+    {
+        FUNCTION_BREAK( codes.size( ) == 0 )
+
+        eventHandler->registerCallback( data( codes )[ 0 ], [ = ]( const KeyState &form, const tKeyCode &code )
+        {
+            bool allSelected = true;
+            for ( int i = 1; i < codes.size( ); ++i )
+            {
+                KeyState pressForm = eventHandler->checkKey( data( codes )[ i ] );
+                allSelected = allSelected && ( pressForm == KeyState::Pressed || pressForm == KeyState::Repeated );
+            }
+
+            FUNCTION_BREAK( !allSelected );
+            proxyActionCallback( actionName, form, 0.0f );
+        } );
+    }
 };
 
 END_NAMESPACES

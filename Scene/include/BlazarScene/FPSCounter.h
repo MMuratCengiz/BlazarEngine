@@ -57,7 +57,10 @@ public:
             start = nowInSeconds( );
             std::stringstream s;
             s << "FPS: " << fpsCounter;
+            std::stringstream dt;
+            dt << "DeltaTime: " << Core::Time::getDeltaTime( );
             Core::Logger::get( ).log( Core::Verbosity::Information, "FPSCounter", s.str( ).c_str( ) );
+            Core::Logger::get( ).log( Core::Verbosity::Information, "DeltaTime", dt.str( ).c_str( ) );
 
             fpsCounter = 0;
         }

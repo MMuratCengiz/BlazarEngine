@@ -33,7 +33,6 @@ NAMESPACES( ENGINE_NAMESPACE, Input )
 
 struct IEventParameters
 {
-    void *userPointer { }; // todo maybe remove
     virtual ~IEventParameters( ) = default;
 };
 

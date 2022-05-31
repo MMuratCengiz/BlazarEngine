@@ -33,5 +33,4 @@ void main() {
     gl_Position = viewProjection.proj * viewProjection.view * outPosition;
 
     outTextureCoor = inTextureCoor;
-    outNormal = inNormal;
 }

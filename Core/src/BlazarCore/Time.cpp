@@ -30,7 +30,7 @@ void Time::tick( )
 
     double now = doubleEpochNow( );
 
-    deltaTime = ( now - prev ) / 1000.0f; //std::max( now - prev, (double) 1 / 60.f );
+    deltaTime = ( now - prev ) / ( double ) 1000000.0; //std::max( now - prev, (double) 1 / 60.f );
     prev = now;
 }
 
@@ -41,7 +41,7 @@ double Time::getDeltaTime( )
 
 double Time::doubleEpochNow( )
 {
-    return std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now( ).time_since_epoch( ) ).count( );
+    return std::chrono::duration_cast< std::chrono::microseconds >( std::chrono::system_clock::now( ).time_since_epoch( ) ).count( );
 }
 
 END_NAMESPACES
